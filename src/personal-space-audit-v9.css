@@ -1,0 +1,644 @@
+/* RAWAJ personal space audit v9.
+ * Explicit ownership for /more and /profile.
+ */
+
+.rawaj-app-shell:is([data-resolved-pathname="/more"], [data-resolved-pathname="/profile"]) .rawaj-app-shell__page {
+  min-height: 100dvh;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/more"], [data-resolved-pathname="/profile"]) main.mobile-page-bottom {
+  padding-top: 0.75rem !important;
+  padding-bottom: 1rem !important;
+}
+
+/* More / personal hub */
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+  display: grid;
+  gap: 0.9rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 > * {
+  margin: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "identity badges"
+    "description badges"
+    "actions actions";
+  gap: 0.55rem 1rem !important;
+  min-height: auto !important;
+  padding: clamp(0.95rem, 2.5vw, 1.25rem) !important;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.3rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.14), transparent 33%),
+    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.11), transparent 38%),
+    linear-gradient(145deg, #313239, #292a30 68%, #27282d) !important;
+  box-shadow: 0 15px 34px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity {
+  grid-area: identity;
+  display: flex !important;
+  min-width: 0;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar {
+  display: grid;
+  width: 3.8rem !important;
+  height: 3.8rem !important;
+  flex: 0 0 3.8rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  border-radius: 1rem !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, rgba(255, 112, 84, 0.9), rgba(220, 62, 182, 0.82) 52%, rgba(63, 145, 255, 0.84)) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity > div:last-child {
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity p {
+  margin: 0 0 0.15rem !important;
+  color: var(--rawaj-accent-pink) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity h1 {
+  margin: 0 !important;
+  color: var(--rawaj-text-primary) !important;
+  font-size: clamp(1rem, 3vw, 1.3rem) !important;
+  line-height: 1.4 !important;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity strong,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity small {
+  display: block;
+  margin-top: 0.15rem !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.66rem !important;
+  font-weight: 600 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
+  grid-area: description;
+  max-width: 66ch !important;
+  margin: 0 !important;
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.72rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges {
+  grid-area: badges;
+  display: grid !important;
+  align-content: center;
+  gap: 0.4rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.6rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges b {
+  color: #f3c98e !important;
+  border-color: rgba(227, 160, 75, 0.18) !important;
+  background: rgba(227, 160, 75, 0.055) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__actions {
+  grid-area: actions;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.45rem !important;
+  margin: 0.15rem 0 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__actions a {
+  display: inline-flex;
+  min-height: 2.55rem !important;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  padding: 0.45rem 0.7rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.69rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] section.rawaj-more-v2__command {
+  border: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header {
+  grid-column: 1 / -1;
+  display: flex !important;
+  align-items: end !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  margin: 0 !important;
+  padding: 0.15rem 0.2rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header p {
+  color: var(--rawaj-accent-coral) !important;
+  font-size: 0.66rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header span {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.69rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 0.15rem 0.7rem !important;
+  min-height: 6.4rem !important;
+  align-items: center;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.1rem !important;
+  padding: 0.85rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-world-orange {
+  border-color: rgba(255, 112, 84, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 112, 84, 0.11), transparent 39%),
+    linear-gradient(150deg, #37302f, #2d2b30) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-world-indigo {
+  border-color: rgba(63, 145, 255, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.11), transparent 39%),
+    linear-gradient(150deg, #2c323d, #292b31) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card > span:first-child {
+  grid-row: 1 / span 2;
+  width: 2.8rem !important;
+  height: 2.8rem !important;
+  margin: 0 !important;
+  border-radius: 0.85rem !important;
+  background: var(--rawaj-gradient-action-short) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card > span:nth-child(2) {
+  align-self: end;
+  margin: 0 !important;
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.88rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card > span:nth-child(3) {
+  align-self: start;
+  margin: 0 !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.67rem !important;
+  line-height: 1.45 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card > svg {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  margin: 0 !important;
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem !important;
+  border: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a {
+  min-height: 4.5rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.95rem !important;
+  padding: 0.65rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-plum { border-color: rgba(220, 62, 182, 0.16) !important; }
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-gold { border-color: rgba(227, 160, 75, 0.16) !important; }
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-emerald { border-color: rgba(112, 213, 177, 0.16) !important; }
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary span {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.69rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section {
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.05rem !important;
+  padding: 0 !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 11px 26px rgba(0, 0, 0, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section > h2 {
+  margin: 0 !important;
+  border-bottom: 1px solid var(--rawaj-border);
+  padding: 0.7rem 0.85rem !important;
+  color: var(--rawaj-accent-pink) !important;
+  background: rgba(255, 255, 255, 0.018);
+  font-size: 0.69rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section[data-tone="muted"] > h2 {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section > div {
+  border-color: var(--rawaj-border) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button) {
+  min-height: 3.65rem !important;
+  padding: 0.65rem 0.8rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button):hover {
+  color: var(--rawaj-text-primary) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button) strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.78rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button) small {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.65rem !important;
+  line-height: 1.4 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button)[data-destructive="true"],
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button).text-destructive {
+  color: #f2aaa4 !important;
+  background: rgba(234, 113, 104, 0.045) !important;
+}
+
+/* Profile / account editor */
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 {
+  display: grid;
+  gap: 0.85rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 > * {
+  margin: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity {
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.3rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 15px 34px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+  height: 6.5rem !important;
+  min-height: 0 !important;
+  background:
+    radial-gradient(circle at 16% 15%, rgba(255, 112, 84, 0.54), transparent 28%),
+    radial-gradient(circle at 55% 0%, rgba(220, 62, 182, 0.42), transparent 33%),
+    radial-gradient(circle at 92% 28%, rgba(63, 145, 255, 0.4), transparent 32%),
+    linear-gradient(135deg, #2d2630, #252a35) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__content {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem !important;
+  align-items: center !important;
+  margin-top: -2rem !important;
+  padding: 0 1rem 0.8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
+  width: 4.5rem !important;
+  height: 4.5rem !important;
+  border: 3px solid #2c2d33 !important;
+  border-radius: 1.15rem !important;
+  background: var(--rawaj-gradient-action-short) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy {
+  min-width: 0;
+  padding-top: 1.65rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > p {
+  color: var(--rawaj-accent-pink) !important;
+  font-size: 0.66rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy h1 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: clamp(1rem, 3vw, 1.3rem) !important;
+  line-height: 1.4 !important;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy :is(small, span) {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.67rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__badges {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.35rem !important;
+  margin-top: 0.4rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__badges b {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 999px !important;
+  padding: 0.25rem 0.5rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.61rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem !important;
+  border-top: 1px solid var(--rawaj-border);
+  padding: 0.7rem !important;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions :is(a, button) {
+  display: inline-flex;
+  min-height: 2.75rem !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  padding: 0.45rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions button:last-child {
+  color: #f2aaa4 !important;
+  border-color: rgba(234, 113, 104, 0.18) !important;
+  background: rgba(234, 113, 104, 0.05) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links a {
+  display: flex !important;
+  min-width: 0;
+  min-height: 4rem !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.95rem !important;
+  padding: 0.65rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links a > span {
+  display: grid;
+  width: 2.3rem !important;
+  height: 2.3rem !important;
+  flex: 0 0 2.3rem;
+  place-items: center;
+  border-radius: 0.72rem !important;
+  color: #fff !important;
+  background: var(--rawaj-gradient-action-short) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links small {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.61rem !important;
+  line-height: 1.35 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section {
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.15rem !important;
+  padding: 0 !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.7rem !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--rawaj-border);
+  padding: 0.8rem 0.9rem !important;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header > span {
+  display: grid;
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+  place-items: center;
+  border-radius: 0.75rem !important;
+  color: var(--rawaj-accent-pink) !important;
+  background: rgba(225, 100, 180, 0.075) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header p {
+  color: var(--rawaj-accent-pink) !important;
+  font-size: 0.63rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.9rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header small {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.66rem !important;
+  line-height: 1.5 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section__body {
+  padding: 0.9rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section__body :is(label > span, h3) {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section__body .bg-muted-surface {
+  border: 1px solid var(--rawaj-border) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "identity"
+      "description"
+      "badges"
+      "actions";
+    padding: 0.9rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges {
+    display: flex !important;
+    flex-wrap: wrap;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
+    white-space: normal;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+    height: 5.25rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__content {
+    margin-top: -1.65rem !important;
+    padding-inline: 0.8rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy {
+    padding-top: 1.35rem;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions,
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 23rem) {
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary,
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions,
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell:is([data-resolved-pathname="/more"], [data-resolved-pathname="/profile"]) * {
+    transition: none !important;
+  }
+}
