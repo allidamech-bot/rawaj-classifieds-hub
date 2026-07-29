@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [header, routeResolver, slot, api] = await Promise.all([
+const [header, routeResolver, slot, api, auditCss] = await Promise.all([
   readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
@@ -18,16 +19,22 @@ test("supported marketplace pages resolve to their ad placement inventory", () =
   assert.match(header, /PublicAdPlacementSlot/);
 });
 
-test("public ad slot loads device-targeted active placements and renders one banner", () => {
+test("public ad slot loads device-targeted placements and can render two distinct home banners", () => {
   assert.match(slot, /MOBILE_PLACEMENT_QUERY = "\(max-width: 767px\)"/);
   assert.match(slot, /window\.matchMedia\(MOBILE_PLACEMENT_QUERY\)/);
   assert.match(slot, /fetchActiveAdPlacements\(page, activeDevice\)/);
-  assert.match(slot, /placement: result\.data\[0\] \?\? null/);
+  assert.match(slot, /function uniquePlacements/);
+  assert.match(slot, /const maximum = placementPage === "home" \? 2 : 1/);
+  assert.match(slot, /\.slice\(0, maximum\)/);
+  assert.match(slot, /rawaj-ad-placement__grid/);
+  assert.match(slot, /data-placement-count=\{visiblePlacements\.length\}/);
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("public ad slot preserves the 16:7 frame with bounded low-frequency refresh", () => {
-  assert.match(slot, /aspect-\[16\/7\]/);
+test("public ad slot preserves stable responsive frames with bounded low-frequency refresh", () => {
+  assert.match(auditCss, /\.rawaj-ad-placement__frame/);
+  assert.match(auditCss, /aspect-ratio: 16 \/ 6\.4/);
+  assert.match(auditCss, /data-count="2"/);
   assert.doesNotMatch(slot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS/);
   assert.doesNotMatch(slot, /window\.setInterval\(/);
   assert.match(slot, /AD_PLACEMENT_RETRY_BASE_MS = 2_000/);
@@ -44,11 +51,15 @@ test("public ad slot preserves the 16:7 frame with bounded low-frequency refresh
   assert.match(slot, /document\.addEventListener\("visibilitychange", refreshWhenAvailable\)/);
 });
 
-test("broken public ad media is replaced while preserving stable banner dimensions", () => {
-  assert.match(slot, /useState<string \| null>\(null\)/);
-  assert.match(slot, /failedImageUrl === placement\.imageUrl/);
-  assert.match(slot, /onError=\{\(\) => setFailedImageUrl\(placement\.imageUrl\)\}/);
-  assert.match(slot, /loading=\{placementPage === "home" \? "eager" : "lazy"\}/);
+test("broken public ad media is removed independently while other placements remain visible", () => {
+  assert.match(slot, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
+  assert.match(slot, /failedImageUrls\.has\(placement\.imageUrl\)/);
+  assert.match(slot, /function markImageFailed\(imageUrl: string\)/);
+  assert.match(slot, /onError=\{\(\) => markImageFailed\(placement\.imageUrl\)\}/);
+  assert.match(slot, /loading=\{placementPage === "home" && index === 0 \? "eager" : "lazy"\}/);
+  assert.match(slot, /fetchPriority=\{placementPage === "home" && index === 0 \? "high" : "auto"\}/);
+  assert.match(slot, /rawaj-ad-placement__backdrop/);
+  assert.match(slot, /rawaj-ad-placement__image/);
   assert.match(slot, /decoding="async"/);
   assert.match(slot, /width=\{1600\}/);
   assert.match(slot, /height=\{700\}/);
