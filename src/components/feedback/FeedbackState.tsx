@@ -24,10 +24,11 @@ export function FeedbackState({
   return (
     <section
       className={cn(
-        "rawaj-foundation-card mx-auto w-full max-w-xl p-6 text-center sm:p-8",
+        "rawaj-feedback-state rawaj-foundation-card mx-auto w-full max-w-xl p-6 text-center sm:p-8",
         tone === "error" && "border-destructive/20",
         className,
       )}
+      data-tone={tone}
       role={tone === "error" ? "alert" : undefined}
     >
       {code ? (
