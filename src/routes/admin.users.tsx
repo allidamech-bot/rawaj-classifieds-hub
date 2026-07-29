@@ -195,12 +195,14 @@ function UsersPage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={text("بحث بالاسم أو البريد أو المعرّف", "Search name, email, or ID")}
+              aria-label={text("بحث المستخدمين", "Search users")}
               className="h-11 w-full bg-transparent text-sm outline-none"
             />
           </label>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value as "all" | AccountStatus)}
+            aria-label={text("تصفية المستخدمين حسب الحالة", "Filter users by status")}
             className="h-11 rounded-xl bg-card px-3 text-sm hairline"
           >
             <option value="all">{text("كل الحالات", "All statuses")}</option>
@@ -353,6 +355,7 @@ function UsersPage() {
                     onChange={(event) =>
                       setRestrictionType(event.target.value as UserRestrictionType)
                     }
+                    aria-label={text("نوع التقييد", "Restriction type")}
                     className="h-11 rounded-xl bg-card px-3 text-sm hairline disabled:opacity-60"
                   >
                     {restrictionOptions.map((option) => (

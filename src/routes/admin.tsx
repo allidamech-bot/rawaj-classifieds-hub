@@ -23,7 +23,6 @@ import { useRef } from "react";
 import { DeploymentTruthPanel } from "@/components/DeploymentTruthPanel";
 import { PageHeader } from "@/components/PageHeader";
 import type { RolePermission } from "@/lib/auth-types";
-import { uiLabel } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -37,6 +36,7 @@ export const Route = createFileRoute("/admin")({
 const tabs: Array<{
   to: string;
   labelAr: string;
+  labelEn: string;
   icon: typeof LayoutDashboard;
   permission: RolePermission;
   exact?: boolean;
@@ -44,6 +44,7 @@ const tabs: Array<{
   {
     to: "/admin",
     labelAr: "مركز القيادة",
+    labelEn: "Command center",
     icon: LayoutDashboard,
     permission: "canViewAdminDashboard",
     exact: true,
@@ -51,69 +52,98 @@ const tabs: Array<{
   {
     to: "/admin/pending",
     labelAr: "مراجعة الإعلانات",
+    labelEn: "Listing review",
     icon: FileCheck,
     permission: "canModerateListings",
   },
   {
     to: "/admin/listings",
     labelAr: "قرارات الإعلانات",
+    labelEn: "Listing decisions",
     icon: ListChecks,
     permission: "canModerateListings",
   },
   {
     to: "/admin/data-quality",
     labelAr: "جودة البيانات",
+    labelEn: "Data quality",
     icon: DatabaseZap,
     permission: "canModerateListings",
   },
-  { to: "/admin/reviews", labelAr: "مراجعة التقييمات", icon: Star, permission: "canManageReviews" },
-  { to: "/admin/reports", labelAr: "بلاغات الإعلانات", icon: Flag, permission: "canManageReports" },
+  {
+    to: "/admin/reviews",
+    labelAr: "مراجعة التقييمات",
+    labelEn: "Review moderation",
+    icon: Star,
+    permission: "canManageReviews",
+  },
+  {
+    to: "/admin/reports",
+    labelAr: "بلاغات الإعلانات",
+    labelEn: "Listing reports",
+    icon: Flag,
+    permission: "canManageReports",
+  },
   {
     to: "/admin/message-reports",
     labelAr: "بلاغات الرسائل",
+    labelEn: "Message reports",
     icon: MessageSquareWarning,
     permission: "canManageReports",
   },
   {
     to: "/admin/safety",
     labelAr: "مركز السلامة",
+    labelEn: "Safety center",
     icon: ShieldAlert,
     permission: "canManageReports",
   },
   {
     to: "/admin/verifications",
     labelAr: "طلبات التوثيق",
+    labelEn: "Verification requests",
     icon: BadgeCheck,
     permission: "canManageVerifications",
   },
-  { to: "/admin/users", labelAr: "إدارة المستخدمين", icon: Users, permission: "canManageUsers" },
+  {
+    to: "/admin/users",
+    labelAr: "إدارة المستخدمين",
+    labelEn: "User management",
+    icon: Users,
+    permission: "canManageUsers",
+  },
   {
     to: "/admin/promotions",
     labelAr: "طلبات الترويج",
+    labelEn: "Promotion requests",
     icon: Sparkles,
     permission: "canManagePromotions",
   },
   {
     to: "/admin/ad-placements",
     labelAr: "مساحات الإعلانات",
+    labelEn: "Ad placements",
     icon: PanelsTopLeft,
     permission: "canManageAdPlacements",
   },
   {
     to: "/admin/campaigns",
     labelAr: "الحملات",
+    labelEn: "Campaigns",
     icon: Megaphone,
     permission: "canManageAdCampaigns",
   },
   {
     to: "/admin/audit",
     labelAr: "سجل التدقيق",
+    labelEn: "Audit log",
     icon: ScrollText,
     permission: "canViewAuditLogs",
   },
   {
     to: "/admin/owner-controls",
     labelAr: "تحكم المالك",
+    labelEn: "Owner controls",
     icon: Siren,
     permission: "canManageSystemSettings",
   },
@@ -240,7 +270,7 @@ function AdminLayout() {
                 {text("مساحة العمل الحالية", "Current workspace")}
               </p>
               <p className="truncate text-xs font-extrabold">
-                {activeTab ? uiLabel(activeTab.labelAr, language) : text("الإدارة", "Admin")}
+                {activeTab ? text(activeTab.labelAr, activeTab.labelEn) : text("الإدارة", "Admin")}
               </p>
             </div>
             <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold text-primary">
@@ -272,7 +302,7 @@ function AdminLayout() {
                     className="inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors duration-150"
                   >
                     <tab.icon className="h-4 w-4" />
-                    {uiLabel(tab.labelAr, language)}
+                    {text(tab.labelAr, tab.labelEn)}
                   </Link>
                 );
               })}

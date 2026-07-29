@@ -49,10 +49,6 @@
   order: 70;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-footer {
-  order: 80;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__load-state {
   order: 45;
 }

@@ -46,7 +46,7 @@
 }
 
 .rawaj-site-footer__mobile {
-  display: grid !important;
+  display: none !important;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     "brand links"
@@ -136,6 +136,7 @@
 }
 
 .rawaj-site-footer__desktop {
+  display: none !important;
   color: #f7f1ea !important;
 }
 
@@ -156,6 +157,18 @@
 
 .rawaj-site-footer__desktop > div:last-child {
   border-color: rgba(255, 255, 255, 0.085) !important;
+}
+
+@media (max-width: 1023.99px) {
+  .rawaj-site-footer__mobile {
+    display: grid !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-site-footer__desktop {
+    display: block !important;
+  }
 }
 
 @media (max-width: 479px) {

@@ -95,7 +95,6 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   const { text } = useUiPreferences();
 
@@ -104,7 +103,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <FeedbackState
         tone="error"
         title={text("حدث خطأ غير متوقع", "Something went wrong")}
@@ -123,7 +122,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           </Button>
         }
       />
-    </div>
+    </main>
   );
 }
 

@@ -298,13 +298,13 @@
     width: 1.8rem !important;
   }
 
-  .rawaj-shell-header--context .rawaj-brand-lockup .font-display,
-  .rawaj-shell-header--workspace .rawaj-brand-lockup .font-display {
+  .rawaj-shell-header--context .rawaj-brand-lockup__name,
+  .rawaj-shell-header--workspace .rawaj-brand-lockup__name {
     font-size: 0.9rem !important;
   }
 
-  .rawaj-shell-header--context .rawaj-brand-lockup > span:last-child > span:last-child,
-  .rawaj-shell-header--workspace .rawaj-brand-lockup > span:last-child > span:last-child {
+  .rawaj-shell-header--context .rawaj-brand-lockup__latin,
+  .rawaj-shell-header--workspace .rawaj-brand-lockup__latin {
     font-size: 0.56rem !important;
     letter-spacing: 0.08em !important;
   }

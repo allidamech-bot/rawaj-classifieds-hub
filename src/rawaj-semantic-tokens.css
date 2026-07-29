@@ -25,6 +25,10 @@
   --rawaj-text-disabled: #77736f;
   --rawaj-text-inverse: #1d1e22;
   --rawaj-link: #ef9bca;
+  --rawaj-text-coral: #ff9b87;
+  --rawaj-text-pink: #ef8bd3;
+  --rawaj-text-blue: #8fc2ff;
+  --rawaj-text-gold: #f3c98e;
 
   /* Borders */
   --rawaj-border: rgba(255, 255, 255, 0.09);

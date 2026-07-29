@@ -253,7 +253,7 @@
 }
 
 .rawaj-search-results-v1 .rawaj-quick-filter-rail button {
-  min-height: 2.35rem !important;
+  min-height: 2.75rem !important;
   border: 1px solid rgba(255, 255, 255, 0.075) !important;
   background: rgba(255, 255, 255, 0.03) !important;
   color: var(--rawaj-text-secondary, #c3c4c9) !important;

@@ -671,6 +671,16 @@
   color: #fff !important;
 }
 
+.rawaj-communication-v2 .rawaj-communication-signed-out > a + a {
+  border: 1px solid rgba(104, 173, 255, 0.2) !important;
+  background: rgba(104, 173, 255, 0.08) !important;
+  color: var(--rawaj-text-blue) !important;
+}
+
+.rawaj-communication-v2 .rawaj-communication-signed-out > a {
+  font-size: 0.75rem !important;
+}
+
 /* --------------------------------------------------------------------------
    Messaging workspace
    -------------------------------------------------------------------------- */

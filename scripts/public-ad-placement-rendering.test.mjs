@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [header, routeResolver, slot, api, auditCss] = await Promise.all([
-  readFile(new URL("../src/components/shell/FloatingHeader.tsx", import.meta.url), "utf8"),
+const [pageHeader, routeResolver, slot, api, cloudflareClient, auditCss] = await Promise.all([
+  readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/public-data/cloudflare-client.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
 ]);
 
@@ -15,8 +16,8 @@ test("supported marketplace pages resolve to their ad placement inventory", () =
     assert.match(routeResolver, new RegExp(`return "${placement}"`));
   }
   assert.match(routeResolver, /export function resolveAdPlacementPage/);
-  assert.match(header, /resolveAdPlacementPage\(pathname\)/);
-  assert.match(header, /PublicAdPlacementSlot/);
+  assert.match(pageHeader, /resolveAdPlacementPage\(pathname\)/);
+  assert.match(pageHeader, /PublicAdPlacementSlot/);
 });
 
 test("public ad slot loads device-targeted placements and can render two distinct home banners", () => {
@@ -57,7 +58,10 @@ test("broken public ad media is removed independently while other placements rem
   assert.match(slot, /function markImageFailed\(imageUrl: string\)/);
   assert.match(slot, /onError=\{\(\) => markImageFailed\(placement\.imageUrl\)\}/);
   assert.match(slot, /loading=\{placementPage === "home" && index === 0 \? "eager" : "lazy"\}/);
-  assert.match(slot, /fetchPriority=\{placementPage === "home" && index === 0 \? "high" : "auto"\}/);
+  assert.match(
+    slot,
+    /fetchPriority=\{placementPage === "home" && index === 0 \? "high" : "auto"\}/,
+  );
   assert.match(slot, /rawaj-ad-placement__backdrop/);
   assert.match(slot, /rawaj-ad-placement__image/);
   assert.match(slot, /decoding="async"/);
@@ -66,14 +70,19 @@ test("broken public ad media is removed independently while other placements rem
   assert.match(slot, /draggable=\{false\}/);
 });
 
-test("public ad API deduplicates and caches active-placement reads for five minutes", () => {
+test("public ad API deduplicates and caches Cloudflare Worker reads for five minutes", () => {
   assert.match(api, /ACTIVE_PLACEMENT_CACHE_TTL_MS = 5 \* 60_000/);
   assert.match(api, /activePlacementCache/);
   assert.match(api, /activePlacementRequests/);
   assert.match(api, /const pending = activePlacementRequests\.get\(cacheKey\)/);
   assert.match(api, /if \(pending\) return pending/);
-  assert.match(api, /rawaj_fetch_active_ad_placements/);
-  assert.match(api, /normalizeAdPlacementMediaUrl/);
-  assert.match(api, /p_placement_page: placementPage/);
-  assert.match(api, /p_device: device/);
+  assert.match(api, /fetchCloudflareAdPlacements\(placementPage, device\)/);
+  assert.doesNotMatch(api, /rawaj_fetch_active_ad_placements/);
+  assert.match(
+    cloudflareClient,
+    /requestJson<CloudflarePublicAdPlacement\[]>\("\/v1\/ad-placements"/,
+  );
+  assert.match(cloudflareClient, /page: placementPage/);
+  assert.match(cloudflareClient, /device/);
+  assert.match(cloudflareClient, /imageUrl: absoluteMediaUrl\(placement\.imageUrl\)/);
 });

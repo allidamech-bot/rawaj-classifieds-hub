@@ -76,7 +76,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity p {
   margin: 0 0 0.15rem !important;
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-pink) !important;
   font-size: 0.68rem !important;
   font-weight: 800 !important;
 }
@@ -181,7 +181,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header p {
-  color: var(--rawaj-accent-coral) !important;
+  color: var(--rawaj-text-coral) !important;
   font-size: 0.66rem !important;
   font-weight: 800 !important;
 }
@@ -306,7 +306,7 @@
   margin: 0 !important;
   border-bottom: 1px solid var(--rawaj-border);
   padding: 0.7rem 0.85rem !important;
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-pink) !important;
   background: rgba(255, 255, 255, 0.018);
   font-size: 0.69rem !important;
   font-weight: 800 !important;
@@ -407,7 +407,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > p {
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-pink) !important;
   font-size: 0.66rem !important;
   font-weight: 800 !important;
 }
@@ -543,7 +543,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-section > header p {
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-pink) !important;
   font-size: 0.63rem !important;
   font-weight: 800 !important;
 }

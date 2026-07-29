@@ -519,6 +519,7 @@ function SavedSearchesPage() {
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder={text("اسم البحث", "Search name")}
+            aria-label={text("اسم البحث المحفوظ", "Saved search name")}
             disabled={creating}
             className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           />
@@ -526,12 +527,14 @@ function SavedSearchesPage() {
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder={text("كلمة البحث", "Search keyword")}
+            aria-label={text("كلمة البحث", "Search keyword")}
             disabled={creating}
             className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           />
           <select
             value={frequency}
             onChange={(event) => setFrequency(event.target.value as LocalSearch["frequency"])}
+            aria-label={text("تكرار التنبيه", "Alert frequency")}
             disabled={creating}
             className="rounded-xl border border-input bg-card px-3 py-2.5 text-sm disabled:opacity-60"
           >

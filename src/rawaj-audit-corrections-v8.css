@@ -169,6 +169,12 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   box-shadow: 0 9px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  .rawaj-category-directory-card
+  .text-brand-orange {
+  color: var(--rawaj-text-coral) !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 2) .category-tile {
   background: rgba(223, 73, 181, 0.1) !important;
   color: #ef8bd3 !important;

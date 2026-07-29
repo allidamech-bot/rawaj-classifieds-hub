@@ -4,7 +4,7 @@
  */
 
 .rawaj-app-shell[data-resolved-pathname="/"][data-shell-dock="true"] .rawaj-app-shell__page {
-  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) - 0.15rem) !important;
+  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 0.5rem) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
@@ -13,10 +13,6 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
   padding-bottom: 0 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-footer {
-  margin-bottom: 0 !important;
 }
 
 /* A missing listing image is represented by the category glyph alone.

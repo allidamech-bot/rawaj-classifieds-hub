@@ -207,6 +207,7 @@ function CategoriesPage() {
               <input
                 value={query}
                 onChange={(event) => updateQuery(event.target.value)}
+                aria-label={text("ابحث داخل الأقسام", "Search categories")}
                 placeholder={text("ابحث داخل الأقسام", "Search categories")}
                 className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
                 type="search"

@@ -43,13 +43,28 @@ const [
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/categories/CategoriesListingDiscovery.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/storefront/OwnerStoreWorkspaceSummary.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/categories/CategoriesListingDiscovery.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/storefront/StorefrontIdentityHero.tsx", import.meta.url),
+    "utf8",
+  ),
+  readFile(
+    new URL("../src/features/storefront/OwnerStoreWorkspaceSummary.tsx", import.meta.url),
+    "utf8",
+  ),
   readFile(new URL("../src/routes/login.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/reset-password.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/auth.callback.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/feedback/FeedbackState.tsx", import.meta.url), "utf8"),
+]);
+
+const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.all([
+  readFile(new URL("../src/launch-readiness-visual-polish.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-semantic-tokens.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/footer-contrast-system-v13.css", import.meta.url), "utf8"),
 ]);
 
 test("audited component corrections load after legacy recovery layers", () => {
@@ -116,6 +131,28 @@ test("footer and personal-space corrections retain readable semantic contrast", 
   assert.match(corrections, /rawaj-account-section\[data-tone="muted"\]/);
 });
 
+test("retired light-theme tokens cannot override the final dark semantic palette", () => {
+  assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
+  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-primary:\s*#18352f/);
+  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-secondary:\s*#536b63/);
+  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f2efeb/);
+  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#c9c3bf/);
+  assert.match(semanticTokens, /--rawaj-text-muted:\s*#aaa39f/);
+});
+
+test("footer renders one responsive variant and reserves the mobile dock", () => {
+  assert.match(footerContrast, /\.rawaj-site-footer__mobile\s*{[\s\S]*display:\s*none !important/);
+  assert.match(footerContrast, /\.rawaj-site-footer__desktop\s*{[\s\S]*display:\s*none !important/);
+  assert.match(
+    footerContrast,
+    /@media \(max-width: 1023\.99px\)[\s\S]*\.rawaj-site-footer__mobile\s*{[\s\S]*display:\s*grid !important/,
+  );
+  assert.match(
+    footerContrast,
+    /@media \(min-width: 1024px\)[\s\S]*\.rawaj-site-footer__desktop\s*{[\s\S]*display:\s*block !important/,
+  );
+});
+
 test("owner workspace uses a compact management summary and prioritizes drafts", () => {
   assert.match(storefrontIdentity, /OwnerStoreWorkspaceSummary/);
   assert.match(storefrontIdentity, /if \(mode === "owner"\)/);
@@ -131,11 +168,17 @@ test("owner workspace uses a compact management summary and prioritizes drafts",
 test("listing creation and draft editing use one compact semantic studio", () => {
   assert.match(studioCorrections, /data-resolved-pathname="\/add-listing"/);
   assert.match(studioCorrections, /data-resolved-pathname\^="\/profile\/listings\/"/);
-  assert.match(studioCorrections, /\.rawaj-studio-shell[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(18\.5rem, 21rem\)/);
+  assert.match(
+    studioCorrections,
+    /\.rawaj-studio-shell[\s\S]*grid-template-columns: minmax\(0, 1fr\) minmax\(18\.5rem, 21rem\)/,
+  );
   assert.match(studioCorrections, /\.rawaj-studio-completion\[data-ready="true"\]/);
   assert.match(studioCorrections, /\.rawaj-studio-quality li\[data-done="false"\]/);
   assert.match(studioCorrections, /\.rawaj-studio-preview[\s\S]*display: none !important/);
-  assert.match(studioCorrections, /\.rawaj-studio-quality li\[data-done="true"\][\s\S]*display: none !important/);
+  assert.match(
+    studioCorrections,
+    /\.rawaj-studio-quality li\[data-done="true"\][\s\S]*display: none !important/,
+  );
   assert.match(studioCorrections, /\.rawaj-studio-action-bar[\s\S]*position: sticky !important/);
 });
 
@@ -143,7 +186,10 @@ test("more and profile routes have explicit personal-space hierarchy", () => {
   assert.match(personalCorrections, /data-resolved-pathname="\/more"/);
   assert.match(personalCorrections, /data-resolved-pathname="\/profile"/);
   assert.match(personalCorrections, /rawaj-trust-hero\[data-mode="more"\]/);
-  assert.match(personalCorrections, /rawaj-more-v2__sections[\s\S]*grid-template-columns: repeat\(2/);
+  assert.match(
+    personalCorrections,
+    /rawaj-more-v2__sections[\s\S]*grid-template-columns: repeat\(2/,
+  );
   assert.match(personalCorrections, /rawaj-account-identity__actions/);
   assert.match(personalCorrections, /rawaj-account-quick-links/);
   assert.match(personalCorrections, /button:last-child[\s\S]*color: #f2aaa4/);
@@ -158,7 +204,10 @@ test("activity messages notifications favorites and saved searches share one cle
   assert.match(activityCorrections, /data-resolved-pathname="\/saved-searches"/);
   assert.match(activityCorrections, /\.rawaj-activity-tabs button\[aria-selected="true"\]/);
   assert.match(activityCorrections, /article\.rawaj-notification-timeline\[data-read="false"\]/);
-  assert.match(activityCorrections, /\.rawaj-message-workspace[\s\S]*grid-template-columns: minmax\(18rem, 22rem\) minmax\(0, 1fr\)/);
+  assert.match(
+    activityCorrections,
+    /\.rawaj-message-workspace[\s\S]*grid-template-columns: minmax\(18rem, 22rem\) minmax\(0, 1fr\)/,
+  );
   assert.match(activityCorrections, /\.rawaj-message-composer > div\.grid:last-of-type/);
   assert.match(activityCorrections, /\.rawaj-adaptive-card--compact/);
   assert.match(activityCorrections, /\.rawaj-account-collection-v3 > form/);
@@ -168,10 +217,16 @@ test("activity messages notifications favorites and saved searches share one cle
 
 test("public listing seller offers and trust journeys use compact readable route ownership", () => {
   assert.match(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
-  assert.match(publicCorrections, /\.rawaj-detail-media__stage[\s\S]*min-height: clamp\(18rem, 52vw, 32rem\)/);
+  assert.match(
+    publicCorrections,
+    /\.rawaj-detail-media__stage[\s\S]*min-height: clamp\(18rem, 52vw, 32rem\)/,
+  );
   assert.match(publicCorrections, /\.rawaj-contact-dock__primary/);
   assert.match(publicCorrections, /data-resolved-pathname\^="\/seller\/"/);
-  assert.match(publicCorrections, /\.rawaj-storefront-identity__content[\s\S]*min-height: clamp\(17rem, 42vw, 22rem\)/);
+  assert.match(
+    publicCorrections,
+    /\.rawaj-storefront-identity__content[\s\S]*min-height: clamp\(17rem, 42vw, 22rem\)/,
+  );
   assert.match(publicCorrections, /data-resolved-pathname="\/offers"/);
   assert.match(publicCorrections, /\.rawaj-offers-stage > div[\s\S]*min-height: 11\.5rem/);
   assert.match(publicCorrections, /data-resolved-pathname="\/support"/);
@@ -239,7 +294,10 @@ test("admin command center separates hero metrics queues commands and shortcuts"
 
 test("admin submodules share readable forms states tables and media previews", () => {
   assert.match(adminWorkspaceCorrections, /data-resolved-pathname\^="\/admin\/"/);
-  assert.match(adminWorkspaceCorrections, /\.rawaj-admin-v3 :is\(input, textarea, select, \.input\)/);
+  assert.match(
+    adminWorkspaceCorrections,
+    /\.rawaj-admin-v3 :is\(input, textarea, select, \.input\)/,
+  );
   assert.match(adminWorkspaceCorrections, /bg-warning\/10/);
   assert.match(adminWorkspaceCorrections, /bg-destructive\/10/);
   assert.match(adminWorkspaceCorrections, /bg-success\/10/);

@@ -49,35 +49,32 @@ const mobileLinks = [
   { to: "/privacy", labelAr: "الخصوصية", labelEn: "Privacy" },
 ] as const;
 
-export function SiteFooter({ pathname = "" }: SiteFooterProps) {
+export function SiteFooter(_props: SiteFooterProps) {
   const { text } = useUiPreferences();
   const year = new Date().getFullYear();
-  const showCompactMobileFooter = pathname !== "/";
 
   return (
     <footer className="rawaj-site-footer mt-10">
-      {showCompactMobileFooter ? (
-        <div className="rawaj-site-footer__mobile container-wide lg:hidden">
-          <div className="rawaj-site-footer__mobile-brand">
-            <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
-              <BrandLockup inverse compact />
-            </Link>
-            <p>{text("سوق سوريا المجاني للإعلانات", "Syria classifieds marketplace")}</p>
-          </div>
-
-          <nav aria-label={text("روابط الفوتر", "Footer links")}>
-            {mobileLinks.map((link) => (
-              <Link key={link.to} to={link.to as "/"}>
-                {text(link.labelAr, link.labelEn)}
-              </Link>
-            ))}
-          </nav>
-
-          <p className="rawaj-site-footer__mobile-copy">
-            © {year} {text("رواج", "RAWAJ")}
-          </p>
+      <div className="rawaj-site-footer__mobile container-wide lg:hidden">
+        <div className="rawaj-site-footer__mobile-brand">
+          <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
+            <BrandLockup inverse compact />
+          </Link>
+          <p>{text("سوق سوريا المجاني للإعلانات", "Syria classifieds marketplace")}</p>
         </div>
-      ) : null}
+
+        <nav aria-label={text("روابط الفوتر", "Footer links")}>
+          {mobileLinks.map((link) => (
+            <Link key={link.to} to={link.to as "/"}>
+              {text(link.labelAr, link.labelEn)}
+            </Link>
+          ))}
+        </nav>
+
+        <p className="rawaj-site-footer__mobile-copy">
+          © {year} {text("رواج", "RAWAJ")}
+        </p>
+      </div>
 
       <div className="rawaj-site-footer__desktop hidden lg:block">
         <div className="container-wide grid grid-cols-[minmax(16rem,1.45fr)_repeat(3,minmax(0,1fr))] gap-10 py-12">
@@ -119,7 +116,11 @@ export function SiteFooter({ pathname = "" }: SiteFooterProps) {
         <div className="border-t border-primary-foreground/10">
           <div className="container-wide flex flex-wrap items-center justify-between gap-3 py-5">
             <p className="text-xs text-primary-foreground/55">
-              © {year} {text("رَوَاج · سوق سوريا المجاني للإعلانات", "RAWAJ · Syria classifieds marketplace")}
+              © {year}{" "}
+              {text(
+                "رَوَاج · سوق سوريا المجاني للإعلانات",
+                "RAWAJ · Syria classifieds marketplace",
+              )}
             </p>
             <span className="text-xs font-semibold text-primary-foreground/65">
               {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}

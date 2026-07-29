@@ -358,7 +358,8 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat span {
-  font-size: 0.68rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.75rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat strong {

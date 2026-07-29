@@ -121,7 +121,7 @@ html[dir="ltr"] .rawaj-app-header::before {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.26));
 }
 
-.rawaj-app-header .rawaj-brand-lockup .font-display {
+.rawaj-app-header .rawaj-brand-lockup__name {
   color: var(--rawaj-text-primary) !important;
   font-size: 1.02rem !important;
   font-weight: 700 !important;
@@ -138,7 +138,7 @@ html[dir="ltr"] .rawaj-app-header::before {
   opacity: 0.72;
 }
 
-.rawaj-app-header .rawaj-brand-lockup > span:last-child > span:last-child {
+.rawaj-app-header .rawaj-brand-lockup__latin {
   color: #c8c2cd !important;
   font-size: 0.66rem !important;
   font-weight: 600 !important;

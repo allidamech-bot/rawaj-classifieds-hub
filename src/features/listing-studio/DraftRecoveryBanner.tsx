@@ -93,8 +93,8 @@ export function DraftRecoveryBanner() {
                 type="button"
                 onClick={() => setDismissed(true)}
                 className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-muted-surface text-muted-foreground"
-                aria-label={text("بدء إعلان جديد", "Start a new listing")}
-                title={text("بدء إعلان جديد", "Start a new listing")}
+                aria-label={text("إغلاق استعادة المسودة", "Close draft recovery")}
+                title={text("إغلاق استعادة المسودة", "Close draft recovery")}
               >
                 <X className="h-4 w-4" />
               </button>

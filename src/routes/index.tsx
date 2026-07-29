@@ -23,7 +23,6 @@ import { useState, type FormEvent, type ReactNode } from "react";
 
 import { AppHeader } from "@/components/AppHeader";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
-import { BrandLockup } from "@/components/shell/BrandLockup";
 import { EmptyState, PageTransition } from "@/components/shell/spatial-primitives";
 import { Button } from "@/components/ui/button";
 import type { HomeCategoryWorld } from "@/features/home/home-category-discovery";
@@ -115,11 +114,7 @@ function HomePage() {
               />
             ) : (
               <>
-                <HomeFeaturedListings
-                  listings={featuredListings}
-                  language={language}
-                  text={text}
-                />
+                <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <HomeLatestListings listings={latestListings} language={language} text={text} />
                 <div className="rawaj-signature-ad-placement">
                   <PublicAdPlacementSlot placementPage="home" />
@@ -142,7 +137,6 @@ function HomePage() {
             )}
 
             <HomeSafetyStrip text={text} />
-            <HomeMobileFooter text={text} />
           </div>
         </PageTransition>
       </main>
@@ -263,7 +257,9 @@ function HomeFeaturedListings({
       aria-labelledby="rawaj-signature-featured-title"
     >
       <HomeSectionHeader
-        title={<span id="rawaj-signature-featured-title">{text("مختارات رواج", "RAWAJ picks")}</span>}
+        title={
+          <span id="rawaj-signature-featured-title">{text("مختارات رواج", "RAWAJ picks")}</span>
+        }
         eyebrow={text("إعلانات بارزة تستحق المشاهدة", "Highlighted listings worth seeing")}
         action={
           <Link to="/listings">
@@ -329,7 +325,12 @@ function HomeLeadListingCard({
           <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
           <h3>{listing.title}</h3>
           <strong>
-            {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+            {formatPriceLocalized(
+              listing.price ?? 0,
+              listing.priceType,
+              language,
+              listing.currency,
+            )}
           </strong>
           {listing.description ? <p>{listing.description}</p> : null}
           <div className="rawaj-signature-card-meta">
@@ -358,11 +359,7 @@ function HomeSupportingListingCard({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <Link
-      to="/listings/$id"
-      params={{ id: listing.id }}
-      className="rawaj-signature-support-card"
-    >
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-signature-support-card">
       <div className="rawaj-signature-support-card__media">
         <ListingCardImage
           src={listing.primaryImageUrl}
@@ -379,7 +376,9 @@ function HomeSupportingListingCard({
       <div className="rawaj-signature-support-card__body">
         <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
         <strong>{listing.title}</strong>
-        <b>{formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}</b>
+        <b>
+          {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        </b>
         <small>
           <MapPin aria-hidden="true" />
           {listingLocationDisplay(listing, language)}
@@ -458,7 +457,10 @@ function HomeLatestListings({
         </div>
       ) : (
         <div className="rawaj-signature-home__empty">
-          {text("لا توجد إعلانات معتمدة للعرض الآن.", "No reviewed listings are available right now.")}
+          {text(
+            "لا توجد إعلانات معتمدة للعرض الآن.",
+            "No reviewed listings are available right now.",
+          )}
         </div>
       )}
     </section>
@@ -482,7 +484,11 @@ function HomeCategories({
       aria-labelledby="rawaj-signature-categories-title"
     >
       <HomeSectionHeader
-        title={<span id="rawaj-signature-categories-title">{text("استكشف الأقسام", "Explore categories")}</span>}
+        title={
+          <span id="rawaj-signature-categories-title">
+            {text("استكشف الأقسام", "Explore categories")}
+          </span>
+        }
         eyebrow={text("وصول أسرع لما تحتاجه", "A faster way to what you need")}
         action={
           <Link to="/categories">
@@ -548,28 +554,15 @@ function HomeSafetyStrip({ text }: { text: (ar: string, en: string) => string })
       <ShieldCheck aria-hidden="true" />
       <span>
         <strong>{text("تعامل بأمان", "Trade safely")}</strong>
-        <small>{text("افحص السلعة قبل الدفع وقابل البائع في مكان آمن.", "Inspect before paying and meet safely.")}</small>
+        <small>
+          {text(
+            "افحص السلعة قبل الدفع وقابل البائع في مكان آمن.",
+            "Inspect before paying and meet safely.",
+          )}
+        </small>
       </span>
       <Link to="/safety">{text("الدليل", "Guide")}</Link>
     </section>
-  );
-}
-
-function HomeMobileFooter({ text }: { text: (ar: string, en: string) => string }) {
-  return (
-    <footer className="rawaj-signature-footer">
-      <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
-        <BrandLockup inverse />
-      </Link>
-      <p>{text("سوقك الأقرب لكل ما تحتاجه", "Your closest market for everything you need")}</p>
-      <nav aria-label={text("روابط التذييل", "Footer links")}>
-        <Link to="/more">{text("من نحن", "About")}</Link>
-        <Link to="/support">{text("تواصل", "Contact")}</Link>
-        <Link to="/privacy">{text("الخصوصية", "Privacy")}</Link>
-        <Link to="/terms">{text("الشروط", "Terms")}</Link>
-      </nav>
-      <small>rawa-j.com</small>
-    </footer>
   );
 }
 

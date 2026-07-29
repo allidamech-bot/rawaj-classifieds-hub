@@ -106,7 +106,7 @@
   white-space: nowrap;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup .font-display {
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__name {
   display: inline !important;
   color: var(--rawaj-signature-text) !important;
   font-family: "Cairo", sans-serif !important;
@@ -127,7 +127,7 @@
   opacity: 0.66;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:last-child > span:last-child {
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
   display: inline !important;
   color: #c8c2cd !important;
   font-family: "Cairo", system-ui, sans-serif !important;
@@ -862,8 +862,8 @@
   gap: 0.2rem;
   margin-top: 0.18rem;
   overflow: hidden;
-  color: #8f8a86;
-  font-size: 0.53rem;
+  color: var(--rawaj-text-muted);
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1018,69 +1018,6 @@
   font-weight: 600;
 }
 
-.rawaj-signature-footer {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 1.9rem;
-  padding: 1.35rem 0.35rem 0.5rem;
-  text-align: center;
-}
-
-.rawaj-signature-footer::before {
-  content: "";
-  position: absolute;
-  inset-inline: 8%;
-  inset-block-start: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 112, 84, 0.38),
-    rgba(220, 62, 182, 0.34),
-    rgba(63, 145, 255, 0.3),
-    transparent
-  );
-}
-
-.rawaj-signature-footer .rawaj-brand-mark {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.rawaj-signature-footer .rawaj-brand-mark img {
-  width: 1.85rem !important;
-}
-
-.rawaj-signature-footer p {
-  margin: 0.65rem 0 0;
-  color: #aaa49f;
-  font-size: 0.63rem;
-  font-weight: 400;
-}
-
-.rawaj-signature-footer nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.55rem 0.85rem;
-  margin-top: 0.72rem;
-  color: #d0cbc6;
-  font-size: 0.6rem;
-  font-weight: 500;
-}
-
-.rawaj-signature-footer > small {
-  margin-top: 0.72rem;
-  color: #716e6b;
-  font-size: 0.55rem;
-  letter-spacing: 0.08em;
-}
-
 .rawaj-signature-home__empty,
 .rawaj-signature-home__load-state {
   margin-top: 1.35rem;
@@ -1219,9 +1156,6 @@
     overflow: visible;
   }
 
-  .rawaj-signature-footer {
-    padding-bottom: 1rem;
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

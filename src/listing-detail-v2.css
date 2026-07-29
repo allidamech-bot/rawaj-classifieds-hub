@@ -534,7 +534,7 @@
 .rawaj-detail-specs span {
   display: block;
   color: var(--color-muted-foreground);
-  font-size: 0.56rem;
+  font-size: 0.7rem;
   font-weight: 750;
 }
 .rawaj-detail-specs strong {
@@ -624,14 +624,14 @@
 }
 .rawaj-detail-seller__identity p {
   color: var(--color-muted-foreground);
-  font-size: 0.56rem;
+  font-size: 0.7rem;
   font-weight: 750;
 }
 .rawaj-detail-seller__identity small {
   display: block;
   margin-top: 0.15rem;
   color: var(--color-muted-foreground);
-  font-size: 0.58rem;
+  font-size: 0.7rem;
 }
 .rawaj-detail-seller__name-row {
   display: flex;
@@ -682,17 +682,17 @@
   display: block;
   margin-top: 0.1rem;
   color: var(--color-muted-foreground);
-  font-size: 0.5rem;
+  font-size: 0.68rem;
 }
 .rawaj-detail-seller__bio {
   margin-top: 0.8rem;
   color: var(--color-muted-foreground);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 .rawaj-detail-seller__actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.45rem;
   margin-top: 0.9rem;
 }
@@ -705,16 +705,19 @@
   gap: 0.35rem;
   border-radius: 0.9rem;
   padding-inline: 0.75rem;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
-.rawaj-detail-seller__actions a {
+.rawaj-detail-seller__actions > a:first-child {
+  grid-column: 1 / -1;
   background: var(--color-primary);
   color: white;
 }
-.rawaj-detail-seller__actions button {
-  background: var(--rawaj-surface-sage);
-  color: var(--color-primary);
+.rawaj-detail-seller__actions > a:not(:first-child),
+.rawaj-detail-seller__actions > button {
+  border: 1px solid rgba(104, 173, 255, 0.2);
+  background: rgba(104, 173, 255, 0.08);
+  color: var(--rawaj-text-blue);
 }
 .rawaj-detail-seller__actions svg {
   width: 0.85rem;

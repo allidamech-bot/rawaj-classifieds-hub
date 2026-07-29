@@ -255,6 +255,7 @@ function AdminListingModerationConsole() {
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+          aria-label={text("تصفية الإعلانات حسب الحالة", "Filter listings by status")}
           className="h-11 rounded-xl bg-muted-surface px-3 text-sm outline-none hairline"
         >
           {STATUS_FILTERS.map((status) => (

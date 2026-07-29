@@ -17,6 +17,7 @@ import {
   sellerReviewTraitLabel,
 } from "@/lib/classifieds-api";
 import type { PublicSellerProfile } from "@/lib/classifieds-types";
+import { readableProfileLabel } from "@/lib/readable-profile-text";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -71,7 +72,7 @@ function SellerPage() {
             avatarUrl={seller.avatarUrl}
             coverUrl={seller.coverUrl}
             bio={seller.bio}
-            location={seller.locationAr}
+            location={readableProfileLabel(seller.locationAr)}
             verified={seller.verified}
             joinedAt={seller.joinedAt}
             ratingAverage={seller.ratingSummary?.average}
@@ -150,9 +151,10 @@ function SellerPage() {
 }
 
 function sellerSeoDescription(seller: PublicSellerProfile) {
+  const sellerLocation = readableProfileLabel(seller.locationAr);
   const parts = [
     plainText(seller.bio, 100),
-    seller.locationAr ? `الموقع: ${seller.locationAr}` : null,
+    sellerLocation ? `الموقع: ${sellerLocation}` : null,
     seller.approvedListingCount != null ? `${seller.approvedListingCount} إعلان عام معتمد` : null,
     seller.verified ? "بائع موثق بعد مراجعة الإدارة" : null,
   ].filter(Boolean);
@@ -161,12 +163,13 @@ function sellerSeoDescription(seller: PublicSellerProfile) {
 }
 
 function buildSellerStructuredData(seller: PublicSellerProfile) {
+  const sellerLocation = readableProfileLabel(seller.locationAr);
   const person: Record<string, unknown> = {
     "@type": "Person",
     name: plainText(seller.businessName || seller.displayName, 120),
     description: sellerSeoDescription(seller),
   };
-  if (seller.locationAr) person.homeLocation = plainText(seller.locationAr, 120);
+  if (sellerLocation) person.homeLocation = plainText(sellerLocation, 120);
   if (seller.avatarUrl || seller.coverUrl) {
     person.image = absoluteUrl(seller.avatarUrl ?? seller.coverUrl ?? "");
   }
