@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { CategoriesListingDiscovery } from "@/features/categories/CategoriesListingDiscovery";
 import { loadPublicCategoriesPageData } from "@/features/categories/public-categories-page-data";
 import {
   fetchPublicCategories,
@@ -29,6 +30,7 @@ import type {
   ClassifiedCategory,
   ClassifiedsError,
   ClassifiedSubcategory,
+  ListingFilters,
   TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { categoryHint, categoryName } from "@/lib/i18n";
@@ -39,6 +41,7 @@ import {
   getTaxonomyChildren,
   getTaxonomyPath,
   getTaxonomyRootNodes,
+  resolveTaxonomyFilterScope,
   resolveTaxonomyListingSearch,
   searchTaxonomyNodes,
   taxonomyListingUrlSearch,
@@ -144,6 +147,15 @@ function CategoriesPage() {
   const currentPath = getTaxonomyPath(taxonomyIndex, currentNode);
   const showTaxonomy = taxonomyAvailable;
   const hasInvalidNode = Boolean(search.node && showTaxonomy && !currentNode);
+  const discoveryFilters = useMemo<ListingFilters>(() => {
+    if (!currentNode) return {};
+    const scope = resolveTaxonomyFilterScope(taxonomyIndex, currentNode);
+    return {
+      taxonomyNodeIds: scope.taxonomyNodeIds,
+      taxonomyLegacyScopes: scope.legacyScopes,
+    };
+  }, [currentNode, taxonomyIndex]);
+  const discoveryContextLabel = currentNode ? taxonomyNodeName(currentNode, language) : undefined;
 
   function updateQuery(value: string) {
     setQuery(value);
@@ -237,6 +249,14 @@ function CategoriesPage() {
             text={text}
           />
         )}
+
+        {!hasInvalidNode ? (
+          <CategoriesListingDiscovery
+            filters={discoveryFilters}
+            contextLabel={discoveryContextLabel}
+            text={text}
+          />
+        ) : null}
       </main>
     </>
   );
