@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ interface FeedbackStateProps {
   code?: string;
   tone?: FeedbackTone;
   className?: string;
+  as?: "main" | "section";
 }
 
 export function FeedbackState({
@@ -20,9 +21,12 @@ export function FeedbackState({
   code,
   tone = "neutral",
   className,
+  as,
 }: FeedbackStateProps) {
+  const Component: ElementType = as ?? (code || tone === "error" ? "main" : "section");
+
   return (
-    <section
+    <Component
       className={cn(
         "rawaj-feedback-state rawaj-foundation-card mx-auto w-full max-w-xl p-6 text-center sm:p-8",
         tone === "error" && "border-destructive/20",
@@ -41,6 +45,6 @@ export function FeedbackState({
       </h1>
       <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted-foreground">{description}</p>
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
-    </section>
+    </Component>
   );
 }
