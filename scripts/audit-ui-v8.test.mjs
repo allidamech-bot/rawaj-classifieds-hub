@@ -13,6 +13,7 @@ const [
   adminWorkspaceCorrections,
   adminCorrections,
   activityCorrections,
+  publicCorrections,
   admin,
   adminOverview,
   adSlot,
@@ -31,6 +32,7 @@ const [
   readFile(new URL("../src/admin-workspaces-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-command-center-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-activity-system-v10.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/public-journey-audit-v11.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
@@ -51,6 +53,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   const adminWorkspaceIndex = routeStyles.indexOf('import "../admin-workspaces-v9.css";');
   const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
   const activityIndex = routeStyles.indexOf('import "../personal-activity-system-v10.css";');
+  const publicIndex = routeStyles.indexOf('import "../public-journey-audit-v11.css";');
 
   for (const index of [
     recoveryIndex,
@@ -63,6 +66,7 @@ test("audited component corrections load after legacy recovery layers", () => {
     adminWorkspaceIndex,
     adminIndex,
     activityIndex,
+    publicIndex,
   ]) {
     assert.notEqual(index, -1);
   }
@@ -75,6 +79,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(adminWorkspaceIndex > personalIndex);
   assert.ok(adminIndex > adminWorkspaceIndex);
   assert.ok(activityIndex > adminIndex);
+  assert.ok(publicIndex > activityIndex);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -146,6 +151,20 @@ test("activity messages notifications favorites and saved searches share one cle
   assert.match(activityCorrections, /\.rawaj-account-collection-v3 > form/);
   assert.match(activityCorrections, /\.rawaj-account-collection-v3 > ul > li/);
   assert.doesNotMatch(activityCorrections, /main\s+:is\(section, article, form/);
+});
+
+test("public listing seller offers and trust journeys use compact readable route ownership", () => {
+  assert.match(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
+  assert.match(publicCorrections, /\.rawaj-detail-media__stage[\s\S]*min-height: clamp\(18rem, 52vw, 32rem\)/);
+  assert.match(publicCorrections, /\.rawaj-contact-dock__primary/);
+  assert.match(publicCorrections, /data-resolved-pathname\^="\/seller\/"/);
+  assert.match(publicCorrections, /\.rawaj-storefront-identity__content[\s\S]*min-height: clamp\(17rem, 42vw, 22rem\)/);
+  assert.match(publicCorrections, /data-resolved-pathname="\/offers"/);
+  assert.match(publicCorrections, /\.rawaj-offers-stage > div[\s\S]*min-height: 11\.5rem/);
+  assert.match(publicCorrections, /data-resolved-pathname="\/support"/);
+  assert.match(publicCorrections, /\.rawaj-support-panel :is\(input, textarea, select\)/);
+  assert.match(publicCorrections, /data-resolved-pathname="\/promotion"/);
+  assert.doesNotMatch(publicCorrections, /main\s+:is\(section, article, form/);
 });
 
 test("admin navigation exposes visible, labelled previous and next controls", () => {
