@@ -90,6 +90,49 @@ function useDarkBrowserChrome() {
   }, []);
 }
 
+function elementHasAccessibleFieldName(field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
+  if (field.getAttribute("aria-label")?.trim()) return true;
+  if (field.getAttribute("aria-labelledby")?.trim()) return true;
+
+  if (field.id) {
+    const explicitLabel = document.querySelector<HTMLLabelElement>(
+      `label[for="${CSS.escape(field.id)}"]`,
+    );
+    if (explicitLabel?.textContent?.trim()) return true;
+  }
+
+  const wrappingLabel = field.closest("label");
+  return Boolean(wrappingLabel?.textContent?.trim());
+}
+
+function applyAccessibleFieldNameFallbacks() {
+  const fields = document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+    "input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea",
+  );
+
+  for (const field of fields) {
+    if (elementHasAccessibleFieldName(field)) continue;
+    const fallback = field.getAttribute("placeholder")?.trim() || field.getAttribute("title")?.trim();
+    if (fallback) field.setAttribute("aria-label", fallback);
+  }
+}
+
+function useAccessibleFieldNameFallbacks(pathname: string) {
+  useEffect(() => {
+    let frame = window.requestAnimationFrame(applyAccessibleFieldNameFallbacks);
+    const observer = new MutationObserver(() => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(applyAccessibleFieldNameFallbacks);
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, [pathname]);
+}
+
 export function AppShell({
   pathname,
   children,
@@ -102,6 +145,7 @@ export function AppShell({
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
   useDarkBrowserChrome();
+  useAccessibleFieldNameFallbacks(pathname);
 
   return (
     <div
