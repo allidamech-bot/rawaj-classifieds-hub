@@ -50,6 +50,18 @@ import searchFiltersV2Css from "../search-filters-v2.css?url";
 import sellerStorefrontFoundationCss from "../seller-storefront-foundation.css?url";
 import sellerStorefrontV2Css from "../seller-storefront-v2.css?url";
 import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
+import semanticTokensCss from "../rawaj-semantic-tokens.css?url";
+import auditCorrectionsV8Css from "../rawaj-audit-corrections-v8.css?url";
+import homeAuditV8Css from "../rawaj-home-audit-v8.css?url";
+import categoriesDiscoveryV8Css from "../rawaj-categories-discovery-v8.css?url";
+import ownerListingsWorkspaceV9Css from "../owner-listings-workspace-v9.css?url";
+import listingStudioAuditV9Css from "../listing-studio-audit-v9.css?url";
+import personalSpaceAuditV9Css from "../personal-space-audit-v9.css?url";
+import adminWorkspacesV9Css from "../admin-workspaces-v9.css?url";
+import adminCommandCenterV9Css from "../admin-command-center-v9.css?url";
+import personalActivitySystemV10Css from "../personal-activity-system-v10.css?url";
+import publicJourneyAuditV11Css from "../public-journey-audit-v11.css?url";
+import authFeedbackSystemV12Css from "../auth-feedback-system-v12.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -77,6 +89,26 @@ export const routeStyleHrefs = {
   myStoreBrandPolish: myStoreBrandPolishCss,
   trustSupportHubV2: trustSupportHubV2Css,
 } as const;
+
+/**
+ * These assets must be linked after every legacy route stylesheet in the root head.
+ * Side-effect imports alone are not sufficient because route-specific link tags are
+ * resolved later and can otherwise reintroduce retired colors and dimensions.
+ */
+export const auditedOverrideStyleHrefs = [
+  semanticTokensCss,
+  auditCorrectionsV8Css,
+  homeAuditV8Css,
+  categoriesDiscoveryV8Css,
+  ownerListingsWorkspaceV9Css,
+  listingStudioAuditV9Css,
+  personalSpaceAuditV9Css,
+  adminWorkspacesV9Css,
+  adminCommandCenterV9Css,
+  personalActivitySystemV10Css,
+  publicJourneyAuditV11Css,
+  authFeedbackSystemV12Css,
+] as const;
 
 export interface RouteStyleScope {
   home: boolean;
