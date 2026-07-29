@@ -1,0 +1,64 @@
+/* RAWAJ homepage audit corrections V8.
+ * Reorders the existing homepage regions without changing listing or ad data.
+ */
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
+  min-height: auto !important;
+  padding-bottom: clamp(1rem, 3vw, 1.75rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+  display: flex;
+  flex-direction: column;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero {
+  order: 10;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row {
+  order: 20;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-ad-placement {
+  order: 30;
+  width: 100%;
+  margin-block: 0.85rem 0.35rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-ad-placement .rawaj-ad-placement {
+  width: 100%;
+  max-width: none;
+  margin-top: 0 !important;
+  padding-inline: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-featured {
+  order: 40;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest {
+  order: 50;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-categories {
+  order: 60;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-safety {
+  order: 70;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-footer {
+  order: 80;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__load-state {
+  order: 45;
+}
+
+@media (max-width: 39.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-ad-placement {
+    margin-top: 0.65rem;
+  }
+}
