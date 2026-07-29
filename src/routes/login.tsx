@@ -89,7 +89,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         {text("المتابعة باستخدام Google", "Continue with Google")}
       </button>
       {error && (
-        <p className="mt-2 rounded-xl bg-destructive/10 p-2 text-xs font-bold text-destructive">
+        <p className="rawaj-auth-state mt-2 p-2" data-tone="error" role="alert">
           {error}
         </p>
       )}
@@ -231,38 +231,56 @@ function LoginPage() {
   return (
     <>
       <PageHeader title={text("الحساب", "Account")} titleIsPageHeading={false} />
-      <main className="rawaj-auth-v2 rawaj-auth-premium-v3 container-wide pb-10 pt-3 sm:pt-5">
+      <main className="rawaj-auth-v2 rawaj-auth-premium-v3 rawaj-auth-audit-v12 container-wide mobile-page-bottom pt-3 sm:pt-5">
         <section className="rawaj-auth-layout">
           <AuthExperienceAside mode={mode} />
           <div className="rawaj-auth-card">
             <AuthExperienceHeader mode={mode} />
 
-            <div className="rawaj-auth-tabs">
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                data-active={mode === "login"}
+            {mode !== "forgot" ? (
+              <div
+                className="rawaj-auth-tabs"
+                role="tablist"
+                aria-label={text("اختيار نوع الدخول", "Choose account action")}
               >
-                {text("تسجيل الدخول", "Log in")}
-              </button>
-              <button
-                type="button"
-                onClick={() => switchMode("register")}
-                data-active={mode === "register"}
-              >
-                {text("إنشاء حساب", "Register")}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "login"}
+                  aria-controls="rawaj-auth-form"
+                  onClick={() => switchMode("login")}
+                  data-active={mode === "login"}
+                >
+                  {text("تسجيل الدخول", "Log in")}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "register"}
+                  aria-controls="rawaj-auth-form"
+                  onClick={() => switchMode("register")}
+                  data-active={mode === "register"}
+                >
+                  {text("إنشاء حساب", "Register")}
+                </button>
+              </div>
+            ) : null}
 
             {auth.status === "authUnavailable" ? (
-              <div className="rounded-[1rem] border border-warning/15 bg-warning/8 p-3.5 text-xs leading-5 text-foreground/90">
+              <div className="rawaj-auth-state p-3.5" data-tone="warning" role="alert">
                 {text(
                   "خدمة الحسابات غير متاحة الآن. يمكنك تصفح الإعلانات والمحاولة لاحقاً.",
                   "Account service is unavailable right now. You can browse listings and try again later.",
                 )}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+              <form
+                id="rawaj-auth-form"
+                onSubmit={handleSubmit}
+                className="space-y-3"
+                noValidate
+                aria-busy={submitting}
+              >
                 {mode === "register" && (
                   <FieldLabel label={text("اسم الحساب", "Account name")}>
                     <input
@@ -291,11 +309,7 @@ function LoginPage() {
                     className="input"
                   />
                   {emailError ? (
-                    <p
-                      id="login-email-error"
-                      role="alert"
-                      className="mt-1.5 text-xs font-medium text-destructive"
-                    >
+                    <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-destructive">
                       {emailError}
                     </p>
                   ) : null}
@@ -316,7 +330,7 @@ function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setPasswordVisible((value) => !value)}
-                        className="absolute inset-y-0 end-0 grid w-11 place-items-center text-muted-foreground"
+                        className="rawaj-auth-password-toggle absolute inset-y-0 end-0 grid w-11 place-items-center"
                         aria-label={
                           passwordVisible
                             ? text("إخفاء كلمة المرور", "Hide password")
@@ -337,14 +351,19 @@ function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("forgot")}
-                    className="inline-flex rounded-lg px-1 py-1 text-xs font-semibold text-brand-orange transition hover:text-primary"
+                    className="rawaj-auth-forgot-link inline-flex rounded-lg px-1 py-1 font-semibold transition"
                   >
                     {text("نسيت كلمة المرور؟", "Forgot password?")}
                   </button>
                 )}
 
                 {submitting && (
-                  <p className="rounded-[1rem] border border-border/65 bg-card-warm/70 p-2.5 text-xs font-medium text-muted-foreground">
+                  <p
+                    className="rawaj-auth-state p-2.5"
+                    data-tone="loading"
+                    role="status"
+                    aria-live="polite"
+                  >
                     {mode === "forgot"
                       ? text("جارٍ إرسال الرابط", "Sending link")
                       : mode === "login"
@@ -354,22 +373,21 @@ function LoginPage() {
                 )}
                 {message && (
                   <p
+                    role="status"
                     aria-live="polite"
-                    className="rounded-[1rem] border border-emerald-trust/15 bg-emerald-trust/8 p-2.5 text-xs font-medium text-emerald-trust"
+                    className="rawaj-auth-state p-2.5"
+                    data-tone="success"
                   >
                     {message}
                   </p>
                 )}
                 {error && (
-                  <p
-                    role="alert"
-                    className="rounded-[1rem] border border-destructive/15 bg-destructive/8 p-2.5 text-xs font-medium text-destructive"
-                  >
+                  <p role="alert" className="rawaj-auth-state p-2.5" data-tone="error">
                     {error}
                   </p>
                 )}
                 {auth.status === "authError" && (
-                  <p className="rounded-[1rem] border border-warning/15 bg-warning/8 p-2.5 text-xs font-medium text-warning">
+                  <p role="alert" className="rawaj-auth-state p-2.5" data-tone="warning">
                     {text(
                       "تعذر فتح الحساب الآن. حاول مرة أخرى.",
                       "Could not open the account right now. Try again.",
@@ -400,7 +418,7 @@ function LoginPage() {
                   <button
                     type="button"
                     onClick={() => switchMode("login")}
-                    className="w-full text-center text-xs font-semibold text-primary transition hover:text-brand-orange"
+                    className="rawaj-auth-back-link flex w-full text-center font-semibold transition"
                   >
                     {text("العودة لتسجيل الدخول", "Back to login")}
                   </button>
@@ -410,12 +428,12 @@ function LoginPage() {
 
             {mode !== "forgot" && (
               <>
-                <div className="relative my-4">
+                <div className="rawaj-auth-divider relative my-4">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border/80" />
                   </div>
-                  <div className="relative flex justify-center text-[10px] font-semibold text-muted-foreground">
-                    <span className="rounded-full bg-card/90 px-3 py-1">{text("أو", "Or")}</span>
+                  <div className="relative flex justify-center font-semibold text-muted-foreground">
+                    <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
                 <GoogleButton returnTo={returnTo} />
@@ -430,10 +448,7 @@ function LoginPage() {
               )}
             </div>
 
-            <Link
-              to="/"
-              className="mt-4 inline-flex text-xs font-semibold text-primary transition hover:text-brand-orange"
-            >
+            <Link to="/" className="rawaj-auth-home-link mt-3 inline-flex font-semibold transition">
               {text("العودة للرئيسية", "Back to home")}
             </Link>
           </div>
@@ -446,7 +461,7 @@ function LoginPage() {
 function FieldLabel({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <span className="rawaj-auth-field-label mb-1.5 block">{label}</span>
       {children}
     </label>
   );
