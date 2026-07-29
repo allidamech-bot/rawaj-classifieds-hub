@@ -10,7 +10,9 @@ const [
   ownerCorrections,
   studioCorrections,
   personalCorrections,
+  adminCorrections,
   admin,
+  adminOverview,
   adSlot,
   categoriesRoute,
   categoriesDiscovery,
@@ -24,7 +26,9 @@ const [
   readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-audit-v9.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/admin-command-center-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/features/categories/CategoriesListingDiscovery.tsx", import.meta.url), "utf8"),
@@ -40,6 +44,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   const ownerIndex = routeStyles.indexOf('import "../owner-listings-workspace-v9.css";');
   const studioIndex = routeStyles.indexOf('import "../listing-studio-audit-v9.css";');
   const personalIndex = routeStyles.indexOf('import "../personal-space-audit-v9.css";');
+  const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
 
   for (const index of [
     recoveryIndex,
@@ -49,6 +54,7 @@ test("audited component corrections load after legacy recovery layers", () => {
     ownerIndex,
     studioIndex,
     personalIndex,
+    adminIndex,
   ]) {
     assert.notEqual(index, -1);
   }
@@ -58,6 +64,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(ownerIndex > categoriesIndex);
   assert.ok(studioIndex > ownerIndex);
   assert.ok(personalIndex > studioIndex);
+  assert.ok(adminIndex > personalIndex);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -123,6 +130,21 @@ test("admin navigation exposes visible, labelled previous and next controls", ()
   assert.match(admin, /Previous admin workspaces/);
   assert.match(admin, /Next admin workspaces/);
   assert.match(corrections, /rawaj-admin-nav-rail > a\[aria-current="page"\]::after/);
+});
+
+test("admin command center separates hero metrics queues commands and shortcuts", () => {
+  assert.match(adminOverview, /rawaj-admin-command-hero/);
+  assert.match(adminOverview, /rawaj-admin-metrics-grid/);
+  assert.match(adminOverview, /rawaj-admin-queue-grid/);
+  assert.match(adminOverview, /rawaj-admin-command-grid/);
+  assert.match(adminOverview, /rawaj-admin-quick-grid/);
+  assert.match(adminOverview, /data-attention=\{attention\}/);
+  assert.match(adminOverview, /data-active=\{value > 0\}/);
+  assert.match(adminCorrections, /\.rawaj-admin-command-hero/);
+  assert.match(adminCorrections, /\.rawaj-admin-metric-card\[data-attention="true"\]/);
+  assert.match(adminCorrections, /\.rawaj-admin-queue-card\[data-active="true"\]/);
+  assert.match(adminCorrections, /\.rawaj-admin-dashboard-state/);
+  assert.doesNotMatch(adminCorrections, /main\s+:is\(section, article, form/);
 });
 
 test("home advertisement inventory supports two unique records without cloning one record", () => {
