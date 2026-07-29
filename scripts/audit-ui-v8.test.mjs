@@ -10,6 +10,7 @@ const [
   ownerCorrections,
   studioCorrections,
   personalCorrections,
+  adminWorkspaceCorrections,
   adminCorrections,
   admin,
   adminOverview,
@@ -26,6 +27,7 @@ const [
   readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-audit-v9.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/admin-workspaces-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-command-center-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
@@ -44,6 +46,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   const ownerIndex = routeStyles.indexOf('import "../owner-listings-workspace-v9.css";');
   const studioIndex = routeStyles.indexOf('import "../listing-studio-audit-v9.css";');
   const personalIndex = routeStyles.indexOf('import "../personal-space-audit-v9.css";');
+  const adminWorkspaceIndex = routeStyles.indexOf('import "../admin-workspaces-v9.css";');
   const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
 
   for (const index of [
@@ -54,6 +57,7 @@ test("audited component corrections load after legacy recovery layers", () => {
     ownerIndex,
     studioIndex,
     personalIndex,
+    adminWorkspaceIndex,
     adminIndex,
   ]) {
     assert.notEqual(index, -1);
@@ -64,7 +68,8 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(ownerIndex > categoriesIndex);
   assert.ok(studioIndex > ownerIndex);
   assert.ok(personalIndex > studioIndex);
-  assert.ok(adminIndex > personalIndex);
+  assert.ok(adminWorkspaceIndex > personalIndex);
+  assert.ok(adminIndex > adminWorkspaceIndex);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -145,6 +150,20 @@ test("admin command center separates hero metrics queues commands and shortcuts"
   assert.match(adminCorrections, /\.rawaj-admin-queue-card\[data-active="true"\]/);
   assert.match(adminCorrections, /\.rawaj-admin-dashboard-state/);
   assert.doesNotMatch(adminCorrections, /main\s+:is\(section, article, form/);
+});
+
+test("admin submodules share readable forms states tables and media previews", () => {
+  assert.match(adminWorkspaceCorrections, /data-resolved-pathname\^="\/admin\/"/);
+  assert.match(adminWorkspaceCorrections, /\.rawaj-admin-v3 :is\(input, textarea, select, \.input\)/);
+  assert.match(adminWorkspaceCorrections, /bg-warning\/10/);
+  assert.match(adminWorkspaceCorrections, /bg-destructive\/10/);
+  assert.match(adminWorkspaceCorrections, /bg-success\/10/);
+  assert.match(adminWorkspaceCorrections, /:is\(table, \[role="table"\]\)/);
+  assert.match(adminWorkspaceCorrections, /data-resolved-pathname="\/admin\/users"/);
+  assert.match(adminWorkspaceCorrections, /data-resolved-pathname="\/admin\/pending"/);
+  assert.match(adminWorkspaceCorrections, /data-resolved-pathname="\/admin\/ad-placements"/);
+  assert.match(adminWorkspaceCorrections, /object-fit: contain !important/);
+  assert.doesNotMatch(adminWorkspaceCorrections, /main\s+:is\(section, article, form/);
 });
 
 test("home advertisement inventory supports two unique records without cloning one record", () => {
