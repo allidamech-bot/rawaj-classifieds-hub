@@ -12,6 +12,7 @@ const [
   personalCorrections,
   adminWorkspaceCorrections,
   adminCorrections,
+  activityCorrections,
   admin,
   adminOverview,
   adSlot,
@@ -29,6 +30,7 @@ const [
   readFile(new URL("../src/personal-space-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-workspaces-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-command-center-v9.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/personal-activity-system-v10.css", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
@@ -48,6 +50,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   const personalIndex = routeStyles.indexOf('import "../personal-space-audit-v9.css";');
   const adminWorkspaceIndex = routeStyles.indexOf('import "../admin-workspaces-v9.css";');
   const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
+  const activityIndex = routeStyles.indexOf('import "../personal-activity-system-v10.css";');
 
   for (const index of [
     recoveryIndex,
@@ -59,6 +62,7 @@ test("audited component corrections load after legacy recovery layers", () => {
     personalIndex,
     adminWorkspaceIndex,
     adminIndex,
+    activityIndex,
   ]) {
     assert.notEqual(index, -1);
   }
@@ -70,6 +74,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(personalIndex > studioIndex);
   assert.ok(adminWorkspaceIndex > personalIndex);
   assert.ok(adminIndex > adminWorkspaceIndex);
+  assert.ok(activityIndex > adminIndex);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -125,6 +130,22 @@ test("more and profile routes have explicit personal-space hierarchy", () => {
   assert.match(personalCorrections, /rawaj-account-quick-links/);
   assert.match(personalCorrections, /button:last-child[\s\S]*color: #f2aaa4/);
   assert.doesNotMatch(personalCorrections, /main\s+:is\(section, article, form/);
+});
+
+test("activity messages notifications favorites and saved searches share one clear hierarchy", () => {
+  assert.match(activityCorrections, /data-resolved-pathname="\/activity"/);
+  assert.match(activityCorrections, /data-resolved-pathname="\/chats"/);
+  assert.match(activityCorrections, /data-resolved-pathname="\/notifications"/);
+  assert.match(activityCorrections, /data-resolved-pathname="\/favorites"/);
+  assert.match(activityCorrections, /data-resolved-pathname="\/saved-searches"/);
+  assert.match(activityCorrections, /\.rawaj-activity-tabs button\[aria-selected="true"\]/);
+  assert.match(activityCorrections, /article\.rawaj-notification-timeline\[data-read="false"\]/);
+  assert.match(activityCorrections, /\.rawaj-message-workspace[\s\S]*grid-template-columns: minmax\(18rem, 22rem\) minmax\(0, 1fr\)/);
+  assert.match(activityCorrections, /\.rawaj-message-composer > div\.grid:last-of-type/);
+  assert.match(activityCorrections, /\.rawaj-adaptive-card--compact/);
+  assert.match(activityCorrections, /\.rawaj-account-collection-v3 > form/);
+  assert.match(activityCorrections, /\.rawaj-account-collection-v3 > ul > li/);
+  assert.doesNotMatch(activityCorrections, /main\s+:is\(section, article, form/);
 });
 
 test("admin navigation exposes visible, labelled previous and next controls", () => {
