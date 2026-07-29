@@ -21,6 +21,7 @@ import "../rawaj-categories-discovery-v8.css";
 import "../owner-listings-workspace-v9.css";
 import "../listing-studio-audit-v9.css";
 import "../personal-space-audit-v9.css";
+import "../admin-workspaces-v9.css";
 import "../admin-command-center-v9.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
