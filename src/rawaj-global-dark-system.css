@@ -1,0 +1,567 @@
+/* RAWAJ global dark component system.
+ * Semantic tokens live in rawaj-semantic-tokens.css.
+ * This layer styles explicit shared components and contains only narrow legacy bridges.
+ */
+
+html,
+body {
+  color-scheme: dark;
+  color: var(--rawaj-text-primary);
+  background: var(--rawaj-page-background);
+  font-family: var(--font-sans);
+}
+
+body {
+  background:
+    radial-gradient(circle at 92% -4%, rgba(63, 145, 255, 0.08), transparent 27rem),
+    radial-gradient(circle at -8% 22%, rgba(220, 62, 182, 0.065), transparent 25rem),
+    linear-gradient(180deg, #2d2e32 0%, var(--rawaj-page-background) 30rem),
+    var(--rawaj-page-background) !important;
+}
+
+.rawaj-app-shell {
+  color: var(--rawaj-text-primary);
+  background:
+    radial-gradient(circle at 88% 2%, rgba(71, 103, 170, 0.07), transparent 24rem),
+    radial-gradient(circle at 7% 55%, rgba(138, 64, 138, 0.035), transparent 28rem),
+    linear-gradient(180deg, #2d2e32 0%, var(--rawaj-page-background) 34rem, #222327 100%);
+  font-family: var(--font-sans);
+}
+
+.rawaj-app-shell__page,
+.rawaj-app-shell__content,
+.rawaj-page-surface,
+.rawaj-app-shell main {
+  color: inherit;
+  background-color: transparent;
+}
+
+.rawaj-app-shell :is(h1, h2, h3, h4, h5, h6, .font-display) {
+  color: var(--rawaj-text-primary);
+  font-family: var(--font-display) !important;
+}
+
+.rawaj-app-shell .text-primary {
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-app-shell .text-muted-foreground {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell .border-primary {
+  border-color: var(--rawaj-border-active) !important;
+}
+
+/* Header signature */
+.rawaj-app-header {
+  position: sticky;
+  isolation: isolate;
+  overflow: hidden;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.065) !important;
+  color: var(--rawaj-text-primary) !important;
+  background: linear-gradient(180deg, rgba(39, 40, 45, 0.985), rgba(34, 35, 40, 0.97)) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(22px) saturate(112%);
+  -webkit-backdrop-filter: blur(22px) saturate(112%);
+}
+
+.rawaj-app-header::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset-block: 0;
+  width: 55%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 132, 101, 0.62) 0 0.75px, transparent 1.4px) 0 0 / 12px 12px,
+    radial-gradient(circle, rgba(225, 77, 191, 0.48) 0 0.82px, transparent 1.48px) 4px 5px / 16px 16px,
+    radial-gradient(circle, rgba(112, 115, 255, 0.34) 0 0.72px, transparent 1.38px) 8px 2px / 20px 20px,
+    radial-gradient(ellipse at 7% 50%, rgba(255, 111, 79, 0.17), transparent 43%),
+    radial-gradient(ellipse at 43% 50%, rgba(220, 62, 182, 0.14), transparent 50%),
+    radial-gradient(ellipse at 82% 53%, rgba(63, 145, 255, 0.1), transparent 48%);
+  opacity: 0.7;
+}
+
+html[dir="rtl"] .rawaj-app-header::before {
+  left: 0;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+}
+
+html[dir="ltr"] .rawaj-app-header::before {
+  right: 0;
+  transform: scaleX(-1);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+}
+
+.rawaj-floating-header-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 3.75rem !important;
+}
+
+.rawaj-app-header .rawaj-brand-lockup {
+  gap: 0.52rem !important;
+}
+
+.rawaj-app-header .rawaj-brand-mark {
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-header .rawaj-brand-mark img {
+  width: 2rem !important;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.26));
+}
+
+.rawaj-app-header .rawaj-brand-lockup__name {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 1.02rem !important;
+  font-weight: 700 !important;
+}
+
+.rawaj-app-header .rawaj-brand-divider {
+  width: 1px !important;
+  height: 1rem !important;
+  background: linear-gradient(
+    var(--rawaj-accent-coral),
+    var(--rawaj-accent-pink),
+    var(--rawaj-accent-violet)
+  ) !important;
+  opacity: 0.72;
+}
+
+.rawaj-app-header .rawaj-brand-lockup__latin {
+  color: #c8c2cd !important;
+  font-size: 0.66rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.13em !important;
+}
+
+.rawaj-header-action,
+.rawaj-header-account,
+.rawaj-header-location,
+.rawaj-home-menu-action,
+.rawaj-app-header .order-3 > .relative > button {
+  color: #ddd7d3 !important;
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  background: rgba(31, 32, 38, 0.58) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.16) !important;
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
+}
+
+.rawaj-header-nav {
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.027) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-header-nav-item {
+  color: #bdb7b3 !important;
+  font-weight: 500 !important;
+}
+
+.rawaj-header-nav-item[data-active="true"] {
+  color: #f4efec !important;
+  background: var(--rawaj-surface-active) !important;
+  box-shadow: inset 0 0 0 1px var(--rawaj-border) !important;
+}
+
+.rawaj-header-cta {
+  color: var(--rawaj-action-primary-foreground) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 11px 26px rgba(155, 40, 111, 0.28) !important;
+}
+
+/* Explicit shared surfaces */
+.rawaj-surface,
+.rawaj-foundation-card,
+.rawaj-color-card,
+.rawaj-hero-surface,
+.rawaj-page-header,
+[data-ui="card"] {
+  color: var(--rawaj-text-primary);
+  border-color: var(--rawaj-border);
+  background-color: var(--rawaj-card-background);
+}
+
+[data-ui="card"][data-variant="default"] {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(73, 103, 154, 0.045), transparent 38%),
+    linear-gradient(150deg, #303136, #2a2c31);
+  box-shadow: var(--shadow-soft);
+}
+
+[data-ui="card"][data-variant="flat"] {
+  background: var(--rawaj-card-background);
+  box-shadow: none;
+}
+
+.rawaj-section-sage,
+.rawaj-section-warm,
+.rawaj-section-gold,
+[data-ui="card"][data-variant="subtle"] {
+  color: var(--rawaj-text-primary);
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-muted-surface);
+  box-shadow: none;
+}
+
+[data-ui="card"][data-variant="elevated"] {
+  border-color: var(--rawaj-border-strong);
+  background: linear-gradient(150deg, #37383e, #303136);
+  box-shadow: var(--shadow-raised);
+}
+
+.tap-card,
+[data-ui="card"][data-interactive="true"] {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tap-card:hover,
+  [data-ui="card"][data-interactive="true"]:hover {
+    transform: translateY(-2px);
+    border-color: var(--rawaj-border-active);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+/* Shared form controls */
+.rawaj-app-shell [data-ui="input"],
+.rawaj-app-shell .input,
+.rawaj-app-shell textarea.input,
+.rawaj-app-shell select.input {
+  color: var(--rawaj-text-primary) !important;
+  border-color: var(--rawaj-border-strong) !important;
+  background: var(--rawaj-surface-inset) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+.rawaj-app-shell [data-ui="input"]::placeholder,
+.rawaj-app-shell .input::placeholder {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell [data-ui="input"]:hover:not(:disabled),
+.rawaj-app-shell .input:hover:not(:disabled) {
+  border-color: rgba(225, 100, 180, 0.3) !important;
+}
+
+.rawaj-app-shell [data-ui="input"]:focus-visible,
+.rawaj-app-shell .input:focus-visible {
+  border-color: #e164b4 !important;
+  box-shadow: 0 0 0 3px rgba(225, 100, 180, 0.14) !important;
+}
+
+/* Shared buttons */
+.rawaj-app-shell [data-ui="button"] {
+  border-color: var(--rawaj-border);
+  font-weight: 600;
+}
+
+.rawaj-app-shell [data-ui="button"][data-variant="default"],
+.rawaj-app-shell [data-ui="button"][data-variant="accent"] {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 10px 24px rgba(155, 40, 111, 0.26) !important;
+}
+
+.rawaj-app-shell [data-ui="button"][data-variant="brand"] {
+  color: #fff !important;
+  background: linear-gradient(115deg, var(--rawaj-action-brand), var(--rawaj-action-blue)) !important;
+  box-shadow: 0 10px 24px rgba(80, 53, 143, 0.26) !important;
+}
+
+.rawaj-app-shell [data-ui="button"][data-variant="soft"],
+.rawaj-app-shell [data-ui="button"][data-variant="outline"],
+.rawaj-app-shell [data-ui="button"][data-variant="secondary"] {
+  color: var(--rawaj-text-secondary) !important;
+  border-color: var(--rawaj-border-strong) !important;
+  background: var(--rawaj-muted-surface) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell [data-ui="button"][data-variant="ghost"] {
+  color: var(--rawaj-text-secondary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell [data-ui="button"][data-variant="link"] {
+  color: var(--rawaj-link) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Shared badges and chips */
+.rawaj-chip,
+[data-ui="badge"] {
+  color: var(--rawaj-text-secondary);
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-muted-surface);
+  box-shadow: none;
+}
+
+[data-ui="badge"][data-variant="accent"] {
+  color: #f6cfe5;
+  border-color: rgba(225, 100, 180, 0.28);
+  background: rgba(155, 40, 111, 0.2);
+}
+
+[data-ui="badge"][data-variant="success"] {
+  color: #bcebd9;
+  border-color: rgba(112, 213, 177, 0.25);
+  background: rgba(112, 213, 177, 0.1);
+}
+
+[data-ui="badge"][data-variant="warning"],
+[data-ui="badge"][data-variant="gold"] {
+  color: #ecd6ac;
+  border-color: rgba(205, 162, 96, 0.25);
+  background: rgba(205, 162, 96, 0.1);
+}
+
+.rawaj-eyebrow,
+.rawaj-signature-kicker {
+  color: #e88470 !important;
+}
+
+.rawaj-section-title {
+  color: var(--rawaj-text-primary) !important;
+  font-weight: 700 !important;
+}
+
+.rawaj-section-heading::before {
+  background: var(--rawaj-gradient-decoration) !important;
+}
+
+/* Dialogs, sheets, menus, and popovers */
+.rawaj-app-shell [role="dialog"],
+.rawaj-app-shell [role="menu"],
+.rawaj-app-shell [role="listbox"],
+.rawaj-app-shell [data-radix-popper-content-wrapper] > *,
+.rawaj-app-shell [data-vaul-drawer],
+.rawaj-app-shell [data-slot="dialog-content"],
+.rawaj-app-shell [data-slot="sheet-content"] {
+  color: var(--rawaj-text-primary) !important;
+  border-color: var(--rawaj-border-strong) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(140, 99, 244, 0.07), transparent 36%),
+    linear-gradient(155deg, #36383d, #292b30) !important;
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.52) !important;
+}
+
+.rawaj-app-shell [data-radix-popper-content-wrapper] [role="menuitem"],
+.rawaj-app-shell [role="option"] {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-app-shell [data-radix-popper-content-wrapper] [role="menuitem"]:hover,
+.rawaj-app-shell [role="option"]:hover,
+.rawaj-app-shell [role="option"][data-highlighted] {
+  color: var(--rawaj-text-primary) !important;
+  background: var(--rawaj-surface-active) !important;
+}
+
+/* Tables and admin data surfaces */
+.rawaj-app-shell table {
+  color: var(--rawaj-text-secondary);
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+}
+
+.rawaj-app-shell thead {
+  color: #d8d2ce;
+  background: var(--rawaj-muted-surface);
+}
+
+.rawaj-app-shell th,
+.rawaj-app-shell td {
+  border-color: var(--rawaj-border) !important;
+}
+
+.rawaj-app-shell tbody tr:hover {
+  background: rgba(255, 255, 255, 0.028);
+}
+
+/* Listing and media placeholders */
+.rawaj-app-shell [class*="listing"] [class*="media"] > div[aria-hidden="true"],
+.rawaj-app-shell [class*="image"] > div[aria-hidden="true"] {
+  color: #f15b98;
+  border-color: var(--rawaj-border) !important;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(225, 77, 191, 0.1), transparent 30%),
+    radial-gradient(circle at 58% 58%, rgba(255, 111, 79, 0.07), transparent 36%),
+    linear-gradient(145deg, #2b2d33, #202227) !important;
+}
+
+/* Public ad placements */
+.rawaj-app-shell aside[data-placement-page] {
+  color: var(--rawaj-text-primary);
+  background: transparent !important;
+}
+
+.rawaj-app-shell aside[data-placement-page] > a,
+.rawaj-app-shell aside[data-placement-page] > div {
+  border-color: var(--rawaj-border) !important;
+  background:
+    linear-gradient(var(--rawaj-card-background), var(--rawaj-card-background)) padding-box,
+    var(--rawaj-gradient-border) border-box !important;
+}
+
+/* Site footer */
+.rawaj-site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--rawaj-text-primary) !important;
+  border-top: 1px solid var(--rawaj-border) !important;
+  background:
+    radial-gradient(circle at 12% 100%, rgba(220, 62, 182, 0.075), transparent 30rem),
+    radial-gradient(circle at 82% 100%, rgba(63, 145, 255, 0.06), transparent 30rem),
+    #222327 !important;
+}
+
+.rawaj-site-footer::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: auto 0 0;
+  height: 52%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 128, 94, 0.32) 0 0.7px, transparent 1.3px) 0 0 / 14px 14px,
+    radial-gradient(circle, rgba(222, 73, 190, 0.27) 0 0.78px, transparent 1.4px) 5px 3px / 18px 18px,
+    radial-gradient(circle, rgba(83, 139, 255, 0.21) 0 0.7px, transparent 1.34px) 1px 8px / 21px 21px;
+  opacity: 0.4;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.68) 48%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.68) 48%, transparent 100%);
+}
+
+.rawaj-site-footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.rawaj-site-footer [class*="text-primary-foreground"] {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-site-footer :is(h2, .font-display) {
+  color: var(--rawaj-text-primary) !important;
+}
+
+/* Bottom navigation */
+.rawaj-mobile-dock {
+  inset-block-end: 0 !important;
+  padding: 0 0.45rem calc(0.3rem + env(safe-area-inset-bottom));
+}
+
+.rawaj-bottom-nav-shell {
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.105) !important;
+  border-radius: 21px !important;
+  background: rgba(39, 40, 45, 0.965) !important;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.038) !important;
+  backdrop-filter: blur(20px) saturate(112%);
+  -webkit-backdrop-filter: blur(20px) saturate(112%);
+}
+
+.rawaj-dock-item {
+  color: #aaa5a0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: var(--font-sans);
+}
+
+.rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
+  color: #f0d5e3 !important;
+  background: var(--rawaj-surface-active) !important;
+  box-shadow: inset 0 0 0 1px var(--rawaj-border) !important;
+}
+
+.rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
+  color: #f2ccdf !important;
+  background: rgba(155, 40, 111, 0.2) !important;
+  box-shadow: inset 0 0 0 1px rgba(226, 105, 181, 0.13) !important;
+}
+
+.rawaj-dock-create {
+  color: #fff !important;
+  background: var(--rawaj-gradient-action) !important;
+  box-shadow:
+    0 12px 28px rgba(155, 40, 111, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+}
+
+.rawaj-bottom-dock__badge,
+.rawaj-notification-badge {
+  color: #fff !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  border-color: #292a2f !important;
+}
+
+/* Narrow compatibility bridge for legacy route CSS. */
+.rawaj-app-shell .bg-primary,
+.rawaj-search-toolbar__filter,
+.rawaj-search-toolbar__views button[aria-pressed="true"],
+.rawaj-auth-tabs button[data-active="true"],
+.rawaj-listing-studio-v4 .rawaj-studio-category-grid button[data-selected="true"],
+.rawaj-account-activity-v3 .rawaj-activity-tabs button[aria-selected="true"],
+.rawaj-account-command-v3 .rawaj-more-v2__command > a:first-child,
+.rawaj-messaging-v4 .rawaj-message-bubble[data-mine="true"] {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: var(--rawaj-action-primary) !important;
+}
+
+.rawaj-app-shell .bg-brand-orange {
+  color: #fff !important;
+  background: var(--rawaj-action-coral) !important;
+}
+
+@media (max-width: 27rem) {
+  .rawaj-app-header::before {
+    width: 62%;
+    opacity: 0.66;
+  }
+
+  .rawaj-floating-header-shell {
+    padding-inline: 0.65rem !important;
+  }
+}
+
+@media (min-width: 64rem) {
+  .rawaj-app-header::before {
+    width: 42%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell *,
+  .rawaj-app-shell *::before,
+  .rawaj-app-shell *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

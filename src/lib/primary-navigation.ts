@@ -24,6 +24,7 @@ export interface AppShellConfig {
 const ACCOUNT_PATHS = [
   "/more",
   "/profile",
+  "/activity",
   "/notifications",
   "/verification",
   "/saved-searches",
@@ -32,6 +33,7 @@ const ACCOUNT_PATHS = [
   "/safety",
   "/privacy",
   "/terms",
+  "/prohibited",
 ] as const;
 
 function matchesPath(pathname: string, path: string) {
@@ -56,7 +58,14 @@ function isConversationPath(pathname: string) {
 
 export function resolvePrimaryNavigationSection(pathname: string): PrimaryNavigationSection {
   if (pathname === "/") return "home";
-  if (matchesPath(pathname, "/categories")) return "categories";
+  if (
+    matchesPath(pathname, "/categories") ||
+    matchesPath(pathname, "/category") ||
+    matchesPath(pathname, "/listings") ||
+    matchesPath(pathname, "/seller")
+  ) {
+    return "categories";
+  }
   if (matchesPath(pathname, "/add-listing")) return "addListing";
   if (matchesPath(pathname, "/chats")) return "chats";
   if (matchesPath(pathname, "/offers") || matchesPath(pathname, "/promotion")) return "offers";

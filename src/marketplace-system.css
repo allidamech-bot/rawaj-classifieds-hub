@@ -333,43 +333,35 @@ main.listing-detail-mobile-bottom .fixed .rawaj-surface {
   backdrop-filter: blur(18px) saturate(130%);
 }
 
-/* Account and seller spaces: trustworthy identity, not a dark dashboard. */
+/* Account and seller identity surfaces inherit the global matte-dark system.
+   Text tones belong to the route/component owners; do not infer them from
+   utility-class substrings because those classes also appear on dark stages. */
 .rawaj-pulse-page .rawaj-id-card,
 .rawaj-pulse-page .rawaj-merchant-stage {
-  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+  border: 1px solid var(--rawaj-border);
   background:
-    radial-gradient(circle at 90% 0%, rgba(237, 101, 61, 0.12), transparent 18rem),
-    linear-gradient(138deg, #f8f4e9 0%, #edf3eb 100%);
-  box-shadow: 0 16px 44px rgba(25, 47, 39, 0.08);
+    radial-gradient(circle at 90% 0%, rgba(225, 100, 180, 0.08), transparent 18rem),
+    var(--rawaj-card-background);
+  box-shadow: var(--rawaj-shadow-card);
 }
 
 .rawaj-pulse-page .rawaj-id-card :is(h1, strong),
 .rawaj-pulse-page .rawaj-merchant-stage :is(h1, strong) {
-  color: var(--color-primary);
-}
-
-.rawaj-pulse-page .rawaj-id-card [class*="text-[#fffaf0]"],
-.rawaj-pulse-page .rawaj-merchant-stage [class*="text-[#fffaf0]"] {
-  color: var(--color-muted-foreground);
+  color: var(--rawaj-text-primary);
 }
 
 .rawaj-pulse-page .rawaj-id-stat,
 .rawaj-pulse-page .rawaj-storefront-review-link,
 .rawaj-pulse-page .rawaj-merchant-stage [class*="bg-white/"] {
-  border-color: color-mix(in srgb, var(--color-border) 82%, transparent);
-  background: rgba(255, 255, 255, 0.62);
-}
-
-.rawaj-pulse-page .rawaj-id-stat [class*="text-[#fffaf0]"],
-.rawaj-pulse-page .rawaj-storefront-review-link [class*="text-[#fffaf0]"] {
-  color: var(--color-primary);
+  border-color: var(--rawaj-border);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .rawaj-pulse-page .rawaj-id-avatar {
-  border-color: rgba(255, 255, 255, 0.88);
-  background: var(--color-primary);
-  color: var(--color-primary-foreground);
-  box-shadow: 0 10px 26px rgba(21, 63, 55, 0.16);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--rawaj-gradient-action-short);
+  color: #fff;
+  box-shadow: var(--rawaj-shadow-card);
 }
 
 .rawaj-pulse-page .rawaj-color-card,

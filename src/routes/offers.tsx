@@ -160,8 +160,8 @@ function OfferSignal({
   return (
     <div className="rawaj-id-stat rounded-[1rem] p-3">
       <Icon className="h-4 w-4 text-gold" />
-      <span className="mt-2 block text-[9px] font-semibold text-[#fffaf0]/52">{label}</span>
-      <strong className="mt-1 block text-[11px] leading-4 text-[#fffaf0]">{value}</strong>
+      <span className="mt-2 block text-xs font-semibold text-[#fffaf0]/80">{label}</span>
+      <strong className="mt-1 block text-xs leading-4 text-[#fffaf0]">{value}</strong>
     </div>
   );
 }

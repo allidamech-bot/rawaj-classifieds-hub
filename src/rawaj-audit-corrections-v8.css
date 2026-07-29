@@ -1,0 +1,524 @@
+/* RAWAJ Audit Corrections V8
+ * First source-level correction batch after the 2026-07-29 production audit.
+ * Narrow component selectors only: shell rhythm, footer, advertisements,
+ * personal space, owner listings, listing studio, and admin navigation.
+ */
+
+/* --------------------------------------------------------------------------
+   Shell rhythm: the shell owns dock/sticky reserves. Route utility padding must
+   not reserve a second dock-height below the actual content.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell:is(
+    [data-shell-mode="standard"],
+    [data-shell-mode="noDock"],
+    [data-shell-mode="stickyAction"]
+  ) .rawaj-app-shell__page {
+  min-height: auto !important;
+}
+
+.rawaj-app-shell[data-shell-dock="true"] .rawaj-app-shell__page {
+  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 0.45rem) !important;
+}
+
+.rawaj-app-shell[data-shell-dock="true"] .rawaj-app-shell__content > main.mobile-page-bottom,
+.rawaj-app-shell[data-shell-dock="false"] .rawaj-app-shell__content > main.mobile-page-bottom {
+  padding-bottom: clamp(1rem, 2.5vw, 1.75rem) !important;
+}
+
+.rawaj-app-shell[data-keyboard-open="true"] .rawaj-app-shell__page,
+html[data-keyboard-open="true"] .rawaj-app-shell__page {
+  padding-bottom: max(0.75rem, var(--safe-bottom)) !important;
+}
+
+.rawaj-app-shell__content {
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Footer: one compact, readable mobile anchor without duplicate top spacing.
+   -------------------------------------------------------------------------- */
+
+.rawaj-site-footer {
+  margin-top: clamp(1rem, 3vw, 2.25rem) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background:
+    radial-gradient(circle at 12% 100%, rgba(220, 62, 182, 0.08), transparent 24rem),
+    radial-gradient(circle at 88% 100%, rgba(63, 145, 255, 0.07), transparent 24rem),
+    #202126 !important;
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-site-footer__mobile {
+  gap: 0.8rem !important;
+  padding-block: 1rem calc(0.9rem + var(--safe-bottom)) !important;
+}
+
+.rawaj-site-footer__mobile-brand p,
+.rawaj-site-footer__mobile-copy {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-site-footer__mobile nav {
+  gap: 0.5rem !important;
+}
+
+.rawaj-site-footer__mobile nav a {
+  min-height: 2.65rem !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  color: var(--rawaj-text-secondary) !important;
+  padding-inline: 0.9rem !important;
+  font-size: 0.78rem !important;
+}
+
+.rawaj-site-footer__mobile nav a:hover,
+.rawaj-site-footer__mobile nav a:focus-visible {
+  border-color: var(--rawaj-border-active) !important;
+  background: var(--rawaj-surface-active) !important;
+  color: var(--rawaj-text-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Public advertisement inventory: up to two distinct home placements with a
+   stable frame that can display arbitrary source aspect ratios cleanly.
+   -------------------------------------------------------------------------- */
+
+.rawaj-ad-placement {
+  margin-top: clamp(0.75rem, 2vw, 1.1rem) !important;
+}
+
+.rawaj-ad-placement__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.rawaj-ad-placement__frame {
+  isolation: isolate;
+  aspect-ratio: 16 / 6.4;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: #1d1e23 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-ad-placement__backdrop {
+  position: absolute;
+  inset: -7%;
+  z-index: 0;
+  width: 114%;
+  height: 114%;
+  object-fit: cover;
+  filter: blur(18px) saturate(0.9) brightness(0.62);
+  transform: scale(1.04);
+  opacity: 0.78;
+}
+
+.rawaj-ad-placement__image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rawaj-ad-placement__scrim {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 9, 13, 0.12), transparent 34%, rgba(8, 9, 13, 0.14));
+}
+
+.rawaj-ad-placement__label {
+  z-index: 3 !important;
+  color: #fff !important;
+  background: rgba(22, 23, 28, 0.82) !important;
+}
+
+@media (min-width: 48rem) {
+  .rawaj-ad-placement[data-placement-page="home"] .rawaj-ad-placement__grid[data-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Categories: preserve category identity instead of allowing broad recovery
+   selectors to turn the entire directory into one repeated grey panel.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background:
+    radial-gradient(circle at 8% 112%, rgba(255, 117, 89, 0.32), transparent 31%),
+    radial-gradient(circle at 46% -16%, rgba(223, 73, 181, 0.25), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.22), transparent 36%),
+    linear-gradient(145deg, #2d2e34, #26272c 58%, #23242a) !important;
+  color: var(--rawaj-text-primary) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card {
+  border: 1px solid var(--rawaj-border) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 32%),
+    linear-gradient(150deg, #303137, #292a30) !important;
+  color: var(--rawaj-text-secondary) !important;
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  .rawaj-category-directory-card
+  .text-brand-orange {
+  color: var(--rawaj-text-coral) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 2) .category-tile {
+  background: rgba(223, 73, 181, 0.1) !important;
+  color: #ef8bd3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 3) .category-tile {
+  background: rgba(104, 173, 255, 0.1) !important;
+  color: #8fc2ff !important;
+}
+
+/* --------------------------------------------------------------------------
+   Personal space and account: restore semantic groups and readable Arabic.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 main,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+  color: var(--rawaj-text-primary) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-color-card,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > .rawaj-color-card {
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  color: var(--rawaj-text-primary) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-orange {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 117, 89, 0.18), transparent 46%),
+    linear-gradient(150deg, #373036, #2e2d33) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-indigo {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.18), transparent 46%),
+    linear-gradient(150deg, #30333b, #2a2c32) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-plum {
+  background: linear-gradient(150deg, #382f39, #2d2b31) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-gold {
+  background: linear-gradient(150deg, #38342d, #2e2d2b) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-emerald {
+  background: linear-gradient(150deg, #2d3734, #292f2f) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card :is(.text-primary, .text-foreground) {
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card .text-muted-foreground {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  color: var(--rawaj-text-secondary) !important;
+  padding: 0.45rem !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section[data-tone="muted"] {
+  background: linear-gradient(150deg, #2d2e33, #28292e) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(.truncate, [class*="truncate"]) {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(.text-[10px], .text-[10\.5px]) {
+  font-size: 0.78rem !important;
+  line-height: 1.55 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Owner listings: compact management-first identity summary.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] {
+  min-height: 0 !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__content {
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 0.75rem 0.9rem !important;
+  padding: clamp(0.9rem, 3vw, 1.25rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__topline {
+  grid-column: 1 / -1;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__main {
+  grid-column: 1 / -1;
+  align-items: center !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__avatar {
+  width: 4.35rem !important;
+  height: 4.35rem !important;
+  border-radius: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__copy h1 {
+  font-size: clamp(1.2rem, 4vw, 1.65rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__bio {
+  grid-column: 1 / -1;
+  margin: 0 !important;
+  padding-inline-start: 0.75rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics {
+  grid-column: 1 / -1;
+  margin-top: 0 !important;
+  gap: 0.45rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics > div {
+  min-height: 3.7rem !important;
+  border-radius: 0.8rem !important;
+  padding: 0.48rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__actions {
+  grid-column: 1 / -1;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.45rem !important;
+  margin-top: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__actions :is(a, button) {
+  min-width: 0 !important;
+  min-height: 2.75rem !important;
+  justify-content: center !important;
+  padding-inline: 0.55rem !important;
+  font-size: 0.72rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   Listing studio: compact hierarchy with distinct completion, preview, quality,
+   and note surfaces instead of four identical grey cards.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero {
+  min-height: 0 !important;
+  padding: clamp(1rem, 3vw, 1.45rem) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__visual span {
+  width: 4.9rem !important;
+  height: 4.9rem !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion {
+  border-color: rgba(112, 213, 177, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(112, 213, 177, 0.08), transparent 38%),
+    linear-gradient(155deg, #303735, #292f2f) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-preview {
+  border-color: rgba(104, 173, 255, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.08), transparent 38%),
+    linear-gradient(155deg, #30343b, #292c32) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality {
+  border-color: rgba(223, 73, 181, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.075), transparent 38%),
+    linear-gradient(155deg, #353038, #2d2a31) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-shell__aside > :last-child:not(.rawaj-studio-quality) {
+  border-color: rgba(227, 160, 75, 0.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 38%),
+    linear-gradient(155deg, #373229, #2f2c28) !important;
+  color: var(--rawaj-text-secondary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Admin: readable semantic surfaces and visible horizontal navigation controls.
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-access-notice {
+  border: 1px solid rgba(227, 160, 75, 0.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 38%),
+    linear-gradient(150deg, #373229, #2e2c29) !important;
+  color: var(--rawaj-text-secondary) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-admin-nav-shell {
+  border: 1px solid var(--rawaj-border) !important;
+  background: rgba(37, 38, 44, 0.94) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.17) !important;
+}
+
+.rawaj-admin-nav-controls {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rawaj-admin-nav-controls::before,
+.rawaj-admin-nav-controls::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset-block: 0;
+  width: 1.6rem;
+  pointer-events: none;
+}
+
+.rawaj-admin-nav-controls::before {
+  inset-inline-start: 2.85rem;
+  background: linear-gradient(to inline-end, rgba(37, 38, 44, 0.96), transparent);
+}
+
+.rawaj-admin-nav-controls::after {
+  inset-inline-end: 2.85rem;
+  background: linear-gradient(to inline-start, rgba(37, 38, 44, 0.96), transparent);
+}
+
+.rawaj-admin-nav-scroll-button {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 2.55rem;
+  height: 2.55rem;
+  min-width: 2.55rem;
+  min-height: 2.55rem;
+  place-items: center;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.75rem !important;
+  background: var(--rawaj-surface-inset) !important;
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-admin-nav-scroll-button:hover,
+.rawaj-admin-nav-scroll-button:focus-visible {
+  border-color: var(--rawaj-border-active) !important;
+  background: var(--rawaj-surface-active) !important;
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-admin-nav-rail {
+  scroll-padding-inline: 1.25rem;
+}
+
+.rawaj-admin-nav-rail > a {
+  position: relative;
+  border: 1px solid var(--rawaj-border) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-admin-nav-rail > a[aria-current="page"] {
+  border-color: rgba(225, 100, 180, 0.3) !important;
+  background: rgba(225, 100, 180, 0.09) !important;
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-admin-nav-rail > a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0.75rem;
+  inset-block-end: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rawaj-accent-coral), var(--rawaj-accent-pink), var(--rawaj-accent-blue));
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section {
+  border: 1px solid var(--rawaj-border) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section:first-child {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background:
+    radial-gradient(circle at 8% 112%, rgba(255, 117, 89, 0.38), transparent 32%),
+    radial-gradient(circle at 46% -14%, rgba(223, 73, 181, 0.3), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.27), transparent 36%),
+    linear-gradient(145deg, #2c2d33, #25262b 58%, #222329) !important;
+  color: #fff !important;
+}
+
+@media (max-width: 39.99rem) {
+  .rawaj-site-footer {
+    margin-top: 1rem !important;
+  }
+
+  .rawaj-ad-placement__frame {
+    aspect-ratio: 16 / 7.2;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-admin-nav-controls::before,
+  .rawaj-admin-nav-controls::after {
+    width: 1rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .rawaj-site-footer {
+    margin-top: clamp(2.5rem, 5vw, 4rem) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-ad-placement,
+  .rawaj-admin-nav-rail {
+    scroll-behavior: auto !important;
+    animation: none !important;
+  }
+}

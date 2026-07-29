@@ -1,1 +1,176 @@
-[data-ui="textarea"]{min-height:8rem}[data-ui="card"]{overflow:clip}.rawaj-discovery-hero,.rawaj-categories-v2__hero,.rawaj-account-identity,.rawaj-trust-hero,.rawaj-listing-studio-v4 .rawaj-studio-hero,.rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"]{border-color:#dbe8e1!important;background:linear-gradient(135deg,#fffaf2,#eef8f2 55%,#fff1e8)!important;color:#18352f!important;box-shadow:0 8px 24px rgba(39,95,81,.08)!important}.rawaj-discovery-hero :is(h1,p,span,a),.rawaj-categories-v2__hero :is(h1,p,span,a),.rawaj-account-identity :is(h1,p,small,span,b),.rawaj-trust-hero :is(h1,h2,p,small,strong,span,b),.rawaj-listing-studio-v4 .rawaj-studio-hero :is(h1,p),.rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] :is(h2,span,strong){color:#18352f!important}.rawaj-discovery-hero__geometry{opacity:.12!important}.rawaj-search-overlay,.rawaj-categories-v2__hero-search{border-color:#dbe8e1!important;background:rgba(255,253,248,.94)!important;box-shadow:0 10px 30px rgba(39,95,81,.1)!important}.rawaj-account-identity__cover>div{background:linear-gradient(180deg,rgba(255,253,248,.2),rgba(255,250,242,.94))!important}.rawaj-account-identity__avatar{border-color:#fff!important;box-shadow:0 10px 24px rgba(39,95,81,.14)!important}.rawaj-account-identity__actions :is(a,button),.rawaj-trust-hero__badges :is(span,b),.rawaj-trust-hero__actions :is(a,button){border-color:#dbe8e1!important;background:rgba(255,255,255,.72)!important;color:#18352f!important;backdrop-filter:none!important}.rawaj-detail-media__stage,.rawaj-detail-media__image{background:#eef3ef}.rawaj-account-hub-v3,.rawaj-account-collection-v3,.rawaj-account-activity-v3,.rawaj-account-command-v3{max-width:80rem;margin-inline:auto}.rawaj-storefront-identity{border-color:#dbe8e1;background:linear-gradient(140deg,#fffaf2,#edf8f2 58%,#fff0e7);color:#18352f;box-shadow:0 12px 32px rgba(39,95,81,.1)}.rawaj-storefront-identity__scrim{background:linear-gradient(180deg,rgba(255,253,248,.08),rgba(255,253,248,.92))}.rawaj-storefront-identity :is(h1,p,span,strong){color:#18352f}.rawaj-account-collection-v3>section,.rawaj-account-activity-v3>section{border-radius:1rem}.rawaj-account-collection-v3 .grid,.rawaj-account-activity-v3 .grid{align-items:start}@media(max-width:767px){.rawaj-discovery-hero__content{min-height:auto!important;padding:1.1rem!important}.rawaj-discovery-hero__copy h1{font-size:clamp(1.8rem,9vw,2.55rem)!important}.rawaj-listing-studio-v4 .rawaj-studio-trust-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.rawaj-listing-studio-v4 .rawaj-studio-steps li{min-width:7.75rem}.rawaj-listing-studio-v4 .rawaj-studio-section{padding:1rem}.rawaj-detail-media__stage{min-height:17rem;border-radius:0 0 1rem 1rem}.rawaj-detail-v2__layout{gap:.75rem}.rawaj-account-identity,.rawaj-categories-v2__hero,.rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"],.rawaj-trust-hero{border-radius:1.1rem!important}.rawaj-account-identity__content{min-height:13.5rem!important;padding:1rem!important;padding-bottom:4.5rem!important}.rawaj-account-identity__avatar{width:4.5rem!important;height:4.5rem!important;border-radius:1rem!important}.rawaj-account-hub-v3,.rawaj-account-collection-v3,.rawaj-account-activity-v3,.rawaj-account-command-v3{padding-inline:1rem}.rawaj-storefront-identity{border-radius:1rem}.rawaj-storefront-identity__content{min-height:18rem;padding:1rem}.rawaj-storefront-identity__main{align-items:center}.rawaj-storefront-identity__avatar{width:4.5rem;height:4.5rem;border-radius:1rem}.rawaj-storefront-identity__metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.rawaj-account-collection-v3>section,.rawaj-account-activity-v3>section{padding:1rem!important}}
+/*
+ * Shared responsive structure only.
+ *
+ * This file used to force the retired ivory/green palette across unrelated
+ * discovery, account, studio, messaging, and storefront descendants. Color
+ * ownership now stays with semantic tokens and each current route component.
+ */
+
+[data-ui="textarea"] {
+  min-height: 8rem;
+}
+
+[data-ui="card"] {
+  overflow: clip;
+}
+
+.rawaj-discovery-hero,
+.rawaj-categories-v2__hero,
+.rawaj-account-identity,
+.rawaj-trust-hero,
+.rawaj-listing-studio-v4 .rawaj-studio-hero,
+.rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] {
+  border-color: var(--rawaj-border-strong);
+  color: var(--rawaj-text-primary);
+  background: var(--rawaj-card-background);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+.rawaj-discovery-hero__geometry {
+  opacity: 0.12;
+}
+
+.rawaj-search-overlay,
+.rawaj-categories-v2__hero-search {
+  border-color: var(--rawaj-border);
+  color: var(--rawaj-text-primary);
+  background: color-mix(in srgb, var(--rawaj-elevated-background) 94%, transparent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.rawaj-account-identity__cover > div {
+  background: linear-gradient(180deg, rgba(45, 46, 52, 0.12), rgba(31, 32, 37, 0.92));
+}
+
+.rawaj-account-identity__avatar {
+  border-color: var(--rawaj-card-background);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.rawaj-account-identity__actions :is(a, button),
+.rawaj-trust-hero__badges :is(span, b),
+.rawaj-trust-hero__actions :is(a, button) {
+  border-color: var(--rawaj-border);
+  color: var(--rawaj-text-secondary);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: none;
+}
+
+.rawaj-detail-media__stage,
+.rawaj-detail-media__image {
+  background: var(--rawaj-surface-inset);
+}
+
+.rawaj-account-hub-v3,
+.rawaj-account-collection-v3,
+.rawaj-account-activity-v3,
+.rawaj-account-command-v3 {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.rawaj-storefront-identity {
+  border-color: var(--rawaj-border-strong);
+  color: var(--rawaj-text-primary);
+  background: var(--rawaj-card-background);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.rawaj-storefront-identity__scrim {
+  background: linear-gradient(180deg, rgba(45, 46, 52, 0.08), rgba(31, 32, 37, 0.92));
+}
+
+.rawaj-account-collection-v3 > section,
+.rawaj-account-activity-v3 > section {
+  border-radius: 1rem;
+}
+
+.rawaj-account-collection-v3 .grid,
+.rawaj-account-activity-v3 .grid {
+  align-items: start;
+}
+
+@media (max-width: 767px) {
+  .rawaj-discovery-hero__content {
+    min-height: auto !important;
+    padding: 1.1rem !important;
+  }
+
+  .rawaj-discovery-hero__copy h1 {
+    font-size: clamp(1.8rem, 9vw, 2.55rem) !important;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-trust-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-steps li {
+    min-width: 7.75rem;
+  }
+
+  .rawaj-listing-studio-v4 .rawaj-studio-section {
+    padding: 1rem;
+  }
+
+  .rawaj-detail-media__stage {
+    min-height: 17rem;
+    border-radius: 0 0 1rem 1rem;
+  }
+
+  .rawaj-detail-v2__layout {
+    gap: 0.75rem;
+  }
+
+  .rawaj-account-identity,
+  .rawaj-categories-v2__hero,
+  .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"],
+  .rawaj-trust-hero {
+    border-radius: 1.1rem !important;
+  }
+
+  .rawaj-account-identity__content {
+    min-height: 13.5rem !important;
+    padding: 1rem 1rem 4.5rem !important;
+  }
+
+  .rawaj-account-identity__avatar {
+    width: 4.5rem !important;
+    height: 4.5rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-account-hub-v3,
+  .rawaj-account-collection-v3,
+  .rawaj-account-activity-v3,
+  .rawaj-account-command-v3 {
+    padding-inline: 1rem;
+  }
+
+  .rawaj-storefront-identity {
+    border-radius: 1rem;
+  }
+
+  .rawaj-storefront-identity__content {
+    min-height: 18rem;
+    padding: 1rem;
+  }
+
+  .rawaj-storefront-identity__main {
+    align-items: center;
+  }
+
+  .rawaj-storefront-identity__avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1rem;
+  }
+
+  .rawaj-storefront-identity__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-account-collection-v3 > section,
+  .rawaj-account-activity-v3 > section {
+    padding: 1rem !important;
+  }
+}

@@ -1,7 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
+import { BrandLockup } from "@/components/shell/BrandLockup";
+import { ShellHeaderFrame, type ShellHeaderVariant } from "@/components/shell/ShellHeaderFrame";
 import { resolveAdPlacementPage } from "@/lib/ad-placement-route";
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -24,6 +27,11 @@ function resolveTitlePlacement(title?: string): AdPlacementPage | null {
   return null;
 }
 
+function resolveHeaderVariant(pathname: string): ShellHeaderVariant {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "workspace";
+  return "context";
+}
+
 export function PageHeader({
   title,
   to = "/",
@@ -32,7 +40,7 @@ export function PageHeader({
   placementPage,
   titleIsPageHeading = true,
 }: Props) {
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const navigate = useNavigate();
   const pathname = useRouterState({
     select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
@@ -41,6 +49,8 @@ export function PageHeader({
     placementPage === undefined
       ? (resolveAdPlacementPage(pathname) ?? resolveTitlePlacement(title))
       : placementPage;
+  const headerVariant = resolveHeaderVariant(pathname);
+  const BackIcon = language === "ar" ? ArrowRight : ArrowLeft;
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -51,58 +61,57 @@ export function PageHeader({
   }
 
   const backClassName =
-    "rawaj-icon-button rawaj-touch-target grid shrink-0 place-items-center shadow-none";
+    "rawaj-shell-header__back rawaj-icon-button rawaj-touch-target grid shrink-0 place-items-center shadow-none";
+
+  const backControl = !back ? null : backMode === "history" ? (
+    <button
+      type="button"
+      onClick={handleBack}
+      aria-label={text("رجوع", "Back")}
+      title={text("رجوع", "Back")}
+      className={backClassName}
+    >
+      <BackIcon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.9} />
+    </button>
+  ) : (
+    <Link
+      to={to}
+      aria-label={text("رجوع", "Back")}
+      title={text("رجوع", "Back")}
+      className={backClassName}
+    >
+      <BackIcon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.9} />
+    </Link>
+  );
 
   return (
     <>
-      <div
-        className="rawaj-page-header sticky top-0 z-20"
-        data-shell-region="header-region"
-        data-resolved-pathname={pathname}
-      >
-        <div className="container-wide flex min-h-14 items-center gap-2.5 py-1.5 sm:min-h-16 sm:gap-3">
-          {back && backMode === "history" ? (
-            <button
-              type="button"
-              onClick={handleBack}
-              aria-label={text("رجوع", "Back")}
-              title={text("رجوع", "Back")}
-              className={backClassName}
-            >
-              <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
-            </button>
-          ) : back ? (
-            <Link
-              to={to}
-              aria-label={text("رجوع", "Back")}
-              title={text("رجوع", "Back")}
-              className={backClassName}
-            >
-              <ChevronRight className="h-4.5 w-4.5 rtl:rotate-180" strokeWidth={1.9} />
-            </Link>
-          ) : null}
+      <ShellHeaderFrame pathname={pathname} variant={headerVariant}>
+        <Link
+          to="/"
+          className="rawaj-shell-header__brand min-w-0"
+          aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}
+        >
+          <BrandLockup compact />
+        </Link>
 
+        <div className="rawaj-shell-header__title min-w-0">
           {title ? (
-            <div className="min-w-0 flex-1">
-              {titleIsPageHeading ? (
-                <h1 className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
-                  {title}
-                </h1>
-              ) : (
-                <p className="truncate text-[15px] font-bold leading-tight text-primary sm:text-base">
-                  {title}
-                </p>
-              )}
-            </div>
+            titleIsPageHeading ? (
+              <h1 className="truncate text-[15px] font-bold leading-tight sm:text-base">{title}</h1>
+            ) : (
+              <p className="truncate text-[15px] font-bold leading-tight sm:text-base">{title}</p>
+            )
           ) : (
-            <div className="flex-1" />
+            <span className="sr-only">{text("رواج", "RAWAJ")}</span>
           )}
-
-          <div className="ms-auto shrink-0">
-            <NotificationTrigger />
-          </div>
         </div>
-      </div>
+
+        <div className="rawaj-shell-header__actions flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <NotificationTrigger tone="light" />
+          {backControl}
+        </div>
+      </ShellHeaderFrame>
       <PublicAdPlacementSlot placementPage={resolvedPlacementPage} />
     </>
   );

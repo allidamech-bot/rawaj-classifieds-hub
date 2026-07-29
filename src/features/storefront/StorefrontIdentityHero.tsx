@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
+import { OwnerStoreWorkspaceSummary } from "@/features/storefront/OwnerStoreWorkspaceSummary";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface StorefrontMetric {
@@ -73,29 +74,39 @@ export function StorefrontIdentityHero({
         timeZone: "UTC",
       }).format(new Date(joinedAt))
     : null;
-  const metrics: StorefrontMetric[] =
-    mode === "owner"
-      ? [
-          { label: text("نشط", "Live"), value: approvedCount ?? 0, tone: "live" },
-          { label: text("قيد المراجعة", "In review"), value: pendingCount, tone: "pending" },
-          { label: text("تحتاج تدخلاً", "Needs action"), value: needsEditCount, tone: "action" },
-          { label: text("مغلقة", "Closed"), value: closedCount, tone: "closed" },
-        ]
-      : [
-          {
-            label: text("إعلان معتمد", "Approved listings"),
-            value: approvedCount ?? "—",
-            icon: Store,
-          },
-          {
-            label:
-              ratingCount > 0
-                ? text("تقييمات معتمدة", "Approved reviews")
-                : text("بائع جديد", "New seller"),
-            value: ratingCount > 0 && ratingAverage != null ? ratingAverage.toFixed(1) : "—",
-            icon: Star,
-          },
-        ];
+
+  if (mode === "owner") {
+    return (
+      <OwnerStoreWorkspaceSummary
+        sellerId={sellerId}
+        displayName={displayName}
+        secondaryName={secondaryName}
+        avatarUrl={avatarUrl}
+        location={location}
+        verified={verified}
+        approvedCount={approvedCount ?? 0}
+        pendingCount={pendingCount}
+        needsEditCount={needsEditCount}
+        closedCount={closedCount}
+      />
+    );
+  }
+
+  const metrics: StorefrontMetric[] = [
+    {
+      label: text("إعلان معتمد", "Approved listings"),
+      value: approvedCount ?? "—",
+      icon: Store,
+    },
+    {
+      label:
+        ratingCount > 0
+          ? text("تقييمات معتمدة", "Approved reviews")
+          : text("بائع جديد", "New seller"),
+      value: ratingCount > 0 && ratingAverage != null ? ratingAverage.toFixed(1) : "—",
+      icon: Star,
+    },
+  ];
 
   return (
     <section
@@ -123,11 +134,7 @@ export function StorefrontIdentityHero({
 
       <div className="rawaj-storefront-identity__content">
         <div className="rawaj-storefront-identity__topline">
-          <span>
-            {mode === "owner"
-              ? text("إدارة إعلاناتي", "My listings workspace")
-              : text("واجهة على رواج", "RAWAJ storefront")}
-          </span>
+          <span>{text("واجهة على رواج", "RAWAJ storefront")}</span>
           {verified ? (
             <strong>
               <BadgeCheck aria-hidden="true" />
@@ -174,18 +181,13 @@ export function StorefrontIdentityHero({
 
         <p className="rawaj-storefront-identity__bio">
           {bio ||
-            (mode === "owner"
-              ? text(
-                  "أضف نبذة قصيرة ليعرف المشترون طبيعة متجرك وما تقدمه.",
-                  "Add a short bio so buyers understand your store and what you offer.",
-                )
-              : text(
-                  "تعرض هذه الصفحة المعلومات العامة والإعلانات المعتمدة فقط.",
-                  "This page shows public information and approved listings only.",
-                ))}
+            text(
+              "تعرض هذه الصفحة المعلومات العامة والإعلانات المعتمدة فقط.",
+              "This page shows public information and approved listings only.",
+            )}
         </p>
 
-        {mode === "public" && verified ? (
+        {verified ? (
           <p className="text-xs leading-5 text-primary-foreground/75">
             {text(
               "تعني الشارة أن بيانات الملف خضعت لمراجعة المنصة، ولا تمثل ضمانًا للمنتج أو الدفع أو التسليم أو إتمام الصفقة.",
@@ -208,34 +210,15 @@ export function StorefrontIdentityHero({
         </div>
 
         <div className="rawaj-storefront-identity__actions">
-          {mode === "owner" ? (
-            <>
-              <Link to="/seller/$id" params={{ id: sellerId }}>
-                <Eye aria-hidden="true" />
-                {text("عرض المتجر العام", "View public store")}
-              </Link>
-              <Link to="/profile">
-                <Pencil aria-hidden="true" />
-                {text("تعديل الهوية", "Edit identity")}
-              </Link>
-              <Link to="/add-listing" data-tone="primary">
-                <Plus aria-hidden="true" />
-                {text("إضافة إعلان", "Post listing")}
-              </Link>
-            </>
-          ) : (
-            <>
-              <a href="#storefront-listings">
-                <Store aria-hidden="true" />
-                {text("تصفح الإعلانات", "Browse listings")}
-              </a>
-              <SellerFollowButton sellerId={sellerId} />
-              <a href="#seller-reviews">
-                <Star aria-hidden="true" />
-                {text("التقييمات", "Reviews")}
-              </a>
-            </>
-          )}
+          <a href="#storefront-listings">
+            <Store aria-hidden="true" />
+            {text("تصفح الإعلانات", "Browse listings")}
+          </a>
+          <SellerFollowButton sellerId={sellerId} />
+          <a href="#seller-reviews">
+            <Star aria-hidden="true" />
+            {text("التقييمات", "Reviews")}
+          </a>
           {extraActions}
         </div>
       </div>

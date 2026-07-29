@@ -28,8 +28,8 @@ export function BrandLockup({ compact = false, inverse = false, className }: Bra
       <span className="flex items-center gap-2 leading-none">
         <span
           className={cn(
-            "font-display text-[18px] font-bold",
-            inverse ? "text-primary-foreground" : "text-primary",
+            "rawaj-brand-lockup__name font-display text-[18px] font-bold",
+            inverse ? "text-primary-foreground" : "text-foreground",
           )}
         >
           رواج
@@ -37,7 +37,7 @@ export function BrandLockup({ compact = false, inverse = false, className }: Bra
         <span className="rawaj-brand-divider h-5 w-px" aria-hidden="true" />
         <span
           className={cn(
-            "text-[11px] font-bold tracking-[0.16em]",
+            "rawaj-brand-lockup__latin text-[11px] font-bold tracking-[0.16em]",
             inverse ? "text-gold" : "text-brand-orange",
           )}
         >

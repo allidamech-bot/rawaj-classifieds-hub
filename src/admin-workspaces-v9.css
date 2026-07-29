@@ -1,0 +1,373 @@
+/* RAWAJ admin workspaces v9.
+ * Shared, route-scoped hierarchy for all /admin/* modules.
+ * This deliberately relies on existing semantic utility combinations instead of
+ * applying generic section/article/form rules across the application.
+ */
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 {
+  padding-top: 0.75rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-access-notice {
+  margin-bottom: 0.75rem !important;
+  border: 1px solid rgba(227, 160, 75, 0.18) !important;
+  border-radius: 1rem !important;
+  padding: 0.7rem 0.8rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 38%),
+    linear-gradient(150deg, #373129, #2f2c29) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-access-notice p {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.69rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-nav-shell {
+  margin-bottom: 0.8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 {
+  display: grid;
+  gap: 0.8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > * {
+  margin: 0 !important;
+}
+
+/* Module introduction panel */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child[class*="rounded-2xl"][class*="bg-card"][class*="hairline"] {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.2rem !important;
+  padding: clamp(0.9rem, 2vw, 1.1rem) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.1), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.075), transparent 36%),
+    linear-gradient(150deg, #313239, #292a30) !important;
+  box-shadow: 0 13px 30px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.45 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child h2 svg,
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child > div > div:first-child > span svg {
+  color: var(--rawaj-accent-pink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child p.text-muted-foreground {
+  max-width: 70ch;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.7rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child [class*="bg-gold"] {
+  border: 1px solid rgba(205, 162, 96, 0.2) !important;
+  color: #eed1a0 !important;
+  background: rgba(205, 162, 96, 0.07) !important;
+}
+
+/* Normal work cards and panels */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(section, article, form, div)[class*="rounded-2xl"][class*="bg-card"][class*="hairline"] {
+  border-color: var(--rawaj-border) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 11px 26px rgba(0, 0, 0, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 article[class*="rounded-2xl"][class*="bg-card"][class*="hairline"],
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 form[class*="rounded-2xl"][class*="bg-card"][class*="hairline"] {
+  border-radius: 1.1rem !important;
+  padding: clamp(0.85rem, 2vw, 1rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 article[class*="rounded-2xl"] h3,
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 form[class*="rounded-2xl"] h3,
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 section[class*="rounded-2xl"] h2 {
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(p, small, td, th).text-muted-foreground {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 p.text-xs {
+  font-size: 0.7rem !important;
+  line-height: 1.55 !important;
+}
+
+/* Nested information and metric surfaces */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-muted-surface"] {
+  border-color: var(--rawaj-border) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-primary/5"] {
+  border-color: rgba(225, 100, 180, 0.26) !important;
+  color: var(--rawaj-text-primary) !important;
+  background: rgba(225, 100, 180, 0.07) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="ring-primary/30"] {
+  --tw-ring-color: rgba(225, 100, 180, 0.27) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-warning/10"],
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-warning/15"] {
+  border-color: rgba(227, 160, 75, 0.2) !important;
+  color: #efca91 !important;
+  background: rgba(227, 160, 75, 0.06) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-destructive/10"] {
+  border-color: rgba(234, 113, 104, 0.2) !important;
+  color: #f2aaa4 !important;
+  background: rgba(234, 113, 104, 0.055) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-success/10"] {
+  border-color: rgba(112, 213, 177, 0.18) !important;
+  color: var(--rawaj-success) !important;
+  background: rgba(112, 213, 177, 0.05) !important;
+}
+
+/* Forms */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(input, textarea, select, .input) {
+  min-height: 2.75rem;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 0.8rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: var(--rawaj-surface-inset) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.74rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 textarea {
+  min-height: 5rem;
+  padding: 0.7rem !important;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(input, textarea)::placeholder {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(input, textarea, select, .input):focus-visible {
+  border-color: #e164b4 !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px rgba(225, 100, 180, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 label > span:first-child {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+}
+
+/* Buttons and action hierarchy */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 button,
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 a[class*="rounded-xl"] {
+  min-height: 2.65rem;
+  border-radius: 0.8rem !important;
+  font-size: 0.69rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="bg-primary"] {
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  color: #fff !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 8px 18px rgba(155, 40, 111, 0.19) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="bg-emerald-trust"] {
+  border: 1px solid rgba(112, 213, 177, 0.2) !important;
+  color: #d9f8ec !important;
+  background: rgba(49, 129, 104, 0.72) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="bg-warning"] {
+  border: 1px solid rgba(227, 160, 75, 0.2) !important;
+  color: #2d2418 !important;
+  background: #d8a14f !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="bg-destructive"]:not([class*="/10"]) {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  background: #a94540 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a).rawaj-chip,
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="bg-muted-surface"] {
+  border: 1px solid var(--rawaj-border) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a):hover:not(:disabled) {
+  border-color: var(--rawaj-border-active) !important;
+  filter: brightness(1.05);
+}
+
+/* Status badges */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 span[class*="rounded-md"][class*="text-[10px]"],
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 span[class*="rounded-lg"][class*="text-xs"] {
+  border: 1px solid var(--rawaj-border) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Tables and dense data */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(table, [role="table"]) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 1rem;
+  color: var(--rawaj-text-secondary);
+  background: linear-gradient(150deg, #303137, #292a30);
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(th, td) {
+  border-bottom: 1px solid var(--rawaj-border);
+  padding: 0.7rem 0.75rem !important;
+  font-size: 0.69rem !important;
+  line-height: 1.5;
+  text-align: start;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 th {
+  color: var(--rawaj-text-primary) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Empty/loading/permission panels */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(section, div)[class*="text-center"][class*="bg-card"][class*="hairline"] {
+  display: grid;
+  min-height: 10rem;
+  place-content: center;
+  justify-items: center;
+  gap: 0.4rem;
+  border-radius: 1.1rem !important;
+  padding: 1.25rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(section, div)[class*="text-center"] > svg {
+  color: var(--rawaj-accent-blue) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(section, div)[class*="text-center"] > p:first-of-type {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+}
+
+/* User-management selection and control panel */
+.rawaj-app-shell[data-resolved-pathname="/admin/users"] .rawaj-admin-v3 button[class*="text-start"][class*="hairline"] {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.11) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/admin/users"] .rawaj-admin-v3 button[class*="ring-primary/30"] {
+  border-color: rgba(225, 100, 180, 0.3) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.08), transparent 38%),
+    linear-gradient(150deg, #353039, #2c2b31) !important;
+}
+
+/* Pending-review content and decision controls */
+.rawaj-app-shell[data-resolved-pathname="/admin/pending"] .rawaj-admin-v3 article > button[class*="bg-muted-surface"] {
+  width: 100%;
+  justify-content: center;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/admin/pending"] .rawaj-admin-v3 article > div:last-child {
+  border-top: 1px solid var(--rawaj-border);
+  padding-top: 0.7rem;
+}
+
+/* Ad placement editor: preserve the whole creative in previews. */
+.rawaj-app-shell[data-resolved-pathname="/admin/ad-placements"] .rawaj-admin-v3 label[class*="border-dashed"] {
+  border: 1px dashed rgba(225, 100, 180, 0.3) !important;
+  border-radius: 1rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.018) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.018) 75%),
+    var(--rawaj-surface-inset) !important;
+  background-size: 18px 18px !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/admin/ad-placements"] .rawaj-admin-v3 label[class*="border-dashed"] img {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: contain !important;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 0.85rem !important;
+  background: #202126;
+}
+
+/* Dialogs inherit the same hierarchy without flattening their content. */
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] [role="dialog"] {
+  border: 1px solid var(--rawaj-border-strong) !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: linear-gradient(150deg, #34353b, #292a30) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.38) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin/"] [role="dialog"] :is(h2, h3) {
+  color: var(--rawaj-text-primary) !important;
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 {
+    padding-inline: 0.7rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 {
+    gap: 0.65rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(section, article, form)[class*="rounded-2xl"][class*="hairline"] {
+    border-radius: 1rem !important;
+    padding: 0.8rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 :is(button, a)[class*="rounded-xl"] {
+    min-height: 2.75rem;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 table {
+    min-width: 42rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 * {
+    transition: none !important;
+  }
+}

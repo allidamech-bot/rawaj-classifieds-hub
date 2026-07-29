@@ -1,0 +1,808 @@
+/* RAWAJ Final Site System V6
+ * Final visual closure for listing detail, seller storefront, trust/legal,
+ * verification/promotion, taxonomy landing pages, admin workspaces, and shared states.
+ * Presentation only. No Firebase, Cloudflare, D1, R2, permissions, or business logic changes.
+ */
+
+.rawaj-app-shell {
+  --v6-panel: rgba(47, 48, 54, 0.985);
+  --v6-panel-raised: rgba(53, 54, 61, 0.985);
+  --v6-inset: rgba(24, 25, 30, 0.72);
+  --v6-line: rgba(255, 255, 255, 0.08);
+  --v6-line-strong: rgba(104, 173, 255, 0.24);
+  --v6-text: #f4f1ed;
+  --v6-text-soft: #c7c7cd;
+  --v6-muted: #9697a0;
+  --v6-coral: #ff7559;
+  --v6-pink: #df49b5;
+  --v6-blue: #68adff;
+  --v6-success: #55d8a4;
+  --v6-warning: #f0b45e;
+  --v6-danger: #ff8189;
+  --v6-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+/* Shared final quality */
+.rawaj-app-shell :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid rgba(104, 173, 255, 0.24);
+  outline-offset: 2px;
+}
+
+.rawaj-app-shell :is(input, textarea, select) {
+  font-family: inherit;
+}
+
+.rawaj-app-shell :is(input, textarea)::placeholder {
+  color: #777983;
+  opacity: 1;
+}
+
+.rawaj-app-shell img {
+  max-width: 100%;
+}
+
+.rawaj-app-shell [aria-busy="true"] {
+  cursor: progress;
+}
+
+.rawaj-app-shell :is(button, a)[aria-disabled="true"],
+.rawaj-app-shell :is(button, input, textarea, select):disabled {
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   Listing detail
+   -------------------------------------------------------------------------- */
+
+.rawaj-detail-v2 {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 117, 89, 0.035), transparent 24rem),
+    radial-gradient(circle at 88% 14%, rgba(104, 173, 255, 0.04), transparent 25rem),
+    #242529 !important;
+  color: var(--v6-text);
+}
+
+.rawaj-detail-media {
+  padding-top: 0.55rem;
+}
+
+.rawaj-detail-media__stage {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(104, 173, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 62% 62%, rgba(223, 73, 181, 0.055), transparent 36%),
+    #1d1e23 !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26) !important;
+}
+
+.rawaj-detail-media__image {
+  background: #1d1e23 !important;
+}
+
+.rawaj-detail-media__shade {
+  background:
+    linear-gradient(180deg, rgba(16, 17, 22, 0.62), transparent 22%),
+    linear-gradient(0deg, rgba(16, 17, 22, 0.68), transparent 28%) !important;
+}
+
+.rawaj-detail-media__top-actions button,
+.rawaj-detail-media__bottom-actions button,
+.rawaj-detail-media__bottom-actions span,
+.rawaj-detail-media__arrow {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(31, 32, 38, 0.78) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-detail-media__top-actions button:hover,
+.rawaj-detail-media__bottom-actions button:hover,
+.rawaj-detail-media__arrow:hover {
+  border-color: rgba(104, 173, 255, 0.32) !important;
+  background: rgba(47, 49, 58, 0.92) !important;
+}
+
+.rawaj-detail-media__thumbnails button {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #292a30 !important;
+}
+
+.rawaj-detail-media__thumbnails button[aria-pressed="true"] {
+  border-color: #68adff !important;
+  box-shadow: 0 0 0 2px rgba(104, 173, 255, 0.22) !important;
+}
+
+.rawaj-detail-summary,
+.rawaj-detail-section,
+.rawaj-detail-seller,
+.rawaj-detail-reference,
+.rawaj-detail-safety,
+.rawaj-detail-reserved {
+  border: 1px solid var(--v6-line) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 30%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.022),
+    0 12px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-detail-reserved {
+  border-color: rgba(240, 180, 94, 0.2) !important;
+  background: rgba(240, 180, 94, 0.065) !important;
+}
+
+.rawaj-detail-reserved svg,
+.rawaj-detail-reserved h2 {
+  color: #f4c47d !important;
+}
+
+.rawaj-detail-reserved p {
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-detail-summary h1,
+.rawaj-detail-section__heading h2,
+.rawaj-detail-seller :is(h2, h3, strong),
+.rawaj-detail-reference strong {
+  color: var(--v6-text) !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-detail-summary__meta,
+.rawaj-detail-section__heading p,
+.rawaj-detail-description,
+.rawaj-detail-location p,
+.rawaj-detail-reference span,
+.rawaj-detail-seller :is(p, small, span) {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-detail-summary__badges > * {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-detail-summary__badges > *:first-child {
+  border-color: rgba(255, 117, 89, 0.19) !important;
+  background: rgba(255, 117, 89, 0.075) !important;
+  color: #ff9a85 !important;
+}
+
+.rawaj-detail-price {
+  border-color: rgba(255, 117, 89, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.075), transparent 42%),
+    rgba(24, 25, 30, 0.52) !important;
+}
+
+.rawaj-detail-price > strong {
+  color: #ff917b !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-detail-price > :is(span, small) {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-detail-specs > div,
+.rawaj-detail-location {
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(24, 25, 30, 0.43) !important;
+}
+
+.rawaj-detail-specs > div span,
+.rawaj-detail-location p {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-detail-specs > div strong,
+.rawaj-detail-location strong {
+  color: var(--v6-text) !important;
+}
+
+.rawaj-detail-location > span {
+  border: 1px solid rgba(104, 173, 255, 0.14) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-detail-v2__message {
+  border: 1px solid rgba(104, 173, 255, 0.15) !important;
+  background: rgba(104, 173, 255, 0.065) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-detail-safety :is(button, a).bg-primary,
+.rawaj-detail-seller :is(button, a).bg-primary,
+.rawaj-listing-contact-dock :is(button, a).bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 11px 24px rgba(218, 67, 160, 0.16) !important;
+}
+
+.rawaj-listing-contact-dock {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(39, 40, 46, 0.93) !important;
+  box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.22) !important;
+  backdrop-filter: blur(16px) saturate(130%);
+}
+
+.rawaj-similar-listings :is(h2, h3),
+.rawaj-similar-listings-rail :is(h2, h3) {
+  color: var(--v6-text) !important;
+}
+
+.rawaj-similar-listings :is(article, a),
+.rawaj-similar-listings-rail :is(article, a) {
+  border-color: var(--v6-line) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-media-viewer {
+  background: #17181d !important;
+}
+
+/* --------------------------------------------------------------------------
+   Public seller storefront
+   -------------------------------------------------------------------------- */
+
+.rawaj-storefront-v2 {
+  color: var(--v6-text);
+}
+
+.rawaj-storefront-v2::before {
+  height: 30rem !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 117, 89, 0.06), transparent 28%),
+    radial-gradient(circle at 48% 0%, rgba(223, 73, 181, 0.055), transparent 30%),
+    radial-gradient(circle at 86% 16%, rgba(104, 173, 255, 0.06), transparent 30%) !important;
+}
+
+.rawaj-storefront-identity {
+  isolation: isolate;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.45rem !important;
+  background:
+    radial-gradient(circle at 4% 112%, rgba(255, 117, 89, 0.44), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.35), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.32), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 54px rgba(0, 0, 0, 0.24) !important;
+}
+
+.rawaj-storefront-identity__scrim {
+  background: linear-gradient(180deg, rgba(34, 35, 41, 0.1), rgba(34, 35, 41, 0.94)) !important;
+}
+
+.rawaj-storefront-identity__pattern {
+  opacity: 0.38 !important;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.48) 0 1px, transparent 1.35px) !important;
+  background-size: 19px 19px !important;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.72) 54%, transparent 94%);
+}
+
+.rawaj-storefront-identity__avatar {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(104, 173, 255, 0.17), transparent 36%),
+    linear-gradient(145deg, #393a42, #292a30) !important;
+  color: #8fc2ff !important;
+  box-shadow: 0 15px 34px rgba(0, 0, 0, 0.26) !important;
+}
+
+.rawaj-storefront-identity__copy h1 {
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-storefront-identity__meta svg,
+.rawaj-storefront-identity__metrics svg {
+  color: #8fc2ff !important;
+}
+
+.rawaj-storefront-identity__bio {
+  border-inline-start-color: #ff7559 !important;
+}
+
+.rawaj-storefront-identity__metrics > div,
+.rawaj-storefront-identity__topline > span,
+.rawaj-storefront-identity__topline > strong,
+.rawaj-storefront-identity__actions :is(a, button) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(24, 25, 30, 0.3) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.rawaj-storefront-identity__actions [data-tone="primary"] {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 11px 24px rgba(218, 67, 160, 0.17) !important;
+}
+
+.rawaj-storefront-section-header p,
+.rawaj-storefront-v2 .rawaj-signature-kicker {
+  color: #ff927b !important;
+}
+
+.rawaj-storefront-section-header h2,
+.rawaj-storefront-v2__reviews h3 {
+  color: var(--v6-text) !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-storefront-section-header > div > span,
+.rawaj-storefront-v2__reviews .text-muted-foreground {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-storefront-v2 :is(.rawaj-storefront-panel, .rawaj-storefront-v2__reviews, article.bg-card, form) {
+  border-color: var(--v6-line) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 30%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
+}
+
+.rawaj-storefront-v2 :is(.bg-white\/70, .bg-white\/72, .bg-muted-surface) {
+  border-color: rgba(255, 255, 255, 0.065) !important;
+  background: rgba(24, 25, 30, 0.43) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-storefront-v2 :is(input, textarea, select) {
+  border-color: var(--v6-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--v6-text) !important;
+  color-scheme: dark;
+}
+
+.rawaj-storefront-v2 :is(input, textarea, select):focus-visible {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline-color: rgba(104, 173, 255, 0.18) !important;
+}
+
+.rawaj-storefront-v2 :is(button, a).bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Trust, support, safety, legal, verification, promotion
+   -------------------------------------------------------------------------- */
+
+.rawaj-trust-v2,
+.rawaj-app-shell[data-resolved-pathname="/terms"] main,
+.rawaj-app-shell[data-resolved-pathname="/privacy"] main,
+.rawaj-app-shell[data-resolved-pathname="/prohibited"] main,
+.rawaj-app-shell[data-resolved-pathname="/verification"] main,
+.rawaj-app-shell[data-resolved-pathname="/promotion"] main,
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main {
+  color: var(--v6-text);
+}
+
+.rawaj-trust-hero {
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 1.35rem !important;
+  background:
+    radial-gradient(circle at 4% 112%, rgba(255, 117, 89, 0.42), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.34), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.31), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 20px 48px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-trust-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.34;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.35px);
+  background-size: 19px 19px;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.72) 54%, transparent 94%);
+}
+
+.rawaj-trust-hero__symbol,
+.rawaj-trust-hero__avatar {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(24, 25, 30, 0.32) !important;
+  color: #8fc2ff !important;
+  box-shadow: none !important;
+}
+
+.rawaj-trust-hero__identity p {
+  color: #ff9a85 !important;
+}
+
+.rawaj-trust-hero__identity h1 {
+  color: #fff !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-trust-hero__identity :is(strong, small),
+.rawaj-trust-hero__description {
+  color: rgba(255, 255, 255, 0.66) !important;
+}
+
+.rawaj-trust-hero__badges > *,
+.rawaj-trust-hero__actions > * {
+  border-color: rgba(255, 255, 255, 0.095) !important;
+  background: rgba(24, 25, 30, 0.28) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.rawaj-trust-hero__actions > *:hover {
+  border-color: rgba(104, 173, 255, 0.24) !important;
+  background: rgba(104, 173, 255, 0.085) !important;
+  color: #fff !important;
+}
+
+.rawaj-support-panel,
+.rawaj-safety-guide,
+.rawaj-trust-link-card,
+.rawaj-trust-empty,
+.rawaj-support-timeline > article,
+.rawaj-app-shell[data-resolved-pathname="/terms"] main :is(section, article),
+.rawaj-app-shell[data-resolved-pathname="/privacy"] main :is(section, article),
+.rawaj-app-shell[data-resolved-pathname="/prohibited"] main :is(section, article),
+.rawaj-app-shell[data-resolved-pathname="/verification"] main :is(section, article, form),
+.rawaj-app-shell[data-resolved-pathname="/promotion"] main :is(section, article, form),
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(section, article, form) {
+  border: 1px solid var(--v6-line) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 30%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.022),
+    0 12px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-trust-section-header p {
+  color: #ff927b !important;
+}
+
+.rawaj-trust-section-header h2,
+.rawaj-safety-guide h2,
+.rawaj-trust-link-card strong,
+.rawaj-support-timeline h3,
+.rawaj-app-shell:is([data-resolved-pathname="/terms"], [data-resolved-pathname="/privacy"], [data-resolved-pathname="/prohibited"], [data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(h1, h2, h3, strong) {
+  color: var(--v6-text) !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-trust-section-header span,
+.rawaj-trust-link-card p,
+.rawaj-support-timeline p,
+.rawaj-trust-empty p,
+.rawaj-app-shell:is([data-resolved-pathname="/terms"], [data-resolved-pathname="/privacy"], [data-resolved-pathname="/prohibited"], [data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(p, li, small, .text-muted-foreground) {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-safety-guide > header > span,
+.rawaj-trust-link-card > span,
+.rawaj-support-timeline__icon {
+  border: 1px solid rgba(104, 173, 255, 0.14) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+.rawaj-safety-guide[data-warning="true"] {
+  border-color: rgba(240, 180, 94, 0.19) !important;
+  background: rgba(240, 180, 94, 0.055) !important;
+}
+
+.rawaj-safety-guide[data-warning="true"] > header > span {
+  border-color: rgba(240, 180, 94, 0.18) !important;
+  background: rgba(240, 180, 94, 0.075) !important;
+  color: #f4c47d !important;
+}
+
+.rawaj-support-panel :is(input, textarea, select),
+.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select) {
+  min-height: 3rem;
+  border: 1px solid var(--v6-line) !important;
+  border-radius: 0.82rem;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--v6-text) !important;
+  color-scheme: dark;
+  box-shadow: none !important;
+}
+
+.rawaj-support-panel textarea,
+.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"]) main textarea {
+  min-height: 8rem;
+}
+
+.rawaj-support-panel :is(input, textarea, select):focus-visible,
+.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select):focus-visible {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline-color: rgba(104, 173, 255, 0.18) !important;
+}
+
+.rawaj-support-panel button[type="submit"],
+.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main button[type="submit"],
+.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(a, button).bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
+}
+
+.rawaj-support-timeline blockquote {
+  border-inline-start-color: #68adff !important;
+  background: rgba(104, 173, 255, 0.055) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Offers and public taxonomy landing pages
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main {
+  color: var(--v6-text);
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main :is(section, article).bg-card,
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main .rawaj-surface,
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main .bg-muted-surface {
+  border-color: var(--v6-line) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main :is(h1, h2, h3, strong) {
+  color: var(--v6-text) !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main :is(p, small, time, .text-muted-foreground) {
+  color: var(--v6-muted) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Admin final system
+   -------------------------------------------------------------------------- */
+
+.rawaj-admin-v3 {
+  color: var(--v6-text);
+}
+
+.rawaj-admin-v3::before {
+  content: "";
+  position: absolute;
+  inset: -2rem 0 auto;
+  z-index: -1;
+  height: 22rem;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 117, 89, 0.055), transparent 28%),
+    radial-gradient(circle at 48% 0%, rgba(223, 73, 181, 0.05), transparent 28%),
+    radial-gradient(circle at 86% 15%, rgba(104, 173, 255, 0.055), transparent 30%);
+  filter: blur(24px);
+}
+
+.rawaj-admin-v3 > .bg-warning\/10 {
+  border: 1px solid rgba(240, 180, 94, 0.18) !important;
+  background: rgba(240, 180, 94, 0.06) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-admin-v3 > .sticky {
+  border: 1px solid var(--v6-line) !important;
+  background: rgba(39, 40, 46, 0.92) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-admin-v3 nav > a {
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  background: rgba(255, 255, 255, 0.028) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-admin-v3 nav > a[aria-current="page"] {
+  border-color: rgba(104, 173, 255, 0.18) !important;
+  background: rgba(104, 173, 255, 0.095) !important;
+  color: #fff !important;
+}
+
+.rawaj-admin-v3 :is(section, article, form, .rawaj-surface, .bg-card) {
+  border-color: var(--v6-line) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.985), rgba(39, 40, 46, 0.985)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+.rawaj-admin-v3 .bg-muted-surface,
+.rawaj-admin-v3 .bg-muted,
+.rawaj-admin-v3 tbody tr,
+.rawaj-admin-v3 [role="row"] {
+  border-color: rgba(255, 255, 255, 0.055) !important;
+  background: rgba(24, 25, 30, 0.38) !important;
+  color: var(--v6-text-soft) !important;
+}
+
+.rawaj-admin-v3 :is(h1, h2, h3, h4, strong, th) {
+  color: var(--v6-text) !important;
+  font-family: var(--font-family, "Cairo", sans-serif) !important;
+}
+
+.rawaj-admin-v3 :is(p, small, time, td, .text-muted-foreground) {
+  color: var(--v6-muted) !important;
+}
+
+.rawaj-admin-v3 :is(input, textarea, select) {
+  min-height: 2.85rem;
+  border-color: var(--v6-line) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: var(--v6-text) !important;
+  color-scheme: dark;
+  box-shadow: none !important;
+}
+
+.rawaj-admin-v3 :is(input, textarea, select):focus-visible {
+  border-color: rgba(104, 173, 255, 0.46) !important;
+  outline-color: rgba(104, 173, 255, 0.18) !important;
+}
+
+.rawaj-admin-v3 :is(button, a).bg-primary,
+.rawaj-admin-v3 button[type="submit"] {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
+  box-shadow: 0 9px 20px rgba(218, 67, 160, 0.14) !important;
+}
+
+.rawaj-admin-v3 table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rawaj-admin-v3 thead {
+  background: rgba(104, 173, 255, 0.05) !important;
+}
+
+.rawaj-admin-v3 :is(.text-destructive, [data-tone="danger"]) {
+  color: #ff999f !important;
+}
+
+.rawaj-admin-v3 :is(.text-warning, [data-tone="warning"]) {
+  color: #f4c47d !important;
+}
+
+.rawaj-admin-v3 :is(.text-emerald-trust, [data-tone="success"]) {
+  color: #7ee4bc !important;
+}
+
+/* --------------------------------------------------------------------------
+   Route-level loading, empty and error cards
+   -------------------------------------------------------------------------- */
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname^="/listings/"],
+    [data-resolved-pathname^="/seller/"],
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"],
+    [data-resolved-pathname="/reset-password"],
+    [data-resolved-pathname^="/admin"]
+  ) main > .rawaj-surface,
+.rawaj-app-shell:is(
+    [data-resolved-pathname^="/listings/"],
+    [data-resolved-pathname^="/seller/"],
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"],
+    [data-resolved-pathname="/reset-password"],
+    [data-resolved-pathname^="/admin"]
+  ) main > section.rounded-2xl {
+  border: 1px solid var(--v6-line) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(104, 173, 255, 0.06), transparent 36%),
+    linear-gradient(155deg, rgba(48, 49, 55, 0.985), rgba(39, 40, 46, 0.985)) !important;
+  color: var(--v6-text-soft) !important;
+  box-shadow: var(--v6-shadow) !important;
+}
+
+/* Mobile closure */
+@media (max-width: 767px) {
+  .rawaj-detail-media {
+    padding-top: 0;
+  }
+
+  .rawaj-detail-media__stage {
+    border-radius: 0 0 1rem 1rem !important;
+  }
+
+  .rawaj-detail-v2__container,
+  .rawaj-storefront-v2,
+  .rawaj-trust-v2,
+  .rawaj-admin-v3 {
+    padding-inline: 0.75rem;
+  }
+
+  .rawaj-storefront-identity,
+  .rawaj-trust-hero {
+    border-radius: 1.1rem !important;
+  }
+
+  .rawaj-storefront-identity__content {
+    min-height: 22rem !important;
+  }
+
+  .rawaj-storefront-identity__main {
+    align-items: center;
+  }
+
+  .rawaj-storefront-identity__copy h1 {
+    white-space: normal !important;
+  }
+
+  .rawaj-admin-v3 > .sticky {
+    top: calc(var(--rawaj-header-height, 3.75rem) + 0.35rem) !important;
+    border-radius: 0.9rem !important;
+  }
+
+  .rawaj-admin-v3 nav {
+    scroll-padding-inline: 0.5rem;
+  }
+
+  .rawaj-listing-contact-dock {
+    bottom: calc(var(--rawaj-bottom-dock-height, 4.75rem) + env(safe-area-inset-bottom) + 0.35rem) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .rawaj-detail-summary__badges > *:nth-child(n + 3),
+  .rawaj-trust-hero__badges > *:nth-child(n + 3) {
+    display: none;
+  }
+
+  .rawaj-storefront-identity__metrics {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .rawaj-detail-v2 :is(button, a),
+  .rawaj-storefront-v2 :is(button, a),
+  .rawaj-trust-v2 :is(button, a),
+  .rawaj-admin-v3 :is(button, a) {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell *,
+  .rawaj-app-shell *::before,
+  .rawaj-app-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -18,21 +18,24 @@ test("chat audio MIME aliases canonicalize Android WebView quirks", () => {
 });
 
 test("chat audio validation keeps the canonical list and adds an operation code", () => {
-  assert.match(
-    messaging,
-    /operation: "chat_audio_validation"/,
-  );
+  assert.match(messaging, /operation: "chat_audio_validation"/);
   for (const type of ["audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg"]) {
     assert.match(messaging, new RegExp(`"${type}"`));
   }
 });
 
-test("chat audio upload canonicalizes MIME/extension and keeps the ArrayBuffer transport", () => {
+test("chat audio upload canonicalizes MIME/extension before Cloudflare Worker transport", () => {
   assert.match(messaging, /normalizeChatAudioFileName/);
   assert.match(messaging, /extensionForChatAudioMime/);
   assert.match(messaging, /payload\.file\.arrayBuffer\(\)/);
-  assert.match(messaging, /\.upload\(path, audioBytes, \{ upsert: false, contentType: mimeType/);
-  assert.match(messaging, /operation: "chat_audio_recorder"/);
+  assert.match(messaging, /const form = new FormData\(\)/);
+  assert.match(messaging, /form\.set\("file", normalizedFile, normalizedFile\.name\)/);
+  assert.match(
+    messaging,
+    /`\/v1\/conversations\/\$\{encodeURIComponent\(conversationId\)\}\/attachments`/,
+  );
+  assert.match(messaging, /cloudflareApiRequest<UploadedChatAttachment>/);
+  assert.doesNotMatch(messaging, /\.upload\(/);
   assert.match(messaging, /operation: "chat_audio_prepare"/);
   assert.match(messaging, /operation: "chat_audio_upload"/);
 });
@@ -49,7 +52,10 @@ test("recorder supports candidate MIME list with safe fallback and error handlin
 
 test("recorder normalizes Android aliases, guards stop, and exposes onerror", () => {
   assert.match(strategy, /if \(base === "video\/webm"\) return "audio\/webm"/);
-  assert.match(strategy, /if \(base === "audio\/m4a" \|\| base === "audio\/x-m4a"\) return "audio\/mp4"/);
+  assert.match(
+    strategy,
+    /if \(base === "audio\/m4a" \|\| base === "audio\/x-m4a"\) return "audio\/mp4"/,
+  );
   assert.match(strategy, /if \(base === "audio\/mp3"\) return "audio\/mpeg"/);
   assert.match(recorder, /recorder\.onerror = /);
   assert.match(recorder, /recorder\.state === "recording"\) recorder\.stop\(\)/);

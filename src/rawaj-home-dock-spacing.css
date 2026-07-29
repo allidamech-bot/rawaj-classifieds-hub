@@ -1,0 +1,33 @@
+/* RAWAJ home finishing corrections.
+ * The app shell already reserves the fixed mobile dock height, so the home page
+ * must not add a second dock-sized bottom padding of its own.
+ */
+
+.rawaj-app-shell[data-resolved-pathname="/"][data-shell-dock="true"] .rawaj-app-shell__page {
+  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 0.5rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
+  padding-bottom: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+  padding-bottom: 0 !important;
+}
+
+/* A missing listing image is represented by the category glyph alone.
+ * Never overlay the awkward "no image" badge on the premium placeholder.
+ */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-no-image {
+  display: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media > div,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media > div {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background:
+    radial-gradient(circle at 50% 43%, rgba(225, 77, 191, 0.1), transparent 30%),
+    radial-gradient(circle at 58% 58%, rgba(255, 111, 79, 0.07), transparent 36%),
+    linear-gradient(145deg, #2b2d33, #202227) !important;
+}

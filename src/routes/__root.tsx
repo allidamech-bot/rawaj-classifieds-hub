@@ -95,7 +95,6 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   const { text } = useUiPreferences();
 
@@ -104,7 +103,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <FeedbackState
         tone="error"
         title={text("حدث خطأ غير متوقع", "Something went wrong")}
@@ -123,7 +122,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           </Button>
         }
       />
-    </div>
+    </main>
   );
 }
 
@@ -136,7 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#123f38" },
+        { name: "theme-color", content: "#242529" },
         { name: "author", content: "RAWAJ" },
         { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
         { name: "rawaj-build-environment", content: rawajBuildInfo.environment },
@@ -237,7 +236,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
         {
           rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
+          href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap",
         },
       ],
     };

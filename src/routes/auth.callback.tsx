@@ -35,10 +35,16 @@ function AuthCallbackPage() {
   }, [mode, oobCode, returnTo]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="rawaj-surface relative w-full max-w-md overflow-hidden rounded-[1.7rem] p-8 text-center sm:p-10">
+    <main className="rawaj-auth-callback-v4">
+      <div
+        className="rawaj-auth-callback-v4__card text-center"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <svg
-          className="mx-auto h-10 w-10 animate-spin text-primary"
+          aria-hidden="true"
+          className="rawaj-auth-callback-v4__spinner mx-auto h-10 w-10 animate-spin"
           viewBox="0 0 24 24"
           fill="none"
         >
@@ -56,9 +62,15 @@ function AuthCallbackPage() {
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
-        <h1 className="mt-4 text-lg font-bold text-primary">
+        <h1 className="mt-4 text-lg font-bold">
           {text("جارٍ إكمال عملية الحساب...", "Completing the account request...")}
         </h1>
+        <p className="mx-auto mt-2 max-w-sm">
+          {text(
+            "سيتم نقلك تلقائياً إلى الخطوة المناسبة خلال لحظات.",
+            "You will be redirected automatically to the correct next step.",
+          )}
+        </p>
       </div>
     </main>
   );

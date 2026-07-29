@@ -1,0 +1,494 @@
+/* RAWAJ owner listings workspace v9.
+ * Explicit component ownership for /profile/listings. No broad section/article selectors.
+ */
+
+.rawaj-owner-workspace-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr);
+  gap: 1rem;
+  align-items: center;
+  padding: clamp(1rem, 2.5vw, 1.35rem);
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong);
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 112, 84, 0.13), transparent 29%),
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.12), transparent 31%),
+    linear-gradient(145deg, #323339, #292a30 68%, #27282d);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.rawaj-owner-workspace-summary__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.rawaj-owner-workspace-summary__avatar {
+  display: grid;
+  width: 4.25rem;
+  height: 4.25rem;
+  flex: 0 0 4.25rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 1.15rem;
+  color: #fff;
+  background: linear-gradient(145deg, rgba(255, 112, 84, 0.9), rgba(220, 62, 182, 0.82) 52%, rgba(63, 145, 255, 0.84));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-workspace-summary__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rawaj-owner-workspace-summary__copy {
+  min-width: 0;
+}
+
+.rawaj-owner-workspace-summary__copy > p {
+  margin: 0 0 0.22rem;
+  color: var(--rawaj-accent-pink);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-workspace-summary__name-row {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rawaj-owner-workspace-summary__name-row h1 {
+  min-width: 0;
+  margin: 0;
+  color: var(--rawaj-text-primary) !important;
+  font-size: clamp(1.05rem, 3vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-owner-workspace-summary__copy > strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--rawaj-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.rawaj-owner-workspace-summary__verified,
+.rawaj-owner-workspace-summary__location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.rawaj-owner-workspace-summary__verified {
+  border: 1px solid rgba(105, 217, 236, 0.22);
+  border-radius: 999px;
+  padding: 0.22rem 0.48rem;
+  color: var(--rawaj-accent-cyan);
+  background: rgba(105, 217, 236, 0.07);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-workspace-summary__verified svg,
+.rawaj-owner-workspace-summary__location svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.rawaj-owner-workspace-summary__location {
+  margin-top: 0.4rem;
+  color: var(--rawaj-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.rawaj-owner-workspace-summary__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.rawaj-owner-workspace-summary__metrics > div {
+  display: grid;
+  min-width: 0;
+  min-height: 4.25rem;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "icon value"
+    "label label";
+  align-content: center;
+  align-items: center;
+  gap: 0.18rem 0.35rem;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 0.95rem;
+  padding: 0.55rem 0.6rem;
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.rawaj-owner-workspace-summary__metrics svg {
+  grid-area: icon;
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.rawaj-owner-workspace-summary__metrics strong {
+  grid-area: value;
+  color: var(--rawaj-text-primary);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.rawaj-owner-workspace-summary__metrics span {
+  grid-area: label;
+  min-width: 0;
+  color: var(--rawaj-text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.rawaj-owner-workspace-summary__metrics > div[data-tone="live"] svg { color: var(--rawaj-success); }
+.rawaj-owner-workspace-summary__metrics > div[data-tone="pending"] svg { color: var(--rawaj-accent-blue); }
+.rawaj-owner-workspace-summary__metrics > div[data-tone="action"] svg { color: var(--rawaj-warning); }
+.rawaj-owner-workspace-summary__metrics > div[data-tone="closed"] svg { color: var(--rawaj-text-muted); }
+
+.rawaj-owner-workspace-summary__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding-top: 0.1rem;
+}
+
+.rawaj-owner-workspace-summary__actions a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  border: 1px solid var(--rawaj-border-strong);
+  border-radius: 0.9rem;
+  padding: 0.55rem 0.9rem;
+  color: var(--rawaj-text-secondary);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-workspace-summary__actions a svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--rawaj-gradient-action-short);
+  box-shadow: 0 10px 24px rgba(155, 40, 111, 0.24);
+}
+
+/* Put the active draft before store identity so the next action is immediate. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-account-store-v3 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-account-store-v3 > * {
+  order: 3;
+  margin: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] {
+  order: 1;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary {
+  order: 2;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(227, 160, 75, 0.24) !important;
+  border-radius: 1.2rem !important;
+  padding: 0.9rem 1rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.12), transparent 36%),
+    linear-gradient(145deg, #383127, #302d2a) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] h3 {
+  color: #f4d4a0 !important;
+  font-size: 0.88rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] p {
+  margin-top: 0.25rem;
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] :is(a, button) {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(227, 160, 75, 0.2);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  color: #f3dfbd !important;
+  background: rgba(227, 160, 75, 0.08) !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] a {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(115deg, #bd4935, #922867) !important;
+}
+
+.rawaj-storefront-owner-tabs {
+  display: flex;
+  max-width: 100%;
+  gap: 0.45rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 0.25rem 0.1rem 0.45rem;
+  scrollbar-width: thin;
+}
+
+.rawaj-storefront-owner-tabs button {
+  position: relative;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.9rem !important;
+  padding: 0.55rem 0.8rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-storefront-owner-tabs button[data-active="true"] {
+  color: #fff !important;
+  border-color: rgba(225, 100, 180, 0.32) !important;
+  background: rgba(225, 100, 180, 0.11) !important;
+  box-shadow: inset 0 -2px 0 var(--rawaj-accent-pink) !important;
+}
+
+.rawaj-storefront-owner-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.rawaj-owner-listing-card {
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.25rem !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-owner-listing-card .rawaj-product-media {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rawaj-border);
+  background: var(--rawaj-surface-inset);
+}
+
+.rawaj-owner-listing-card .rawaj-product-media > :is(img, div) {
+  width: 100%;
+  aspect-ratio: 16 / 8.5 !important;
+  object-fit: cover;
+}
+
+.rawaj-owner-listing-card > .space-y-2 {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.9rem !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > * {
+  margin: 0 !important;
+}
+
+.rawaj-owner-listing-card h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.92rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > p {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  padding: 0.55rem 0.65rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.69rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > p.bg-destructive\/10 {
+  border-color: rgba(234, 113, 104, 0.22) !important;
+  color: #f2aaa4 !important;
+  background: rgba(234, 113, 104, 0.075) !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .text-lg {
+  color: #f4d8aa !important;
+  font-size: 1.05rem !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .text-\[11px\].text-muted-foreground {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem !important;
+  padding-top: 0.15rem;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > :is(a, button, select, span) {
+  width: 100%;
+  min-height: 2.7rem !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  padding: 0.5rem 0.6rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  font-size: 0.69rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > a:has(svg.lucide-pencil) {
+  grid-column: 1 / -1;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 9px 20px rgba(155, 40, 111, 0.22);
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > span {
+  grid-column: 1 / -1;
+  min-height: auto !important;
+  justify-content: flex-start;
+  color: var(--rawaj-text-muted) !important;
+  text-align: start;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > button:has(svg.lucide-trash-2) {
+  color: #f2aaa4 !important;
+  border-color: rgba(234, 113, 104, 0.2) !important;
+  background: rgba(234, 113, 104, 0.07) !important;
+}
+
+.rawaj-owner-listing-card > .space-y-2 > .rounded-xl.bg-brand-orange\/5 {
+  border: 1px solid rgba(255, 112, 84, 0.16) !important;
+  border-radius: 0.95rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 112, 84, 0.08), transparent 38%),
+    rgba(255, 112, 84, 0.035) !important;
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-owner-workspace-summary {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    padding: 0.9rem;
+  }
+
+  .rawaj-owner-workspace-summary__avatar {
+    width: 3.65rem;
+    height: 3.65rem;
+    flex-basis: 3.65rem;
+    border-radius: 1rem;
+  }
+
+  .rawaj-owner-workspace-summary__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-owner-workspace-summary__metrics > div {
+    min-height: 3.75rem;
+  }
+
+  .rawaj-owner-workspace-summary__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
+    grid-column: 1 / -1;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] > div:last-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .rawaj-storefront-owner-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 24rem) {
+  .rawaj-owner-workspace-summary__actions,
+  .rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-notice[data-tone="draft"] > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-owner-workspace-summary__actions a[data-tone="primary"],
+  .rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > a:has(svg.lucide-pencil),
+  .rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > span {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-storefront-owner-tabs,
+  .rawaj-owner-listing-card * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

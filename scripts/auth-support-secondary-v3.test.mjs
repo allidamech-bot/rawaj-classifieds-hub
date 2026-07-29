@@ -32,7 +32,7 @@ const [
 
 test("phase 7 scopes authentication, recovery, legal, prohibited, and offers surfaces", () => {
   assert.match(login, /rawaj-auth-premium-v3/);
-  assert.match(reset, /rawaj-auth-recovery-v3/);
+  assert.match(reset, /rawaj-auth-recovery-v4/);
   assert.match(terms, /rawaj-legal-v3/);
   assert.match(privacy, /rawaj-legal-v3/);
   assert.match(prohibited, /rawaj-prohibited-v3/);

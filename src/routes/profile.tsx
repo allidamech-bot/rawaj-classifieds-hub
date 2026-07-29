@@ -539,8 +539,14 @@ function ProfilePage() {
           avatarUrl={auth.profile?.avatarUrl}
           coverUrl={auth.profile?.coverUrl}
           location={auth.profile?.cityArea || auth.profile?.governorate}
-          roleLabel={roleLabel(auth.profile?.role, text)}
-          statusLabel={accountStatusLabel(auth.profile?.accountStatus, text)}
+          roleLabel={
+            auth.status === "signedIn" ? roleLabel(auth.profile?.role, text) : text("زائر", "Guest")
+          }
+          statusLabel={
+            auth.status === "signedIn"
+              ? accountStatusLabel(auth.profile?.accountStatus, text)
+              : text("غير مسجّل", "Signed out")
+          }
           verified={auth.profile?.verificationStatus === "verified"}
           signedIn={auth.status === "signedIn"}
           actions={

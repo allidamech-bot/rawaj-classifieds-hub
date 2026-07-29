@@ -1,0 +1,1189 @@
+/* RAWAJ personal activity system v10.
+ * Presentation-only hierarchy for messages, notifications, activity,
+ * favorites, and saved searches. Runtime behavior and data ownership stay unchanged.
+ */
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/chats"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-app-shell__page {
+  min-height: 100dvh;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/chats"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) main.mobile-page-bottom {
+  padding-top: 0.75rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-content-stack {
+  display: grid;
+  gap: 0.85rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-content-stack > * {
+  margin: 0 !important;
+}
+
+/* Communication identity: compact status header, not a landing-page billboard. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.62fr) !important;
+  grid-template-areas:
+    "copy metrics"
+    "actions actions";
+  align-items: center !important;
+  gap: 0.75rem 1rem !important;
+  min-height: auto !important;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.35rem !important;
+  padding: clamp(0.95rem, 2.5vw, 1.25rem) !important;
+  color: var(--rawaj-text-primary) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.13), transparent 35%),
+    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.1), transparent 38%),
+    linear-gradient(145deg, #313239, #292a30 68%, #27282d) !important;
+  box-shadow:
+    0 15px 34px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__copy {
+  grid-area: copy;
+  min-width: 0;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__copy > p {
+  display: flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.25rem !important;
+  color: var(--rawaj-accent-pink) !important;
+  font-size: 0.66rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__copy :is(h1, h2) {
+  margin: 0 !important;
+  color: var(--rawaj-text-primary) !important;
+  font-size: clamp(1.05rem, 3vw, 1.35rem) !important;
+  line-height: 1.35 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__copy > span {
+  display: block !important;
+  max-width: 68ch;
+  margin-top: 0.35rem !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.7rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics {
+  grid-area: metrics;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  margin: 0 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics > div {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 0.05rem 0.45rem !important;
+  min-height: 4rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.95rem !important;
+  padding: 0.65rem !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics > div:first-child {
+  border-color: rgba(63, 145, 255, 0.2) !important;
+  background: rgba(63, 145, 255, 0.055) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics > div:nth-child(2) {
+  border-color: rgba(255, 112, 84, 0.2) !important;
+  background: rgba(255, 112, 84, 0.055) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics svg {
+  grid-row: 1 / span 2;
+  width: 1rem !important;
+  height: 1rem !important;
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 1rem !important;
+  line-height: 1.1 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__metrics span {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.58rem !important;
+  line-height: 1.35 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__actions {
+  grid-area: actions;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.4rem !important;
+  margin: 0 !important;
+  padding-top: 0.1rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__actions :is(a, button) {
+  display: inline-flex;
+  min-height: 2.45rem !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.78rem !important;
+  padding: 0.45rem 0.7rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.66rem !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero__actions [data-active="true"] {
+  border-color: rgba(255, 112, 84, 0.24) !important;
+  color: #ffd0c7 !important;
+  background: rgba(255, 112, 84, 0.08) !important;
+}
+
+/* Activity: one clear switch, then one focused feed. */
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  padding: 0.35rem !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button {
+  display: inline-flex;
+  min-height: 2.8rem !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid transparent !important;
+  border-radius: 0.75rem !important;
+  color: var(--rawaj-text-muted) !important;
+  background: transparent !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
+  border-color: rgba(63, 145, 255, 0.22) !important;
+  color: var(--rawaj-text-primary) !important;
+  background: linear-gradient(145deg, rgba(63, 145, 255, 0.13), rgba(220, 62, 182, 0.07)) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button b {
+  display: grid;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border-radius: 999px;
+  padding-inline: 0.25rem;
+  color: #fff;
+  background: var(--rawaj-accent-coral);
+  font-size: 0.58rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel {
+  display: grid !important;
+  gap: 0.7rem !important;
+  min-height: auto !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.15rem !important;
+  padding: 0.85rem !important;
+  background: linear-gradient(155deg, #303137, #2a2b31) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child {
+  min-height: 2.6rem;
+  padding-inline: 0.15rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.86rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child a {
+  min-height: 2.3rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.72rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed {
+  display: grid !important;
+  gap: 0.45rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > :is(a, article) {
+  min-height: 4.6rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.9rem !important;
+  padding: 0.7rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: rgba(255, 255, 255, 0.022) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > .rawaj-notification-timeline[data-read="false"] {
+  border-color: rgba(255, 112, 84, 0.22) !important;
+  background: rgba(255, 112, 84, 0.045) !important;
+  box-shadow: inset 3px 0 0 var(--rawaj-accent-coral) !important;
+}
+
+[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > .rawaj-notification-timeline[data-read="false"] {
+  box-shadow: inset -3px 0 0 var(--rawaj-accent-coral) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation > b {
+  display: grid;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: 999px;
+  padding-inline: 0.25rem;
+  color: #fff;
+  background: var(--rawaj-accent-coral);
+  font-size: 0.6rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-state {
+  min-height: 7rem;
+  border: 1px dashed var(--rawaj-border) !important;
+  border-radius: 0.95rem !important;
+  padding: 1rem !important;
+  color: var(--rawaj-text-muted) !important;
+  background: rgba(255, 255, 255, 0.018) !important;
+}
+
+/* Notifications: unread is obvious; preferences and follow-up are secondary. */
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-panel {
+  display: grid !important;
+  gap: 0.7rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1.15rem !important;
+  padding: 0.85rem !important;
+  background: linear-gradient(155deg, #303137, #2a2b31) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-section-header {
+  display: flex !important;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 !important;
+  padding: 0.1rem 0.15rem 0.25rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-section-header p {
+  color: var(--rawaj-accent-coral) !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-section-header h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.92rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-section-header span {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.67rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-list {
+  display: grid !important;
+  gap: 0.48rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.95rem !important;
+  padding: 0.2rem !important;
+  background: rgba(255, 255, 255, 0.022) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline[data-read="false"] {
+  border-color: rgba(255, 112, 84, 0.22) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 112, 84, 0.07), transparent 42%),
+    rgba(255, 255, 255, 0.026) !important;
+  box-shadow: inset 3px 0 0 var(--rawaj-accent-coral) !important;
+}
+
+[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline[data-read="false"] {
+  box-shadow: inset -3px 0 0 var(--rawaj-accent-coral) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline > :is(button:first-child, div:first-child) {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem !important;
+  min-width: 0;
+  min-height: 4.8rem;
+  border: 0 !important;
+  padding: 0.65rem !important;
+  color: inherit !important;
+  background: transparent !important;
+  text-align: start;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__icon {
+  display: grid;
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  place-items: center;
+  border: 1px solid rgba(63, 145, 255, 0.18) !important;
+  border-radius: 0.85rem !important;
+  color: #b9d5ff !important;
+  background: rgba(63, 145, 255, 0.07) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline[data-read="false"] .rawaj-notification-timeline__icon {
+  border-color: rgba(255, 112, 84, 0.22) !important;
+  color: #ffd0c7 !important;
+  background: rgba(255, 112, 84, 0.08) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy {
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy strong {
+  display: block;
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.5 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy p {
+  margin-top: 0.18rem !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.66rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy small {
+  display: block;
+  margin-top: 0.28rem !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.58rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__chevron {
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__read {
+  display: inline-flex !important;
+  min-height: 2.25rem !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  align-self: stretch;
+  border: 0 !important;
+  border-inline-start: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.72rem !important;
+  padding: 0.45rem 0.6rem !important;
+  color: #c9defd !important;
+  background: rgba(63, 145, 255, 0.055) !important;
+  font-size: 0.59rem !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-preferences {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  padding: 0.75rem !important;
+  background: rgba(255, 255, 255, 0.018) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up {
+  display: grid !important;
+  gap: 0.55rem !important;
+  border: 0 !important;
+  padding: 0.15rem 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up > h2 {
+  color: var(--rawaj-text-secondary) !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid > a {
+  display: grid !important;
+  min-height: 4.6rem;
+  place-items: center;
+  gap: 0.35rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.85rem !important;
+  padding: 0.55rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  font-size: 0.61rem !important;
+  text-align: center;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid > a > span {
+  width: 2.15rem !important;
+  height: 2.15rem !important;
+  border: 0 !important;
+  border-radius: 0.7rem !important;
+  color: #ffd0c7 !important;
+  background: rgba(255, 112, 84, 0.07) !important;
+}
+
+/* Messaging: working surface first, secondary controls stay quiet. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-v2--messages {
+  display: grid;
+  gap: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
+  grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr) !important;
+  min-height: min(76dvh, 52rem) !important;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.25rem !important;
+  background: #292a30 !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar {
+  min-width: 0;
+  border-inline-end: 1px solid var(--rawaj-border) !important;
+  padding: 0.75rem !important;
+  background: linear-gradient(165deg, #303137, #292a30) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar__heading {
+  min-height: 2.5rem;
+  margin-bottom: 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar__heading h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.86rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar__heading > span {
+  display: grid;
+  min-width: 1.7rem !important;
+  height: 1.7rem !important;
+  place-items: center;
+  border-radius: 0.55rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  font-size: 0.62rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search {
+  min-height: 2.75rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.78rem !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-list {
+  display: grid !important;
+  gap: 0.35rem !important;
+  margin-top: 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary {
+  min-height: 4.45rem !important;
+  gap: 0.6rem !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.85rem !important;
+  padding: 0.6rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary[data-selected="true"] {
+  border-color: rgba(63, 145, 255, 0.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.09), transparent 46%),
+    rgba(255, 255, 255, 0.028) !important;
+  box-shadow: inset 3px 0 0 var(--rawaj-accent-blue) !important;
+}
+
+[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary[data-selected="true"] {
+  box-shadow: inset -3px 0 0 var(--rawaj-accent-blue) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-participant-avatar {
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: linear-gradient(145deg, rgba(63, 145, 255, 0.13), rgba(220, 62, 182, 0.09)) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__copy strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__copy :is(small, p) {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.62rem !important;
+  line-height: 1.45 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__meta time {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.56rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__meta b {
+  background: var(--rawaj-accent-coral) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-panel {
+  min-width: 0;
+  min-height: min(76dvh, 52rem) !important;
+  border: 0 !important;
+  background: #292a30 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header {
+  border-color: var(--rawaj-border) !important;
+  padding: 0.7rem 0.8rem !important;
+  background: linear-gradient(160deg, #313239, #2b2c32) !important;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header__copy h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.78rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header__copy :is(a, span) {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.62rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header button {
+  min-height: 2.3rem !important;
+  border: 1px solid rgba(239, 111, 108, 0.18) !important;
+  border-radius: 0.72rem !important;
+  color: #f2aaa4 !important;
+  background: rgba(239, 111, 108, 0.055) !important;
+  font-size: 0.6rem !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-stream {
+  gap: 0.5rem !important;
+  padding: 0.85rem !important;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(63, 145, 255, 0.04), transparent 28%),
+    radial-gradient(circle at 90% 90%, rgba(220, 62, 182, 0.035), transparent 30%),
+    #25262b !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble {
+  max-width: min(78%, 38rem) !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem 1rem 1rem 0.32rem !important;
+  padding: 0.65rem 0.75rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: #303137 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.65 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.11) !important;
+}
+
+[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble {
+  border-radius: 1rem 1rem 0.32rem 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble[data-mine="true"] {
+  border-color: rgba(220, 62, 182, 0.18) !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #87415b, #6b406d) !important;
+  box-shadow: 0 5px 14px rgba(41, 19, 40, 0.24) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble__time,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble__report {
+  font-size: 0.56rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble__report {
+  color: #f2aaa4 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer {
+  border-color: var(--rawaj-border) !important;
+  padding: 0.7rem !important;
+  background: linear-gradient(160deg, #303137, #292a30) !important;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer__block-reason {
+  min-height: 2.3rem !important;
+  border: 1px dashed rgba(239, 111, 108, 0.18) !important;
+  border-radius: 0.68rem !important;
+  padding: 0.45rem 0.65rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(239, 111, 108, 0.035) !important;
+  font-size: 0.58rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-quick-replies {
+  display: flex !important;
+  gap: 0.35rem !important;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-quick-replies::-webkit-scrollbar {
+  display: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-quick-replies button {
+  flex: 0 0 auto;
+  min-height: 2.15rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.65rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  font-size: 0.58rem !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer textarea {
+  min-height: 3.15rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.8rem !important;
+  padding: 0.65rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: #24252a !important;
+  font-size: 0.7rem !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer .grid > button:not(.rawaj-message-composer__send),
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer .grid > :is(div, span) > button {
+  min-height: 2.85rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.76rem !important;
+  color: #b9d5ff !important;
+  background: rgba(63, 145, 255, 0.055) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer__send {
+  min-height: 2.85rem !important;
+  border: 0 !important;
+  border-radius: 0.78rem !important;
+  color: #fff !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 18px rgba(113, 64, 109, 0.22) !important;
+}
+
+/* Favorites: collection first, unavailable history clearly separated. */
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child,
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.2rem !important;
+  padding: 0.9rem 1rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(220, 62, 182, 0.1), transparent 42%),
+    linear-gradient(150deg, #323238, #2b2c31) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child {
+  border-color: rgba(220, 62, 182, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
+  border-color: rgba(63, 145, 255, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.11), transparent 42%),
+    linear-gradient(150deg, #30333a, #2b2c31) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+  .rawaj-account-collection-v3 > section:first-child h2 {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.9rem !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+  .rawaj-account-collection-v3 > section:first-child p {
+  max-width: 76ch;
+  margin-top: 0.25rem !important;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.68rem !important;
+  line-height: 1.6 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.65rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact,
+.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 {
+  min-height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  background: linear-gradient(155deg, #303137, #292a30) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__media {
+  aspect-ratio: 16 / 10 !important;
+  border-radius: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__body {
+  padding: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
+  inset: 0.55rem 0.55rem auto auto !important;
+}
+
+[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
+  inset: 0.55rem auto auto 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid rgba(239, 111, 108, 0.2) !important;
+  border-radius: 0.72rem !important;
+  color: #f2aaa4 !important;
+  background: rgba(30, 30, 34, 0.84) !important;
+  backdrop-filter: blur(8px);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 {
+  opacity: 1 !important;
+  border-style: dashed !important;
+  border-color: rgba(227, 160, 75, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.055), transparent 45%),
+    #2b2c31 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:first-child {
+  grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child a {
+  min-height: 2.45rem !important;
+  border-radius: 0.72rem !important;
+  background: rgba(63, 145, 255, 0.08) !important;
+  color: #c9defd !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child button {
+  width: 2.45rem !important;
+  height: 2.45rem !important;
+  border: 1px solid rgba(239, 111, 108, 0.18) !important;
+  border-radius: 0.72rem !important;
+  color: #f2aaa4 !important;
+  background: rgba(239, 111, 108, 0.055) !important;
+}
+
+/* Saved searches: creator is an intentional command bar; saved rows are scannable. */
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(9rem, 0.55fr) auto !important;
+  gap: 0.55rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  padding: 0.75rem !important;
+  background: linear-gradient(155deg, #303137, #292a30) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form :is(input, select) {
+  min-height: 2.85rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.55rem 0.7rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: #24252a !important;
+  font-size: 0.7rem !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form button[type="submit"] {
+  min-height: 2.85rem !important;
+  border: 0 !important;
+  border-radius: 0.75rem !important;
+  padding-inline: 1rem !important;
+  color: #fff !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  font-size: 0.7rem !important;
+  box-shadow: 0 8px 18px rgba(113, 64, 109, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li {
+  display: grid;
+  align-content: space-between;
+  min-height: 8.5rem;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 1rem !important;
+  padding: 0.8rem !important;
+  background: linear-gradient(155deg, #303137, #292a30) !important;
+  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:first-child {
+  align-items: flex-start !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li .lucide-search {
+  color: #b9d5ff !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li select {
+  min-height: 1.9rem !important;
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: 0.58rem !important;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li button[aria-label] {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border: 1px solid rgba(239, 111, 108, 0.18) !important;
+  border-radius: 0.7rem !important;
+  color: #f2aaa4 !important;
+  background: rgba(239, 111, 108, 0.055) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:last-child a {
+  display: inline-flex;
+  min-height: 2.35rem !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(63, 145, 255, 0.18) !important;
+  border-radius: 0.7rem !important;
+  padding: 0.45rem 0.75rem !important;
+  color: #c9defd !important;
+  background: rgba(63, 145, 255, 0.065) !important;
+  font-size: 0.64rem !important;
+  box-shadow: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > :is(a, article):hover,
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline:hover,
+  .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact:hover,
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li:hover {
+    border-color: var(--rawaj-border-strong) !important;
+    transform: translateY(-1px);
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary:hover {
+    border-color: var(--rawaj-border) !important;
+    background: rgba(255, 255, 255, 0.022) !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "copy"
+      "metrics"
+      "actions";
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form button[type="submit"] {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 639px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero {
+    gap: 0.6rem !important;
+    border-radius: 1.1rem !important;
+    padding: 0.8rem !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero__copy > span {
+    display: none !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero__metrics > div {
+    min-height: 3.45rem;
+    padding: 0.5rem !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero__actions {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"]
+  ) .rawaj-communication-hero__actions :is(a, button) {
+    min-width: 0;
+    padding-inline: 0.45rem !important;
+    font-size: 0.6rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel,
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-panel {
+    border-radius: 1rem !important;
+    padding: 0.65rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__read {
+    min-height: 2.15rem !important;
+    border-inline-start: 0 !important;
+    border-top: 1px solid var(--rawaj-border) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
+    min-height: 0 !important;
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] .rawaj-message-panel {
+    min-height: calc(100dvh - 9.5rem) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header__row {
+    display: grid !important;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 0.45rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-stream {
+    min-height: 48dvh;
+    padding: 0.7rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble {
+    max-width: 88% !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer > div.grid:last-of-type {
+    grid-template-columns: repeat(3, 2.8rem) minmax(6rem, 1fr) !important;
+    gap: 0.4rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer > div.grid:last-of-type > textarea {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer > div.grid:last-of-type > .rawaj-message-composer__send {
+    min-width: 0;
+    padding-inline: 0.55rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.grid,
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul,
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form button[type="submit"] {
+    grid-column: auto;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li {
+    min-height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > :is(a, article),
+  .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline,
+  .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact,
+  .rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li {
+    transition: none !important;
+  }
+}

@@ -34,23 +34,13 @@
   white-space: nowrap;
 }
 
-html:root {
-  --rawaj-page-background: #f5f2e9;
-  --rawaj-card-background: #fffdf8;
-  --rawaj-elevated-background: #fffefb;
-  --rawaj-subtle-background: #ede9df;
-  --rawaj-brand-background: #123f38;
-  --rawaj-brand-muted-background: #e5eee8;
-  --rawaj-primary: #123f38;
-  --rawaj-primary-deep: #092d29;
-  --rawaj-accent-orange: #e9663c;
-  --rawaj-accent-gold: #b98d43;
-  --rawaj-text-primary: #18352f;
-  --rawaj-text-secondary: #536b63;
-  --rawaj-text-muted: #687c75;
-  --rawaj-border: #d5ded8;
-  --rawaj-border-strong: #aebfb6;
-  --rawaj-muted-surface: #e9efea;
+/*
+ * Color ownership lives in rawaj-semantic-tokens.css. This sheet previously
+ * restored the retired ivory/green theme through an `html:root` selector,
+ * whose extra specificity defeated the final dark tokens on every route.
+ * Keep only sizing, radius, and shadow polish here.
+ */
+:root {
   --rawaj-control-height: 2.875rem;
   --rawaj-control-height-lg: 3.125rem;
   --radius-input: 0.7rem;
@@ -61,13 +51,6 @@ html:root {
   --radius-hero: 1.25rem;
   --shadow-soft: 0 1px 2px rgba(9, 45, 41, 0.035), 0 6px 18px rgba(9, 45, 41, 0.045);
   --shadow-raised: 0 3px 10px rgba(9, 45, 41, 0.055), 0 14px 30px rgba(9, 45, 41, 0.07);
-}
-
-body {
-  background:
-    radial-gradient(38rem 24rem at 102% -8%, rgba(185, 141, 67, 0.07), transparent 70%),
-    linear-gradient(180deg, #faf7f0 0%, var(--rawaj-page-background) 22rem),
-    var(--rawaj-page-background);
 }
 
 /* Arabic readability: no critical UI label should render as 9–10px text. */
@@ -131,12 +114,14 @@ body {
 
 .rawaj-button-primary {
   border-radius: var(--radius-button);
-  background: var(--rawaj-accent-orange);
+  background: var(--rawaj-action-coral);
+  color: #fff;
   box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
 }
 
 .rawaj-button-primary:hover {
-  filter: brightness(0.97) saturate(1.02);
+  background: var(--rawaj-action-coral-hover);
+  filter: saturate(1.02);
 }
 
 .rawaj-icon-button {

@@ -74,7 +74,8 @@ async function resolves(base) {
 function extractSpecifiers(source) {
   const output = new Set();
   const patterns = [
-    /\b(?:import|export)\s+(?:type\s+)?(?:[\s\S]*?\s+from\s+)?["']([^"']+)["']/g,
+    /^\s*(?:import|export)\s+(?:type\s+)?[^;]*?\s+from\s+["']([^"']+)["']/gm,
+    /^\s*import\s*["']([^"']+)["']/gm,
     /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
     /\brequire\s*\(\s*["']([^"']+)["']\s*\)/g,
   ];
