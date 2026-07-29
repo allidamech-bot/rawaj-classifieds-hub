@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
 const migration = await readFile(
-  "cloudflare/d1/migrations/0012_listing_moderation_notifications.sql",
+  "cloudflare/d1/migrations/0018_listing_moderation_notifications.sql",
   "utf8",
 );
 
