@@ -119,16 +119,26 @@ function applyAccessibleFieldNameFallbacks() {
 
 function useAccessibleFieldNameFallbacks(pathname: string) {
   useEffect(() => {
-    let frame = window.requestAnimationFrame(applyAccessibleFieldNameFallbacks);
+    const root = document.documentElement;
+    let frame = 0;
+
+    const applyAndSignal = () => {
+      applyAccessibleFieldNameFallbacks();
+      root.dataset.rawajA11yReady = "true";
+    };
+
+    applyAndSignal();
     const observer = new MutationObserver(() => {
+      root.dataset.rawajA11yReady = "pending";
       window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(applyAccessibleFieldNameFallbacks);
+      frame = window.requestAnimationFrame(applyAndSignal);
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
     return () => {
       observer.disconnect();
       window.cancelAnimationFrame(frame);
+      delete root.dataset.rawajA11yReady;
     };
   }, [pathname]);
 }
