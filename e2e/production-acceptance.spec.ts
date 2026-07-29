@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectRenderedLayout } from "./layout-audit";
 
 const acceptanceOnly = !process.env.PRODUCTION_ACCEPTANCE;
 const acceptanceEmail = process.env.RAWAJ_ACCEPTANCE_EMAIL ?? "";
@@ -36,6 +37,11 @@ async function expectAuthenticatedRoute(page: Page, path: (typeof authenticatedR
   if (path === "/add-listing") {
     await expect(page.getByText(/استوديو الإعلان|Listing studio/).first()).toBeVisible();
   }
+
+  await expectRenderedLayout(page, {
+    label: `authenticated:${path}`,
+    mobile: (page.viewportSize()?.width ?? 1440) < 768,
+  });
 }
 
 test.describe("RAWAJ authenticated production acceptance", () => {
