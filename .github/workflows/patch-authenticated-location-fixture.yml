@@ -1,0 +1,77 @@
+name: Patch Authenticated Location Fixture
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/patch-authenticated-location-fixture.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'fix/critical-authenticated-journey'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/critical-authenticated-journey
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Replace broad location with precise Damascus district
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("e2e/rawaj-e2e-private-fixtures.ts")
+          source = path.read_text(encoding="utf-8")
+          replacement = '''function locationNode() {
+            return {
+              id: FIXTURE_LOCATION_ID,
+              parentId: FIXTURE_GOVERNORATE_ID,
+              countryCode: "SY",
+              nodeType: "district",
+              nameAr: "المزة",
+              nameEn: "Al Mazzeh",
+              slug: "damascus-al-mazzeh",
+              officialCode: "SY-DI-MAZ",
+              externalSource: "e2e",
+              externalId: "e2e-damascus-al-mazzeh",
+              latitude: 33.5038,
+              longitude: 36.2504,
+              sortOrder: 1,
+              depth: 1,
+              isActive: true,
+              searchAliases: ["دمشق", "المزة", "Damascus", "Al Mazzeh"],
+              legacyGovernorateId: FIXTURE_GOVERNORATE_ID,
+              legacyDistrictAr: "المزة",
+            };
+          }
+
+          function completeness'''
+          updated, count = re.subn(
+              r'function locationNode\(\) \{.*?\n\}\n\nfunction completeness',
+              replacement,
+              source,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit("locationNode fixture block was not found exactly once")
+          path.write_text(updated, encoding="utf-8")
+          PY
+          npx prettier --write e2e/rawaj-e2e-private-fixtures.ts
+      - name: Commit fixture correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/rawaj-e2e-private-fixtures.ts
+          git commit -m "test: use precise location in authenticated journey fixture"
+          git push origin HEAD:fix/critical-authenticated-journey
