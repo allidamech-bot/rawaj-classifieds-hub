@@ -204,19 +204,21 @@ export function NotificationPreferencesPanel() {
     }
   }
 
-  async function handlePushToggle() {
+  async function handleDevicePushToggle() {
     const currentProfileId = profileId;
-    if (!currentProfileId || !preferences || pushBusyProfilesRef.current.has(currentProfileId))
+    if (!currentProfileId || !preferences || pushBusyProfilesRef.current.has(currentProfileId)) {
       return;
+    }
 
     const currentPreferences = preferences;
     const currentCapability = pushCapability;
+    const currentStatus = pushStatus;
     pushBusyProfilesRef.current.add(currentProfileId);
     setPushBusy(true);
     setError("");
     setPushMessage("");
     try {
-      if (pushStatus.registered) {
+      if (currentStatus.registered) {
         const result = await disableNativePush(false);
         if (currentProfileId !== profileIdRef.current) return;
         if (!result.ok) {
@@ -224,14 +226,15 @@ export function NotificationPreferencesPanel() {
           return;
         }
         setPushStatus({
-          ...EMPTY_PUSH_STATUS,
+          ...currentStatus,
           pushEnabled: currentPreferences.pushEnabled,
-          platform: currentCapability.platform,
+          registered: false,
+          lastSeenAt: null,
         });
         setPushMessage(
           text(
-            "تم إيقاف الإشعارات الفورية على هذا الجهاز.",
-            "Push notifications were disabled on this device.",
+            "تم فصل هذا الجهاز فقط، وبقيت قناة الإشعارات في الحساب كما هي.",
+            "This device was detached. The account push channel was left unchanged.",
           ),
         );
         return;
@@ -257,8 +260,8 @@ export function NotificationPreferencesPanel() {
       setPushMessage(
         enabled
           ? text(
-              "تم تفعيل الإشعارات الفورية على هذا الجهاز.",
-              "Push notifications are enabled on this device.",
+              "تم تسجيل هذا الجهاز وتفعيل قناة الإشعارات للحساب.",
+              "This device was registered and the account push channel was enabled.",
             )
           : text(
               "لم يمنح الهاتف إذن الإشعارات. يمكنك تفعيله من إعدادات النظام.",
@@ -271,9 +274,76 @@ export function NotificationPreferencesPanel() {
     }
   }
 
+  async function handleAccountPushToggle() {
+    const currentProfileId = profileId;
+    if (!currentProfileId || !preferences || pushBusyProfilesRef.current.has(currentProfileId)) {
+      return;
+    }
+
+    const currentPreferences = preferences;
+    const currentStatus = pushStatus;
+    pushBusyProfilesRef.current.add(currentProfileId);
+    setPushBusy(true);
+    setError("");
+    setPushMessage("");
+    try {
+      if (currentPreferences.pushEnabled) {
+        const result = await disableNativePush(true);
+        if (currentProfileId !== profileIdRef.current) return;
+        if (!result.ok) {
+          setError(result.error.message);
+          return;
+        }
+        setPreferences({ ...currentPreferences, pushEnabled: false });
+        setPushStatus({
+          ...currentStatus,
+          pushEnabled: false,
+          registered: false,
+          lastSeenAt: null,
+        });
+        setPushMessage(
+          text(
+            "تم تعطيل قناة الإشعارات على مستوى الحساب بناءً على طلبك.",
+            "The account push channel was disabled as requested.",
+          ),
+        );
+        return;
+      }
+
+      const result = await enableNativePush(language, true);
+      if (currentProfileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      const enabled = result.data.permissionStatus === "granted" && result.data.registered;
+      setPreferences({ ...currentPreferences, pushEnabled: enabled });
+      setPushStatus({
+        pushEnabled: enabled,
+        registered: result.data.registered,
+        permissionStatus: result.data.permissionStatus,
+        platform: pushCapability.platform,
+        lastSeenAt: enabled ? new Date().toISOString() : null,
+      });
+      setPushMessage(
+        enabled
+          ? text("تم تفعيل قناة الحساب وتسجيل هذا الجهاز.", "Account push and this device are enabled.")
+          : text(
+              "لم يمنح الهاتف إذن الإشعارات، لذلك بقيت قناة الحساب متوقفة.",
+              "Permission was not granted, so the account push channel remains disabled.",
+            ),
+      );
+    } finally {
+      pushBusyProfilesRef.current.delete(currentProfileId);
+      if (currentProfileId === profileIdRef.current) setPushBusy(false);
+    }
+  }
+
   if (auth.status !== "signedIn") return null;
 
-  const pushEnabled = Boolean(preferences?.pushEnabled && pushStatus.registered);
+  const accountPushEnabled = Boolean(preferences?.pushEnabled);
+  const devicePushEnabled = Boolean(accountPushEnabled && pushStatus.registered);
+  const controlsDisabled = pushBusy || !pushCapability.available || loading || !preferences;
 
   return (
     <section className="rounded-2xl bg-card p-4 shadow-soft hairline">
@@ -287,67 +357,70 @@ export function NotificationPreferencesPanel() {
           </h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
             {text(
-              "تحكم بفئات الإشعارات داخل رواج، وفعّل Push من تطبيق الهاتف لتصلك التنبيهات حتى عند إغلاقه.",
-              "Control notification categories and enable push in the mobile app to receive alerts while it is closed.",
+              "تحكم بقناة الحساب بشكل مستقل عن تسجيل هذا الهاتف، ثم اختر أنواع التنبيهات التي تريدها.",
+              "Control the account channel separately from this device, then choose the alerts you want.",
             )}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-muted-surface p-3 hairline">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-primary hairline">
-              <Smartphone className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-extrabold">
-                {text("إشعارات الهاتف الفورية", "Mobile push notifications")}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-5 text-muted-foreground">
-                {pushCapability.available
-                  ? pushEnabled
+      <div className="mt-4 space-y-3 rounded-2xl bg-muted-surface p-3 hairline">
+        <PushControlRow
+          icon={<BellRing className="h-4 w-4" />}
+          title={text("قناة الإشعارات للحساب", "Account push channel")}
+          hint={
+            accountPushEnabled
+              ? text(
+                  "القناة مفعّلة للحساب. إيقافها إجراء صريح يوقف Push على مستوى الحساب.",
+                  "The account channel is enabled. Turning it off explicitly disables account push.",
+                )
+              : text(
+                  "القناة متوقفة ولن تُرسل إشعارات Push للحساب.",
+                  "The channel is disabled and account push will not be sent.",
+                )
+          }
+          checked={accountPushEnabled}
+          disabled={controlsDisabled}
+          busy={pushBusy}
+          onClick={() => void handleAccountPushToggle()}
+          label={text("قناة الإشعارات للحساب", "Account push channel")}
+        />
+
+        <div className="border-t border-border/70 pt-3">
+          <PushControlRow
+            icon={<Smartphone className="h-4 w-4" />}
+            title={text("هذا الجهاز", "This device")}
+            hint={
+              pushCapability.available
+                ? devicePushEnabled
+                  ? text(
+                      "هذا الجهاز مسجل ويستقبل التنبيهات.",
+                      "This device is registered for push alerts.",
+                    )
+                  : pushStatus.permissionStatus === "denied"
                     ? text(
-                        "هذا الجهاز مسجل ويستقبل التنبيهات.",
-                        "This device is registered for push alerts.",
+                        "إذن Android مرفوض من إعدادات الهاتف ولم يتم تغييره من رواج.",
+                        "Android permission is blocked in system settings and was not changed by RAWAJ.",
                       )
-                    : pushStatus.permissionStatus === "denied"
-                      ? text(
-                          "الإذن مرفوض من إعدادات الهاتف.",
-                          "Permission is blocked in system settings.",
-                        )
-                      : text(
-                          "فعّلها لاستقبال الرسائل ونتائج البحث الجديدة.",
-                          "Enable push for messages and new saved-search matches.",
-                        )
-                  : text(
-                      "متاحة داخل تطبيق رواج على Android.",
-                      "Available in the RAWAJ Android app.",
-                    )}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={pushEnabled}
-            disabled={pushBusy || !pushCapability.available || loading || !preferences}
-            onClick={() => void handlePushToggle()}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
-              pushEnabled ? "bg-primary" : "bg-card hairline"
-            }`}
-            aria-label={text("إشعارات الهاتف الفورية", "Mobile push notifications")}
-          >
-            <span
-              className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow-soft transition-all ${
-                pushEnabled ? "start-6" : "start-1"
-              }`}
-            />
-            <span className="sr-only">{pushBusy ? text("جارٍ الحفظ", "Saving") : ""}</span>
-          </button>
+                    : text(
+                        "الجهاز غير مسجل. فصله لا يعطّل قناة الحساب.",
+                        "This device is detached. Detaching it does not disable the account channel.",
+                      )
+                : text(
+                    "إدارة الجهاز متاحة داخل تطبيق رواج على Android.",
+                    "Device management is available in the RAWAJ Android app.",
+                  )
+            }
+            checked={devicePushEnabled}
+            disabled={controlsDisabled}
+            busy={pushBusy}
+            onClick={() => void handleDevicePushToggle()}
+            label={text("تسجيل هذا الجهاز", "Register this device")}
+          />
         </div>
+
         {pushMessage ? (
-          <p className="mt-2 text-[10px] font-semibold text-muted-foreground">{pushMessage}</p>
+          <p className="text-[10px] font-semibold leading-5 text-muted-foreground">{pushMessage}</p>
         ) : null}
       </div>
 
@@ -404,5 +477,57 @@ export function NotificationPreferencesPanel() {
         </p>
       ) : null}
     </section>
+  );
+}
+
+function PushControlRow({
+  icon,
+  title,
+  hint,
+  checked,
+  disabled,
+  busy,
+  onClick,
+  label,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
+  checked: boolean;
+  disabled: boolean;
+  busy: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card text-primary hairline">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-extrabold">{title}</p>
+          <p className="mt-0.5 text-[10px] leading-5 text-muted-foreground">{hint}</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={onClick}
+        className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
+          checked ? "bg-primary" : "bg-card hairline"
+        }`}
+        aria-label={label}
+      >
+        <span
+          className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow-soft transition-all ${
+            checked ? "start-6" : "start-1"
+          }`}
+        />
+        <span className="sr-only">{busy ? "Saving" : ""}</span>
+      </button>
+    </div>
   );
 }
