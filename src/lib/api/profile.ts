@@ -79,7 +79,9 @@ function normalizeProfilePayload(
   const businessName = normalizeSingleLine(payload.businessName) || null;
   const phone = normalizeSingleLine(payload.phone) || null;
   const whatsapp = normalizeSingleLine(payload.whatsapp) || null;
-  const preferredContactMethod = normalizeSingleLine(payload.preferredContactMethod) || null;
+  const preferredContactInput = normalizeSingleLine(payload.preferredContactMethod) || null;
+  const preferredContactMethod =
+    preferredContactInput === "messages" ? "chat" : preferredContactInput;
 
   if (firstName.length < 2 || firstName.length > 40 || lastName.length > 40) {
     return {
