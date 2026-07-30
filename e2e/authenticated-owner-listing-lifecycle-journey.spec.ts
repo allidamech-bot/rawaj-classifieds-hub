@@ -126,9 +126,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       approvedCard.getByRole("button", { name: /وضع محجوز|Mark reserved/i }),
     ).toBeVisible();
 
-    await clickTwiceInSameTick(
-      approvedCard.getByRole("button", { name: /تم البيع|Mark sold/i }),
-    );
+    await clickTwiceInSameTick(approvedCard.getByRole("button", { name: /تم البيع|Mark sold/i }));
     await expect(ownerCard(page, APPROVED_TITLE)).toHaveCount(0, { timeout: 30_000 });
     await expectActionCount(lifecycleActions, "sold", 1);
 
@@ -174,11 +172,11 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
-    await expect(
-      page.getByText(/لا توجد عناصر في هذا القسم|Nothing in this section/i),
-    ).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByText(/لا توجد عناصر في هذا القسم|Nothing in this section/i)).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    );
 
     expect(Object.fromEntries(lifecycleActions)).toEqual({
       reserve: 1,
