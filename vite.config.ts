@@ -7,6 +7,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
+import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
 
 const rawajBuildInfo = {
   commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "unknown",
@@ -27,7 +28,9 @@ const rawajE2eApiProxyPath = "/v1";
 
 export default defineConfig({
   vite: {
-    plugins: rawajE2eUseFixtures ? [createRawajE2eApiFixturePlugin()] : [],
+    plugins: rawajE2eUseFixtures
+      ? [createRawajE2ePrivateFixturePlugin(), createRawajE2eApiFixturePlugin()]
+      : [],
     server: rawajE2eApiProxyTarget
       ? {
           proxy: {
@@ -41,6 +44,16 @@ export default defineConfig({
       : undefined,
     resolve: {
       alias: [
+        ...(rawajE2eUseFixtures
+          ? [
+              {
+                find: /^firebase\/auth$/,
+                replacement: fileURLToPath(
+                  new URL("./e2e/firebase-auth-fixture.ts", import.meta.url),
+                ),
+              },
+            ]
+          : []),
         {
           find: "@/lib/api/taxonomy-metadata",
           replacement: fileURLToPath(
