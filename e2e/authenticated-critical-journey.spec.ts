@@ -34,6 +34,7 @@ test.describe("authenticated launch-critical journey", () => {
 
     await page.addInitScript(() => window.localStorage.clear());
     await page.goto("/login?returnTo=/add-listing", { waitUntil: "domcontentloaded" });
+    await waitForHydration(page);
 
     await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
     await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
@@ -48,6 +49,7 @@ test.describe("authenticated launch-critical journey", () => {
     });
 
     await page.reload({ waitUntil: "domcontentloaded" });
+    await waitForHydration(page);
     await expect(page).toHaveURL(/\/add-listing(?:[/?#]|$)/);
     await expect(page.locator('[data-listing-taxonomy-selector="true"]')).toBeVisible({
       timeout: 30_000,
@@ -113,6 +115,12 @@ test.describe("authenticated launch-critical journey", () => {
     );
   });
 });
+
+async function waitForHydration(page: Page): Promise<void> {
+  await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1, {
+    timeout: 30_000,
+  });
+}
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {
   const selector = page.locator('[data-listing-taxonomy-selector="true"]');
