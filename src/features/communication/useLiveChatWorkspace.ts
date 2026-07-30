@@ -1,3 +1,4 @@
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 
 import "../../communication-center-v3.css";
@@ -6,6 +7,7 @@ import {
   invalidateConversationMessagesCache,
 } from "@/lib/api/messaging-guarded";
 import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
+import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
@@ -22,6 +24,8 @@ interface InFlightChatRefresh {
   promise: Promise<void>;
 }
 
+const INITIAL_DEEP_LINK_RESTORE_WINDOW_MS = 2_000;
+
 function buildScopeKey(profileId: string, conversationId: string | null) {
   return `${profileId}:${conversationId ?? "conversation-list"}`;
 }
@@ -34,10 +38,61 @@ export function useLiveChatWorkspace({
   setMessages,
 }: LiveChatWorkspaceOptions) {
   const { counts } = useUnreadActivityCounts();
+  const navigate = useNavigate();
+  const locationSearch = useRouterState({ select: (state) => state.location.search });
+  const looseSearch = locationSearch as unknown as Record<string, unknown>;
+  const routeConversationId = normalizeChatResourceId(
+    typeof looseSearch.conversation === "string" ? looseSearch.conversation : null,
+  );
   const activeScopeRef = useRef<string | null>(null);
   const inFlightRefreshRef = useRef<InFlightChatRefresh | null>(null);
   const previousUnreadMessagesRef = useRef<number | null>(null);
   const cacheProfileIdRef = useRef<string | null | undefined>(undefined);
+  const profileTransitionRef = useRef<string | null>(signedIn ? profileId : null);
+  const initialDeepLinkRef = useRef<string | null>(routeConversationId);
+  const restoreDeadlineRef = useRef(0);
+
+  if (routeConversationId) initialDeepLinkRef.current = routeConversationId;
+
+  useEffect(() => {
+    const nextProfileId = signedIn ? profileId : null;
+    const previousProfileId = profileTransitionRef.current;
+    profileTransitionRef.current = nextProfileId;
+
+    if (previousProfileId && previousProfileId !== nextProfileId) {
+      initialDeepLinkRef.current = null;
+      restoreDeadlineRef.current = 0;
+      return;
+    }
+
+    if (!previousProfileId && nextProfileId && initialDeepLinkRef.current) {
+      restoreDeadlineRef.current = Date.now() + INITIAL_DEEP_LINK_RESTORE_WINDOW_MS;
+      const timeout = window.setTimeout(() => {
+        restoreDeadlineRef.current = 0;
+      }, INITIAL_DEEP_LINK_RESTORE_WINDOW_MS);
+      return () => window.clearTimeout(timeout);
+    }
+  }, [profileId, signedIn]);
+
+  useEffect(() => {
+    const rememberedConversationId = initialDeepLinkRef.current;
+    if (
+      !signedIn ||
+      !profileId ||
+      routeConversationId ||
+      !rememberedConversationId ||
+      restoreDeadlineRef.current < Date.now()
+    ) {
+      return;
+    }
+
+    restoreDeadlineRef.current = 0;
+    void navigate({
+      to: "/chats",
+      search: { conversation: rememberedConversationId },
+      replace: true,
+    });
+  }, [navigate, profileId, routeConversationId, signedIn]);
 
   useEffect(() => {
     const nextProfileId = signedIn ? profileId : null;
