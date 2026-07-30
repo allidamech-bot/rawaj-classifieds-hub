@@ -75,11 +75,12 @@ for (const check of checks) {
       redirect: "manual",
     });
     const allowOrigin = response.headers.get("access-control-allow-origin");
+    const allowCredentials = response.headers.get("access-control-allow-credentials");
     const requestId = response.headers.get("x-request-id");
     const contentTypeOptions = response.headers.get("x-content-type-options");
     const referrerPolicy = response.headers.get("referrer-policy");
     const body = response.status === 204 ? "" : await response.text();
-    const corsOk = allowOrigin === check.origin;
+    const corsOk = allowOrigin === check.origin && allowCredentials === null;
     const statusOk = response.status === check.expectedStatus;
     const requestIdOk = Boolean(requestId && requestIdPattern.test(requestId));
     const securityHeadersOk = contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
@@ -107,6 +108,8 @@ for (const check of checks) {
           expectedStatus: check.expectedStatus,
           origin: check.origin,
           allowOrigin,
+          allowCredentials,
+          credentialFreeCors: allowCredentials === null,
           requestId,
           requestIdValid: requestIdOk,
           contentTypeOptions,
@@ -126,6 +129,7 @@ for (const check of checks) {
         status: response.status,
         origin: check.origin,
         allowOrigin,
+        credentialFreeCors: true,
         requestId,
         securityHeadersValid: securityHeadersOk,
         ...(check.verifyRelease ? { releaseSha: actualReleaseSha } : {}),
