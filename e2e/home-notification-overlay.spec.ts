@@ -38,7 +38,10 @@ test.describe("home notification overlay boundary", () => {
     expect(
       await probe.evaluate((element) => {
         const rect = element.getBoundingClientRect();
-        const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        const hit = document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+        );
         return hit === element || element.contains(hit);
       }),
     ).toBe(true);
