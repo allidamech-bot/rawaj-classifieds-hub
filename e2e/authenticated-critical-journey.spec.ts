@@ -180,8 +180,10 @@ async function completeVisibleDetailControls(page: Page): Promise<void> {
     const input = inputs.nth(index);
     if ((await input.inputValue()).trim()) continue;
     const type = (await input.getAttribute("type")) ?? "text";
-    if (type === "number") await input.fill(await suitableNumericValue(input));
-    else if (type === "date") await input.fill("2026-01-15");
+    const inputMode = (await input.getAttribute("inputmode")) ?? "";
+    if (type === "number" || inputMode === "numeric" || inputMode === "decimal") {
+      await input.fill(await suitableNumericValue(input));
+    } else if (type === "date") await input.fill("2026-01-15");
     else if (type === "tel") await input.fill("+963944000000");
     else await input.fill("اختبار رواج");
   }
