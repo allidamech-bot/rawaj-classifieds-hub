@@ -49,7 +49,8 @@ const controlMeta: Record<
     ar: "تجميد الرسائل الجديدة",
     en: "Freeze new messages",
     detailAr: "يمنع إرسال محادثات ورسائل ومرفقات جديدة، دون حذف المحادثات الموجودة.",
-    detailEn: "Blocks new conversations, messages, and attachments without deleting existing chats.",
+    detailEn:
+      "Blocks new conversations, messages, and attachments without deleting existing chats.",
     icon: MessageSquareOff,
   },
   freeze_promotions: {
