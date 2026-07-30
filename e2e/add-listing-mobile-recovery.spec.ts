@@ -261,8 +261,10 @@ test("server-autosaved fields still block navigation for an unpersisted local im
     document.body.append(container);
     const harnessModuleUrl = "/e2e/unsaved-changes-warning-harness.tsx";
     const { mountUnsavedChangesWarningHarness } = await import(harnessModuleUrl);
-    (window as UnsavedHarnessWindow).__unsavedHarness =
-      await mountUnsavedChangesWarningHarness(container, dirty);
+    (window as UnsavedHarnessWindow).__unsavedHarness = await mountUnsavedChangesWarningHarness(
+      container,
+      dirty,
+    );
   }, states.pending);
 
   await expect(page.getByTestId("unsaved-harness-index")).toBeVisible();

@@ -64,8 +64,9 @@ test("featured and latest home inventory never repeat the same listing", async (
     .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
   const latestLinks = page.locator('.rawaj-signature-latest a[href^="/listings/"]');
   await expect(latestLinks.first()).toBeVisible();
-  const latest = await latestLinks
-    .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
+  const latest = await latestLinks.evaluateAll((links) =>
+    links.map((link) => (link as HTMLAnchorElement).pathname),
+  );
 
   expect(latest.length).toBeGreaterThan(0);
   expect(new Set(featured).size).toBe(featured.length);
