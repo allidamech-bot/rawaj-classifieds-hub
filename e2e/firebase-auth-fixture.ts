@@ -11,6 +11,11 @@ type FixtureAuth = {
   currentUser: FixtureUser | null;
 };
 
+type FixtureGoogleCredential = {
+  providerId: "google.com";
+  idToken: string;
+};
+
 type TokenListener = (user: FixtureUser | null) => void;
 
 const STORAGE_KEY = "rawaj:e2e:firebase-user";
@@ -125,6 +130,10 @@ export async function signOut(auth: FixtureAuth): Promise<void> {
 }
 
 export class GoogleAuthProvider {
+  static credential(idToken: string): FixtureGoogleCredential {
+    return { providerId: "google.com", idToken };
+  }
+
   setCustomParameters(parameters: Record<string, string>): void {
     void parameters;
   }
@@ -137,6 +146,19 @@ export async function signInWithPopup(
   void auth;
   void provider;
   const user = createFixtureUser("google-browser-smoke@rawa-j.test", "مستخدم غوغل التجريبي");
+  emit(user);
+  return { user };
+}
+
+export async function signInWithCredential(
+  auth: FixtureAuth,
+  credential: FixtureGoogleCredential,
+): Promise<{ user: FixtureUser }> {
+  void auth;
+  if (credential.providerId !== "google.com" || !credential.idToken.trim()) {
+    throw new Error("Invalid fixture Google credential.");
+  }
+  const user = createFixtureUser("google-android-smoke@rawa-j.test", "مستخدم غوغل أندرويد");
   emit(user);
   return { user };
 }
