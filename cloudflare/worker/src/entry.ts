@@ -5,6 +5,7 @@ import type { AuthEnv } from "./auth";
 import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-private";
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
 import { handleNotifications, type NotificationsEnv } from "./notifications";
+import { handlePushDeviceSession, type PushDeviceSessionEnv } from "./push-device-session";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
@@ -27,6 +28,7 @@ type EntryEnv = PublicCoreEnv &
   MarketplaceEnv &
   AccountSocialEnv &
   NotificationsEnv &
+  PushDeviceSessionEnv &
   AdminEnv &
   AdPlacementsEnv &
   TaxonomyEnv &
@@ -137,6 +139,12 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   }
   if (/^\/v1\/admin\b/.test(path)) {
     return required(await handleAdmin(request, env));
+  }
+  if (
+    request.method === "DELETE" &&
+    /^\/v1\/account\/push-devices\/[^/]+$/.test(path)
+  ) {
+    return required(await handlePushDeviceSession(request, env));
   }
   if (/^\/v1\/account\/(?:notifications|notification-preferences|push-devices)\b/.test(path)) {
     return required(await handleNotifications(request, env));
