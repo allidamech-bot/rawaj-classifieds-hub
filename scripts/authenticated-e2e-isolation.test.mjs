@@ -29,7 +29,9 @@ test("authenticated and write fixture routes fail locally instead of reaching th
   assert.match(privateFixture, /path\.startsWith\("\/api\/"\) \|\| privateRequest/);
   assert.match(privateFixture, /hasFixtureAuthorization/);
   assert.match(privateFixture, /Bearer \$\{FIXTURE_TOKEN\}/);
-  assert.match(privateFixture, /response,\s*501/);
+  const missingRouteBranch = privateFixture.slice(privateFixture.indexOf("fixture_route_missing"));
+  assert.match(missingRouteBranch, /\n\s*501,?\s*\n/);
+  assert.match(missingRouteBranch, /return;/);
 });
 
 test("the browser journey proves authorization and prohibits remote writes", () => {
