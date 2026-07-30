@@ -132,10 +132,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const load = useCallback(
-    async () => applyFirebaseUser(firebaseAuth.currentUser),
-    [applyFirebaseUser],
-  );
+  const refreshProfile = useCallback(async () => {
+    const firebaseUser = firebaseAuth.currentUser;
+    if (!firebaseUser) return { error: "تسجيل الدخول مطلوب." };
+
+    const requestId = ++loadRequestIdRef.current;
+    try {
+      const existingProfileLoad = profileLoadRef.current;
+      const profilePromise =
+        existingProfileLoad?.userId === firebaseUser.uid
+          ? existingProfileLoad.promise
+          : loadCloudflareUserProfile(toAuthUser(firebaseUser));
+      profileLoadRef.current = { userId: firebaseUser.uid, promise: profilePromise };
+      const nextProfile = await profilePromise;
+      if (profileLoadRef.current?.promise === profilePromise) {
+        profileLoadRef.current = null;
+      }
+      if (
+        requestId !== loadRequestIdRef.current ||
+        firebaseAuth.currentUser?.uid !== firebaseUser.uid
+      ) {
+        return { error: null };
+      }
+      setProfile(nextProfile);
+      setStatus("signedIn");
+      setReason(null);
+      return { error: null };
+    } catch (error) {
+      if (profileLoadRef.current?.userId === firebaseUser.uid) {
+        profileLoadRef.current = null;
+      }
+      if (
+        requestId !== loadRequestIdRef.current ||
+        firebaseAuth.currentUser?.uid !== firebaseUser.uid
+      ) {
+        return { error: null };
+      }
+      const message = error instanceof Error ? error.message : "تعذر تحديث بيانات الحساب.";
+      return { error: message };
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
@@ -228,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canAccessOwnerControls: canAccessOwnerControls(profile),
       emailConfirmed: Boolean(session?.user.email_confirmed_at),
       signOut,
-      refreshProfile: load,
+      refreshProfile,
       signInWithGoogle: async (returnTo) => {
         try {
           const provider = new GoogleAuthProvider();
@@ -247,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUpWithPassword,
       requestPasswordReset,
     };
-  }, [applyFirebaseUser, load, profile, reason, session, status]);
+  }, [applyFirebaseUser, profile, reason, refreshProfile, session, status]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

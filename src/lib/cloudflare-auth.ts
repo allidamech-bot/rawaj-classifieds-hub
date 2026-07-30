@@ -265,6 +265,10 @@ export async function loadCloudflareUserProfile(user: AuthUser): Promise<UserPro
   return {
     ...result.data,
     displayName,
+    preferredContactMethod:
+      result.data.preferredContactMethod === "chat"
+        ? "messages"
+        : result.data.preferredContactMethod,
     id: result.data.id || user.id,
     email: result.data.email || user.email || "",
     role,
