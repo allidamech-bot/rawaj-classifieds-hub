@@ -13,49 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch-chat-deep-link:
-    if: github.event_name == 'pull_request' && github.head_ref == 'fix/critical-messaging-journey'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout maintenance branch
-        uses: actions/checkout@v4
-        with:
-          ref: fix/critical-messaging-journey
-          fetch-depth: 0
-
-      - name: Preserve initial deep-linked conversation during auth hydration
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("src/routes/chats.tsx")
-          source = path.read_text(encoding="utf-8")
-          old = '''    if (search.conversation) {
-      void navigate({ to: "/chats", search: {}, replace: true });
-    }'''
-          new = '''    if (search.conversation && previousProfileId && previousProfileId !== nextProfileId) {
-      void navigate({ to: "/chats", search: {}, replace: true });
-    }'''
-          if source.count(old) != 1:
-              raise SystemExit("chat account-transition block was not found exactly once")
-          path.write_text(source.replace(old, new, 1), encoding="utf-8")
-          PY
-
-      - name: Restore CI and commit only the product fix
-        run: |
-          git fetch --no-tags origin main
-          git checkout origin/main -- .github/workflows/quality-gate.yml
-          rm -f .github/workflows/patch-chat-deep-link-restoration.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/routes/chats.tsx .github/workflows/quality-gate.yml .github/workflows/patch-chat-deep-link-restoration.yml
-          git commit -m "fix: preserve chat deep links during auth hydration"
-          git push origin HEAD:fix/critical-messaging-journey
-
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 25
