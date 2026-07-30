@@ -86,6 +86,15 @@ test("the retired SDK is absent from both dependency manifests", async () => {
   }
 });
 
+test("Cloudflare CORS stays credential-free and its Production smoke enforces the boundary", async () => {
+  const cors = await read("cloudflare/worker/src/cors.ts");
+  const smoke = await read("cloudflare/worker/scripts/remote-smoke.mjs");
+  assert.doesNotMatch(cors, /Access-Control-Allow-Credentials/i);
+  assert.match(smoke, /access-control-allow-credentials/);
+  assert.match(smoke, /allowCredentials === null/);
+  assert.match(smoke, /credentialFreeCors/);
+});
+
 async function walk(relativeDirectory, extensions) {
   const absoluteDirectory = resolve(ROOT, relativeDirectory);
   const output = [];
