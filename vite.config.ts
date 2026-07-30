@@ -9,6 +9,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
 import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-order-fixture";
 import { createRawajE2eMessagingFixturePlugin } from "./e2e/rawaj-e2e-messaging-fixture";
+import { createRawajE2eNotificationsFixturePlugin } from "./e2e/rawaj-e2e-notifications-fixture";
 import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
 
 const rawajBuildInfo = {
@@ -33,6 +34,7 @@ export default defineConfig({
   vite: {
     plugins: rawajE2eUseFixtures
       ? [
+          createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
           createRawajE2eImageOrderFixturePlugin(),
           createRawajE2ePrivateFixturePlugin(),
