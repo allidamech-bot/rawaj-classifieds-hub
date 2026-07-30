@@ -59,7 +59,7 @@ export async function requestNativeGoogleIdToken(): Promise<string> {
 
 export async function clearNativeGoogleCredentialState(): Promise<void> {
   if (!isNativeAndroidGoogleAuthAvailable()) return;
-  await RawajGoogleAuth.clearCredentialState();
+  await RawajGoogleAuth.clearCredentialState().catch(() => undefined);
 }
 
 export function nativeGoogleAuthErrorMessage(error: unknown): string {
