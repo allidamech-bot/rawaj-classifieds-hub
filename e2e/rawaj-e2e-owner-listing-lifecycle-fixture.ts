@@ -226,10 +226,7 @@ function applyLifecycle(
       updatedAt: ACTION_TIMESTAMP,
     };
   }
-  if (
-    ["sold", "rented", "unavailable"].includes(action) &&
-    listing.status === "approved"
-  ) {
+  if (["sold", "rented", "unavailable"].includes(action) && listing.status === "approved") {
     return {
       ...listing,
       status: action as ListingStatus,
