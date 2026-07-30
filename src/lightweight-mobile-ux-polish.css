@@ -115,7 +115,7 @@
     .rawaj-auth-tabs,
     [data-rawaj-segmented-control="true"]
   )
-  button:is([data-active="true"], [aria-selected="true"]) {
+  button:is([data-active="true"], [aria-selected="true"], [aria-pressed="true"]) {
   color: var(--rawaj-text-primary) !important;
   border-color: color-mix(in srgb, var(--rawaj-accent-pink) 40%, var(--rawaj-border)) !important;
   background: color-mix(in srgb, var(--rawaj-accent-pink) 13%, transparent) !important;

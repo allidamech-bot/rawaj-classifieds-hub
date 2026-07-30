@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import ts from "typescript";
 
 const [
   appShell,
@@ -20,6 +21,7 @@ const [
   moreRoute,
   localDraft,
   addListing,
+  addListingDirtyState,
   unsavedWarning,
   profileRoute,
   offlineNotice,
@@ -43,12 +45,75 @@ const [
     "../src/routes/more.tsx",
     "../src/lib/local-listing-draft.ts",
     "../src/routes/add-listing.tsx",
+    "../src/lib/add-listing-dirty-state.ts",
     "../src/lib/use-unsaved-changes-warning.ts",
     "../src/routes/profile.tsx",
     "../src/components/OfflineNotice.tsx",
     "../src/lib/ui-preferences.tsx",
   ].map((path) => readFile(new URL(path, import.meta.url), "utf8")),
 );
+
+async function importTypeScriptModule(source, replacements = []) {
+  const prepared = replacements.reduce(
+    (current, [pattern, replacement]) => current.replace(pattern, replacement),
+    source,
+  );
+  const transpiled = ts.transpileModule(prepared, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  return import(`data:text/javascript;base64,${Buffer.from(transpiled).toString("base64")}`);
+}
+
+function createFakeHistoryWindow() {
+  const values = new Map();
+  const listeners = new Map();
+  const added = new Map();
+  const removed = new Map();
+  let storageReads = 0;
+
+  const emit = (type, event) => {
+    for (const listener of listeners.get(type) ?? []) listener(event);
+  };
+
+  return {
+    values,
+    added,
+    removed,
+    get storageReads() {
+      return storageReads;
+    },
+    localStorage: {
+      getItem(key) {
+        storageReads += 1;
+        return values.get(key) ?? null;
+      },
+      setItem(key, value) {
+        values.set(key, value);
+      },
+      removeItem(key) {
+        values.delete(key);
+      },
+    },
+    addEventListener(type, listener) {
+      const current = listeners.get(type) ?? new Set();
+      current.add(listener);
+      listeners.set(type, current);
+      added.set(type, (added.get(type) ?? 0) + 1);
+    },
+    removeEventListener(type, listener) {
+      listeners.get(type)?.delete(listener);
+      removed.set(type, (removed.get(type) ?? 0) + 1);
+    },
+    dispatchEvent(event) {
+      emit(event.type, event);
+      return true;
+    },
+    emit,
+  };
+}
 
 test("one lightweight back-to-top control respects motion and obstruction contracts", () => {
   assert.match(appShell, /<BackToTop \/>/);
@@ -88,6 +153,67 @@ test("viewed history is bounded and account history uses one batch endpoint", ()
   assert.doesNotMatch(recentAccount, /fetchCloudflareListingDetail/);
 });
 
+test("listing cards share one browser subscription and one parsed history cache", async (t) => {
+  const fakeWindow = createFakeHistoryWindow();
+  const previousWindow = globalThis.window;
+  globalThis.window = fakeWindow;
+  t.after(() => {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  });
+
+  const history = await importTypeScriptModule(listingHistory, [
+    [
+      'import { useSyncExternalStore } from "react";',
+      "const useSyncExternalStore = () => false;",
+    ],
+  ]);
+  const storageKey = "rawaj:listing-history:v1";
+
+  assert.equal(history.getListingViewedSnapshot("listing-1"), false);
+  const readsAfterFirstSnapshot = fakeWindow.storageReads;
+  let notifications = 0;
+  const unsubscribers = Array.from({ length: 80 }, (_, index) =>
+    history.subscribeToListingHistory(() => {
+      notifications += 1;
+      history.getListingViewedSnapshot(`listing-${index}`);
+    }),
+  );
+
+  assert.equal(fakeWindow.added.get("storage"), 1);
+  assert.equal(fakeWindow.added.get("rawaj:listing-history-change"), 1);
+  assert.equal(fakeWindow.storageReads, readsAfterFirstSnapshot + 1);
+  const readsAfterSubscriptions = fakeWindow.storageReads;
+
+  history.recordLocalListingView("listing-1");
+  assert.equal(notifications, 80);
+  assert.equal(fakeWindow.storageReads, readsAfterSubscriptions + 1);
+  assert.equal(history.getListingViewedSnapshot("listing-1"), true);
+  assert.equal(history.readLocalListingHistory().length, 1);
+
+  history.clearLocalListingHistory();
+  assert.equal(notifications, 160);
+  assert.equal(fakeWindow.storageReads, readsAfterSubscriptions + 2);
+  assert.equal(history.getListingViewedSnapshot("listing-1"), false);
+  assert.deepEqual(history.readLocalListingHistory(), []);
+
+  const crossTabValue = JSON.stringify([
+    { listingId: "listing-2", viewedAt: "2026-07-30T12:00:00.000Z" },
+  ]);
+  fakeWindow.values.set(storageKey, crossTabValue);
+  fakeWindow.emit("storage", {
+    key: storageKey,
+    newValue: crossTabValue,
+  });
+  assert.equal(notifications, 240);
+  assert.equal(fakeWindow.storageReads, readsAfterSubscriptions + 2);
+  assert.equal(history.getListingViewedSnapshot("listing-2"), true);
+
+  unsubscribers.forEach((unsubscribe) => unsubscribe());
+  assert.equal(fakeWindow.removed.get("storage"), 1);
+  assert.equal(fakeWindow.removed.get("rawaj:listing-history-change"), 1);
+});
+
 test("marketplace images use resilient shared fallbacks", () => {
   assert.match(ownerListings, /<ListingCardImage/);
   assert.match(sellerComponents, /<ResilientImage/);
@@ -118,6 +244,92 @@ test("dirty forms, invalid focus, and duplicate submission guards are explicit",
   assert.match(addListing, /aria-busy=\{submitting\}/);
 });
 
+test("server-autosaved fields still block navigation for an unpersisted local image", async () => {
+  const dirtyState = await importTypeScriptModule(addListingDirtyState);
+  const savedFieldsWithPendingImage = dirtyState.getAddListingDirtyState({
+    hasMeaningfulServerChanges: true,
+    autosaveState: "saved",
+    draftId: "draft-1",
+    draftStatus: "draft",
+    submitting: false,
+    images: [{ state: "pending" }],
+  });
+
+  assert.equal(savedFieldsWithPendingImage.unsavedServerChanges, false);
+  assert.equal(savedFieldsWithPendingImage.unsavedLocalImageChanges, true);
+  assert.equal(savedFieldsWithPendingImage.shouldBlockNavigation, true);
+
+  for (const state of ["uploading", "failed"]) {
+    assert.equal(
+      dirtyState.getAddListingDirtyState({
+        hasMeaningfulServerChanges: true,
+        autosaveState: "saved",
+        draftId: "draft-1",
+        draftStatus: "draft",
+        submitting: false,
+        images: [{ state }],
+      }).shouldBlockNavigation,
+      true,
+    );
+  }
+});
+
+test("persisted, removed, submitted, or actively submitting images do not warn", async () => {
+  const dirtyState = await importTypeScriptModule(addListingDirtyState);
+  const base = {
+    hasMeaningfulServerChanges: true,
+    autosaveState: "saved",
+    draftId: "draft-1",
+    draftStatus: "draft",
+    submitting: false,
+  };
+
+  assert.equal(
+    dirtyState.getAddListingDirtyState({
+      ...base,
+      images: [
+        {
+          state: "uploaded",
+          uploadedImage: { id: "image-1", listingId: "draft-1" },
+        },
+      ],
+    }).shouldBlockNavigation,
+    false,
+  );
+  assert.equal(
+    dirtyState.getAddListingDirtyState({
+      ...base,
+      images: [
+        {
+          state: "uploaded",
+          uploadedImage: { id: "image-2", listingId: "different-draft" },
+        },
+      ],
+    }).shouldBlockNavigation,
+    true,
+  );
+  assert.equal(
+    dirtyState.getAddListingDirtyState({ ...base, images: [] }).shouldBlockNavigation,
+    false,
+  );
+  assert.equal(
+    dirtyState.getAddListingDirtyState({
+      ...base,
+      submitting: true,
+      images: [{ state: "pending" }],
+    }).shouldBlockNavigation,
+    false,
+  );
+  assert.equal(
+    dirtyState.getAddListingDirtyState({
+      ...base,
+      draftStatus: "pending_review",
+      images: [{ state: "pending" }],
+    }).shouldBlockNavigation,
+    false,
+  );
+});
+
 test("dark surfaces, safe-area, overflow, offline, and final CSS ordering are protected", () => {
   assert.match(routeStyles, /lightweight-mobile-ux-polish\.css/);
   assert.ok(
@@ -130,8 +342,9 @@ test("dark surfaces, safe-area, overflow, offline, and final CSS ordering are pr
   assert.match(css, /overflow-wrap: anywhere/);
   assert.match(css, /-webkit-line-clamp: 2/);
   assert.match(css, /env\(safe-area-inset-bottom/);
-  assert.match(ownerListings, /role="tablist"/);
-  assert.match(ownerListings, /aria-selected=\{active\}/);
+  assert.match(ownerListings, /role="group"/);
+  assert.match(ownerListings, /aria-pressed=\{active\}/);
+  assert.doesNotMatch(ownerListings, /role="tablist"|role="tab"|aria-selected=\{active\}/);
   assert.match(offlineNotice, /No internet connection/);
   assert.match(offlineNotice, /rawaj-offline-notice/);
   assert.match(appShell, /<OfflineNotice \/>/);

@@ -9,14 +9,24 @@ export interface LocalListingHistoryEntry {
   viewedAt: string;
 }
 
-function canUseStorage() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const listingHistorySubscribers = new Set<() => void>();
+let cachedHistory: readonly LocalListingHistoryEntry[] = [];
+let cachedHistoryById = new Map<string, LocalListingHistoryEntry>();
+let cachedStorageValue: string | null | undefined;
+let listeningWindow: Window | null = null;
+
+function getBrowserStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
 }
 
-export function readLocalListingHistory(): LocalListingHistoryEntry[] {
-  if (!canUseStorage()) return [];
+function parseListingHistory(serialized: string | null): LocalListingHistoryEntry[] {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]") as unknown;
+    const parsed = JSON.parse(serialized ?? "[]") as unknown;
     if (!Array.isArray(parsed)) return [];
     return parsed
       .flatMap((value): LocalListingHistoryEntry[] => {
@@ -33,59 +43,139 @@ export function readLocalListingHistory(): LocalListingHistoryEntry[] {
   }
 }
 
-function writeLocalListingHistory(entries: LocalListingHistoryEntry[]): void {
-  if (!canUseStorage()) return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_LISTING_HISTORY)));
-    window.dispatchEvent(new Event(HISTORY_EVENT));
-  } catch {
-    // Cards and listing details remain usable when storage is blocked.
+function replaceCachedHistory(
+  entries: readonly LocalListingHistoryEntry[],
+  serialized: string | null,
+): void {
+  cachedHistory = entries.slice(0, MAX_LISTING_HISTORY);
+  cachedHistoryById = new Map(cachedHistory.map((entry) => [entry.listingId, entry]));
+  cachedStorageValue = serialized;
+}
+
+function refreshCacheFromSerialized(serialized: string | null): boolean {
+  if (cachedStorageValue !== undefined && serialized === cachedStorageValue) return false;
+  replaceCachedHistory(parseListingHistory(serialized), serialized);
+  return true;
+}
+
+function refreshCacheFromStorage(): boolean {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    if (cachedStorageValue === undefined) replaceCachedHistory([], null);
+    return false;
   }
+  try {
+    return refreshCacheFromSerialized(storage.getItem(STORAGE_KEY));
+  } catch {
+    if (cachedStorageValue === undefined) replaceCachedHistory([], null);
+    return false;
+  }
+}
+
+function ensureHistoryCache(): void {
+  if (cachedStorageValue === undefined && typeof window !== "undefined") {
+    refreshCacheFromStorage();
+  }
+}
+
+function notifyListingHistorySubscribers(): void {
+  listingHistorySubscribers.forEach((subscriber) => subscriber());
+}
+
+function publishLocalHistory(entries: LocalListingHistoryEntry[], clear = false): void {
+  const boundedEntries = entries.slice(0, MAX_LISTING_HISTORY);
+  const serialized = JSON.stringify(boundedEntries);
+  const storage = getBrowserStorage();
+  let storageUpdated = false;
+
+  if (storage) {
+    try {
+      if (clear) storage.removeItem(STORAGE_KEY);
+      else storage.setItem(STORAGE_KEY, serialized);
+      storageUpdated = true;
+    } catch {
+      // Keep the in-memory session useful when browser storage is blocked.
+    }
+  }
+
+  replaceCachedHistory(boundedEntries, clear && storageUpdated ? null : serialized);
+  notifyListingHistorySubscribers();
+
+  if (storageUpdated && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(HISTORY_EVENT));
+  }
+}
+
+function handleListingHistoryStorage(event: StorageEvent): void {
+  if (event.key !== STORAGE_KEY) return;
+  if (refreshCacheFromSerialized(event.newValue)) notifyListingHistorySubscribers();
+}
+
+function handleListingHistoryEvent(): void {
+  if (refreshCacheFromStorage()) notifyListingHistorySubscribers();
+}
+
+function installBrowserListeners(): void {
+  if (typeof window === "undefined" || listeningWindow === window) return;
+  listeningWindow = window;
+  window.addEventListener("storage", handleListingHistoryStorage);
+  window.addEventListener(HISTORY_EVENT, handleListingHistoryEvent);
+}
+
+function removeBrowserListeners(): void {
+  if (!listeningWindow) return;
+  listeningWindow.removeEventListener("storage", handleListingHistoryStorage);
+  listeningWindow.removeEventListener(HISTORY_EVENT, handleListingHistoryEvent);
+  listeningWindow = null;
+}
+
+export function readLocalListingHistory(): LocalListingHistoryEntry[] {
+  ensureHistoryCache();
+  return [...cachedHistory];
 }
 
 export function recordLocalListingView(listingId: string): void {
   const cleanListingId = listingId.trim();
   if (!cleanListingId) return;
-  const current = readLocalListingHistory();
-  writeLocalListingHistory([
+  ensureHistoryCache();
+  publishLocalHistory([
     { listingId: cleanListingId, viewedAt: new Date().toISOString() },
-    ...current.filter((entry) => entry.listingId !== cleanListingId),
+    ...cachedHistory.filter((entry) => entry.listingId !== cleanListingId),
   ]);
 }
 
 export function clearLocalListingHistory(): void {
-  if (!canUseStorage()) return;
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.dispatchEvent(new Event(HISTORY_EVENT));
-  } catch {
-    // Nothing else is required when storage cleanup is unavailable.
-  }
+  publishLocalHistory([], true);
 }
 
 export function findLocalListingView(listingId: string): LocalListingHistoryEntry | null {
   const cleanListingId = listingId.trim();
   if (!cleanListingId) return null;
-  return readLocalListingHistory().find((entry) => entry.listingId === cleanListingId) ?? null;
+  ensureHistoryCache();
+  return cachedHistoryById.get(cleanListingId) ?? null;
 }
 
-function subscribeToListingHistory(onStoreChange: () => void) {
-  if (typeof window === "undefined") return () => undefined;
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY) onStoreChange();
-  };
-  window.addEventListener(HISTORY_EVENT, onStoreChange);
-  window.addEventListener("storage", handleStorage);
+export function subscribeToListingHistory(onStoreChange: () => void): () => void {
+  listingHistorySubscribers.add(onStoreChange);
+  if (listingHistorySubscribers.size === 1) {
+    refreshCacheFromStorage();
+    installBrowserListeners();
+  }
+
   return () => {
-    window.removeEventListener(HISTORY_EVENT, onStoreChange);
-    window.removeEventListener("storage", handleStorage);
+    listingHistorySubscribers.delete(onStoreChange);
+    if (listingHistorySubscribers.size === 0) removeBrowserListeners();
   };
+}
+
+export function getListingViewedSnapshot(listingId: string): boolean {
+  return Boolean(findLocalListingView(listingId));
 }
 
 export function useIsListingViewed(listingId: string): boolean {
   return useSyncExternalStore(
     subscribeToListingHistory,
-    () => Boolean(findLocalListingView(listingId)),
+    () => getListingViewedSnapshot(listingId),
     () => false,
   );
 }

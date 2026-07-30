@@ -43,6 +43,7 @@ import {
 } from "@/lib/dynamic-listing-fields";
 import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import { runBoundedTasks } from "@/lib/bounded-task-queue";
+import { getAddListingDirtyState } from "@/lib/add-listing-dirty-state";
 import {
   assignOwnerListingTaxonomy,
   createOwnerDraftListing,
@@ -275,7 +276,7 @@ function AddListingPage() {
     text("السعر والموقع والتواصل", "Price, location, contact"),
     text("مراجعة وإرسال", "Review and submit"),
   ];
-  const hasMeaningfulChanges = Boolean(
+  const hasMeaningfulServerChanges = Boolean(
     categoryId ||
     taxonomyNodeId ||
     title.trim() ||
@@ -283,17 +284,24 @@ function AddListingPage() {
     price.trim() ||
     governorateId ||
     phone.trim() ||
-    whatsapp.trim() ||
-    selectedImages.length,
+    whatsapp.trim(),
   );
-  const hasUnsavedChanges =
-    hasMeaningfulChanges &&
-    !submitting &&
-    autosaveState !== "saved" &&
-    (!draftListing || draftListing.status === "draft");
+  const hasMeaningfulChanges = hasMeaningfulServerChanges || selectedImages.length > 0;
+  const {
+    unsavedServerChanges,
+    unsavedLocalImageChanges,
+    shouldBlockNavigation: hasUnsavedChanges,
+  } = getAddListingDirtyState({
+    hasMeaningfulServerChanges,
+    autosaveState,
+    draftId: draftListing?.id ?? null,
+    draftStatus: draftListing?.status ?? null,
+    submitting,
+    images: selectedImages,
+  });
 
   useUnsavedChangesWarning(
-    hasUnsavedChanges,
+    hasUnsavedChanges && (unsavedServerChanges || unsavedLocalImageChanges),
     text(
       "لديك تغييرات غير محفوظة في الإعلان. هل تريد مغادرة الصفحة؟",
       "You have unsaved listing changes. Leave this page?",

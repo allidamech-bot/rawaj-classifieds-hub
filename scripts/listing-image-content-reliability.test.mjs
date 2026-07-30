@@ -1,14 +1,40 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import ts from "typescript";
 
-const [processing, guardedUpload, retry, journal, apiBarrel] = await Promise.all([
+const [
+  processing,
+  guardedUpload,
+  retry,
+  journal,
+  apiBarrel,
+  listingsClient,
+  addListing,
+  marketplaceWorker,
+] = await Promise.all([
   readFile(new URL("../src/lib/listing-image-processing.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/listing-image-upload-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/listing-image-upload-retry.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/listing-image-upload-journal.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listings.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../cloudflare/worker/src/marketplace-private.ts", import.meta.url),
+    "utf8",
+  ),
 ]);
+
+async function importTypeScriptModule(source) {
+  const transpiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  return import(`data:text/javascript;base64,${Buffer.from(transpiled).toString("base64")}`);
+}
 
 test("listing image content is verified by real file signatures", () => {
   assert.match(processing, /detectListingImageMimeType/);
@@ -41,78 +67,108 @@ test("oversized decoded dimensions are rejected before canvas allocation", () =>
   assert.match(processing, /MAX_LISTING_IMAGE_SOURCE_DIMENSION = 12_000/);
   assert.match(processing, /MAX_LISTING_IMAGE_SOURCE_PIXELS = 50_000_000/);
   assert.match(processing, /dimensions\.width \* dimensions\.height/);
-  assert.match(processing, /أبعاد الصورة كبيرة جداً للمعالجة الآمنة/);
   assert.ok(
     processing.indexOf("dimensions.width > MAX_LISTING_IMAGE_SOURCE_DIMENSION") <
       processing.indexOf('createImageBitmap(file, { imageOrientation: "from-image" })'),
   );
 });
 
-test("decodable image content is checked before and after processing", () => {
+test("client validates decodable content before and after image preparation", () => {
+  const firstValidation = listingsClient.indexOf("validateListingImageContent(file)");
+  const preparation = listingsClient.indexOf("prepareListingImageForUpload(file)");
+  const preparedValidation = listingsClient.indexOf(
+    "validateListingImageContent(prepared)",
+  );
+
   assert.match(processing, /validateListingImageContent/);
   assert.match(processing, /createImageBitmap\(file, \{ imageOrientation: "from-image" \}\)/);
-  assert.match(processing, /ملف الصورة تالف أو يتعذر فك ترميزه/);
-  assert.ok(
-    guardedUpload.indexOf("validateListingImageContent(file)") <
-      guardedUpload.indexOf("prepareListingImageForUpload(file)"),
+  assert.ok(firstValidation >= 0);
+  assert.ok(firstValidation < preparation);
+  assert.ok(preparation < preparedValidation);
+});
+
+test("transient upload retry helper is behaviorally bounded with exponential delays", async () => {
+  const retryModule = await importTypeScriptModule(retry);
+  const waits = [];
+  let attempts = 0;
+  const result = await retryModule.uploadListingImageObjectWithRetry(
+    async () => {
+      attempts += 1;
+      return { error: { status: 503, message: "temporarily unavailable" } };
+    },
+    {
+      wait: async (delayMs) => {
+        waits.push(delayMs);
+      },
+    },
   );
-  assert.ok(
-    guardedUpload.indexOf("prepareListingImageForUpload(file)") <
-      guardedUpload.indexOf("validateListingImageContent(preparedFile)"),
+
+  assert.equal(attempts, 3);
+  assert.deepEqual(waits, [300, 600]);
+  assert.equal(result.error.status, 503);
+  assert.match(retry, /Math\.min\(options\.maxAttempts \?\? DEFAULT_MAX_ATTEMPTS, 5\)/);
+});
+
+test("the browser upload path is Cloudflare-only and has no Supabase storage fallback", () => {
+  assert.match(
+    listingsClient,
+    /`\/v1\/listings\/\$\{encodeURIComponent\(listing\.id\)\}\/images`/,
+  );
+  assert.match(guardedUpload, /return uploadListingImageCloudflare\(payload\)/);
+  assert.doesNotMatch(
+    `${guardedUpload}\n${listingsClient}\n${journal}`,
+    /@supabase|createClient|\.from\(["']|\.storage\.|getPublicUrl|createSignedUrl/i,
   );
 });
 
-test("transient storage failures receive bounded exponential retries", () => {
-  assert.match(retry, /DEFAULT_MAX_ATTEMPTS = 3/);
-  assert.match(retry, /status === 408/);
-  assert.match(retry, /status === 429/);
-  assert.match(retry, /status !== null && status >= 500/);
-  assert.match(retry, /baseDelayMs \* 2 \*\* \(attempt - 1\)/);
-  assert.match(guardedUpload, /uploadListingImageObjectWithRetry/);
-  assert.match(guardedUpload, /mapStorageError/);
+test("Worker enforces ownership, MIME/signature checks, then links R2 and D1 metadata", () => {
+  assert.match(marketplaceWorker, /listing\.owner_id !== auth\.userId/);
+  assert.match(marketplaceWorker, /IMAGE_TYPES\.has\(file\.type\)/);
+  assert.match(marketplaceWorker, /matchesImageSignature\(bytes, file\.type\)/);
+  assert.match(marketplaceWorker, /env\.MEDIA\.put\(objectKey, bytes\.buffer/);
+  assert.match(marketplaceWorker, /INSERT INTO media_assets/);
+  assert.match(marketplaceWorker, /INSERT INTO listing_images/);
+  assert.ok(
+    marketplaceWorker.indexOf("matchesImageSignature(bytes, file.type)") <
+      marketplaceWorker.indexOf("env.MEDIA.put(objectKey, bytes.buffer"),
+  );
 });
 
-test("unfinished storage writes survive navigation in a bounded browser journal", () => {
+test("Worker deletes a newly written R2 object when its D1 link fails", () => {
+  const failedBatchCheck = marketplaceWorker.indexOf(
+    "results.some((result) => !result.success)",
+  );
+  const cleanup = marketplaceWorker.indexOf(
+    "await env.MEDIA.delete(objectKey)",
+    failedBatchCheck,
+  );
+  assert.ok(failedBatchCheck >= 0);
+  assert.ok(cleanup > failedBatchCheck);
+  assert.ok(
+    cleanup <
+      marketplaceWorker.indexOf(
+        "return databaseError(cors)",
+        failedBatchCheck,
+      ),
+  );
+});
+
+test("removed in-flight images use the current Worker delete API for stale cleanup", () => {
+  assert.match(addListing, /registerStaleUploadCleanup/);
+  assert.match(addListing, /runStaleUploadCleanup/);
+  assert.match(addListing, /deleteListingImage\(record\.userId, record\.draftId/);
+  assert.match(addListing, /await awaitStaleUploadCleanups\(listingDraft\.id\)/);
+  assert.match(listingsClient, /`\/v1\/listing-images\/\$\{encodeURIComponent\(image\.id\)\}`/);
+});
+
+test("retired browser upload journal is only cleared and never contacts storage or a database", () => {
   assert.match(journal, /rawaj:listing-image-upload-journal:v1/);
-  assert.match(journal, /DEFAULT_ORPHAN_MIN_AGE_MS = 15 \* 60 \* 1000/);
-  assert.match(journal, /MAX_JOURNAL_RECORDS = 50/);
-  assert.match(journal, /typeof window === "undefined"/);
-  assert.match(journal, /window\.localStorage/);
-  assert.match(journal, /isOwnedListingImagePath/);
-  assert.match(journal, /activeListingImageUploads\.add\(storagePath\)/);
-  assert.match(journal, /!activeListingImageUploads\.has\(record\.storagePath\)/);
-  assert.match(
-    guardedUpload,
-    /rememberPendingListingImageUpload\(userId, listing\.id, storagePath\)/,
-  );
+  assert.match(journal, /window\.localStorage\.removeItem\(JOURNAL_STORAGE_KEY\)/);
+  assert.match(journal, /removed: 0, referenced: 0, pending: 0/);
+  assert.doesNotMatch(journal, /\.setItem\(|\.from\(|\.remove\(|supabase|listingImagesBucket/i);
 });
 
-test("orphan cleanup verifies database references before deleting storage objects", () => {
-  assert.match(journal, /\.from\("listing_images"\)/);
-  assert.match(journal, /\.select\("storage_path"\)/);
-  assert.match(journal, /\.in\("storage_path", candidatePaths\)/);
-  assert.ok(journal.indexOf('.from("listing_images")') < journal.indexOf(".remove(orphanPaths)"));
-  assert.match(journal, /\.from\(listingImagesBucket\)/);
-  assert.match(journal, /\.remove\(orphanPaths\)/);
-  assert.match(journal, /const clearedPaths = new Set\(referencedPaths\)/);
-});
-
-test("upload journal clears only after a database link or confirmed storage cleanup", () => {
-  assert.match(guardedUpload, /cleanupPendingListingImageUploads\(userId\)/);
-  assert.match(guardedUpload, /if \(!orphanCleanup\.ok\)/);
-  assert.match(
-    guardedUpload,
-    /if \(removeResult\.error\) releasePendingListingImageUpload\(storagePath\);/,
-  );
-  assert.match(guardedUpload, /else clearPendingListingImageUpload\(storagePath\);/);
-  assert.match(guardedUpload, /releasePendingListingImageUpload\(storagePath\)/);
-  assert.ok(
-    guardedUpload.indexOf(".insert({") <
-      guardedUpload.lastIndexOf("clearPendingListingImageUpload(storagePath)"),
-  );
-});
-
-test("public classifieds API routes uploads through the guarded image pipeline", () => {
+test("public classifieds API routes uploads through the guarded Cloudflare pipeline", () => {
   assert.match(
     apiBarrel,
     /export \{ uploadListingImage \} from "@\/lib\/api\/listing-image-upload-guarded"/,

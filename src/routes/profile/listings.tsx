@@ -268,7 +268,7 @@ function MyListingsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <div
             className="rawaj-storefront-owner-tabs"
-            role="tablist"
+            role="group"
             aria-label={text("حالات الإعلانات", "Listing statuses")}
             data-rawaj-segmented-control="true"
           >
@@ -409,7 +409,7 @@ function TabButton({
   onClick: () => void;
 }) {
   return (
-    <button type="button" role="tab" aria-selected={active} onClick={onClick} data-active={active}>
+    <button type="button" aria-pressed={active} onClick={onClick} data-active={active}>
       {label} <span className="opacity-75">({count})</span>
     </button>
   );
