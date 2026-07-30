@@ -7,6 +7,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
+import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-order-fixture";
 import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
 
 const rawajBuildInfo = {
@@ -30,7 +31,11 @@ const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 export default defineConfig({
   vite: {
     plugins: rawajE2eUseFixtures
-      ? [createRawajE2ePrivateFixturePlugin(), createRawajE2eApiFixturePlugin()]
+      ? [
+          createRawajE2eImageOrderFixturePlugin(),
+          createRawajE2ePrivateFixturePlugin(),
+          createRawajE2eApiFixturePlugin(),
+        ]
       : [],
     server: rawajE2eApiProxyTarget
       ? {
