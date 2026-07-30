@@ -3,6 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const viteConfig = await readFile(new URL("../vite.config.ts", import.meta.url), "utf8");
+const playwrightConfig = await readFile(
+  new URL("../playwright.config.ts", import.meta.url),
+  "utf8",
+);
 const authFixture = await readFile(
   new URL("../e2e/firebase-auth-fixture.ts", import.meta.url),
   "utf8",
@@ -22,6 +26,13 @@ test("Firebase Auth replacement is gated by the explicit E2E fixture flag", () =
   assert.match(viteConfig, /find: \/\^firebase\\\/auth\$\//);
   assert.match(viteConfig, /firebase-auth-fixture\.ts/);
   assert.doesNotMatch(authFixture, /firebaseapp\.com|googleapis\.com|workers\.dev|rawa-j\.com/);
+});
+
+test("fixture-backed browser runs point Cloudflare requests to the local Playwright server", () => {
+  assert.match(playwrightConfig, /RAWAJ_E2E_USE_FIXTURES === "1"/);
+  assert.match(playwrightConfig, /VITE_PUBLIC_DATA_API_BASE_URL: baseURL/);
+  assert.match(playwrightConfig, /usesLocalFixtures\s*\?/);
+  assert.doesNotMatch(playwrightConfig, /workers\.dev/);
 });
 
 test("authenticated and write fixture routes fail locally instead of reaching the proxy", () => {
