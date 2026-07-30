@@ -17,7 +17,7 @@ test("categories direct load keeps its designed atlas and active production ad t
     timeout: 15_000,
   });
 
-  const image = placement.locator("img");
+  const image = placement.locator("img.rawaj-ad-placement__image");
   await expect(image).toHaveCount(1);
   await expect
     .poll(() =>

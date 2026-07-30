@@ -98,7 +98,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-ad-placement__frame {
   isolation: isolate;
-  aspect-ratio: 16 / 6.4;
+  aspect-ratio: 16 / 7;
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: #1d1e23 !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18) !important;
@@ -492,7 +492,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   }
 
   .rawaj-ad-placement__frame {
-    aspect-ratio: 16 / 7.2;
+    aspect-ratio: 16 / 7;
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics {

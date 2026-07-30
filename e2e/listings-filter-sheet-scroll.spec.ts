@@ -2,9 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function verifyFixedMobileFilterSheet(page: Page) {
   test.skip((page.viewportSize()?.width ?? 1440) >= 768, "Mobile filter sheet behavior");
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: viewport?.width ?? 390, height: 560 });
 
   const response = await page.goto("/listings", { waitUntil: "domcontentloaded" });
   expect(response?.status() ?? 200).toBeLessThan(500);
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 
   const openFilters = page.getByRole("button", { name: /فتح الفلاتر|Open filters/i });
   await expect(openFilters).toBeVisible();
@@ -21,6 +24,11 @@ async function verifyFixedMobileFilterSheet(page: Page) {
   await expect(body).toBeVisible();
   await expect(footer).toBeVisible();
   await expect(applyButton).toBeVisible();
+  await sheet.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
   await expect(
     sheet.getByRole("button", { name: /توسيع نافذة الفلاتر|Expand filter sheet/i }),
   ).toHaveCount(0);
@@ -50,10 +58,10 @@ async function verifyFixedMobileFilterSheet(page: Page) {
   expect(Math.abs(scrolledSheetBox!.height - initialSheetBox!.height)).toBeLessThanOrEqual(1);
 
   const footerBox = await footer.boundingBox();
-  const viewport = page.viewportSize();
+  const finalViewport = page.viewportSize();
   expect(footerBox).not.toBeNull();
-  expect(viewport).not.toBeNull();
-  expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(viewport!.height + 1);
+  expect(finalViewport).not.toBeNull();
+  expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(finalViewport!.height + 1);
 }
 
 test("mobile listing filters scroll inside a fixed sheet with visible actions", async ({ page }) =>

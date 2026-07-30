@@ -52,7 +52,7 @@
     "performance:budget": "node scripts/performance-budget.mjs",
     "release:manifest": "node scripts/release-candidate-manifest.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:smoke": "playwright test --project=mobile-chromium --project=desktop-chromium",
+    "test:e2e:smoke": "playwright test --config=playwright.smoke.config.ts --project=mobile-chromium --project=desktop-chromium",
     "test:release:browsers": "playwright test e2e/release-core-journeys.spec.ts --project=mobile-chromium --project=desktop-chromium --project=desktop-firefox --project=mobile-webkit",
     "test:listing-quality-chat-safety": "node --test scripts/listing-quality-chat-safety-v1.test.mjs",
     "test:cloudflare-runtime-cleanup": "node --test scripts/cloudflare-runtime-cleanup.test.mjs",

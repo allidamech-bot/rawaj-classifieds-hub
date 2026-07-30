@@ -5,11 +5,11 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-hero :is(h1, p, span, a, button) {
-  color: inherit;
+  color: inherit !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-hero__description {
-  color: #526b62;
+  color: #526b62 !important;
 }
 
 .rawaj-listing-studio-v4 :is(
@@ -20,7 +20,7 @@
 ) {
   border-color: #d5e5dc;
   background: rgb(255 255 255 / 78%);
-  color: #173b34;
+  color: #173b34 !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar {
