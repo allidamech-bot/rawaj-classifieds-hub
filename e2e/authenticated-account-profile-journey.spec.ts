@@ -10,7 +10,7 @@ const UPDATED_PROFILE = {
   businessName: "متجر رواج التجريبي",
   phone: "0933001122",
   whatsapp: "0933001133",
-  preferredContactMethod: "whatsapp",
+  preferredContactMethod: "messages",
   bio: "حساب تجريبي لاختبار استعادة معلومات الملف الشخصي.",
 } as const;
 
@@ -46,6 +46,8 @@ test.describe("authenticated launch-critical account profile journey", () => {
       }
       if (method === "PATCH" && url.pathname === "/v1/profile") {
         profilePatchRequests += 1;
+        const body = request.postDataJSON() as Record<string, unknown>;
+        expect(body.preferredContactMethod).toBe("chat");
       }
     });
 
@@ -63,6 +65,9 @@ test.describe("authenticated launch-critical account profile journey", () => {
       timeout: 30_000,
     });
     await expect(profileInput(page, /اسم العائلة|Last name/i)).toHaveValue("تجريبي");
+    await expect(page.getByLabel(/طريقة التواصل المفضلة|Preferred contact method/i)).toHaveValue(
+      "messages",
+    );
 
     await profileInput(page, /الاسم الأول|First name/i).fill(UPDATED_PROFILE.firstName);
     await profileInput(page, /اسم العائلة|Last name/i).fill(UPDATED_PROFILE.lastName);
