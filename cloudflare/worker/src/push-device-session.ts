@@ -1,9 +1,4 @@
-import {
-  corsHeaders,
-  json,
-  requireMutationAuth,
-  type AuthEnv,
-} from "./auth";
+import { corsHeaders, json, requireMutationAuth, type AuthEnv } from "./auth";
 
 type Value = string | number | null;
 interface Result {
