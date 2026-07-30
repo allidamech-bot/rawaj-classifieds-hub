@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
-const CONVERSATION_ID = "e2e-conversation-1";
+const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
 const INCOMING_MESSAGE = "مرحباً، هل السيارة ما زالت متوفرة؟";
 const OUTGOING_MESSAGE = "نعم، ما زالت متوفرة ويمكن المعاينة غداً.";
 
