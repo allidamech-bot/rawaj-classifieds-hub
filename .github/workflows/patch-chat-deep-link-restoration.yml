@@ -1,0 +1,51 @@
+name: Patch Chat Deep Link Restoration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/patch-chat-deep-link-restoration.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'fix/critical-messaging-journey'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/critical-messaging-journey
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preserve initial deep-linked conversation during auth hydration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/routes/chats.tsx")
+          source = path.read_text(encoding="utf-8")
+          old = '''    if (search.conversation) {
+      void navigate({ to: "/chats", search: {}, replace: true });
+    }'''
+          new = '''    if (search.conversation && previousProfileId && previousProfileId !== nextProfileId) {
+      void navigate({ to: "/chats", search: {}, replace: true });
+    }'''
+          if source.count(old) != 1:
+              raise SystemExit("chat account-transition block was not found exactly once")
+          path.write_text(source.replace(old, new, 1), encoding="utf-8")
+          PY
+          npx prettier --write src/routes/chats.tsx
+      - name: Commit deep-link fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/chats.tsx
+          git commit -m "fix: preserve chat deep links during auth hydration"
+          git push origin HEAD:fix/critical-messaging-journey
