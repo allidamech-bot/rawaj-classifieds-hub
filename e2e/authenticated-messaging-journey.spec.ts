@@ -13,6 +13,11 @@ test.describe("authenticated launch-critical messaging journey", () => {
     const authorizedRequests: string[] = [];
     let messageSendRequests = 0;
 
+    const resetResponse = await page.request.post("/__rawaj_e2e__/messaging/reset", {
+      headers: { "x-rawaj-e2e-reset": "1" },
+    });
+    expect(resetResponse.ok()).toBe(true);
+
     page.on("request", (request) => {
       const url = new URL(request.url());
       const method = request.method();
@@ -88,6 +93,7 @@ test.describe("authenticated launch-critical messaging journey", () => {
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForHydration(page);
+    await expect(page).toHaveURL(new RegExp(`conversation=${CONVERSATION_ID}`));
     await expect(page.locator(".rawaj-message-header h2")).toHaveText("سارة التجريبية", {
       timeout: 30_000,
     });
