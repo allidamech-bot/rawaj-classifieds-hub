@@ -72,9 +72,8 @@ export default defineConfig({
     define: {
       ...(rawajE2eUseFixtures
         ? {
-            "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL": JSON.stringify(
-              rawajE2eLocalApiBaseUrl,
-            ),
+            "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL":
+              JSON.stringify(rawajE2eLocalApiBaseUrl),
           }
         : {}),
       __RAWAJ_BUILD_INFO__: JSON.stringify(rawajBuildInfo),
