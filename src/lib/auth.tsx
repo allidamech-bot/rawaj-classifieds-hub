@@ -4,6 +4,7 @@ import {
   createUserWithEmailAndPassword,
   onIdTokenChanged,
   sendPasswordResetEmail,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -28,6 +29,12 @@ import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
 import { loadCloudflareUserProfile } from "./cloudflare-auth";
 import { firebaseAuth } from "./firebase";
+import {
+  clearNativeGoogleCredentialState,
+  isNativeAndroidGoogleAuthAvailable,
+  nativeGoogleAuthErrorMessage,
+  requestNativeGoogleIdToken,
+} from "./native-google-auth";
 import { clearLocalNativePushState } from "./native-push";
 
 function firebaseErrorMessage(error: unknown): string {
@@ -70,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(null);
   const loadRequestIdRef = useRef(0);
+  const googleSignInAttemptRef = useRef(0);
+  const googleSignInRequestRef = useRef<Promise<{ error: string | null }> | null>(null);
   const profileLoadRef = useRef<{
     userId: string;
     promise: Promise<UserProfile>;
@@ -182,19 +191,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => {
     const signOut = async () => {
+      googleSignInAttemptRef.current += 1;
       loadRequestIdRef.current += 1;
       profileLoadRef.current = null;
       const localNotificationCleanup = clearLocalNativePushState();
+      const nativeGoogleCleanup = clearNativeGoogleCredentialState();
+      const completeLocalCleanup = () =>
+        Promise.all([
+          localNotificationCleanup.catch(() => undefined),
+          nativeGoogleCleanup.catch(() => undefined),
+        ]);
       try {
         await firebaseSignOut(firebaseAuth);
         setSession(null);
         setProfile(null);
         setStatus("signedOut");
         setReason(null);
-        await localNotificationCleanup.catch(() => undefined);
+        await completeLocalCleanup();
         return { error: null };
       } catch (error) {
-        await localNotificationCleanup.catch(() => undefined);
+        await completeLocalCleanup();
         if (!firebaseAuth.currentUser) {
           setSession(null);
           setProfile(null);
@@ -250,6 +266,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    const signInWithGoogle = async (returnTo?: string) => {
+      const pending = googleSignInRequestRef.current;
+      if (pending) return pending;
+
+      const attemptId = ++googleSignInAttemptRef.current;
+      const request = (async (): Promise<{ error: string | null }> => {
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+
+          let result;
+          if (isNativeAndroidGoogleAuthAvailable()) {
+            let idToken: string;
+            try {
+              idToken = await requestNativeGoogleIdToken();
+            } catch (error) {
+              return { error: nativeGoogleAuthErrorMessage(error) };
+            }
+            if (attemptId !== googleSignInAttemptRef.current) {
+              return { error: "تم إلغاء تسجيل الدخول باستخدام Google." };
+            }
+            const credential = GoogleAuthProvider.credential(idToken);
+            result = await signInWithCredential(firebaseAuth, credential);
+          } else {
+            result = await signInWithPopup(firebaseAuth, provider);
+          }
+
+          if (attemptId !== googleSignInAttemptRef.current) {
+            await firebaseSignOut(firebaseAuth).catch(() => undefined);
+            return { error: "تم إلغاء تسجيل الدخول باستخدام Google." };
+          }
+          const applied = await applyFirebaseUser(result.user);
+          if (applied.error) return applied;
+          const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
+          if (typeof window !== "undefined") window.location.assign(safeReturnTo);
+          return { error: null };
+        } catch (error) {
+          return { error: firebaseErrorMessage(error) };
+        }
+      })();
+
+      googleSignInRequestRef.current = request;
+      try {
+        return await request;
+      } finally {
+        if (googleSignInRequestRef.current === request) {
+          googleSignInRequestRef.current = null;
+        }
+      }
+    };
+
     const permissions = profile ? effectiveRolePermissions(profile) : emptyRolePermissions;
     const hasPermission = (permission: RolePermission) => permissions[permission];
     return {
@@ -265,20 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       emailConfirmed: Boolean(session?.user.email_confirmed_at),
       signOut,
       refreshProfile,
-      signInWithGoogle: async (returnTo) => {
-        try {
-          const provider = new GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: "select_account" });
-          const result = await signInWithPopup(firebaseAuth, provider);
-          const applied = await applyFirebaseUser(result.user);
-          if (applied.error) return applied;
-          const safeReturnTo = sanitizeAuthReturnTo(returnTo, "/more");
-          if (typeof window !== "undefined") window.location.assign(safeReturnTo);
-          return { error: null };
-        } catch (error) {
-          return { error: firebaseErrorMessage(error) };
-        }
-      },
+      signInWithGoogle,
       signInWithPassword,
       signUpWithPassword,
       requestPasswordReset,
