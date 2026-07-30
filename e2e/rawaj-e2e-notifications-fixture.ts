@@ -33,11 +33,24 @@ interface FixtureNotification {
   createdAt: string;
 }
 
+interface FixtureNotificationPreferences extends Record<string, unknown> {
+  pushEnabled: boolean;
+  messagesEnabled: boolean;
+  priceChangesEnabled: boolean;
+  savedSearchMatchesEnabled: boolean;
+  listingStatusEnabled: boolean;
+  reviewsEnabled: boolean;
+  promotionsEnabled: boolean;
+  updatedAt: string | null;
+}
+
 export function createRawajE2eNotificationsFixturePlugin(): Plugin {
   const notifications: FixtureNotification[] = [];
+  let preferences = initialPreferences();
 
   function resetFixture(): void {
     notifications.splice(0, notifications.length, ...initialNotifications());
+    preferences = initialPreferences();
   }
 
   resetFixture();
@@ -71,6 +84,7 @@ export function createRawajE2eNotificationsFixturePlugin(): Plugin {
           path === "/v1/account/notifications" ||
           path === "/v1/account/notifications/unread-count" ||
           path === "/v1/account/notifications/read-all" ||
+          path === "/v1/account/notification-preferences" ||
           Boolean(itemMatch);
 
         if (!handled) {
@@ -85,6 +99,27 @@ export function createRawajE2eNotificationsFixturePlugin(): Plugin {
             401,
           );
           return;
+        }
+
+        if (path === "/v1/account/notification-preferences") {
+          if (method === "GET") {
+            sendJson(response, { data: preferences });
+            return;
+          }
+          if (method === "PATCH") {
+            const body = await readJsonBody(request);
+            const key = typeof body.key === "string" ? body.key : "";
+            const enabled = body.enabled === true;
+            if (key && key in preferences && key !== "pushEnabled" && key !== "updatedAt") {
+              preferences = {
+                ...preferences,
+                [key]: enabled,
+                updatedAt: MARK_ONE_READ_AT,
+              };
+            }
+            sendJson(response, { data: preferences });
+            return;
+          }
         }
 
         if (method === "GET" && path === "/v1/account/notifications") {
@@ -193,8 +228,34 @@ function initialNotifications(): FixtureNotification[] {
   ];
 }
 
+function initialPreferences(): FixtureNotificationPreferences {
+  return {
+    pushEnabled: false,
+    messagesEnabled: true,
+    priceChangesEnabled: true,
+    savedSearchMatchesEnabled: true,
+    listingStatusEnabled: true,
+    reviewsEnabled: true,
+    promotionsEnabled: true,
+    updatedAt: null,
+  };
+}
+
 function unreadCount(notifications: FixtureNotification[]): number {
   return notifications.reduce((count, notification) => count + (notification.readAt ? 0 : 1), 0);
+}
+
+async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+  const body = await readBody(request);
+  if (!body) return {};
+  try {
+    const parsed = JSON.parse(body);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 async function drainBody(request: IncomingMessage): Promise<void> {
