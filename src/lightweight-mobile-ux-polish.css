@@ -83,6 +83,57 @@
   box-shadow: none !important;
 }
 
+/* The admin workspace switcher must remain dark even when a legacy/light token
+ * is active elsewhere. This file is loaded last, so use explicit audited values
+ * instead of allowing a generic surface alias to turn the mobile panel white. */
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f2efeb !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.08), transparent 42%),
+    linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell > div:first-child p:first-child {
+  color: #aaa39f !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell > div:first-child p.font-extrabold {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell > div:first-child > span {
+  border: 1px solid rgba(225, 100, 180, 0.18) !important;
+  color: #ef8bd3 !important;
+  background: rgba(225, 100, 180, 0.09) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #c9c3bf !important;
+  background: #27292e !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button:hover,
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button:focus-visible {
+  border-color: rgba(225, 100, 180, 0.38) !important;
+  color: #f2efeb !important;
+  background: #39343b !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-rail > a {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  color: #c9c3bf !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-rail > a[aria-current="page"] {
+  border-color: rgba(225, 100, 180, 0.3) !important;
+  color: #f2efeb !important;
+  background: rgba(225, 100, 180, 0.11) !important;
+}
+
 .rawaj-storefront-owner-tabs,
 .rawaj-activity-tabs,
 .rawaj-auth-tabs,
