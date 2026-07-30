@@ -32,7 +32,9 @@ export function createRawajE2eImageOrderFixturePlugin(): Plugin {
         const listingId = decodeURIComponent(match[1] ?? "");
         const body = await readJsonBody(request);
         const imageIds = Array.isArray(body.imageIds)
-          ? body.imageIds.filter((value): value is string => typeof value === "string" && value.length > 0)
+          ? body.imageIds.filter(
+              (value): value is string => typeof value === "string" && value.length > 0,
+            )
           : [];
         if (!listingId || imageIds.length === 0 || new Set(imageIds).size !== imageIds.length) {
           sendJson(
