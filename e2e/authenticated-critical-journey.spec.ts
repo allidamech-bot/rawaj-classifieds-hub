@@ -32,7 +32,12 @@ test.describe("authenticated launch-critical journey", () => {
       }
     });
 
-    await page.addInitScript(() => window.localStorage.clear());
+    await page.addInitScript(() => {
+      const marker = "rawaj:e2e:storage-cleared";
+      if (window.sessionStorage.getItem(marker) === "1") return;
+      window.localStorage.clear();
+      window.sessionStorage.setItem(marker, "1");
+    });
     await page.goto("/login?returnTo=/add-listing", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
 
