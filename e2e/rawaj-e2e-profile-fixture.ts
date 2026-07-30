@@ -136,7 +136,7 @@ function initialProfile(): FixtureProfile {
     cityArea: null,
     phone: null,
     whatsapp: null,
-    preferredContactMethod: "whatsapp",
+    preferredContactMethod: "chat",
     verificationStatus: "unverified",
     accountStatus: "active",
     roles: ["user"],
