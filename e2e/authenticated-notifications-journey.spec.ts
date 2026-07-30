@@ -12,7 +12,6 @@ const REMINDER_NOTIFICATION_TITLE = "تذكير بإكمال معلومات ال
 const MARK_READ_LABEL = /تحديد كمقروء|Mark read/i;
 const MARK_ALL_LABEL = /قراءة الكل|Mark all read/i;
 
-
 test.describe("authenticated launch-critical notifications journey", () => {
   test.setTimeout(120_000);
 
@@ -109,7 +108,9 @@ test.describe("authenticated launch-critical notifications journey", () => {
     await clickTwiceInSameTick(markAllButton);
 
     await expect(unreadNotificationsMetric(page).locator("strong")).toHaveText("0");
-    await expect(page.locator("article.rawaj-notification-timeline[data-read='true']")).toHaveCount(3);
+    await expect(
+      page.locator("article.rawaj-notification-timeline[data-read='true']"),
+    ).toHaveCount(3);
     expect(markAllRequests).toBe(1);
 
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -118,7 +119,9 @@ test.describe("authenticated launch-critical notifications journey", () => {
       timeout: 30_000,
     });
     await expect(unreadNotificationsMetric(page).locator("strong")).toHaveText("0");
-    await expect(page.locator("article.rawaj-notification-timeline[data-read='true']")).toHaveCount(3);
+    await expect(
+      page.locator("article.rawaj-notification-timeline[data-read='true']"),
+    ).toHaveCount(3);
 
     await page.goto("/activity?tab=notifications", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
