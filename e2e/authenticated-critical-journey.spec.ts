@@ -9,7 +9,9 @@ const VALID_PNG = Buffer.from(
 test.describe("authenticated launch-critical journey", () => {
   test.setTimeout(120_000);
 
-  test("signs in, restores the session, creates a draft, uploads, and submits", async ({ page }) => {
+  test("signs in, restores the session, creates a draft, uploads, and submits", async ({
+    page,
+  }) => {
     const remoteWrites: string[] = [];
     const authorizedPrivateRequests: string[] = [];
 
@@ -87,9 +89,7 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(
       page.getByRole("heading", { name: /^(Review before submitting|راجع الإعلان قبل الإرسال)$/ }),
     ).toBeVisible({ timeout: 25_000 });
-    await page
-      .getByRole("button", { name: /^(Submit for review|إرسال للمراجعة)$/ })
-      .click();
+    await page.getByRole("button", { name: /^(Submit for review|إرسال للمراجعة)$/ }).click();
 
     const success = page.locator(".rawaj-studio-success[role='status']");
     await expect(success).toContainText(/تم إرسال الإعلان للمراجعة|Listing sent for review/i, {
@@ -153,8 +153,9 @@ async function completeVisibleDetailControls(page: Page): Promise<void> {
   for (let index = 0; index < (await selects.count()); index += 1) {
     const select = selects.nth(index);
     if ((await select.inputValue()) !== "") continue;
-    const value = await select.evaluate((element: HTMLSelectElement) =>
-      Array.from(element.options).find((option) => option.value && !option.disabled)?.value ?? "",
+    const value = await select.evaluate(
+      (element: HTMLSelectElement) =>
+        Array.from(element.options).find((option) => option.value && !option.disabled)?.value ?? "",
     );
     if (value) await select.selectOption(value);
   }
