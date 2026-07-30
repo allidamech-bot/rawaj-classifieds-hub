@@ -2,8 +2,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
-const CONVERSATION_ID = "e2e-conversation-1";
-const LISTING_ID = "e2e-approved-listing-1";
+const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
+const LISTING_ID = "00000000-0000-4000-8000-000000000042";
 const FIXTURE_STARTED_AT = "2026-07-30T12:30:00.000Z";
 
 interface FixtureMessage extends Record<string, unknown> {
@@ -17,7 +17,7 @@ interface FixtureMessage extends Record<string, unknown> {
 export function createRawajE2eMessagingFixturePlugin(): Plugin {
   const messages: FixtureMessage[] = [
     {
-      id: "e2e-message-incoming-1",
+      id: "00000000-0000-4000-8000-000000000043",
       conversation_id: CONVERSATION_ID,
       body: "مرحباً، هل السيارة ما زالت متوفرة؟",
       is_mine: 0,
@@ -110,7 +110,7 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
 
             messageSequence += 1;
             const message: FixtureMessage = {
-              id: `e2e-message-outgoing-${messageSequence}`,
+              id: `00000000-0000-4000-8000-${String(43 + messageSequence).padStart(12, "0")}`,
               conversation_id: CONVERSATION_ID,
               body: messageBody,
               is_mine: 1,
