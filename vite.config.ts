@@ -11,6 +11,7 @@ import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-ord
 import { createRawajE2eMessagingFixturePlugin } from "./e2e/rawaj-e2e-messaging-fixture";
 import { createRawajE2eNotificationsFixturePlugin } from "./e2e/rawaj-e2e-notifications-fixture";
 import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
+import { createRawajE2eSavedDiscoveryFixturePlugin } from "./e2e/rawaj-e2e-saved-discovery-fixture";
 
 const rawajBuildInfo = {
   commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "unknown",
@@ -34,6 +35,7 @@ export default defineConfig({
   vite: {
     plugins: rawajE2eUseFixtures
       ? [
+          createRawajE2eSavedDiscoveryFixturePlugin(),
           createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
           createRawajE2eImageOrderFixturePlugin(),
