@@ -83,9 +83,9 @@ test.describe("authenticated launch-critical account profile journey", () => {
     const profileForm = saveButton.locator("xpath=ancestor::form");
     await submitTwiceInSameTick(profileForm);
 
-    await expect(page.getByText(/تم حفظ معلومات الحساب وتحديثها|Account information saved/i)).toBeVisible(
-      { timeout: 30_000 },
-    );
+    await expect(
+      page.getByText(/تم حفظ معلومات الحساب وتحديثها|Account information saved/i),
+    ).toBeVisible({ timeout: 30_000 });
     expect(profilePatchRequests).toBe(1);
     await assertUpdatedProfile(page);
 
@@ -116,9 +116,9 @@ test.describe("authenticated launch-critical account profile journey", () => {
         "GET /v1/account/verifications",
       ]),
     );
-    expect(authorizedRequests.filter((entry) => entry === "GET /api/profile").length).toBeGreaterThanOrEqual(
-      3,
-    );
+    expect(
+      authorizedRequests.filter((entry) => entry === "GET /api/profile").length,
+    ).toBeGreaterThanOrEqual(3);
   });
 });
 
