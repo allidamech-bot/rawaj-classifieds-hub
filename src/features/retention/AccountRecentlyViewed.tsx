@@ -14,35 +14,47 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 
 export function AccountRecentlyViewed({ userId }: { userId: string }) {
   const { text } = useUiPreferences();
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <section className="rawaj-account-section" data-tone="default" data-user-scope={userId}>
-      <Link
-        to="/recently-viewed"
-        className="flex min-h-16 w-full items-center justify-between gap-3 rounded-xl px-2 py-3 text-start transition hover:bg-card/65 active:scale-[0.985]"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-            <History className="h-4.5 w-4.5" aria-hidden="true" />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-foreground">
-              {text("سجل المشاهدة", "Viewing history")}
+    <div className="grid gap-2" data-user-scope={userId}>
+      <section className="rawaj-account-section" data-tone="default">
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          aria-expanded={expanded}
+          aria-controls="rawaj-account-recent-panel"
+          className="flex min-h-16 w-full items-center justify-between gap-3 rounded-xl px-2 py-3 text-start transition hover:bg-card/65 active:scale-[0.985]"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <History className="h-4.5 w-4.5" aria-hidden="true" />
             </span>
-            <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground">
-              {text(
-                "افتح الإعلانات التي شاهدتها مؤخرًا من صفحة مستقلة.",
-                "Open listings you recently viewed on a separate page.",
-              )}
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-foreground">
+                {text("سجل المشاهدة", "Viewing history")}
+              </span>
+              <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground">
+                {text(
+                  "اضغط لعرض الإعلانات التي شاهدتها مؤخرًا.",
+                  "Tap to view listings you recently opened.",
+                )}
+              </span>
             </span>
           </span>
-        </span>
-        <ChevronLeft
-          className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180"
-          aria-hidden="true"
-        />
-      </Link>
-    </section>
+          <ChevronLeft
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform rtl:rotate-180 ${expanded ? "rotate-90 rtl:rotate-90" : ""}`}
+            aria-hidden="true"
+          />
+        </button>
+      </section>
+
+      {expanded ? (
+        <div id="rawaj-account-recent-panel">
+          <RecentlyViewedHistory userId={userId} />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -108,7 +120,7 @@ export function RecentlyViewedHistory({ userId }: { userId: string }) {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold text-brand-orange">
-            {text("سجل مستقل", "Dedicated history")}
+            {text("سجل المشاهدة", "Viewing history")}
           </p>
           <h2 id="rawaj-account-recent-title" className="mt-1 text-sm font-extrabold">
             {text("الإعلانات التي شاهدتها", "Listings you viewed")}
