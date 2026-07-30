@@ -28,7 +28,8 @@ function createFixtureUser(
     emailVerified: true,
     displayName,
     photoURL: null,
-    async getIdToken() {
+    async getIdToken(forceRefresh?: boolean) {
+      void forceRefresh;
       return FIXTURE_TOKEN;
     },
   };
@@ -86,20 +87,24 @@ export function onIdTokenChanged(auth: FixtureAuth, listener: TokenListener): ()
 }
 
 export async function signInWithEmailAndPassword(
-  _auth: FixtureAuth,
+  auth: FixtureAuth,
   email: string,
-  _password: string,
+  password: string,
 ): Promise<{ user: FixtureUser }> {
+  void auth;
+  void password;
   const user = createFixtureUser(email.trim().toLowerCase());
   emit(user);
   return { user };
 }
 
 export async function createUserWithEmailAndPassword(
-  _auth: FixtureAuth,
+  auth: FixtureAuth,
   email: string,
-  _password: string,
+  password: string,
 ): Promise<{ user: FixtureUser }> {
+  void auth;
+  void password;
   const user = createFixtureUser(email.trim().toLowerCase(), "");
   emit(user);
   return { user };
@@ -114,30 +119,40 @@ export async function updateProfile(
   emit(user);
 }
 
-export async function signOut(_auth: FixtureAuth): Promise<void> {
+export async function signOut(auth: FixtureAuth): Promise<void> {
+  void auth;
   emit(null);
 }
 
 export class GoogleAuthProvider {
-  setCustomParameters(_parameters: Record<string, string>): void {}
+  setCustomParameters(parameters: Record<string, string>): void {
+    void parameters;
+  }
 }
 
 export async function signInWithPopup(
-  _auth: FixtureAuth,
-  _provider: GoogleAuthProvider,
+  auth: FixtureAuth,
+  provider: GoogleAuthProvider,
 ): Promise<{ user: FixtureUser }> {
+  void auth;
+  void provider;
   const user = createFixtureUser("google-browser-smoke@rawa-j.test", "مستخدم غوغل التجريبي");
   emit(user);
   return { user };
 }
 
-export async function sendPasswordResetEmail(): Promise<void> {}
+export async function sendPasswordResetEmail(...arguments_: unknown[]): Promise<void> {
+  void arguments_;
+}
 
-export async function verifyPasswordResetCode(): Promise<string> {
+export async function verifyPasswordResetCode(...arguments_: unknown[]): Promise<string> {
+  void arguments_;
   return "browser-smoke@rawa-j.test";
 }
 
-export async function confirmPasswordReset(): Promise<void> {}
+export async function confirmPasswordReset(...arguments_: unknown[]): Promise<void> {
+  void arguments_;
+}
 
 export const EmailAuthProvider = {
   credential(email: string, password: string) {
@@ -145,8 +160,12 @@ export const EmailAuthProvider = {
   },
 };
 
-export async function reauthenticateWithCredential(): Promise<void> {}
+export async function reauthenticateWithCredential(...arguments_: unknown[]): Promise<void> {
+  void arguments_;
+}
 
-export async function updatePassword(): Promise<void> {}
+export async function updatePassword(...arguments_: unknown[]): Promise<void> {
+  void arguments_;
+}
 
 export type User = FixtureUser;
