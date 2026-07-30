@@ -63,10 +63,7 @@ export function OfflineNotice() {
         >
           <span className="inline-flex items-center gap-2">
             <Wrench className="h-4 w-4" aria-hidden="true" />
-            {text(
-              "الموقع في وضع الصيانة حاليًا.",
-              "The website is currently under maintenance.",
-            )}
+            {text("الموقع في وضع الصيانة حاليًا.", "The website is currently under maintenance.")}
           </span>
         </div>
       ) : null}
