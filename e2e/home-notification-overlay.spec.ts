@@ -7,9 +7,7 @@ test.describe("home notification overlay boundary", () => {
     const response = await page.goto("/", { waitUntil: "domcontentloaded" });
     expect(response?.status() ?? 200).toBeLessThan(500);
 
-    const header = page.locator(
-      '.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header',
-    );
+    const header = page.locator('.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header');
     await expect(header).toBeVisible();
 
     await expect
