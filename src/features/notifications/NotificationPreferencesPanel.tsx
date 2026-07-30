@@ -7,7 +7,7 @@ import {
   Smartphone,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   fetchNotificationPreferences,
   fetchPushChannelStatus,
@@ -327,7 +327,10 @@ export function NotificationPreferencesPanel() {
       });
       setPushMessage(
         enabled
-          ? text("تم تفعيل قناة الحساب وتسجيل هذا الجهاز.", "Account push and this device are enabled.")
+          ? text(
+              "تم تفعيل قناة الحساب وتسجيل هذا الجهاز.",
+              "Account push and this device are enabled.",
+            )
           : text(
               "لم يمنح الهاتف إذن الإشعارات، لذلك بقيت قناة الحساب متوقفة.",
               "Permission was not granted, so the account push channel remains disabled.",
@@ -490,7 +493,7 @@ function PushControlRow({
   onClick,
   label,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   hint: string;
   checked: boolean;
