@@ -41,44 +41,49 @@ const controlMeta: Record<
   freeze_new_listings: {
     ar: "تجميد الإعلانات الجديدة",
     en: "Freeze new listings",
-    detailAr: "يوقف إنشاء إعلانات جديدة عند ربطه بمسار النشر التشغيلي.",
-    detailEn: "Stops new listing creation when enforced by the publishing path.",
+    detailAr: "يمنع إنشاء إعلانات جديدة، بينما يبقى تصفح الإعلانات الحالية متاحًا.",
+    detailEn: "Blocks new listing creation while existing listings remain available to browse.",
     icon: ShoppingBag,
   },
   freeze_new_messages: {
     ar: "تجميد الرسائل الجديدة",
     en: "Freeze new messages",
-    detailAr: "مفتاح طوارئ لتعطيل إرسال رسائل جديدة عند تطبيقه على مسار الرسائل.",
-    detailEn: "Emergency switch for new message sends when enforced by messaging flows.",
+    detailAr: "يمنع إرسال محادثات ورسائل ومرفقات جديدة، دون حذف المحادثات الموجودة.",
+    detailEn:
+      "Blocks new conversations, messages, and attachments without deleting existing chats.",
     icon: MessageSquareOff,
   },
   freeze_promotions: {
     ar: "تجميد الترويج",
     en: "Freeze promotions",
-    detailAr: "يوقف قبول عمليات ترويج جديدة عند تطبيقه على المسار التجاري.",
-    detailEn: "Stops new promotion operations when enforced by commercial flows.",
+    detailAr: "يوقف استقبال طلبات ترويج الإعلانات الجديدة مؤقتًا.",
+    detailEn: "Temporarily stops new listing-promotion requests.",
     icon: PauseCircle,
   },
   freeze_verifications: {
     ar: "تجميد التوثيق",
     en: "Freeze verifications",
-    detailAr: "يوقف استقبال طلبات توثيق جديدة عند تطبيقه على مسار التوثيق.",
-    detailEn: "Stops new verification submissions when enforced by verification flows.",
+    detailAr: "يوقف استقبال طلبات توثيق الحسابات الجديدة مؤقتًا.",
+    detailEn: "Temporarily stops new account-verification submissions.",
     icon: BadgeCheck,
   },
   maintenance_mode: {
-    ar: "وضع الصيانة",
-    en: "Maintenance mode",
-    detailAr: "مفتاح تشغيلي عام للصيانة المخططة.",
-    detailEn: "Global operational switch for planned maintenance.",
+    ar: "الموقع تحت الصيانة",
+    en: "Website maintenance mode",
+    detailAr:
+      "يعرض تنبيهًا أعلى جميع الصفحات ويوقف عمليات الإضافة والتعديل والإرسال مؤقتًا، مع بقاء التصفح متاحًا.",
+    detailEn:
+      "Shows a notice across every page and temporarily blocks create, update, and send operations while browsing remains available.",
     icon: Wrench,
     danger: true,
   },
   emergency_read_only: {
     ar: "القراءة فقط للطوارئ",
     en: "Emergency read-only",
-    detailAr: "أعلى مفتاح طوارئ لتجميد عمليات الكتابة عند فرضه في الخدمات.",
-    detailEn: "Highest emergency switch for freezing write operations when enforced by services.",
+    detailAr:
+      "يوقف جميع عمليات الكتابة فورًا ويُبقي الموقع للقراءة والتصفح فقط. يُستخدم للحالات الطارئة.",
+    detailEn:
+      "Immediately blocks all write operations and leaves the website available for reading only. Use for emergencies.",
     icon: AlertOctagon,
     danger: true,
   },
@@ -158,6 +163,9 @@ function OwnerControlsPage() {
           "System control changed and audited.",
         ),
       );
+      if (control.key === "maintenance_mode") {
+        window.dispatchEvent(new Event("rawaj:system-control-changed"));
+      }
       await refresh();
     } finally {
       toggleInFlightRef.current.delete(control.key);
@@ -216,8 +224,8 @@ function OwnerControlsPage() {
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
           <p className="text-xs leading-6">
             {text(
-              "لا يكفي ظهور المفتاح هنا لتطبيقه على المنتج؛ التنفيذ الفعلي يجب أن يقرأ المفتاح داخل مسار Backend/RPC المقصود. هذه الصفحة تدير الحالة الموثقة ولا تدّعي حماية غير موصولة.",
-              "Displaying a switch here is not enforcement by itself; affected Backend/RPC paths must read it. This console manages audited state and does not claim unenforced protection.",
+              "هذه المفاتيح مرتبطة بمسارات Cloudflare الحالية: وضع الصيانة والقراءة فقط يوقفان عمليات الكتابة العامة، أما بقية المفاتيح فتوقف العملية المحددة فقط.",
+              "These switches are enforced by the current Cloudflare paths: maintenance and read-only block general write operations, while the other switches block only their named operation.",
             )}
           </p>
         </div>

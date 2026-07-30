@@ -44,6 +44,9 @@ const CONTROL_KEYS = [
 ] as const;
 type ControlKey = (typeof CONTROL_KEYS)[number];
 
+const ADMIN_CONTROLS_PATH = "/v1/admin/system-controls";
+const PUBLIC_STATUS_PATH = "/v1/system-status";
+
 function asAuthEnv(env: SystemControlsEnv): AuthEnv {
   return env as unknown as AuthEnv;
 }
@@ -54,9 +57,44 @@ export async function handleSystemControls(
 ): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api\b/, "/v1");
-  if (path !== "/v1/admin/system-controls") return null;
+  if (path !== ADMIN_CONTROLS_PATH && path !== PUBLIC_STATUS_PATH) return null;
   const cors = corsHeaders(request, asAuthEnv(env));
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+
+  if (path === PUBLIC_STATUS_PATH) {
+    if (request.method !== "GET") {
+      return json(
+        { error: { code: "method_not_allowed", message: "Method not allowed." } },
+        405,
+        cors,
+      );
+    }
+
+    const result = await env.DB.prepare(
+      `SELECT key, enabled
+         FROM system_controls
+        WHERE key IN ('maintenance_mode', 'emergency_read_only')`,
+    ).all<Row>();
+    if (!result.success) return databaseError(cors);
+
+    const active = new Map<string, boolean>();
+    for (const row of result.results ?? []) {
+      active.set(stringValue(row.key), row.enabled === 1 || row.enabled === true);
+    }
+
+    const headers = new Headers(cors);
+    headers.set("Cache-Control", "public, max-age=15, s-maxage=15, stale-while-revalidate=45");
+    return json(
+      {
+        data: {
+          maintenanceMode: active.get("maintenance_mode") === true,
+          emergencyReadOnly: active.get("emergency_read_only") === true,
+        },
+      },
+      200,
+      headers,
+    );
+  }
 
   if (request.method === "GET") {
     const auth = await authenticate(request, asAuthEnv(env));
