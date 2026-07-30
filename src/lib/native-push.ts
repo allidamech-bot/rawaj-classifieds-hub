@@ -123,11 +123,7 @@ export async function enableNativePush(
       });
     }
 
-    const context = await ensureNativePushListeners(
-      accountSnapshot,
-      locale,
-      capability.platform,
-    );
+    const context = await ensureNativePushListeners(accountSnapshot, locale, capability.platform);
     const tokenResult = await waitForRegistrationToken(PushNotifications);
     if (!tokenResult.ok) return tokenResult;
 
@@ -136,10 +132,7 @@ export async function enableNativePush(
 
     const currentActor = await currentPushAccount();
     if (!currentActor.ok) return currentActor;
-    if (
-      currentActor.data !== accountSnapshot ||
-      context.generation !== nativePushGeneration
-    ) {
+    if (currentActor.data !== accountSnapshot || context.generation !== nativePushGeneration) {
       return stalePushAccountError();
     }
 
