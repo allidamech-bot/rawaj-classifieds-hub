@@ -23,7 +23,7 @@ jobs:
         run: |
           git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
           git show refs/remotes/origin/main:cloudflare/worker/package-lock.json > cloudflare/worker/package-lock.json
-      - name: Remove only the retired application link
+      - name: Remove only the retired application links
         run: |
           node --input-type=module <<'NODE'
           import { readFile, writeFile } from "node:fs/promises";
@@ -31,6 +31,7 @@ jobs:
           const lock = JSON.parse(await readFile(path, "utf8"));
           delete lock.packages?.[""]?.dependencies;
           delete lock.packages?.["../.."];
+          delete lock.packages?.["node_modules/tanstack_start_ts"];
           await writeFile(path, `${JSON.stringify(lock, null, 2)}\n`);
           NODE
       - name: Verify the lock changed only at the package boundary
