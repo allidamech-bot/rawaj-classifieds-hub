@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:4173";
 const usesExternalServer = Boolean(process.env.E2E_BASE_URL);
+const usesLocalFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -50,5 +51,11 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        env: usesLocalFixtures
+          ? {
+              ...process.env,
+              VITE_PUBLIC_DATA_API_BASE_URL: baseURL,
+            }
+          : process.env,
       },
 });

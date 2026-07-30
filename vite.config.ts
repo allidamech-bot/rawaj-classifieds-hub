@@ -7,6 +7,8 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
+import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-order-fixture";
+import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
 
 const rawajBuildInfo = {
   commitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? "unknown",
@@ -24,10 +26,17 @@ const rawajDisableRemoteMedia =
 const rawajE2eUseFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
 const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
 const rawajE2eApiProxyPath = "/v1";
+const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
 export default defineConfig({
   vite: {
-    plugins: rawajE2eUseFixtures ? [createRawajE2eApiFixturePlugin()] : [],
+    plugins: rawajE2eUseFixtures
+      ? [
+          createRawajE2eImageOrderFixturePlugin(),
+          createRawajE2ePrivateFixturePlugin(),
+          createRawajE2eApiFixturePlugin(),
+        ]
+      : [],
     server: rawajE2eApiProxyTarget
       ? {
           proxy: {
@@ -41,6 +50,16 @@ export default defineConfig({
       : undefined,
     resolve: {
       alias: [
+        ...(rawajE2eUseFixtures
+          ? [
+              {
+                find: /^firebase\/auth$/,
+                replacement: fileURLToPath(
+                  new URL("./e2e/firebase-auth-fixture.ts", import.meta.url),
+                ),
+              },
+            ]
+          : []),
         {
           find: "@/lib/api/taxonomy-metadata",
           replacement: fileURLToPath(
@@ -56,6 +75,12 @@ export default defineConfig({
       ],
     },
     define: {
+      ...(rawajE2eUseFixtures
+        ? {
+            "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL":
+              JSON.stringify(rawajE2eLocalApiBaseUrl),
+          }
+        : {}),
       __RAWAJ_BUILD_INFO__: JSON.stringify(rawajBuildInfo),
       __RAWAJ_DISABLE_REMOTE_MEDIA__: JSON.stringify(rawajDisableRemoteMedia),
     },
