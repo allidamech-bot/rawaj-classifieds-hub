@@ -37,7 +37,10 @@ export function AccountRecentlyViewed({ userId }: { userId: string }) {
             </span>
           </span>
         </span>
-        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" aria-hidden="true" />
+        <ChevronLeft
+          className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180"
+          aria-hidden="true"
+        />
       </Link>
     </section>
   );
