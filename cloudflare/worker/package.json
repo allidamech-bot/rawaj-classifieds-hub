@@ -21,8 +21,5 @@
   "devDependencies": {
     "typescript": "^5.8.3",
     "wrangler": "^4.0.0"
-  },
-  "dependencies": {
-    "tanstack_start_ts": "file:../.."
   }
 }
