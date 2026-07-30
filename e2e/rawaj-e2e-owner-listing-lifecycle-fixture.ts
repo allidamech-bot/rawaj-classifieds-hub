@@ -146,7 +146,12 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           if (!next) {
             sendJson(
               response,
-              { error: { code: "status_mismatch", message: "Fixture lifecycle action rejected." } },
+              {
+                error: {
+                  code: "status_mismatch",
+                  message: "Fixture lifecycle action rejected.",
+                },
+              },
               409,
             );
             return;
@@ -195,17 +200,24 @@ function applyLifecycle(
   }
   if (action === "reduce_price" && listing.status === "approved") {
     const newPrice = Number(body.newPrice);
-    if (!Number.isFinite(newPrice) || newPrice <= 0 || (listing.price !== null && newPrice >= listing.price)) {
+    if (
+      !Number.isFinite(newPrice) ||
+      newPrice <= 0 ||
+      (listing.price !== null && newPrice >= listing.price)
+    ) {
       return null;
     }
     return { ...listing, price: newPrice, updatedAt: ACTION_TIMESTAMP };
   }
   if (action === "set_expiry" && listing.status === "approved") {
     const rawDays = body.expiryDays;
-    const expiryDays = rawDays === null ? null : Number(rawDays);
-    if (expiryDays !== null && expiryDays !== 30 && expiryDays !== 60 && expiryDays !== 90) {
-      return null;
-    }
+    const expiryDays =
+      rawDays === null
+        ? null
+        : rawDays === 30 || rawDays === 60 || rawDays === 90
+          ? rawDays
+          : undefined;
+    if (expiryDays === undefined) return null;
     return {
       ...listing,
       expiryDays,
@@ -214,7 +226,10 @@ function applyLifecycle(
       updatedAt: ACTION_TIMESTAMP,
     };
   }
-  if (["sold", "rented", "unavailable"].includes(action) && listing.status === "approved") {
+  if (
+    ["sold", "rented", "unavailable"].includes(action) &&
+    listing.status === "approved"
+  ) {
     return {
       ...listing,
       status: action as ListingStatus,
@@ -267,7 +282,21 @@ function draftListing(): FixtureListing {
   });
 }
 
-function baseListing(overrides: Partial<FixtureListing> & Pick<FixtureListing, "id" | "title" | "description" | "status" | "price" | "priceType" | "expiryDays" | "expiresAt" | "renewedAt">): FixtureListing {
+function baseListing(
+  overrides: Partial<FixtureListing> &
+    Pick<
+      FixtureListing,
+      | "id"
+      | "title"
+      | "description"
+      | "status"
+      | "price"
+      | "priceType"
+      | "expiryDays"
+      | "expiresAt"
+      | "renewedAt"
+    >,
+): FixtureListing {
   return {
     id: overrides.id,
     ownerId: OWNER_ID,
@@ -322,7 +351,11 @@ function sellerProfile(currentListings: FixtureListing[]): Record<string, unknow
     approvedListingCount: approved.length,
     inventoryStatus: "ready",
     listingDisplayLimit: 24,
-    ratingSummary: { average: null, count: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } },
+    ratingSummary: {
+      average: null,
+      count: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    },
     reviews: [],
     reviewsStatus: "ready",
     approvedReviewCount: 0,
