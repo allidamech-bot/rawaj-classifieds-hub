@@ -59,9 +59,9 @@ test.describe("authenticated launch-critical journey", () => {
       .fill("سيارة تجريبية لاختبار رحلة النشر");
     await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
 
-    await expect(
-      page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ }),
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ })).toBeVisible(
+      { timeout: 20_000 },
+    );
     await page.locator('input[type="file"][accept*="image"]').setInputFiles({
       name: "rawaj-e2e.png",
       mimeType: "image/png",

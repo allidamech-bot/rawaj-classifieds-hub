@@ -219,7 +219,11 @@ export function createRawajE2ePrivateFixturePlugin(): Plugin {
           const listingId = decodeURIComponent(ownerDetailMatch[1] ?? "");
           const listing = listings.get(listingId);
           if (!listing) {
-            sendJson(response, { error: { code: "not_found", message: "Listing not found." } }, 404);
+            sendJson(
+              response,
+              { error: { code: "not_found", message: "Listing not found." } },
+              404,
+            );
             return;
           }
           sendJson(response, { data: { listing, images: images.get(listingId) ?? [] } });
@@ -231,7 +235,11 @@ export function createRawajE2ePrivateFixturePlugin(): Plugin {
           const listingId = decodeURIComponent(listingMatch[1] ?? "");
           const listing = listings.get(listingId);
           if (!listing) {
-            sendJson(response, { error: { code: "not_found", message: "Listing not found." } }, 404);
+            sendJson(
+              response,
+              { error: { code: "not_found", message: "Listing not found." } },
+              404,
+            );
             return;
           }
           const body = await readJsonBody(request);
@@ -289,7 +297,11 @@ export function createRawajE2ePrivateFixturePlugin(): Plugin {
           const listingId = decodeURIComponent(attributesMatch[1] ?? "");
           const listing = listings.get(listingId);
           if (!listing) {
-            sendJson(response, { error: { code: "not_found", message: "Listing not found." } }, 404);
+            sendJson(
+              response,
+              { error: { code: "not_found", message: "Listing not found." } },
+              404,
+            );
             return;
           }
           if (method === "PATCH") {
@@ -510,5 +522,7 @@ function nullableNumber(value: unknown): number | null {
 }
 
 function copyDefined(source: Record<string, unknown>, keys: string[]): Record<string, unknown> {
-  return Object.fromEntries(keys.filter((key) => source[key] !== undefined).map((key) => [key, source[key]]));
+  return Object.fromEntries(
+    keys.filter((key) => source[key] !== undefined).map((key) => [key, source[key]]),
+  );
 }

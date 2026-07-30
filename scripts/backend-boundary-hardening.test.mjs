@@ -71,7 +71,11 @@ test("Firebase remains authentication-only while Cloudflare owns application dat
 test("all committed application environments select the Cloudflare provider", async () => {
   for (const path of REQUIRED_ENV_FILES) {
     const content = await read(path);
-    assert.match(content, /^VITE_PUBLIC_DATA_PROVIDER=cloudflare$/m, `${path} must select Cloudflare`);
+    assert.match(
+      content,
+      /^VITE_PUBLIC_DATA_PROVIDER=cloudflare$/m,
+      `${path} must select Cloudflare`,
+    );
     assert.match(
       content,
       /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/(?:api\.rawa-j\.com|rawaj-classifieds-hub\.allidamech\.workers\.dev)\/?$/m,
