@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
+const FIXTURE_COOKIE = "rawaj-e2e-owner-listing-lifecycle";
 const OWNER_ID = "00000000-0000-4000-8000-000000000020";
 const APPROVED_LISTING_ID = "00000000-0000-4000-8000-000000000071";
 const DRAFT_LISTING_ID = "00000000-0000-4000-8000-000000000072";
@@ -74,16 +75,32 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           return;
         }
 
+        if (!hasFixtureCookie(request)) {
+          next();
+          return;
+        }
+
         const lifecycleMatch = path.match(/^\/v1\/listings\/([^/]+)\/lifecycle$/);
         const ownerDetailMatch = path.match(/^\/api\/listings\/([^/]+)$/);
         const deleteMatch = path.match(/^\/v1\/listings\/([^/]+)$/);
         const sellerMatch = path.match(/^\/v1\/sellers\/([^/]+)$/);
-        const handled =
+        const lifecycleListingId = decodedMatch(lifecycleMatch);
+        const ownerDetailListingId = decodedMatch(ownerDetailMatch);
+        const deleteListingId = decodedMatch(deleteMatch);
+        const sellerId = decodedMatch(sellerMatch);
+        const relevantRoute =
           path === "/v1/account/listings" ||
-          Boolean(lifecycleMatch) ||
-          Boolean(ownerDetailMatch) ||
-          Boolean(deleteMatch) ||
-          Boolean(sellerMatch);
+          isFixtureListingId(lifecycleListingId) ||
+          isFixtureListingId(ownerDetailListingId) ||
+          isFixtureListingId(deleteListingId) ||
+          sellerId === OWNER_ID;
+        const handled =
+          (method === "GET" && path === "/v1/account/listings") ||
+          (method === "PATCH" && isFixtureListingId(lifecycleListingId)) ||
+          (method === "GET" && isFixtureListingId(ownerDetailListingId)) ||
+          (method === "DELETE" && isFixtureListingId(deleteListingId)) ||
+          (method === "GET" && sellerId === OWNER_ID) ||
+          (method === "OPTIONS" && relevantRoute);
 
         if (!handled) {
           next();
@@ -95,7 +112,7 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           return;
         }
 
-        if (sellerMatch && method === "GET") {
+        if (sellerId === OWNER_ID && method === "GET") {
           sendJson(response, { data: sellerProfile([...listings.values()]) });
           return;
         }
@@ -114,9 +131,8 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           return;
         }
 
-        if (ownerDetailMatch && method === "GET") {
-          const listingId = decodeURIComponent(ownerDetailMatch[1] ?? "");
-          const listing = listings.get(listingId);
+        if (ownerDetailListingId && method === "GET") {
+          const listing = listings.get(ownerDetailListingId);
           if (!listing) {
             sendJson(
               response,
@@ -129,9 +145,8 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           return;
         }
 
-        if (lifecycleMatch && method === "PATCH") {
-          const listingId = decodeURIComponent(lifecycleMatch[1] ?? "");
-          const listing = listings.get(listingId);
+        if (lifecycleListingId && method === "PATCH") {
+          const listing = listings.get(lifecycleListingId);
           if (!listing) {
             sendJson(
               response,
@@ -142,8 +157,8 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           }
           const body = await readJsonBody(request);
           const action = text(body.action);
-          const next = applyLifecycle(listing, action, body);
-          if (!next) {
+          const nextListing = applyLifecycle(listing, action, body);
+          if (!nextListing) {
             sendJson(
               response,
               {
@@ -156,14 +171,13 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
             );
             return;
           }
-          listings.set(listingId, next);
-          sendJson(response, { data: { success: true, updatedAt: next.updatedAt } });
+          listings.set(lifecycleListingId, nextListing);
+          sendJson(response, { data: { success: true, updatedAt: nextListing.updatedAt } });
           return;
         }
 
-        if (deleteMatch && method === "DELETE") {
-          const listingId = decodeURIComponent(deleteMatch[1] ?? "");
-          const listing = listings.get(listingId);
+        if (deleteListingId && method === "DELETE") {
+          const listing = listings.get(deleteListingId);
           if (!listing) {
             sendJson(
               response,
@@ -172,7 +186,7 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
             );
             return;
           }
-          listings.delete(listingId);
+          listings.delete(deleteListingId);
           sendJson(response, { data: { success: true } });
           return;
         }
@@ -359,6 +373,20 @@ function sellerProfile(currentListings: FixtureListing[]): Record<string, unknow
     reviewDisplayLimit: 10,
     listings: approved,
   };
+}
+
+function hasFixtureCookie(request: IncomingMessage): boolean {
+  return (request.headers.cookie ?? "")
+    .split(";")
+    .some((cookie) => cookie.trim() === `${FIXTURE_COOKIE}=1`);
+}
+
+function decodedMatch(match: RegExpMatchArray | null): string | null {
+  return match ? decodeURIComponent(match[1] ?? "") : null;
+}
+
+function isFixtureListingId(value: string | null): boolean {
+  return value === APPROVED_LISTING_ID || value === DRAFT_LISTING_ID;
 }
 
 function text(value: unknown): string {
