@@ -30,10 +30,7 @@ test.describe("authenticated launch-critical messaging journey", () => {
         expect(request.headers().authorization).toBe(`Bearer ${FIXTURE_TOKEN}`);
         authorizedRequests.push(`${method} ${url.pathname}`);
       }
-      if (
-        method === "POST" &&
-        url.pathname === `/v1/conversations/${CONVERSATION_ID}/messages`
-      ) {
+      if (method === "POST" && url.pathname === `/v1/conversations/${CONVERSATION_ID}/messages`) {
         messageSendRequests += 1;
       }
     });
