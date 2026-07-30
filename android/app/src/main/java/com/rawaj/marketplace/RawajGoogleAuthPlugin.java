@@ -22,7 +22,6 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -138,7 +137,7 @@ public class RawajGoogleAuthPlugin extends Plugin {
             final JSObject result = new JSObject();
             result.put("idToken", idToken);
             call.resolve(result);
-        } catch (GoogleIdTokenParsingException | IllegalArgumentException error) {
+        } catch (IllegalArgumentException error) {
             call.reject("Google ID token could not be parsed.", ERROR_FAILED, error);
         }
     }
