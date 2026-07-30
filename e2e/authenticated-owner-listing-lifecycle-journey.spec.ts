@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
+const FIXTURE_COOKIE = "rawaj-e2e-owner-listing-lifecycle";
 const APPROVED_LISTING_ID = "00000000-0000-4000-8000-000000000071";
 const DRAFT_LISTING_ID = "00000000-0000-4000-8000-000000000072";
 const APPROVED_TITLE = "سيارة عائلية معتمدة";
@@ -20,6 +21,13 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       headers: { "x-rawaj-e2e-reset": "1" },
     });
     expect(resetResponse.ok()).toBe(true);
+    await page.context().addCookies([
+      {
+        name: FIXTURE_COOKIE,
+        value: "1",
+        url: new URL(resetResponse.url()).origin,
+      },
+    ]);
 
     page.on("request", (request) => {
       const url = new URL(request.url());
