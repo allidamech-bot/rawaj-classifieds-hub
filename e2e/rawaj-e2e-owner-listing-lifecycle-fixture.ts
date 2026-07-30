@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
-const FIXTURE_COOKIE = "rawaj-e2e-owner-listing-lifecycle";
+const FIXTURE_HEADER = "x-rawaj-e2e-owner-listing-lifecycle";
 const OWNER_ID = "00000000-0000-4000-8000-000000000020";
 const APPROVED_LISTING_ID = "00000000-0000-4000-8000-000000000071";
 const DRAFT_LISTING_ID = "00000000-0000-4000-8000-000000000072";
@@ -75,48 +75,40 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           return;
         }
 
-        if (!hasFixtureCookie(request)) {
+        if (request.headers[FIXTURE_HEADER] !== "1") {
           next();
           return;
         }
 
-        const lifecycleMatch = path.match(/^\/v1\/listings\/([^/]+)\/lifecycle$/);
-        const ownerDetailMatch = path.match(/^\/api\/listings\/([^/]+)$/);
-        const deleteMatch = path.match(/^\/v1\/listings\/([^/]+)$/);
-        const sellerMatch = path.match(/^\/v1\/sellers\/([^/]+)$/);
-        const lifecycleListingId = decodedMatch(lifecycleMatch);
-        const ownerDetailListingId = decodedMatch(ownerDetailMatch);
-        const deleteListingId = decodedMatch(deleteMatch);
-        const sellerId = decodedMatch(sellerMatch);
-        const relevantRoute =
+        const lifecycleId = matchId(path, /^\/v1\/listings\/([^/]+)\/lifecycle$/);
+        const detailId = matchId(path, /^\/api\/listings\/([^/]+)$/);
+        const deleteId = matchId(path, /^\/v1\/listings\/([^/]+)$/);
+        const sellerId = matchId(path, /^\/v1\/sellers\/([^/]+)$/);
+        const relevant =
           path === "/v1/account/listings" ||
-          isFixtureListingId(lifecycleListingId) ||
-          isFixtureListingId(ownerDetailListingId) ||
-          isFixtureListingId(deleteListingId) ||
+          isFixtureListingId(lifecycleId) ||
+          isFixtureListingId(detailId) ||
+          isFixtureListingId(deleteId) ||
           sellerId === OWNER_ID;
-        const handled =
-          (method === "GET" && path === "/v1/account/listings") ||
-          (method === "PATCH" && isFixtureListingId(lifecycleListingId)) ||
-          (method === "GET" && isFixtureListingId(ownerDetailListingId)) ||
-          (method === "DELETE" && isFixtureListingId(deleteListingId)) ||
-          (method === "GET" && sellerId === OWNER_ID) ||
-          (method === "OPTIONS" && relevantRoute);
 
-        if (!handled) {
-          next();
-          return;
-        }
-
-        if (method === "OPTIONS") {
+        if (method === "OPTIONS" && relevant) {
           sendEmpty(response, 204);
           return;
         }
-
-        if (sellerId === OWNER_ID && method === "GET") {
+        if (method === "GET" && sellerId === OWNER_ID) {
           sendJson(response, { data: sellerProfile([...listings.values()]) });
           return;
         }
 
+        const handledPrivateRoute =
+          (method === "GET" && path === "/v1/account/listings") ||
+          (method === "PATCH" && isFixtureListingId(lifecycleId)) ||
+          (method === "GET" && isFixtureListingId(detailId)) ||
+          (method === "DELETE" && isFixtureListingId(deleteId));
+        if (!handledPrivateRoute) {
+          next();
+          return;
+        }
         if (request.headers.authorization !== `Bearer ${FIXTURE_TOKEN}`) {
           sendJson(
             response,
@@ -130,34 +122,18 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
           sendJson(response, { data: [...listings.values()] });
           return;
         }
-
-        if (ownerDetailListingId && method === "GET") {
-          const listing = listings.get(ownerDetailListingId);
-          if (!listing) {
-            sendJson(
-              response,
-              { error: { code: "not_found", message: "Fixture listing was not found." } },
-              404,
-            );
-            return;
-          }
-          sendJson(response, { data: { listing, images: [] } });
+        if (method === "GET" && detailId) {
+          sendOwnerDetail(response, listings.get(detailId));
           return;
         }
-
-        if (lifecycleListingId && method === "PATCH") {
-          const listing = listings.get(lifecycleListingId);
-          if (!listing) {
-            sendJson(
-              response,
-              { error: { code: "not_found", message: "Fixture listing was not found." } },
-              404,
-            );
+        if (method === "PATCH" && lifecycleId) {
+          const current = listings.get(lifecycleId);
+          if (!current) {
+            sendNotFound(response);
             return;
           }
           const body = await readJsonBody(request);
-          const action = text(body.action);
-          const nextListing = applyLifecycle(listing, action, body);
+          const nextListing = applyLifecycle(current, text(body.action), body);
           if (!nextListing) {
             sendJson(
               response,
@@ -171,31 +147,21 @@ export function createRawajE2eOwnerListingLifecycleFixturePlugin(): Plugin {
             );
             return;
           }
-          listings.set(lifecycleListingId, nextListing);
+          listings.set(lifecycleId, nextListing);
           sendJson(response, { data: { success: true, updatedAt: nextListing.updatedAt } });
           return;
         }
-
-        if (deleteListingId && method === "DELETE") {
-          const listing = listings.get(deleteListingId);
-          if (!listing) {
-            sendJson(
-              response,
-              { error: { code: "not_found", message: "Fixture listing was not found." } },
-              404,
-            );
+        if (method === "DELETE" && deleteId) {
+          if (!listings.has(deleteId)) {
+            sendNotFound(response);
             return;
           }
-          listings.delete(deleteListingId);
+          listings.delete(deleteId);
           sendJson(response, { data: { success: true } });
           return;
         }
 
-        sendJson(
-          response,
-          { error: { code: "not_found", message: "Fixture owner-listing route was not found." } },
-          404,
-        );
+        next();
       });
     },
   };
@@ -224,13 +190,7 @@ function applyLifecycle(
     return { ...listing, price: newPrice, updatedAt: ACTION_TIMESTAMP };
   }
   if (action === "set_expiry" && listing.status === "approved") {
-    const rawDays = body.expiryDays;
-    const expiryDays =
-      rawDays === null
-        ? null
-        : rawDays === 30 || rawDays === 60 || rawDays === 90
-          ? rawDays
-          : undefined;
+    const expiryDays = normalizeExpiryDays(body.expiryDays);
     if (expiryDays === undefined) return null;
     return {
       ...listing,
@@ -265,6 +225,11 @@ function applyLifecycle(
   return null;
 }
 
+function normalizeExpiryDays(value: unknown): 30 | 60 | 90 | null | undefined {
+  if (value === null) return null;
+  return value === 30 || value === 60 || value === 90 ? value : undefined;
+}
+
 function approvedListing(): FixtureListing {
   return baseListing({
     id: APPROVED_LISTING_ID,
@@ -294,22 +259,21 @@ function draftListing(): FixtureListing {
 }
 
 function baseListing(
-  overrides: Partial<FixtureListing> &
-    Pick<
-      FixtureListing,
-      | "id"
-      | "title"
-      | "description"
-      | "status"
-      | "price"
-      | "priceType"
-      | "expiryDays"
-      | "expiresAt"
-      | "renewedAt"
-    >,
+  values: Pick<
+    FixtureListing,
+    | "id"
+    | "title"
+    | "description"
+    | "status"
+    | "price"
+    | "priceType"
+    | "expiryDays"
+    | "expiresAt"
+    | "renewedAt"
+  >,
 ): FixtureListing {
   return {
-    id: overrides.id,
+    id: values.id,
     ownerId: OWNER_ID,
     categoryId: "cat-vehicles",
     subcategoryId: "sub-cars",
@@ -318,13 +282,13 @@ function baseListing(
     governorateId: "gov-damascus",
     governorateNameAr: "دمشق",
     locationNodeId: null,
-    title: overrides.title,
-    description: overrides.description,
-    price: overrides.price,
+    title: values.title,
+    description: values.description,
+    price: values.price,
     currency: "SYP",
-    priceType: overrides.priceType,
+    priceType: values.priceType,
     condition: "used",
-    status: overrides.status,
+    status: values.status,
     districtAr: "المزة",
     contactName: "مالك رواج",
     contactOptions: { message: true, phone: false, whatsapp: true },
@@ -334,13 +298,13 @@ function baseListing(
     reviewedBy: null,
     reviewedAt: null,
     rejectionReason: null,
-    publishedAt: overrides.status === "approved" ? BASE_TIMESTAMP : null,
+    publishedAt: values.status === "approved" ? BASE_TIMESTAMP : null,
     archivedAt: null,
     reservedAt: null,
     statusChangedAt: null,
-    expiresAt: overrides.expiresAt,
-    renewedAt: overrides.renewedAt,
-    expiryDays: overrides.expiryDays,
+    expiresAt: values.expiresAt,
+    renewedAt: values.renewedAt,
+    expiryDays: values.expiryDays,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
     primaryImageUrl: FIXTURE_IMAGE,
@@ -375,18 +339,32 @@ function sellerProfile(currentListings: FixtureListing[]): Record<string, unknow
   };
 }
 
-function hasFixtureCookie(request: IncomingMessage): boolean {
-  return (request.headers.cookie ?? "")
-    .split(";")
-    .some((cookie) => cookie.trim() === `${FIXTURE_COOKIE}=1`);
-}
-
-function decodedMatch(match: RegExpMatchArray | null): string | null {
+function matchId(path: string, pattern: RegExp): string | null {
+  const match = path.match(pattern);
   return match ? decodeURIComponent(match[1] ?? "") : null;
 }
 
 function isFixtureListingId(value: string | null): boolean {
   return value === APPROVED_LISTING_ID || value === DRAFT_LISTING_ID;
+}
+
+function sendOwnerDetail(
+  response: ServerResponse,
+  listing: FixtureListing | undefined,
+): void {
+  if (!listing) {
+    sendNotFound(response);
+    return;
+  }
+  sendJson(response, { data: { listing, images: [] } });
+}
+
+function sendNotFound(response: ServerResponse): void {
+  sendJson(
+    response,
+    { error: { code: "not_found", message: "Fixture listing was not found." } },
+    404,
+  );
 }
 
 function text(value: unknown): string {
@@ -438,6 +416,9 @@ function sendJson(response: ServerResponse, payload: unknown, statusCode = 200):
 
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
-  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  response.setHeader(
+    "Access-Control-Allow-Headers",
+    `Content-Type, Authorization, ${FIXTURE_HEADER}`,
+  );
   response.setHeader("Access-Control-Allow-Methods", "GET, PATCH, DELETE, OPTIONS");
 }
