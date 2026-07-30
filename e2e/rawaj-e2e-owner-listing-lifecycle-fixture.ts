@@ -348,10 +348,7 @@ function isFixtureListingId(value: string | null): boolean {
   return value === APPROVED_LISTING_ID || value === DRAFT_LISTING_ID;
 }
 
-function sendOwnerDetail(
-  response: ServerResponse,
-  listing: FixtureListing | undefined,
-): void {
+function sendOwnerDetail(response: ServerResponse, listing: FixtureListing | undefined): void {
   if (!listing) {
     sendNotFound(response);
     return;
