@@ -30,8 +30,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       }
 
       const isLifecycleRequest =
-        method === "PATCH" &&
-        url.pathname === `/v1/listings/${APPROVED_LISTING_ID}/lifecycle`;
+        method === "PATCH" && url.pathname === `/v1/listings/${APPROVED_LISTING_ID}/lifecycle`;
       const isDraftDelete =
         method === "DELETE" && url.pathname === `/v1/listings/${DRAFT_LISTING_ID}`;
       const privateRequest =
@@ -107,9 +106,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(dropPriceButton).toBeEnabled({ timeout: 30_000 });
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    await approvedCard
-      .getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i)
-      .selectOption("90");
+    await approvedCard.getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i).selectOption("90");
     const applyExpiryButton = approvedCard.getByRole("button", {
       name: /تطبيق \/ تجديد المدة|Apply \/ renew duration/i,
     });
@@ -177,7 +174,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
-    await expect(page.getByText(/لا توجد عناصر في هذا القسم|Nothing in this section/i)).toBeVisible({
+    await expect(
+      page.getByText(/لا توجد عناصر في هذا القسم|Nothing in this section/i),
+    ).toBeVisible({
       timeout: 30_000,
     });
 
