@@ -82,8 +82,7 @@ for (const check of checks) {
     const corsOk = allowOrigin === check.origin;
     const statusOk = response.status === check.expectedStatus;
     const requestIdOk = Boolean(requestId && requestIdPattern.test(requestId));
-    const securityHeadersOk =
-      contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
+    const securityHeadersOk = contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
     let releaseOk = true;
     let actualReleaseSha = null;
 
