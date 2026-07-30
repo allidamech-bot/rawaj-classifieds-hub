@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { extname, relative, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import "./cloudflare-worker-package-isolation.test.mjs";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
