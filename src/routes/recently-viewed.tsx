@@ -8,10 +8,7 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/recently-viewed")({
   head: () => ({
-    meta: [
-      { title: "سجل المشاهدة | رَوَاج" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "سجل المشاهدة | رَوَاج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: RecentlyViewedPage,
 });
@@ -28,7 +25,10 @@ function RecentlyViewedPage() {
         {auth.status === "loading" ? (
           <HistoryState
             title={text("جارٍ تحميل سجل المشاهدة", "Loading viewing history")}
-            body={text("نجهّز الإعلانات التي فتحتها مؤخرًا.", "Preparing listings you recently opened.")}
+            body={text(
+              "نجهّز الإعلانات التي فتحتها مؤخرًا.",
+              "Preparing listings you recently opened.",
+            )}
           />
         ) : auth.status === "signedIn" && userId ? (
           <RecentlyViewedHistory userId={userId} />
