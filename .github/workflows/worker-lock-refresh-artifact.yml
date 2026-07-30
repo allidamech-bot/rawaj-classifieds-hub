@@ -21,9 +21,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Regenerate Worker lockfile only
+      - name: Regenerate Worker lockfile from a clean state
         working-directory: cloudflare/worker
-        run: npm install --package-lock-only --ignore-scripts
+        run: |
+          rm package-lock.json
+          npm install --package-lock-only --ignore-scripts
       - name: Verify Worker package isolation
         run: |
           node --input-type=module <<'NODE'
@@ -41,6 +43,7 @@ jobs:
           }
           NODE
       - name: Upload regenerated lockfile
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: isolated-worker-package-lock-${{ github.run_id }}
