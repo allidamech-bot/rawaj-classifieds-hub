@@ -62,9 +62,7 @@ export function createRawajE2eProfileFixturePlugin(): Plugin {
         }
 
         const handled =
-          path === "/api/profile" ||
-          path === "/v1/profile" ||
-          path === "/v1/account/verifications";
+          path === "/api/profile" || path === "/v1/profile" || path === "/v1/account/verifications";
 
         if (!handled) {
           next();
