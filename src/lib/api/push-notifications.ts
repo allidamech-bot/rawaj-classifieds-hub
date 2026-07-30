@@ -1,19 +1,22 @@
 import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 
+export type PushPermissionStatus = "granted" | "denied" | "prompt";
+export type PushPlatform = "android" | "ios" | "web";
+
 export interface PushChannelStatus {
   pushEnabled: boolean;
   registered: boolean;
-  permissionStatus: "granted" | "denied" | "prompt";
-  platform: "android" | "ios" | "web";
+  permissionStatus: PushPermissionStatus;
+  platform: PushPlatform;
   lastSeenAt: string | null;
 }
 
 export interface RegisterPushDevicePayload {
   deviceKey: string;
   deviceToken: string;
-  platform: "android" | "ios" | "web";
-  permissionStatus: "granted" | "denied" | "prompt";
+  platform: PushPlatform;
+  permissionStatus: PushPermissionStatus;
   appVersion?: string | null;
   locale?: string | null;
 }
@@ -54,11 +57,14 @@ export async function registerPushDevice(
 export async function disablePushDevice(
   deviceKey: string,
   disableChannel = true,
+  permissionStatus?: PushPermissionStatus,
 ): Promise<ClassifiedsResult<boolean>> {
   const cleanDeviceKey = normalizeDeviceKey(deviceKey);
   if (!cleanDeviceKey) return validationError("تعذر تحديد هذا الجهاز.");
+  const query = new URLSearchParams({ disableChannel: String(disableChannel) });
+  if (permissionStatus) query.set("permissionStatus", normalizePermission(permissionStatus));
   const result = await cloudflareApiRequest<boolean>(
-    `/v1/account/push-devices/${encodeURIComponent(cleanDeviceKey)}?disableChannel=${disableChannel}`,
+    `/v1/account/push-devices/${encodeURIComponent(cleanDeviceKey)}?${query.toString()}`,
     { method: "DELETE" },
   );
   return result.ok ? { ok: true, data: result.data === true } : apiFailure(result);
@@ -68,10 +74,10 @@ function normalizeDeviceKey(value: string): string | null {
   const clean = value.trim();
   return clean.length >= 8 && clean.length <= 200 ? clean : null;
 }
-function normalizePlatform(value: string): "android" | "ios" | "web" {
+function normalizePlatform(value: string): PushPlatform {
   return value === "ios" || value === "web" ? value : "android";
 }
-function normalizePermission(value: string): "granted" | "denied" | "prompt" {
+function normalizePermission(value: string): PushPermissionStatus {
   return value === "granted" || value === "denied" ? value : "prompt";
 }
 function normalizeStatus(value: PushChannelStatus): PushChannelStatus {
