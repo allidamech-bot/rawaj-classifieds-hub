@@ -2,8 +2,11 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
+const RESET_HEADER = "x-rawaj-e2e-reset";
+const RESET_PATH = "/__rawaj_e2e__/messaging/reset";
 const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
 const LISTING_ID = "00000000-0000-4000-8000-000000000042";
+const INCOMING_MESSAGE_ID = "00000000-0000-4000-8000-000000000043";
 const FIXTURE_STARTED_AT = "2026-07-30T12:30:00.000Z";
 
 interface FixtureMessage extends Record<string, unknown> {
@@ -15,25 +18,19 @@ interface FixtureMessage extends Record<string, unknown> {
 }
 
 export function createRawajE2eMessagingFixturePlugin(): Plugin {
-  const messages: FixtureMessage[] = [
-    {
-      id: "00000000-0000-4000-8000-000000000043",
-      conversation_id: CONVERSATION_ID,
-      body: "مرحباً، هل السيارة ما زالت متوفرة؟",
-      is_mine: 0,
-      attachment_path: null,
-      attachment_mime_type: null,
-      attachment_size_bytes: null,
-      attachment_kind: null,
-      attachment_duration_ms: null,
-      created_at: FIXTURE_STARTED_AT,
-      edited_at: null,
-      deleted_at: null,
-    },
-  ];
+  const messages: FixtureMessage[] = [];
   const sentByRequestId = new Map<string, FixtureMessage>();
   let unreadCount = 1;
   let messageSequence = 0;
+
+  function resetFixture(): void {
+    messages.splice(0, messages.length, initialIncomingMessage());
+    sentByRequestId.clear();
+    unreadCount = 1;
+    messageSequence = 0;
+  }
+
+  resetFixture();
 
   return {
     name: "rawaj-e2e-messaging-fixture",
@@ -45,6 +42,22 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
         const path = url.pathname;
         const messagesMatch = path.match(/^\/v1\/conversations\/([^/]+)\/messages$/);
         const readMatch = path.match(/^\/v1\/conversations\/([^/]+)\/read$/);
+
+        if (method === "POST" && path === RESET_PATH) {
+          await drainBody(request);
+          if (request.headers[RESET_HEADER] !== "1") {
+            sendJson(
+              response,
+              { error: { code: "permission_denied", message: "Fixture reset denied." } },
+              403,
+            );
+            return;
+          }
+          resetFixture();
+          sendJson(response, { data: { success: true } });
+          return;
+        }
+
         const handled =
           path === "/v1/account/conversations" ||
           path === "/v1/account/messages/unread-count" ||
@@ -150,6 +163,23 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
         );
       });
     },
+  };
+}
+
+function initialIncomingMessage(): FixtureMessage {
+  return {
+    id: INCOMING_MESSAGE_ID,
+    conversation_id: CONVERSATION_ID,
+    body: "مرحباً، هل السيارة ما زالت متوفرة؟",
+    is_mine: 0,
+    attachment_path: null,
+    attachment_mime_type: null,
+    attachment_size_bytes: null,
+    attachment_kind: null,
+    attachment_duration_ms: null,
+    created_at: FIXTURE_STARTED_AT,
+    edited_at: null,
+    deleted_at: null,
   };
 }
 
