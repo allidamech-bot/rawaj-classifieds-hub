@@ -35,10 +35,7 @@ import {
   nativeGoogleAuthErrorMessage,
   requestNativeGoogleIdToken,
 } from "./native-google-auth";
-import {
-  clearLocalNativePushState,
-  detachNativePushBeforeSignOut,
-} from "./native-push";
+import { clearLocalNativePushState, detachNativePushBeforeSignOut } from "./native-push";
 
 function firebaseErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object") return "تعذر إكمال عملية الحساب.";
