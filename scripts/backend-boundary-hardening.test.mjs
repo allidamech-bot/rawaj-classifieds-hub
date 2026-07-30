@@ -31,6 +31,8 @@ const forbiddenFirebaseDataPatterns = [
   ["Firebase Storage constructor", /\bgetStorage\s*\(/],
   ["Realtime Database constructor", /\bgetDatabase\s*\(/],
   ["Callable Functions constructor", /\bhttpsCallable\s*\(/],
+  ["Firebase Storage bucket configuration", /\bstorageBucket\s*:/],
+  ["Firebase Storage service host", /https?:\/\/[^\s"']*firebasestorage\.app/i],
 ];
 
 const runtimeFiles = (
