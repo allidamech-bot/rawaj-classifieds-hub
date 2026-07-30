@@ -11,6 +11,7 @@ import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-ord
 import { createRawajE2eMessagingFixturePlugin } from "./e2e/rawaj-e2e-messaging-fixture";
 import { createRawajE2eNotificationsFixturePlugin } from "./e2e/rawaj-e2e-notifications-fixture";
 import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
+import { createRawajE2eProfileFixturePlugin } from "./e2e/rawaj-e2e-profile-fixture";
 import { createRawajE2eSavedDiscoveryFixturePlugin } from "./e2e/rawaj-e2e-saved-discovery-fixture";
 
 const rawajBuildInfo = {
@@ -35,6 +36,7 @@ export default defineConfig({
   vite: {
     plugins: rawajE2eUseFixtures
       ? [
+          createRawajE2eProfileFixturePlugin(),
           createRawajE2eSavedDiscoveryFixturePlugin(),
           createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
