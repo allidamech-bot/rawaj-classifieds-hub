@@ -107,7 +107,10 @@ test.describe("authenticated launch-critical saved discovery journey", () => {
     await waitForHydration(page);
     await page.getByLabel(/اسم البحث المحفوظ|Saved search name/i).fill(SAVED_SEARCH_NAME);
     await page.getByLabel(/كلمة البحث|Search keyword/i).fill("سيارة");
-    await page.getByLabel(/تكرار التنبيه|Alert frequency/i).first().selectOption("daily");
+    await page
+      .getByLabel(/تكرار التنبيه|Alert frequency/i)
+      .first()
+      .selectOption("daily");
 
     const savedSearchForm = page
       .getByRole("button", { name: /حفظ البحث|Save search/i })
@@ -128,9 +131,9 @@ test.describe("authenticated launch-critical saved discovery journey", () => {
     await waitForHydration(page);
     const restoredSavedSearchRow = savedSearchItem(page, SAVED_SEARCH_NAME);
     await expect(restoredSavedSearchRow).toBeVisible({ timeout: 30_000 });
-    await expect(
-      restoredSavedSearchRow.getByLabel(/تكرار التنبيه|Alert frequency/i),
-    ).toHaveValue("weekly");
+    await expect(restoredSavedSearchRow.getByLabel(/تكرار التنبيه|Alert frequency/i)).toHaveValue(
+      "weekly",
+    );
 
     const removeSavedSearchButton = restoredSavedSearchRow.getByRole("button", {
       name: /حذف البحث|Remove search/i,
