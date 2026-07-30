@@ -1,0 +1,6 @@
+/* The notification panel is rendered inside the floating header.
+ * The home header's decorative particle layer previously used overflow:hidden,
+ * which clipped the entire panel below the header even though React opened it. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
+  overflow: visible !important;
+}

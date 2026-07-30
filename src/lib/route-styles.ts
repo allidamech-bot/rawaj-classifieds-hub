@@ -28,6 +28,7 @@ import "../public-journey-audit-v11.css";
 import "../auth-feedback-system-v12.css";
 import "../footer-contrast-system-v13.css";
 import "../lightweight-mobile-ux-polish.css";
+import "../home-notification-overlay-fix.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -66,6 +67,7 @@ import publicJourneyAuditV11Css from "../public-journey-audit-v11.css?url";
 import authFeedbackSystemV12Css from "../auth-feedback-system-v12.css?url";
 import footerContrastSystemV13Css from "../footer-contrast-system-v13.css?url";
 import lightweightMobileUxPolishCss from "../lightweight-mobile-ux-polish.css?url";
+import homeNotificationOverlayFixCss from "../home-notification-overlay-fix.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -114,6 +116,7 @@ export const auditedOverrideStyleHrefs = [
   authFeedbackSystemV12Css,
   footerContrastSystemV13Css,
   lightweightMobileUxPolishCss,
+  homeNotificationOverlayFixCss,
 ] as const;
 
 export interface RouteStyleScope {
