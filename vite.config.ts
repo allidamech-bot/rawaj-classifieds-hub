@@ -10,6 +10,7 @@ import { createRawajE2eApiFixturePlugin } from "./e2e/rawaj-e2e-api-fixtures";
 import { createRawajE2eImageOrderFixturePlugin } from "./e2e/rawaj-e2e-image-order-fixture";
 import { createRawajE2eMessagingFixturePlugin } from "./e2e/rawaj-e2e-messaging-fixture";
 import { createRawajE2eNotificationsFixturePlugin } from "./e2e/rawaj-e2e-notifications-fixture";
+import { createRawajE2eOwnerListingLifecycleFixturePlugin } from "./e2e/rawaj-e2e-owner-listing-lifecycle-fixture";
 import { createRawajE2ePrivateFixturePlugin } from "./e2e/rawaj-e2e-private-fixtures";
 import { createRawajE2eProfileFixturePlugin } from "./e2e/rawaj-e2e-profile-fixture";
 import { createRawajE2eSavedDiscoveryFixturePlugin } from "./e2e/rawaj-e2e-saved-discovery-fixture";
@@ -41,6 +42,7 @@ export default defineConfig({
           createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
           createRawajE2eImageOrderFixturePlugin(),
+          createRawajE2eOwnerListingLifecycleFixturePlugin(),
           createRawajE2ePrivateFixturePlugin(),
           createRawajE2eApiFixturePlugin(),
         ]
