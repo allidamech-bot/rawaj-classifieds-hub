@@ -1,15 +1,8 @@
 import { Clock3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PriceChangeBanner } from "@/features/listing-detail/PriceChangeBanner";
+import { findLocalListingView } from "@/lib/listing-history";
 import { useUiPreferences } from "@/lib/ui-preferences";
-
-const STORAGE_KEY = "rawaj:recent-listing-views:v1";
-const MAX_RECENT_VIEWS = 50;
-
-interface ListingViewRecord {
-  listingId: string;
-  viewedAt: string;
-}
 
 export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
   const { language, text } = useUiPreferences();
@@ -19,20 +12,7 @@ export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
     const cleanListingId = listingId.trim();
     if (!cleanListingId) return;
 
-    try {
-      const current = readRecentViews();
-      const previous = current.find((entry) => entry.listingId === cleanListingId) ?? null;
-      setPreviousViewAt(previous?.viewedAt ?? null);
-
-      const now = new Date().toISOString();
-      const next = [
-        { listingId: cleanListingId, viewedAt: now },
-        ...current.filter((entry) => entry.listingId !== cleanListingId),
-      ].slice(0, MAX_RECENT_VIEWS);
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      setPreviousViewAt(null);
-    }
+    setPreviousViewAt(findLocalListingView(cleanListingId)?.viewedAt ?? null);
   }, [listingId]);
 
   return (
@@ -57,22 +37,6 @@ export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
       )}
     </>
   );
-}
-
-function readRecentViews(): ListingViewRecord[] {
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-
-  const parsed: unknown = JSON.parse(raw);
-  if (!Array.isArray(parsed)) return [];
-
-  return parsed
-    .filter((entry): entry is ListingViewRecord => {
-      if (!entry || typeof entry !== "object") return false;
-      const record = entry as Record<string, unknown>;
-      return typeof record.listingId === "string" && typeof record.viewedAt === "string";
-    })
-    .slice(0, MAX_RECENT_VIEWS);
 }
 
 function formatViewedAt(value: string, language: "ar" | "en") {

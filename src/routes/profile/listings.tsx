@@ -3,7 +3,7 @@ import { BadgePercent, BookmarkCheck, Eye, Pencil, Plus, Star, Trash2 } from "lu
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
-import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
 import {
   StorefrontIdentityHero,
   StorefrontNotice,
@@ -266,7 +266,12 @@ function MyListingsPage() {
         ) : null}
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-          <div className="rawaj-storefront-owner-tabs">
+          <div
+            className="rawaj-storefront-owner-tabs"
+            role="tablist"
+            aria-label={text("حالات الإعلانات", "Listing statuses")}
+            data-rawaj-segmented-control="true"
+          >
             <TabButton
               active={activeTab === "approved"}
               label={text("الإعلانات المعتمدة", "Approved listings")}
@@ -404,7 +409,7 @@ function TabButton({
   onClick: () => void;
 }) {
   return (
-    <button type="button" onClick={onClick} data-active={active}>
+    <button type="button" role="tab" aria-selected={active} onClick={onClick} data-active={active}>
       {label} <span className="opacity-75">({count})</span>
     </button>
   );
@@ -644,17 +649,14 @@ function StoreListingCard({
           <span className="rawaj-status-ribbon" data-status={listing.status}>
             {listingStatusLabel(listing.status, language)}
           </span>
-          {listing.primaryImageUrl ? (
-            <img
-              src={listing.primaryImageUrl}
-              alt={listing.title}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
-            />
-          ) : (
-            <PlaceholderArt type={listing.categoryPlaceholder ?? "misc"} aspect="wide" />
-          )}
+          <ListingCardImage
+            src={listing.primaryImageUrl}
+            alt={listing.title}
+            placeholder={listing.categoryPlaceholder ?? "misc"}
+            placeholderAspect="wide"
+            loading="lazy"
+            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
+          />
         </div>
         <div className="space-y-2 p-4">
           <div className="flex items-start justify-between gap-2">

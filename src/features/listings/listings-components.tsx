@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ResilientImage } from "@/components/media/ResilientImage";
 import { carMakeOptions, type CategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedSubcategory, PublicSellerSearchResult } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -291,17 +292,16 @@ export function SellerSearchCard({ seller }: { seller: PublicSellerSearchResult 
       className="flex items-center gap-3 rounded-2xl bg-card p-3 hairline tap-card hover:bg-muted-surface"
     >
       <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-muted-surface text-sm font-bold text-primary">
-        {seller.avatarUrl ? (
-          <img
-            src={seller.avatarUrl}
-            alt={title}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          title.slice(0, 1)
-        )}
+        <ResilientImage
+          src={seller.avatarUrl ?? undefined}
+          alt={title}
+          loading="lazy"
+          decoding="async"
+          width={48}
+          height={48}
+          className="h-full w-full object-cover"
+          fallback={title.slice(0, 1)}
+        />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-extrabold">{title}</span>

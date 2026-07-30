@@ -40,6 +40,7 @@ import { categoryName, governorateName } from "@/lib/i18n";
 import { listingStatusLabel } from "@/lib/status-labels";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -95,6 +96,7 @@ function ProfilePage() {
   const listingsRequestIdRef = useRef(0);
   const verificationRequestIdRef = useRef(0);
   const loadedProfileIdRef = useRef<string | null>(null);
+  const savedProfileSignatureRef = useRef("");
   const profileId = auth.profile?.id ?? null;
   const profileIdRef = useRef<string | null>(profileId);
   const settingsSavingProfilesRef = useRef<Set<string>>(new Set());
@@ -105,6 +107,47 @@ function ProfilePage() {
   profileIdRef.current = profileId;
   const displayName = auth.profile?.displayName || auth.profile?.email || text("زائر", "Guest");
   const recentListings = myListings.slice(0, 3);
+  const profileFormSignature = JSON.stringify({
+    displayName: settingsDisplayName,
+    firstName: settingsFirstName,
+    lastName: settingsLastName,
+    governorate: settingsGovernorate,
+    cityArea: settingsCityArea,
+    bio: settingsBio,
+    businessName: settingsBusinessName,
+    phone: settingsPhone,
+    whatsapp: settingsWhatsapp,
+    preferredContact: settingsPreferredContact,
+  });
+  const serverProfileSignature = JSON.stringify({
+    displayName: auth.profile?.displayName ?? "",
+    firstName:
+      auth.profile?.firstName ?? auth.profile?.displayName?.split(" ").filter(Boolean).at(0) ?? "",
+    lastName:
+      auth.profile?.lastName ??
+      auth.profile?.displayName?.split(" ").filter(Boolean).slice(1).join(" ") ??
+      "",
+    governorate: auth.profile?.governorate ?? "",
+    cityArea: auth.profile?.cityArea ?? "",
+    bio: auth.profile?.bio ?? "",
+    businessName: auth.profile?.businessName ?? "",
+    phone: auth.profile?.phone ?? "",
+    whatsapp: auth.profile?.whatsapp ?? "",
+    preferredContact: auth.profile?.preferredContactMethod ?? "",
+  });
+  const profileDirty =
+    auth.status === "signedIn" &&
+    loadedProfileIdRef.current === profileId &&
+    profileFormSignature !== savedProfileSignatureRef.current;
+  const passwordDirty = Boolean(currentPassword || newPassword || confirmPassword);
+
+  useUnsavedChangesWarning(
+    (profileDirty && !settingsSaving) || (passwordDirty && !passwordSaving),
+    text(
+      "لديك تغييرات غير محفوظة في الحساب. هل تريد مغادرة الصفحة؟",
+      "You have unsaved account changes. Leave this page?",
+    ),
+  );
 
   useEffect(() => {
     if (window.location.hash !== "#account-info") return;
@@ -317,6 +360,7 @@ function ProfilePage() {
         setSettingsNotice(result.error.message);
         return;
       }
+      savedProfileSignatureRef.current = profileFormSignature;
       const refreshResult = await auth.refreshProfile();
       if (currentProfileId !== profileIdRef.current) return;
       setSettingsNotice(
@@ -423,6 +467,7 @@ function ProfilePage() {
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       loadedProfileIdRef.current = null;
+      savedProfileSignatureRef.current = "";
       setSettingsDisplayName("");
       setSettingsFirstName("");
       setSettingsLastName("");
@@ -449,6 +494,7 @@ function ProfilePage() {
 
     const accountChanged = loadedProfileIdRef.current !== profileId;
     loadedProfileIdRef.current = profileId;
+    savedProfileSignatureRef.current = serverProfileSignature;
     setSettingsDisplayName(auth.profile?.displayName ?? "");
     setSettingsFirstName(
       auth.profile?.firstName ?? auth.profile?.displayName?.split(" ").filter(Boolean).at(0) ?? "",
@@ -478,7 +524,21 @@ function ProfilePage() {
       setDeletionNotice("");
       setMediaSaving(null);
     }
-  }, [auth.profile, auth.status, profileId]);
+  }, [
+    auth.profile?.bio,
+    auth.profile?.businessName,
+    auth.profile?.cityArea,
+    auth.profile?.displayName,
+    auth.profile?.firstName,
+    auth.profile?.governorate,
+    auth.profile?.lastName,
+    auth.profile?.phone,
+    auth.profile?.preferredContactMethod,
+    auth.profile?.whatsapp,
+    auth.status,
+    profileId,
+    serverProfileSignature,
+  ]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -720,6 +780,7 @@ function ProfilePage() {
                 <button
                   type="submit"
                   disabled={settingsSaving}
+                  aria-busy={settingsSaving}
                   className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
                 >
                   {settingsSaving

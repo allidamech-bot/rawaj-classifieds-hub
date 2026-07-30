@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Languages, LogIn, MapPin, Menu, Plus, Search, User, UserCog } from "lucide-react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
-import { OfflineNotice } from "@/components/OfflineNotice";
 import { BrandLockup } from "@/components/shell/BrandLockup";
 import { ShellHeaderFrame } from "@/components/shell/ShellHeaderFrame";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
@@ -158,7 +157,6 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
           </Link>
         </div>
       </ShellHeaderFrame>
-      <OfflineNotice />
     </>
   );
 }

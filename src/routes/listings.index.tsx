@@ -57,6 +57,10 @@ import {
   StateCard,
   subcategoryName,
 } from "@/features/listings/listings-components";
+import {
+  readListingBrowsingPreferences,
+  writeListingBrowsingPreferences,
+} from "@/lib/listing-browsing-preferences";
 
 export const Route = createFileRoute("/listings/")({
   validateSearch: listingsSearchSchema,
@@ -250,8 +254,9 @@ function ListingsPage() {
     setEmploymentType(search.employment_type ?? "");
     setSalaryType(search.salary_type ?? "");
     setAttributeFilters(parseListingAttributeFilters(search.attrs));
-    setSort(search.sort ?? "latest");
-    setView(search.view ?? "grid");
+    const storedPreferences = readListingBrowsingPreferences();
+    setSort(search.sort ?? storedPreferences.sort);
+    setView(search.view ?? storedPreferences.view);
     setWithPhotos(Boolean(search.with_photos));
   }, [
     search.attrs,
@@ -279,6 +284,17 @@ function ListingsPage() {
     search.view,
     search.with_photos,
   ]);
+
+  useEffect(() => {
+    const storedPreferences = readListingBrowsingPreferences();
+    if (
+      sort !== (search.sort ?? storedPreferences.sort) ||
+      view !== (search.view ?? storedPreferences.view)
+    ) {
+      return;
+    }
+    writeListingBrowsingPreferences({ sort, view });
+  }, [search.sort, search.view, sort, view]);
 
   useEffect(() => {
     if (!canonicalLocationNodeId) {
