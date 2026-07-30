@@ -25,6 +25,7 @@ const rawajDisableRemoteMedia =
 const rawajE2eUseFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
 const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
 const rawajE2eApiProxyPath = "/v1";
+const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
 export default defineConfig({
   vite: {
@@ -69,6 +70,13 @@ export default defineConfig({
       ],
     },
     define: {
+      ...(rawajE2eUseFixtures
+        ? {
+            "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL": JSON.stringify(
+              rawajE2eLocalApiBaseUrl,
+            ),
+          }
+        : {}),
       __RAWAJ_BUILD_INFO__: JSON.stringify(rawajBuildInfo),
       __RAWAJ_DISABLE_REMOTE_MEDIA__: JSON.stringify(rawajDisableRemoteMedia),
     },
