@@ -85,7 +85,7 @@ test("home shell renders one header and one responsive dock", async ({ page }, t
 test("home search submits trimmed queries", async ({ page }) => {
   await openHealthyPage(page, "/");
 
-  const search = page.locator("#rawaj-signature-search-input");
+  let search = page.locator("#rawaj-signature-search-input");
   await expect(search).toBeVisible();
   await expect(search).toHaveAttribute("name", "q");
   await expect(search).toHaveAttribute("enterkeyhint", "search");
@@ -96,16 +96,16 @@ test("home search submits trimmed queries", async ({ page }) => {
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   expect(new URL(page.url()).searchParams.get("q")).toBe("سيارة");
 
-  await page.goBack();
-  await waitForHydratedRouter(page);
+  await openHealthyPage(page, "/");
+  search = page.locator("#rawaj-signature-search-input");
   await expect(search).toBeVisible();
   await search.fill("  iPhone 15  ");
   await page.locator(".rawaj-signature-search button").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   expect(new URL(page.url()).searchParams.get("q")).toBe("iPhone 15");
 
-  await page.goBack();
-  await waitForHydratedRouter(page);
+  await openHealthyPage(page, "/");
+  search = page.locator("#rawaj-signature-search-input");
   await expect(search).toBeVisible();
   await search.fill("   ");
   await search.press("Enter");

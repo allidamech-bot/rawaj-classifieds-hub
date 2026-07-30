@@ -47,18 +47,15 @@ export default {
   async fetch(request: Request, env: EntryEnv): Promise<Response> {
     const origin = request.headers.get("Origin");
     const cors = corsHeadersForOrigin(origin, env);
+    const requestId = crypto.randomUUID();
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: cors });
+      return new Response(null, { status: 204, headers: responseHeaders(cors, requestId) });
     }
-
-    const requestId = crypto.randomUUID();
 
     try {
       const response = await routeRequest(request, env);
-      const headers = new Headers(cors);
-      headers.set("X-Request-Id", requestId);
-      return withCors(response, headers);
+      return withCors(response, responseHeaders(cors, requestId));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
       console.error(
@@ -72,10 +69,9 @@ export default {
         }),
       );
 
-      const headers = new Headers(cors);
+      const headers = responseHeaders(cors, requestId);
       headers.set("Content-Type", "application/json; charset=utf-8");
       headers.set("Cache-Control", "no-store");
-      headers.set("X-Request-Id", requestId);
 
       return new Response(
         JSON.stringify({
@@ -250,6 +246,14 @@ function required(response: Response | null): Response {
       { status: 404, headers: { "Content-Type": "application/json; charset=utf-8" } },
     )
   );
+}
+
+function responseHeaders(cors: Headers, requestId: string): Headers {
+  const headers = new Headers(cors);
+  headers.set("X-Request-Id", requestId);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "no-referrer");
+  return headers;
 }
 
 function withCors(response: Response, cors: Headers): Response {

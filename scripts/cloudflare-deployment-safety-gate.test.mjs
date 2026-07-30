@@ -22,6 +22,7 @@ const approvalGuard = await readFile(
   "utf8",
 );
 const healthSource = await readFile(new URL("cloudflare/worker/src/index.ts", root), "utf8");
+const entrySource = await readFile(new URL("cloudflare/worker/src/entry.ts", root), "utf8");
 const renderConfig = await readFile(
   new URL("cloudflare/worker/scripts/render-config.mjs", root),
   "utf8",
@@ -128,5 +129,14 @@ test("health and post-deploy smoke expose and verify release identity safely", (
   ]) {
     assert.match(smokeSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+  assert.match(entrySource, /const requestId = crypto\.randomUUID\(\)/);
+  assert.match(entrySource, /request\.method === "OPTIONS"[\s\S]*responseHeaders\(cors, requestId\)/);
+  assert.match(entrySource, /headers\.set\("X-Content-Type-Options", "nosniff"\)/);
+  assert.match(entrySource, /headers\.set\("Referrer-Policy", "no-referrer"\)/);
+  assert.match(smokeSource, /requestIdPattern/);
+  assert.match(smokeSource, /requestIdValid/);
+  assert.match(smokeSource, /securityHeadersValid/);
+  assert.match(smokeSource, /contentTypeOptions === "nosniff"/);
+  assert.match(smokeSource, /referrerPolicy === "no-referrer"/);
   assert.doesNotMatch(smokeSource, /\bwrangler\b/i);
 });

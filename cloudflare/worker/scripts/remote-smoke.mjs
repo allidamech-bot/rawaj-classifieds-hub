@@ -2,6 +2,8 @@ const baseUrl = (
   process.env.RAWAJ_WORKER_BASE_URL || "https://rawaj-classifieds-hub.allidamech.workers.dev"
 ).replace(/\/$/, "");
 const expectedReleaseSha = process.env.RAWAJ_WORKER_EXPECTED_RELEASE_SHA?.trim() ?? "";
+const requestIdPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 if (!/^[0-9a-f]{40}$/.test(expectedReleaseSha)) {
   console.error("RAWAJ_WORKER_EXPECTED_RELEASE_SHA must be an exact 40-character Git SHA.");
@@ -73,10 +75,15 @@ for (const check of checks) {
       redirect: "manual",
     });
     const allowOrigin = response.headers.get("access-control-allow-origin");
+    const allowCredentials = response.headers.get("access-control-allow-credentials");
     const requestId = response.headers.get("x-request-id");
+    const contentTypeOptions = response.headers.get("x-content-type-options");
+    const referrerPolicy = response.headers.get("referrer-policy");
     const body = response.status === 204 ? "" : await response.text();
-    const corsOk = allowOrigin === check.origin;
+    const corsOk = allowOrigin === check.origin && allowCredentials === null;
     const statusOk = response.status === check.expectedStatus;
+    const requestIdOk = Boolean(requestId && requestIdPattern.test(requestId));
+    const securityHeadersOk = contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
     let releaseOk = true;
     let actualReleaseSha = null;
 
@@ -91,7 +98,7 @@ for (const check of checks) {
       }
     }
 
-    if (!corsOk || !statusOk || !releaseOk) {
+    if (!corsOk || !statusOk || !releaseOk || !requestIdOk || !securityHeadersOk) {
       failed = true;
       console.error(
         JSON.stringify({
@@ -101,7 +108,13 @@ for (const check of checks) {
           expectedStatus: check.expectedStatus,
           origin: check.origin,
           allowOrigin,
+          allowCredentials,
+          credentialFreeCors: allowCredentials === null,
           requestId,
+          requestIdValid: requestIdOk,
+          contentTypeOptions,
+          referrerPolicy,
+          securityHeadersValid: securityHeadersOk,
           releaseMatches: releaseOk,
           actualReleaseSha,
         }),
@@ -116,7 +129,9 @@ for (const check of checks) {
         status: response.status,
         origin: check.origin,
         allowOrigin,
+        credentialFreeCors: true,
         requestId,
+        securityHeadersValid: securityHeadersOk,
         ...(check.verifyRelease ? { releaseSha: actualReleaseSha } : {}),
       }),
     );
