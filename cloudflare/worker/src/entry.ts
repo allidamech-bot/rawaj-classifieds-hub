@@ -96,7 +96,7 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   const url = new URL(request.url);
   const path = url.pathname;
 
-  if (path === "/v1/admin/system-controls") {
+  if (path === "/v1/admin/system-controls" || path === "/v1/system-status") {
     return required(await handleSystemControls(request, env));
   }
   if (/^\/v1\/listings\/[^/]+\/attributes(?:\/completeness)?$/.test(path)) {
