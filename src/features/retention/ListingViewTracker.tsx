@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { recordRecentListingView, syncAnonymousRecentListingViews } from "@/lib/classifieds-api";
+import { recordLocalListingView } from "@/lib/listing-history";
 import { useAuth } from "@/lib/use-auth";
 
 interface ListingViewTrackerProps {
@@ -18,6 +19,9 @@ export function ListingViewTracker({ listingId }: ListingViewTrackerProps) {
     const recordKey = `${userId ?? "guest"}:${cleanListingId}`;
     if (recordedViewKeyRef.current === recordKey) return;
 
+    const localTimer = window.setTimeout(() => {
+      recordLocalListingView(cleanListingId);
+    }, 0);
     const timer = window.setTimeout(() => {
       void (async () => {
         if (userId) await syncAnonymousRecentListingViews(userId);
@@ -26,7 +30,10 @@ export function ListingViewTracker({ listingId }: ListingViewTrackerProps) {
       })();
     }, 900);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(localTimer);
+      window.clearTimeout(timer);
+    };
   }, [auth.profile?.id, auth.status, auth.user?.id, listingId]);
 
   return null;

@@ -8,6 +8,7 @@ on:
       - "src/**"
       - "e2e/**"
       - "playwright.config.ts"
+      - "playwright.smoke.config.ts"
       - "vite.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -19,6 +20,7 @@ on:
       - "src/**"
       - "e2e/**"
       - "playwright.config.ts"
+      - "playwright.smoke.config.ts"
       - "vite.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -33,8 +35,14 @@ permissions:
 
 jobs:
   smoke:
+    name: smoke (shard ${{ matrix.shard }}/${{ matrix.total }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+        total: [4]
 
     steps:
       - name: Checkout
@@ -58,13 +66,13 @@ jobs:
           RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
           VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
-        run: npm run test:e2e:smoke
+        run: npm run test:e2e:smoke -- --shard=${{ matrix.shard }}/${{ matrix.total }}
 
       - name: Upload browser diagnostics
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ github.run_id }}
+          name: playwright-report-${{ github.run_id }}-shard-${{ matrix.shard }}
           path: |
             playwright-report
             test-results

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { AccountRecentlyViewed } from "@/features/retention/AccountRecentlyViewed";
 import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
@@ -222,6 +223,8 @@ function MorePage() {
             <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
         </section>
+
+        {user ? <AccountRecentlyViewed userId={profile?.id ?? user.id} /> : null}
 
         <div className="rawaj-more-v2__sections">
           {logoutError && (

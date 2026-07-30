@@ -43,6 +43,7 @@ import {
 } from "@/lib/dynamic-listing-fields";
 import { calculateListingQuality, listingQualityCheckLabel } from "@/lib/listing-quality";
 import { runBoundedTasks } from "@/lib/bounded-task-queue";
+import { getAddListingDirtyState } from "@/lib/add-listing-dirty-state";
 import {
   assignOwnerListingTaxonomy,
   createOwnerDraftListing,
@@ -100,6 +101,14 @@ import {
 } from "@/lib/taxonomy";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import {
+  clearLocalListingDraft,
+  readLocalListingDraft,
+  type LocalListingDraft,
+  writeLocalListingDraft,
+} from "@/lib/local-listing-draft";
+import { prefersReducedMotion } from "@/lib/scroll-utils";
+import { useUnsavedChangesWarning } from "@/lib/use-unsaved-changes-warning";
 import type { PriceType } from "@/types";
 
 const MAX_IMAGES = 6;
@@ -158,6 +167,8 @@ function AddListingPage() {
   const [dynamicValues, setDynamicValues] = useState<DynamicListingValues>({});
   const [dynamicSchemaLoading, setDynamicSchemaLoading] = useState(false);
   const [dynamicSchemaError, setDynamicSchemaError] = useState<string | null>(null);
+  const [restorableLocalDraft, setRestorableLocalDraft] = useState<LocalListingDraft | null>(null);
+  const [localDraftChecked, setLocalDraftChecked] = useState(false);
   const submittingRef = useRef(false);
   const selectedImagesRef = useRef<UploadImageEntry[]>([]);
   const imageRetryInFlightRef = useRef<Set<string>>(new Set());
@@ -174,6 +185,8 @@ function AddListingPage() {
   const lastAutosaveSignatureRef = useRef("");
   const setupRequestIdRef = useRef(0);
   const dynamicSchemaRequestIdRef = useRef(0);
+  const localDraftTimerRef = useRef<number | null>(null);
+  const localDraftUserId = auth.profile?.id ?? auth.user?.id ?? "";
 
   const category = categories.find((item) => item.id === categoryId);
   const selectedTaxonomyNode = taxonomyNodes.find((item) => item.id === taxonomyNodeId);
@@ -263,6 +276,37 @@ function AddListingPage() {
     text("السعر والموقع والتواصل", "Price, location, contact"),
     text("مراجعة وإرسال", "Review and submit"),
   ];
+  const hasMeaningfulServerChanges = Boolean(
+    categoryId ||
+    taxonomyNodeId ||
+    title.trim() ||
+    description.trim() ||
+    price.trim() ||
+    governorateId ||
+    phone.trim() ||
+    whatsapp.trim(),
+  );
+  const hasMeaningfulChanges = hasMeaningfulServerChanges || selectedImages.length > 0;
+  const {
+    unsavedServerChanges,
+    unsavedLocalImageChanges,
+    shouldBlockNavigation: hasUnsavedChanges,
+  } = getAddListingDirtyState({
+    hasMeaningfulServerChanges,
+    autosaveState,
+    draftId: draftListing?.id ?? null,
+    draftStatus: draftListing?.status ?? null,
+    submitting,
+    images: selectedImages,
+  });
+
+  useUnsavedChangesWarning(
+    hasUnsavedChanges && (unsavedServerChanges || unsavedLocalImageChanges),
+    text(
+      "لديك تغييرات غير محفوظة في الإعلان. هل تريد مغادرة الصفحة؟",
+      "You have unsaved listing changes. Leave this page?",
+    ),
+  );
   const selectedImagePreviews = useMemo(
     () =>
       selectedImages.map((entry) => ({
@@ -293,6 +337,129 @@ function AddListingPage() {
   useEffect(() => {
     taxonomyNodeIdRef.current = taxonomyNodeId;
   }, [taxonomyNodeId]);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !localDraftUserId) {
+      setRestorableLocalDraft(null);
+      setLocalDraftChecked(auth.status !== "loading");
+      return;
+    }
+    setRestorableLocalDraft(readLocalListingDraft(localDraftUserId));
+    setLocalDraftChecked(true);
+  }, [auth.status, localDraftUserId]);
+
+  useEffect(() => {
+    if (
+      !localDraftChecked ||
+      !localDraftUserId ||
+      restorableLocalDraft ||
+      !hasMeaningfulChanges ||
+      (draftListing && draftListing.status !== "draft")
+    ) {
+      return;
+    }
+
+    if (localDraftTimerRef.current !== null) window.clearTimeout(localDraftTimerRef.current);
+    localDraftTimerRef.current = window.setTimeout(() => {
+      localDraftTimerRef.current = null;
+      writeLocalListingDraft(localDraftUserId, {
+        serverDraftId: draftListingRef.current?.id ?? null,
+        step,
+        categoryId,
+        subcategoryId,
+        taxonomyNodeId,
+        title,
+        price,
+        priceType,
+        governorateId,
+        district,
+        locationNodeId,
+        locationNodeType,
+        locationLabel,
+        description,
+        condition,
+        contactName,
+        contact,
+        phone,
+        whatsapp,
+        categoryDetails: { ...categoryDetails },
+        dynamicValues,
+      });
+    }, 800);
+
+    return () => {
+      if (localDraftTimerRef.current !== null) {
+        window.clearTimeout(localDraftTimerRef.current);
+        localDraftTimerRef.current = null;
+      }
+    };
+  }, [
+    categoryDetails,
+    categoryId,
+    condition,
+    contact,
+    contactName,
+    description,
+    district,
+    draftListing,
+    dynamicValues,
+    governorateId,
+    hasMeaningfulChanges,
+    localDraftChecked,
+    localDraftUserId,
+    locationLabel,
+    locationNodeId,
+    locationNodeType,
+    phone,
+    price,
+    priceType,
+    restorableLocalDraft,
+    step,
+    subcategoryId,
+    taxonomyNodeId,
+    title,
+    whatsapp,
+  ]);
+
+  function restoreLocalDraft() {
+    const draft = restorableLocalDraft;
+    if (!draft) return;
+    if (draft.serverDraftId) {
+      void navigate({
+        to: "/profile/listings/$id",
+        params: { id: draft.serverDraftId },
+      });
+      return;
+    }
+    setCategoryId(draft.categoryId);
+    setSubcategoryId(draft.subcategoryId);
+    setTaxonomyNodeId(draft.taxonomyNodeId);
+    setTitle(draft.title);
+    setPrice(draft.price);
+    setPriceType(draft.priceType as PriceType);
+    setGovernorateId(draft.governorateId);
+    setDistrict(draft.district);
+    setLocationNodeId(draft.locationNodeId);
+    setLocationNodeType(draft.locationNodeType as LocationNodeType | "");
+    setLocationLabel(draft.locationLabel);
+    setDescription(draft.description);
+    setCondition(draft.condition as ListingCondition);
+    setContactName(draft.contactName);
+    setContact(draft.contact);
+    setPhone(draft.phone);
+    setWhatsapp(draft.whatsapp);
+    setCategoryDetails(draft.categoryDetails as CategorySpecificDetails);
+    setDynamicValues(draft.dynamicValues as DynamicListingValues);
+    const restoredStep = Math.max(0, Math.min(3, Math.trunc(draft.step)));
+    setStep(restoredStep);
+    setFurthestStep(restoredStep);
+    setRestorableLocalDraft(null);
+  }
+
+  function discardLocalDraft() {
+    clearLocalListingDraft(localDraftUserId);
+    setRestorableLocalDraft(null);
+  }
 
   useEffect(() => {
     const requestId = ++dynamicSchemaRequestIdRef.current;
@@ -767,12 +934,22 @@ function AddListingPage() {
     setFieldErrors(errors.fields);
     setStepErrors(errors.summary);
     if (errors.summary.length > 0) {
+      const firstInvalidKey = Object.keys(errors.fields)[0] ?? "";
+      const targetStep = ["taxonomyNodeId", "categoryId", "title"].includes(firstInvalidKey)
+        ? 0
+        : ["governorateId", "district", "price", "phone", "whatsapp"].includes(firstInvalidKey)
+          ? 2
+          : 1;
+      if (currentStep === 3 && step !== targetStep) setStep(targetStep);
       window.setTimeout(() => {
-        document.querySelector<HTMLElement>("[data-first-invalid='true']")?.focus();
-        document.querySelector<HTMLElement>("[data-error-summary='true']")?.scrollIntoView({
+        const invalidField = document.querySelector<HTMLElement>("[data-first-invalid='true']");
+        const focusTarget =
+          invalidField ?? document.querySelector<HTMLElement>("[data-error-summary='true']");
+        focusTarget?.scrollIntoView({
           block: "center",
-          behavior: "smooth",
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
         });
+        focusTarget?.focus({ preventScroll: true });
       }, 0);
     }
     return errors.summary.length === 0;
@@ -1397,6 +1574,8 @@ function AddListingPage() {
         );
         return;
       }
+      clearLocalListingDraft(localDraftUserId);
+      setRestorableLocalDraft(null);
       draftListingRef.current = submitResult.data;
       setDraftListing(submitResult.data);
       lastAutosaveSignatureRef.current = "";
@@ -1529,6 +1708,40 @@ function AddListingPage() {
           }
         />
         <ListingStudioTrustStrip text={text} />
+        {restorableLocalDraft ? (
+          <section
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.15rem] border border-brand-orange/20 bg-brand-orange/8 p-4"
+            aria-labelledby="rawaj-local-draft-title"
+          >
+            <div className="min-w-0">
+              <h2 id="rawaj-local-draft-title" className="text-sm font-extrabold">
+                {text("توجد مسودة محلية غير مكتملة", "An unfinished local draft is available")}
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {text(
+                  "يمكنك استعادة الحقول المحفوظة. الصور لا تُحفظ على الجهاز.",
+                  "You can restore the saved fields. Images are not stored locally.",
+                )}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={restoreLocalDraft}
+                className="rawaj-button-primary min-h-10 px-3 text-xs"
+              >
+                {text("استعادة", "Restore")}
+              </button>
+              <button
+                type="button"
+                onClick={discardLocalDraft}
+                className="min-h-10 rounded-xl bg-muted-surface px-3 text-xs font-bold"
+              >
+                {text("تجاهل المسودة", "Discard")}
+              </button>
+            </div>
+          </section>
+        ) : null}
         <ListingStudioSteps
           progressLabel={text("تقدم إنشاء الإعلان", "Listing creation progress")}
           steps={steps.map((label, index) => ({
@@ -1595,6 +1808,7 @@ function AddListingPage() {
               {stepErrors.length > 0 && (
                 <div
                   data-error-summary="true"
+                  tabIndex={-1}
                   className="rounded-[1.15rem] border border-destructive/15 bg-destructive/8 p-4 text-sm text-destructive shadow-soft"
                 >
                   <p className="font-bold">
@@ -2074,6 +2288,7 @@ function AddListingPage() {
                   <button
                     type="button"
                     disabled={!canSubmit || submitting}
+                    aria-busy={submitting}
                     onClick={() => void submitListing()}
                     className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
                   >

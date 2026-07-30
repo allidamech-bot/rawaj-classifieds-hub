@@ -36,9 +36,9 @@ async function mockPublicAdApi(page: Page) {
 test("home category cards expose unique canonical destinations", async ({ page }) => {
   await openHydrated(page, "/");
 
-  const categoryLinks = page.locator(".rawaj-category-world");
+  const categoryLinks = page.locator(".rawaj-signature-category-chip");
+  await expect(categoryLinks.first()).toBeVisible();
   const count = await categoryLinks.count();
-  expect(count).toBeGreaterThan(0);
 
   const destinations = await categoryLinks.evaluateAll((links) =>
     links.map((link) => (link as HTMLAnchorElement).getAttribute("href") ?? ""),
@@ -52,7 +52,7 @@ test("home category cards expose unique canonical destinations", async ({ page }
 
   await categoryLinks.first().click();
   await expect(page).not.toHaveURL(/\/$/);
-  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
 });
 
@@ -60,11 +60,13 @@ test("featured and latest home inventory never repeat the same listing", async (
   await openHydrated(page, "/");
 
   const featured = await page
-    .locator('.rawaj-featured-showcase a[href^="/listings/"]')
+    .locator('.rawaj-signature-featured a[href^="/listings/"]')
     .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
-  const latest = await page
-    .locator('.rawaj-latest-discovery a[href^="/listings/"]')
-    .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).pathname));
+  const latestLinks = page.locator('.rawaj-signature-latest a[href^="/listings/"]');
+  await expect(latestLinks.first()).toBeVisible();
+  const latest = await latestLinks.evaluateAll((links) =>
+    links.map((link) => (link as HTMLAnchorElement).pathname),
+  );
 
   expect(latest.length).toBeGreaterThan(0);
   expect(new Set(featured).size).toBe(featured.length);
@@ -78,23 +80,23 @@ test("browser back and forward keep exactly one resolved page", async ({ page })
   await openHydrated(page, "/");
   const shell = page.locator(".rawaj-app-shell");
 
-  await page.locator(".rawaj-search-location").click();
+  await page.locator(".rawaj-signature-location").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
 
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(1);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(1);
 
   await page.goForward();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-home-v3-main")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
 });
 
 test("all supported routes mount one correctly targeted public ad slot", async ({
@@ -107,10 +109,9 @@ test("all supported routes mount one correctly targeted public ad slot", async (
   await mockPublicAdApi(page);
 
   await openHydrated(page, "/");
-  const firstListingPath = await page
-    .locator('.rawaj-latest-discovery a[href^="/listings/"]')
-    .first()
-    .getAttribute("href");
+  const firstListing = page.locator('.rawaj-signature-latest a[href^="/listings/"]').first();
+  await expect(firstListing).toBeVisible();
+  const firstListingPath = await firstListing.getAttribute("href");
   expect(firstListingPath).toMatch(/^\/listings\//);
 
   const routes = [
@@ -129,12 +130,13 @@ test("all supported routes mount one correctly targeted public ad slot", async (
     await expect(slot).toHaveAttribute("data-placement-device", expectedDevice);
     await expect(slot).toHaveAttribute("data-placement-loading", "false");
     await expect(page.locator("[data-placement-page]")).toHaveCount(1);
-    await expect(slot.locator("img")).toHaveAttribute("width", "1600");
-    await expect(slot.locator("img")).toHaveAttribute("height", "700");
+    const contentImage = slot.locator("img.rawaj-ad-placement__image");
+    await expect(contentImage).toHaveAttribute("width", "1600");
+    await expect(contentImage).toHaveAttribute("height", "700");
   }
 });
 
-test("active home ad replaces its SSR placeholder without shifting main content", async ({
+test("active home ad mounts without an empty SSR placeholder or shifting main content", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "Single deterministic layout check");
@@ -157,15 +159,16 @@ test("active home ad replaces its SSR placeholder without shifting main content"
     expect(response?.status() ?? 200).toBeLessThan(500);
     await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 
-    const loadingSlot = page.locator('[data-placement-page="home"][data-placement-loading="true"]');
-    await expect(loadingSlot).toBeVisible();
-    const mainTopBefore = (await page.locator("main.rawaj-home-v3-main").boundingBox())?.y;
+    await expect(
+      page.locator('[data-placement-page="home"][data-placement-loading="true"]'),
+    ).toHaveCount(0);
+    const mainTopBefore = (await page.locator("main.rawaj-signature-home").boundingBox())?.y;
     expect(mainTopBefore).toBeDefined();
 
     releaseRequest();
     const loadedSlot = page.locator('[data-placement-page="home"][data-placement-loading="false"]');
     await expect(loadedSlot).toBeVisible();
-    const mainTopAfter = (await page.locator("main.rawaj-home-v3-main").boundingBox())?.y;
+    const mainTopAfter = (await page.locator("main.rawaj-signature-home").boundingBox())?.y;
     expect(mainTopAfter).toBeDefined();
     expect(Math.abs(mainTopAfter! - mainTopBefore!)).toBeLessThanOrEqual(1);
   } finally {

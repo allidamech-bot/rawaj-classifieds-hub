@@ -16,8 +16,8 @@ test("bounded task queue normalizes invalid concurrency and never exceeds its li
   assert.match(queueSource, /Promise\.all\(Array\.from\(\{ length: workerCount \}/);
 });
 
-test("listing submission uploads at most two images concurrently", () => {
-  assert.match(studioSource, /IMAGE_UPLOAD_CONCURRENCY = 2/);
+test("listing submission deliberately serializes image uploads for production safety", () => {
+  assert.match(studioSource, /IMAGE_UPLOAD_CONCURRENCY = 1/);
   assert.match(studioSource, /runBoundedTasks\(/);
   assert.match(studioSource, /submitUploadEntries/);
   assert.match(studioSource, /await waitForAllImageUploadsInFlight\(\)/);

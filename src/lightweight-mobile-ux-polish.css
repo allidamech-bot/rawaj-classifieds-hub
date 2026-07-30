@@ -1,0 +1,225 @@
+/* Focused mobile UX corrections, loaded after the route bundles. */
+
+:root {
+  --rawaj-mobile-obstruction: calc(
+    var(--dock-height, var(--rawaj-bottom-dock-height, 4.75rem)) +
+      var(--safe-bottom, env(safe-area-inset-bottom, 0px))
+  );
+  --rawaj-floating-bottom: calc(var(--rawaj-mobile-obstruction) + 0.75rem);
+}
+
+.rawaj-app-shell[data-shell-dock="true"] .rawaj-app-shell__page {
+  padding-bottom: calc(var(--rawaj-mobile-obstruction) + 0.45rem) !important;
+}
+
+.rawaj-app-shell .rawaj-app-shell__content > main.mobile-page-bottom {
+  min-height: auto !important;
+  padding-bottom: clamp(1rem, 2.5vw, 1.75rem) !important;
+}
+
+.rawaj-site-footer {
+  margin-top: clamp(1rem, 3vw, 2.25rem) !important;
+}
+
+.rawaj-back-to-top {
+  position: fixed;
+  inset-inline-end: max(0.8rem, env(safe-area-inset-right, 0px));
+  bottom: var(--rawaj-floating-bottom);
+  z-index: 45;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--rawaj-border-strong);
+  border-radius: 999px;
+  color: var(--rawaj-text-primary);
+  background: var(--rawaj-elevated-background);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.55rem) scale(0.96);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    background-color 120ms ease;
+}
+
+.rawaj-app-shell[data-shell-dock="false"] .rawaj-back-to-top {
+  bottom: max(0.9rem, calc(env(safe-area-inset-bottom, 0px) + 0.65rem));
+}
+
+.rawaj-app-shell[data-shell-sticky-action="true"] .rawaj-back-to-top {
+  bottom: calc(var(--rawaj-floating-bottom) + 4rem);
+}
+
+.rawaj-back-to-top[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.rawaj-back-to-top:hover {
+  background: var(--rawaj-surface-active);
+}
+
+.rawaj-back-to-top:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.rawaj-back-to-top:focus-visible,
+[data-rawaj-segmented-control="true"] button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--rawaj-accent-pink) 62%, white);
+  outline-offset: 3px;
+}
+
+.rawaj-admin-nav-shell,
+.rawaj-storefront-owner-tabs,
+.rawaj-activity-tabs,
+.rawaj-auth-tabs,
+[data-rawaj-segmented-control="true"] {
+  border: 1px solid var(--rawaj-border) !important;
+  color: var(--rawaj-text-primary) !important;
+  background: var(--rawaj-elevated-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-storefront-owner-tabs,
+.rawaj-activity-tabs,
+.rawaj-auth-tabs,
+[data-rawaj-segmented-control="true"] {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+:is(
+    .rawaj-storefront-owner-tabs,
+    .rawaj-activity-tabs,
+    .rawaj-auth-tabs,
+    [data-rawaj-segmented-control="true"]
+  )
+  button {
+  min-width: max-content;
+  color: var(--rawaj-text-secondary) !important;
+  background: transparent !important;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    transform 120ms ease;
+}
+
+:is(
+    .rawaj-storefront-owner-tabs,
+    .rawaj-activity-tabs,
+    .rawaj-auth-tabs,
+    [data-rawaj-segmented-control="true"]
+  )
+  button:is([data-active="true"], [aria-selected="true"], [aria-pressed="true"]) {
+  color: var(--rawaj-text-primary) !important;
+  border-color: color-mix(in srgb, var(--rawaj-accent-pink) 40%, var(--rawaj-border)) !important;
+  background: color-mix(in srgb, var(--rawaj-accent-pink) 13%, transparent) !important;
+}
+
+:is(
+    .rawaj-storefront-owner-tabs,
+    .rawaj-activity-tabs,
+    .rawaj-auth-tabs,
+    [data-rawaj-segmented-control="true"]
+  )
+  button:active {
+  transform: scale(0.98);
+}
+
+.rawaj-adaptive-card,
+.rawaj-adaptive-card__link,
+.rawaj-adaptive-card__heading,
+.rawaj-adaptive-card__meta,
+.rawaj-owner-listing-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rawaj-adaptive-card__title {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rawaj-adaptive-card__price,
+.rawaj-adaptive-card__category,
+.rawaj-adaptive-card__meta span,
+.rawaj-owner-listing-card :is(h2, p, strong),
+.rawaj-storefront-v2 :is(.rawaj-storefront-title, .rawaj-storefront-location) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-adaptive-card__viewed {
+  position: absolute;
+  inset-inline-start: 0.55rem;
+  bottom: 0.55rem;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(26, 27, 32, 0.78);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.25;
+  backdrop-filter: blur(3px);
+  animation: rawaj-badge-in 140ms ease-out both;
+}
+
+.rawaj-offline-notice {
+  position: relative;
+  z-index: 55;
+  animation: rawaj-banner-in 160ms ease-out both;
+}
+
+[data-first-invalid="true"],
+[aria-invalid="true"] {
+  scroll-margin-block-start: 6rem;
+}
+
+@keyframes rawaj-badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.2rem);
+  }
+}
+
+@keyframes rawaj-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+}
+
+@media (min-width: 768px) {
+  .rawaj-back-to-top {
+    inset-inline-end: 1.25rem;
+    bottom: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-back-to-top,
+  .rawaj-offline-notice,
+  .rawaj-adaptive-card__viewed,
+  :is(
+      .rawaj-storefront-owner-tabs,
+      .rawaj-activity-tabs,
+      .rawaj-auth-tabs,
+      [data-rawaj-segmented-control="true"]
+    )
+    button {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

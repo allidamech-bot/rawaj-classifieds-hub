@@ -32,9 +32,9 @@ test("public ad slot loads device-targeted placements and can render two distinc
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("public ad slot preserves stable responsive frames with bounded low-frequency refresh", () => {
+test("public ad slot preserves its 1600:700 frame with bounded low-frequency refresh", () => {
   assert.match(auditCss, /\.rawaj-ad-placement__frame/);
-  assert.match(auditCss, /aspect-ratio: 16 \/ 6\.4/);
+  assert.match(auditCss, /aspect-ratio: 16 \/ 7/);
   assert.match(auditCss, /data-count="2"/);
   assert.doesNotMatch(slot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS/);
   assert.doesNotMatch(slot, /window\.setInterval\(/);

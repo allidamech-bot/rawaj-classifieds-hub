@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
+import { BackToTop } from "@/components/BackToTop";
+import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
@@ -91,7 +93,9 @@ function useDarkBrowserChrome() {
   }, []);
 }
 
-function elementHasAccessibleFieldName(field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
+function elementHasAccessibleFieldName(
+  field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+) {
   if (field.getAttribute("aria-label")?.trim()) return true;
   if (field.getAttribute("aria-labelledby")?.trim()) return true;
 
@@ -107,13 +111,14 @@ function elementHasAccessibleFieldName(field: HTMLInputElement | HTMLSelectEleme
 }
 
 function applyAccessibleFieldNameFallbacks() {
-  const fields = document.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-    "input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea",
-  );
+  const fields = document.querySelectorAll<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+  >("input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea");
 
   for (const field of fields) {
     if (elementHasAccessibleFieldName(field)) continue;
-    const fallback = field.getAttribute("placeholder")?.trim() || field.getAttribute("title")?.trim();
+    const fallback =
+      field.getAttribute("placeholder")?.trim() || field.getAttribute("title")?.trim();
     if (fallback) field.setAttribute("aria-label", fallback);
   }
 }
@@ -171,6 +176,9 @@ export function AppShell({
   const config = resolveAppShellConfig(pathname);
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
+  const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
+    config.mode,
+  );
   useDarkBrowserChrome();
   useAccessibleFieldNameFallbacks(pathname);
 
@@ -191,6 +199,7 @@ export function AppShell({
         aria-busy={isRouteNavigating}
       >
         <div className="rawaj-app-shell__page" data-shell-region="page-canvas">
+          <OfflineNotice />
           {announcements ? (
             <div className="rawaj-app-shell__announcements" data-shell-region="announcement-region">
               {announcements}
@@ -232,6 +241,7 @@ export function AppShell({
           aria-hidden="true"
         />
 
+        {showBackToTop ? <BackToTop /> : null}
         <BottomDock pathname={pathname} />
 
         <div

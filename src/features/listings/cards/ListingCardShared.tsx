@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
+import { useIsListingViewed } from "@/lib/listing-history";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { cn } from "@/lib/utils";
 import { formatDate } from "../listings-components";
@@ -33,6 +34,7 @@ export function ListingCardFrame({
 }: ListingCardFrameProps) {
   const { text } = useUiPreferences();
   const hasImage = Boolean(listing.primaryImageUrl);
+  const viewed = useIsListingViewed(listing.id);
 
   return (
     <article
@@ -64,6 +66,9 @@ export function ListingCardFrame({
             <span className="rawaj-adaptive-card__status" data-tone="featured">
               {text("مميز", "Featured")}
             </span>
+          ) : null}
+          {viewed ? (
+            <span className="rawaj-adaptive-card__viewed">{text("تمت مشاهدته", "Viewed")}</span>
           ) : null}
         </div>
         {children}

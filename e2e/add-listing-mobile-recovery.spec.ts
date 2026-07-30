@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 type FixtureWindow = Window & { __listingStudioSubmitCount?: number };
+type UnsavedHarnessWindow = Window & {
+  __unsavedHarness?: {
+    setDirty(dirty: boolean): void;
+    destroy(): void;
+  };
+};
 type Rgb = readonly [number, number, number];
 
 const mobileViewports = [
@@ -106,6 +112,10 @@ for (const viewport of mobileViewports) {
         waitUntil: "domcontentloaded",
       });
       expect(response?.status() ?? 200).toBeLessThan(500);
+      await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+      // The anonymous route redirects before the protected studio stylesheet is
+      // mounted. This fixture exercises that stylesheet directly.
+      await page.addStyleTag({ url: "/src/listing-studio-mobile-recovery.css" });
     });
 
     test("renders readable, bounded, non-overlapping controls", async ({ page }) => {
@@ -190,3 +200,88 @@ for (const viewport of mobileViewports) {
     });
   });
 }
+
+test("server-autosaved fields still block navigation for an unpersisted local image", async ({
+  page,
+}) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+
+  const states = await page.evaluate(async () => {
+    const dirtyStateModuleUrl = "/src/lib/add-listing-dirty-state.ts";
+    const { getAddListingDirtyState } = await import(dirtyStateModuleUrl);
+    const shared = {
+      hasMeaningfulServerChanges: true,
+      autosaveState: "saved" as const,
+      draftId: "draft-1",
+      draftStatus: "draft",
+      submitting: false,
+    };
+    return {
+      pending: getAddListingDirtyState({
+        ...shared,
+        images: [{ state: "pending" }],
+      }).shouldBlockNavigation,
+      persisted: getAddListingDirtyState({
+        ...shared,
+        images: [
+          {
+            state: "uploaded",
+            uploadedImage: { id: "image-1", listingId: "draft-1" },
+          },
+        ],
+      }).shouldBlockNavigation,
+      removed: getAddListingDirtyState({ ...shared, images: [] }).shouldBlockNavigation,
+      submitting: getAddListingDirtyState({
+        ...shared,
+        submitting: true,
+        images: [{ state: "uploading" }],
+      }).shouldBlockNavigation,
+      submitted: getAddListingDirtyState({
+        ...shared,
+        draftStatus: "pending_review",
+        images: [{ state: "uploaded", uploadedImage: { id: "image-1", listingId: "draft-1" } }],
+      }).shouldBlockNavigation,
+    };
+  });
+
+  expect(states).toEqual({
+    pending: true,
+    persisted: false,
+    removed: false,
+    submitting: false,
+    submitted: false,
+  });
+
+  await page.evaluate(async (dirty) => {
+    const container = document.createElement("div");
+    container.id = "unsaved-changes-warning-harness";
+    container.style.cssText =
+      "position:fixed;inset:0 auto auto 0;z-index:1000;padding:1rem;background:white";
+    document.body.append(container);
+    const harnessModuleUrl = "/e2e/unsaved-changes-warning-harness.tsx";
+    const { mountUnsavedChangesWarningHarness } = await import(harnessModuleUrl);
+    (window as UnsavedHarnessWindow).__unsavedHarness = await mountUnsavedChangesWarningHarness(
+      container,
+      dirty,
+    );
+  }, states.pending);
+
+  await expect(page.getByTestId("unsaved-harness-index")).toBeVisible();
+  let confirmationCount = 0;
+  page.once("dialog", async (dialog) => {
+    confirmationCount += 1;
+    expect(dialog.message()).toBe("Unsaved local image");
+    await dialog.dismiss();
+  });
+  await page.getByTestId("unsaved-harness-leave").click();
+  await expect(page.getByTestId("unsaved-harness-index")).toBeVisible();
+  expect(confirmationCount).toBe(1);
+
+  await page.evaluate(() => {
+    (window as UnsavedHarnessWindow).__unsavedHarness?.setDirty(false);
+  });
+  await page.getByTestId("unsaved-harness-leave").click();
+  await expect(page.getByTestId("unsaved-harness-next")).toBeVisible();
+  expect(confirmationCount).toBe(1);
+});

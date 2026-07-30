@@ -40,20 +40,23 @@ function readStoredTheme(): Theme {
 export function UiPreferencesProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("ar");
   const [theme, setThemeState] = useState<Theme>("light");
+  const [preferencesHydrated, setPreferencesHydrated] = useState(false);
 
   useEffect(() => {
     setLanguageState(readStoredLanguage());
     setThemeState(readStoredTheme());
+    setPreferencesHydrated(true);
   }, []);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
+    if (!preferencesHydrated) return;
     const direction = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
     document.documentElement.dir = direction;
     document.body.dir = direction;
     window.localStorage.setItem(LANGUAGE_KEY, language);
-  }, [language]);
+  }, [language, preferencesHydrated]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;

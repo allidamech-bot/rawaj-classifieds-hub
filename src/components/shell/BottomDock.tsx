@@ -8,6 +8,7 @@ import {
 } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
+import { scrollPageToTop } from "@/lib/scroll-utils";
 
 interface BottomDockProps {
   pathname: string;
@@ -98,11 +99,18 @@ export function BottomDock({ pathname }: BottomDockProps) {
               className="rawaj-dock-item relative flex min-w-0 flex-col items-center justify-end active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               aria-label={accessibleLabel}
               aria-current={active ? "page" : undefined}
+              onClick={(event) => {
+                if (!active || item.primary) return;
+                event.preventDefault();
+                scrollPageToTop();
+              }}
             >
               <span
                 data-active={active && !item.primary}
                 className={`relative grid place-items-center ${
-                  item.primary ? "rawaj-dock-create ring-[3px] ring-card" : "rawaj-dock-icon rounded-xl"
+                  item.primary
+                    ? "rawaj-dock-create -mt-3 h-11 w-11 ring-[3px] ring-card"
+                    : "rawaj-dock-icon rounded-xl"
                 }`}
               >
                 <Icon

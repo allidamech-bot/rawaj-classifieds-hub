@@ -23,14 +23,11 @@ export function OfflineNotice() {
     <div
       role="status"
       aria-live="polite"
-      className="border-b border-warning/25 bg-warning/10 px-4 py-2 text-center text-xs font-semibold text-foreground"
+      className="rawaj-offline-notice border-b border-warning/25 bg-warning/10 px-4 py-2 text-center text-xs font-semibold text-foreground"
     >
       <span className="inline-flex items-center gap-2">
         <WifiOff className="h-4 w-4" aria-hidden="true" />
-        {text(
-          "أنت غير متصل بالإنترنت. ستبقى الصفحات المفتوحة ظاهرة، وقد تفشل العمليات الجديدة حتى يعود الاتصال.",
-          "You are offline. Open pages remain visible, but new actions may fail until the connection returns.",
-        )}
+        {text("لا يوجد اتصال بالإنترنت", "No internet connection")}
       </span>
     </div>
   );
