@@ -1,0 +1,74 @@
+name: Patch Authenticated Image Order Fixture
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/patch-authenticated-image-order-fixture.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'fix/critical-authenticated-journey'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/critical-authenticated-journey
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Add deterministic image reorder endpoint
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("e2e/rawaj-e2e-private-fixtures.ts")
+          source = path.read_text(encoding="utf-8")
+          anchor = '''        if (method === "GET" && path === "/v1/account/notifications") {'''
+          route = '''        if (method === "PATCH" && imageUploadMatch) {
+            const listingId = decodeURIComponent(imageUploadMatch[1] ?? "");
+            const body = await readJsonBody(request);
+            const imageIds = Array.isArray(body.imageIds)
+              ? body.imageIds.filter((value): value is string => typeof value === "string")
+              : [];
+            const currentImages = images.get(listingId) ?? [];
+            const imagesById = new Map(currentImages.map((image) => [image.id, image]));
+            const reordered = imageIds
+              .map((imageId, sortOrder) => {
+                const image = imagesById.get(imageId);
+                return image ? { ...image, sortOrder } : null;
+              })
+              .filter((image): image is FixtureImage => image !== null);
+            if (reordered.length !== currentImages.length || reordered.length !== imageIds.length) {
+              sendJson(
+                response,
+                { error: { code: "validation_error", message: "Invalid fixture image order." } },
+                400,
+              );
+              return;
+            }
+            images.set(listingId, reordered);
+            sendJson(response, { data: reordered });
+            return;
+          }
+
+'''
+          if source.count(anchor) != 1:
+              raise SystemExit("image reorder insertion anchor was not found exactly once")
+          path.write_text(source.replace(anchor, route + anchor, 1), encoding="utf-8")
+          PY
+          npx prettier --write e2e/rawaj-e2e-private-fixtures.ts
+      - name: Commit fixture correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/rawaj-e2e-private-fixtures.ts
+          git commit -m "test: fixture authenticated image reordering"
+          git push origin HEAD:fix/critical-authenticated-journey
