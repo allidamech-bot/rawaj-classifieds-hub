@@ -28,22 +28,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node <<'NODE'
-          const fs = require("node:fs");
-          const path = "cloudflare/worker/src/marketplace-private.ts";
-          let source = fs.readFileSync(path, "utf8");
+          python3 <<'PY'
+          from pathlib import Path
 
-          function replaceFunction(name, replacement) {
-            const start = source.indexOf(`async function ${name}(`);
-            if (start < 0) throw new Error(`${name} not found`);
-            const next = source.indexOf("\nasync function ", start + 1);
-            if (next < 0) throw new Error(`Unable to find end of ${name}`);
-            source = `${source.slice(0, start)}${replacement.trimEnd()}\n${source.slice(next + 1)}`;
-          }
+          path = Path("cloudflare/worker/src/marketplace-private.ts")
+          source = path.read_text()
 
-          replaceFunction(
-            "deleteListing",
-            String.raw`async function deleteListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
+          def replace_function(name: str, replacement: str) -> None:
+              global source
+              start = source.find(f"async function {name}(")
+              if start < 0:
+                  raise RuntimeError(f"{name} not found")
+              end = source.find("\nasync function ", start + 1)
+              if end < 0:
+                  raise RuntimeError(f"Unable to find end of {name}")
+              source = source[:start] + replacement.rstrip() + "\n" + source[end + 1:]
+
+          replace_function("deleteListing", r'''async function deleteListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
             const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
             if (auth instanceof Response) return auth;
             const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
@@ -91,12 +92,9 @@ jobs:
               );
             }
             return json({ data: { success: true } }, 200, cors);
-          }`,
-          );
+          }''')
 
-          replaceFunction(
-            "deleteImage",
-            String.raw`async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers, imageId: string) {
+          replace_function("deleteImage", r'''async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers, imageId: string) {
             const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
             if (auth instanceof Response) return auth;
             const row = await env.DB.prepare(
@@ -127,11 +125,10 @@ jobs:
               }),
             );
             return json({ data: { success: true } }, 200, cors);
-          }`,
-          );
+          }''')
 
-          fs.writeFileSync(path, source);
-          NODE
+          path.write_text(source)
+          PY
 
       - name: Format and validate focused contract
         run: |
