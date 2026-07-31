@@ -82,7 +82,12 @@ test("the only Worker deployment workflow is manual, SHA-gated, and permanently 
   assert.match(source, /d0e6496c-9f63-48d3-beeb-d2e219500f6a/);
   assert.match(source, /CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging/);
   assert.match(source, /CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production/);
-  assert.match(source, /CLOUDFLARE_WORKER_CUSTOM_DOMAIN: api\.rawa-j\.com/);
+  assert.match(
+    source,
+    /RAWAJ_WORKER_BASE_URL: https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev/,
+  );
+  assert.doesNotMatch(source, /CLOUDFLARE_WORKER_CUSTOM_DOMAIN/);
+  assert.doesNotMatch(source, /api\.rawa-j\.com/);
   assert.match(source, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
   assert.match(source, /expected_commit_sha/);
   assert.match(source, /DISPATCH_REF: \$\{\{ github\.ref \}\}/);
@@ -95,6 +100,7 @@ test("the only Worker deployment workflow is manual, SHA-gated, and permanently 
   assert.match(source, /\[\[ "\$EXPECTED_COMMIT_SHA" != "\$MAIN_HEAD_SHA" \]\]/);
   assert.match(source, /stale or non-main commits cannot be deployed/);
   assert.match(source, /docs\/cloudflare-production-freeze\.md/);
+  assert.match(source, /scripts\/cloudflare-deployment-safety-gate\.test\.mjs/);
   assert.doesNotMatch(source, /DISPATCH_SHA:\s*\$\{\{\s*github\.sha\s*\}\}/);
   assert.doesNotMatch(source, /\$EXPECTED_COMMIT_SHA"\s*!=\s*"\$(?:DISPATCH_SHA|GITHUB_SHA)/);
   assert.match(source, /npm --prefix cloudflare\/worker run deploy:production/);
@@ -113,13 +119,18 @@ test("the only Worker deployment workflow is manual, SHA-gated, and permanently 
   );
 });
 
-test("the Cloudflare Production freeze is documented as one path", () => {
+test("the Cloudflare Production freeze is documented as one workers.dev path", () => {
   assert.match(productionFreeze, /one path only/i);
   assert.match(productionFreeze, /CLOUDFLARE_PRODUCTION_API_TOKEN/);
-  assert.match(productionFreeze, /https:\/\/api\.rawa-j\.com/);
+  assert.match(
+    productionFreeze,
+    /https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev/,
+  );
   assert.match(productionFreeze, /No automatic Worker deployment/);
   assert.match(productionFreeze, /No fallback to the legacy generic/);
   assert.match(productionFreeze, /No temporary one-shot deployment workflows/);
+  assert.match(productionFreeze, /No custom-domain, Zone, route, or DNS mutation/);
+  assert.match(productionFreeze, /No dependency on `api\.rawa-j\.com`/);
 });
 
 test("Production package scripts fail closed outside the approved dispatch", () => {
