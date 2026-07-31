@@ -37,6 +37,11 @@ interface FixtureListing extends Record<string, unknown> {
   renewedAt: string | null;
   expiryDays: 30 | 60 | 90 | null;
   statusChangedAt: string | null;
+  recordedViewCount: number;
+  favoriteCount: number;
+  conversationCount: number;
+  unreadMessageCount: number;
+  lastInquiryAt: string | null;
   updatedAt: string;
 }
 
@@ -231,17 +236,24 @@ function normalizeExpiryDays(value: unknown): 30 | 60 | 90 | null | undefined {
 }
 
 function approvedListing(): FixtureListing {
-  return baseListing({
-    id: APPROVED_LISTING_ID,
-    title: "سيارة عائلية معتمدة",
-    description: "إعلان معتمد مخصص لاختبار إدارة دورة حياة الإعلان.",
-    status: "approved",
-    price: 450_000_000,
-    priceType: "fixed",
-    expiryDays: 60,
-    expiresAt: "2026-09-28T12:00:00.000Z",
-    renewedAt: null,
-  });
+  return {
+    ...baseListing({
+      id: APPROVED_LISTING_ID,
+      title: "سيارة عائلية معتمدة",
+      description: "إعلان معتمد مخصص لاختبار إدارة دورة حياة الإعلان.",
+      status: "approved",
+      price: 450_000_000,
+      priceType: "fixed",
+      expiryDays: 60,
+      expiresAt: "2026-09-28T12:00:00.000Z",
+      renewedAt: null,
+    }),
+    recordedViewCount: 24,
+    favoriteCount: 5,
+    conversationCount: 3,
+    unreadMessageCount: 2,
+    lastInquiryAt: "2026-07-30T16:45:00.000Z",
+  };
 }
 
 function draftListing(): FixtureListing {
@@ -305,6 +317,11 @@ function baseListing(
     expiresAt: values.expiresAt,
     renewedAt: values.renewedAt,
     expiryDays: values.expiryDays,
+    recordedViewCount: 0,
+    favoriteCount: 0,
+    conversationCount: 0,
+    unreadMessageCount: 0,
+    lastInquiryAt: null,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
     primaryImageUrl: FIXTURE_IMAGE,

@@ -416,16 +416,44 @@ async function ownerListings(request: Request, env: MarketplaceEnv, cors: Header
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const result = await env.DB.prepare(
-    `SELECT id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
-      title, description, price, currency, price_type, listing_condition, status,
-      district_ar, contact_name, contact_options, details, is_featured, featured_until,
-      published_at, archived_at, reserved_at, expires_at, renewed_at, expiry_days,
-      created_at, updated_at,
-      (SELECT li.media_asset_id FROM listing_images li WHERE li.listing_id = listings.id
+    `SELECT l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
+      l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
+      l.listing_condition, l.status, l.district_ar, l.contact_name, l.contact_options,
+      l.details, l.is_featured, l.featured_until, l.published_at, l.archived_at,
+      l.reserved_at, l.expires_at, l.renewed_at, l.expiry_days, l.created_at, l.updated_at,
+      COALESCE(rv.recorded_view_count, 0) AS owner_recorded_view_count,
+      COALESCE(fv.favorite_count, 0) AS owner_favorite_count,
+      COALESCE(cv.conversation_count, 0) AS owner_conversation_count,
+      COALESCE(um.unread_message_count, 0) AS owner_unread_message_count,
+      cv.last_inquiry_at AS owner_last_inquiry_at,
+      (SELECT li.media_asset_id FROM listing_images li WHERE li.listing_id = l.id
         ORDER BY li.sort_order, li.id LIMIT 1) AS primary_media_asset_id
-      FROM listings WHERE owner_id = ? ORDER BY updated_at DESC LIMIT 200`,
+      FROM listings l
+      LEFT JOIN (
+        SELECT listing_id, SUM(view_count) AS recorded_view_count
+          FROM recent_listing_views WHERE user_id <> ? GROUP BY listing_id
+      ) rv ON rv.listing_id = l.id
+      LEFT JOIN (
+        SELECT listing_id, COUNT(*) AS favorite_count
+          FROM favorites WHERE user_id <> ? GROUP BY listing_id
+      ) fv ON fv.listing_id = l.id
+      LEFT JOIN (
+        SELECT listing_id, COUNT(*) AS conversation_count,
+          MAX(COALESCE(last_message_at, updated_at)) AS last_inquiry_at
+          FROM conversations WHERE seller_id = ? AND listing_id IS NOT NULL
+          GROUP BY listing_id
+      ) cv ON cv.listing_id = l.id
+      LEFT JOIN (
+        SELECT c.listing_id, COUNT(*) AS unread_message_count
+          FROM conversations c
+          JOIN conversation_messages cm ON cm.conversation_id = c.id
+          WHERE c.seller_id = ? AND cm.sender_id <> ?
+            AND cm.read_at IS NULL AND cm.deleted_at IS NULL
+          GROUP BY c.listing_id
+      ) um ON um.listing_id = l.id
+      WHERE l.owner_id = ? ORDER BY l.updated_at DESC LIMIT 200`,
   )
-    .bind(auth.userId)
+    .bind(auth.userId, auth.userId, auth.userId, auth.userId, auth.userId, auth.userId)
     .all();
   return result.success
     ? json({ data: (result.results ?? []).map(mapListingRow) }, 200, cors)
@@ -1147,6 +1175,14 @@ function mapListingRow(row: Row) {
     expiresAt: nullableString(row.expires_at),
     renewedAt: nullableString(row.renewed_at),
     expiryDays: nullableNumber(row.expiry_days),
+    recordedViewCount: optionalMetric(row.owner_recorded_view_count),
+    favoriteCount: optionalMetric(row.owner_favorite_count),
+    conversationCount: optionalMetric(row.owner_conversation_count),
+    unreadMessageCount: optionalMetric(row.owner_unread_message_count),
+    lastInquiryAt:
+      row.owner_last_inquiry_at === undefined
+        ? undefined
+        : nullableString(row.owner_last_inquiry_at),
     primaryImageUrl: nullableString(row.primary_media_asset_id)
       ? `${primaryMediaPrefix}/${encodeURIComponent(String(row.primary_media_asset_id))}`
       : null,
@@ -1193,6 +1229,11 @@ function nullableNumber(value: unknown): number | null {
 function numberValue(value: unknown, fallback = 0): number {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function optionalMetric(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  return Math.max(0, Math.trunc(numberValue(value)));
 }
 
 const windows1256Decoder = new TextDecoder("windows-1256");

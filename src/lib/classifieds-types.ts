@@ -140,6 +140,11 @@ export interface ClassifiedListing {
   expiresAt?: string | null;
   renewedAt?: string | null;
   expiryDays?: 30 | 60 | 90 | null;
+  recordedViewCount?: number;
+  favoriteCount?: number;
+  conversationCount?: number;
+  unreadMessageCount?: number;
+  lastInquiryAt?: string | null;
   createdAt: string;
   updatedAt: string;
   primaryImageUrl?: string | null;

@@ -71,6 +71,29 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     let approvedCard = ownerCard(page, APPROVED_TITLE);
     await expect(approvedCard).toBeVisible({ timeout: 30_000 });
 
+    const performanceOverview = page.locator('[data-owner-performance-overview="true"]');
+    await expect(performanceOverview).toBeVisible();
+    await expect(performanceOverview.locator('[data-owner-summary-metric="views"]')).toContainText(
+      "24",
+    );
+    await expect(
+      performanceOverview.locator('[data-owner-summary-metric="favorites"]'),
+    ).toContainText("5");
+    await expect(
+      performanceOverview.locator('[data-owner-summary-metric="conversations"]'),
+    ).toContainText("3");
+    await expect(performanceOverview.locator('[data-owner-summary-metric="unread"]')).toContainText(
+      "2",
+    );
+
+    const listingPerformance = approvedCard.locator('[data-owner-listing-performance="true"]');
+    await expect(listingPerformance.locator('[data-owner-metric="views"]')).toContainText("24");
+    await expect(listingPerformance.locator('[data-owner-metric="favorites"]')).toContainText("5");
+    await expect(listingPerformance.locator('[data-owner-metric="conversations"]')).toContainText(
+      "3",
+    );
+    await expect(listingPerformance.locator('[data-owner-metric="unread"]')).toContainText("2");
+
     const markReservedButton = approvedCard.getByRole("button", {
       name: /وضع محجوز|Mark reserved/i,
     });
