@@ -39,6 +39,25 @@ test("owner query aggregates existing social and messaging data without schema c
   assert.doesNotMatch(worker, /CREATE TABLE owner_listing_performance/);
 });
 
+test("performance metrics remain behind the authenticated owner boundary", () => {
+  const ownerStart = worker.indexOf("async function ownerListings");
+  const ownerEnd = worker.indexOf("async function createListing", ownerStart);
+  const publicStart = worker.indexOf("async function publicListings");
+  assert.ok(publicStart >= 0 && ownerStart > publicStart && ownerEnd > ownerStart);
+
+  const publicListingsSection = worker.slice(publicStart, ownerStart);
+  const ownerListingsSection = worker.slice(ownerStart, ownerEnd);
+
+  assert.match(ownerListingsSection, /const auth = await authenticate/);
+  assert.match(ownerListingsSection, /if \(!auth\) return unauthorized\(cors\)/);
+  assert.match(ownerListingsSection, /WHERE l\.owner_id = \?/);
+  assert.match(ownerListingsSection, /recent_listing_views WHERE user_id <> \?/);
+  assert.match(ownerListingsSection, /favorites WHERE user_id <> \?/);
+  assert.match(ownerListingsSection, /cm\.sender_id <> \?/);
+  assert.doesNotMatch(publicListingsSection, /owner_recorded_view_count/);
+  assert.doesNotMatch(publicListingsSection, /owner_unread_message_count/);
+});
+
 test("owner UI renders summary, per-listing metrics, unread action, and expiry guidance", () => {
   assert.match(route, /data-owner-performance-overview="true"/);
   assert.match(route, /data-owner-listing-performance="true"/);
