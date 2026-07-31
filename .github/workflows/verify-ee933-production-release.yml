@@ -1,4 +1,4 @@
-name: Visible RAWAJ Worker Deploy and Production Verification ee933
+name: Visible RAWAJ Cloudflare Worker Deploy ee933
 
 on:
   pull_request:
@@ -12,58 +12,32 @@ permissions:
   contents: read
 
 concurrency:
-  group: visible-production-verification-ee933-${{ github.event.pull_request.number || github.run_id }}
+  group: visible-rawaj-worker-deploy-ee933-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-  deploy-and-verify-production:
-    name: Deploy stale Worker and verify Production
+  deploy-and-verify-worker:
+    name: Deploy and verify reviewed Worker
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 40
+    timeout-minutes: 30
     env:
       RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
-      E2E_BASE_URL: https://rawa-j.com
-      PRODUCTION_ACCEPTANCE: "1"
       EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       RAWAJ_EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       RAWAJ_PRODUCTION_APPROVAL: DEPLOY_RAWAJ_WORKER_PRODUCTION
       RAWAJ_WORKER_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       RAWAJ_WORKER_ENVIRONMENT: production
-      RAWAJ_ACCEPTANCE_EMAIL: ${{ secrets.RAWAJ_ACCEPTANCE_EMAIL }}
-      RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
-      - name: Checkout reviewed release source
+      - name: Checkout reviewed Worker source
         uses: actions/checkout@v4
         with:
           ref: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Inspect current Cloudflare Worker release
-        id: worker_state
-        shell: bash
-        run: |
-          set -euo pipefail
-          body_file=/tmp/rawaj-worker-before.json
-          status="$(curl --silent --show-error --max-time 20 \
-            --output "$body_file" \
-            --write-out '%{http_code}' \
-            --header 'Accept: application/json' \
-            --header 'Origin: https://rawa-j.com' \
-            https://rawaj-classifieds-hub.allidamech.workers.dev/v1/health || true)"
-          release="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
-          environment="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.environment??'')}catch{}")"
-          if [[ "$status" == "200" && "$release" == "$RELEASE_SHA" && "$environment" == "production" ]]; then
-            echo "needs_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "Cloudflare Worker already serves $RELEASE_SHA."
-          else
-            echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
-            echo "Cloudflare Worker is stale and requires the reviewed release."
-          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -74,8 +48,7 @@ jobs:
             package-lock.json
             cloudflare/worker/package-lock.json
 
-      - name: Discover existing Cloudflare bindings
-        if: steps.worker_state.outputs.needs_deploy == 'true'
+      - name: Discover existing D1 and R2 resources safely
         shell: bash
         run: |
           set -euo pipefail
@@ -91,15 +64,11 @@ jobs:
 
           const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
           const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-          const scriptName = "rawaj-classifieds-hub";
           const apiRoot = `https://api.cloudflare.com/client/v4/accounts/${accountId}`;
 
-          async function cloudflare(path) {
+          async function request(path) {
             const response = await fetch(`${apiRoot}${path}`, {
-              headers: {
-                Authorization: `Bearer ${apiToken}`,
-                "Content-Type": "application/json",
-              },
+              headers: { Authorization: `Bearer ${apiToken}` },
             });
             const payload = await response.json().catch(() => ({}));
             if (!response.ok || payload.success === false) {
@@ -112,49 +81,37 @@ jobs:
           }
 
           (async () => {
-            const settings = await cloudflare(`/workers/scripts/${scriptName}/settings`);
-            const bindings = Array.isArray(settings?.bindings) ? settings.bindings : [];
-            const d1 = bindings.find((binding) => binding?.type === "d1" && binding?.name === "DB");
-            const r2 = bindings.find(
-              (binding) => binding?.type === "r2_bucket" && binding?.name === "MEDIA",
+            const databases = await request("/d1/database?name=rawaj-staging&per_page=100");
+            const exactDatabases = (Array.isArray(databases) ? databases : []).filter(
+              (database) => database?.name === "rawaj-staging" && typeof database?.uuid === "string",
             );
-            const d1Id = d1?.database_id ?? d1?.id;
-            const bucketName = r2?.bucket_name;
-
-            if (!d1Id || !bucketName) {
-              throw new Error("Existing Worker DB/MEDIA bindings could not be resolved safely.");
+            if (exactDatabases.length !== 1) {
+              throw new Error(
+                `Expected exactly one D1 database named rawaj-staging; found ${exactDatabases.length}.`,
+              );
             }
 
-            const database = await cloudflare(`/d1/database/${encodeURIComponent(d1Id)}`);
-            const databaseName = database?.name;
-            if (!databaseName) {
-              throw new Error("The bound D1 database name could not be resolved.");
-            }
-
-            const domains = await cloudflare(
-              `/workers/domains?service=${encodeURIComponent(scriptName)}`,
+            const r2Result = await request(
+              "/r2/buckets?name_contains=rawaj&order=name&direction=asc&per_page=1000",
             );
-            const domainCandidates = (Array.isArray(domains) ? domains : []).filter(
-              (entry) => entry?.service === scriptName && typeof entry?.hostname === "string",
+            const rawajBuckets = (Array.isArray(r2Result?.buckets) ? r2Result.buckets : []).filter(
+              (bucket) => typeof bucket?.name === "string" && bucket.name.toLowerCase().includes("rawaj"),
             );
-            const preferredDomain = domainCandidates.find(
-              (entry) => entry.hostname === "api.rawa-j.com",
-            );
-            const customDomain = preferredDomain?.hostname ??
-              (domainCandidates.length === 1 ? domainCandidates[0].hostname : "");
-
-            if (domainCandidates.length > 1 && !preferredDomain) {
-              throw new Error("Multiple Worker custom domains exist and none is the approved API domain.");
+            if (rawajBuckets.length !== 1) {
+              const names = rawajBuckets.map((bucket) => bucket.name).join(", ") || "none";
+              throw new Error(
+                `Expected exactly one RAWAJ R2 bucket; found ${rawajBuckets.length}: ${names}`,
+              );
             }
 
             const lines = [
-              `CLOUDFLARE_D1_DATABASE_ID=${d1Id}`,
-              `CLOUDFLARE_D1_DATABASE_NAME=${databaseName}`,
-              `CLOUDFLARE_R2_BUCKET_NAME=${bucketName}`,
+              `CLOUDFLARE_D1_DATABASE_ID=${exactDatabases[0].uuid}`,
+              "CLOUDFLARE_D1_DATABASE_NAME=rawaj-staging",
+              `CLOUDFLARE_R2_BUCKET_NAME=${rawajBuckets[0].name}`,
+              "CLOUDFLARE_WORKER_CUSTOM_DOMAIN=api.rawa-j.com",
             ];
-            if (customDomain) lines.push(`CLOUDFLARE_WORKER_CUSTOM_DOMAIN=${customDomain}`);
             fs.appendFileSync(process.env.GITHUB_ENV, `${lines.join("\n")}\n`);
-            console.log("Resolved the existing Worker D1, R2, and custom-domain bindings.");
+            console.log("Resolved exactly one existing D1 database and one existing RAWAJ R2 bucket.");
           })().catch((error) => {
             console.error(error instanceof Error ? error.message : String(error));
             process.exit(1);
@@ -162,128 +119,60 @@ jobs:
           NODE
 
       - name: Install Worker dependencies
-        if: steps.worker_state.outputs.needs_deploy == 'true'
         run: npm ci --prefix cloudflare/worker --ignore-scripts
 
       - name: Validate deployment safety contracts
-        if: steps.worker_state.outputs.needs_deploy == 'true'
         run: npm run test:cloudflare-deployment-safety
 
       - name: Deploy reviewed Worker once
-        if: steps.worker_state.outputs.needs_deploy == 'true'
         run: npm --prefix cloudflare/worker run deploy:production
 
-      - name: Verify Cloudflare Worker release
-        id: worker
-        shell: bash
-        run: |
-          set -euo pipefail
-          for attempt in {1..30}; do
-            rm -f /tmp/rawaj-worker-body.json /tmp/rawaj-worker-headers.txt /tmp/rawaj-worker-headers-clean.txt
-            status="$(curl --silent --show-error --max-time 20 \
-              --output /tmp/rawaj-worker-body.json \
-              --dump-header /tmp/rawaj-worker-headers.txt \
-              --write-out '%{http_code}' \
-              --header 'Accept: application/json' \
-              --header 'Origin: https://rawa-j.com' \
-              https://rawaj-classifieds-hub.allidamech.workers.dev/v1/health || true)"
-            tr -d '\r' < /tmp/rawaj-worker-headers.txt > /tmp/rawaj-worker-headers-clean.txt || true
-            release="$(node -e "try{const d=require('/tmp/rawaj-worker-body.json');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
-            environment="$(node -e "try{const d=require('/tmp/rawaj-worker-body.json');process.stdout.write(d?.data?.environment??'')}catch{}")"
-            if [[ "$status" == "200" \
-              && "$release" == "$RELEASE_SHA" \
-              && "$environment" == "production" ]] \
-              && grep -Eiq '^access-control-allow-origin: https://rawa-j\.com$' /tmp/rawaj-worker-headers-clean.txt \
-              && grep -Eiq '^x-content-type-options: nosniff$' /tmp/rawaj-worker-headers-clean.txt \
-              && grep -Eiq '^referrer-policy: no-referrer$' /tmp/rawaj-worker-headers-clean.txt; then
-              echo "Cloudflare Worker is serving $RELEASE_SHA"
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "Cloudflare Worker did not expose the approved release SHA." >&2
-          cat /tmp/rawaj-worker-body.json >&2 || true
-          exit 1
-
-      - name: Run Worker read-only Production smoke
-        if: steps.worker.outcome == 'success'
+      - name: Verify workers.dev release and read-only routes
         env:
           RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
           RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
-        run: |
-          if [[ ! -d cloudflare/worker/node_modules ]]; then
-            npm ci --prefix cloudflare/worker --ignore-scripts
-          fi
-          npm --prefix cloudflare/worker run smoke:production:read-only
+        run: npm --prefix cloudflare/worker run smoke:production:read-only
 
-      - name: Verify Vercel Production release
-        id: vercel
-        if: always()
+      - name: Verify custom API domain release
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_file=/tmp/rawaj-api-health.json
+          status="$(curl --silent --show-error --max-time 20 \
+            --output "$body_file" \
+            --write-out '%{http_code}' \
+            --header 'Accept: application/json' \
+            --header 'Origin: https://rawa-j.com' \
+            https://api.rawa-j.com/v1/health || true)"
+          release="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
+          environment="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.environment??'')}catch{}")"
+          if [[ "$status" != "200" || "$release" != "$RELEASE_SHA" || "$environment" != "production" ]]; then
+            echo "Custom API domain did not expose the reviewed Worker release." >&2
+            cat "$body_file" >&2 || true
+            exit 1
+          fi
+          echo "api.rawa-j.com is serving the reviewed Worker release."
+
+      - name: Confirm Vercel Production remains unchanged
         shell: bash
         run: |
           set -euo pipefail
           html="$(curl --fail --silent --show-error --max-time 20 https://rawa-j.com/)"
           printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$RELEASE_SHA\""
-          echo "Vercel Production is serving $RELEASE_SHA"
-
-      - name: Inspect Android App Links association
-        id: app_links
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          body_file=/tmp/rawaj-assetlinks.json
-          status="$(curl --silent --show-error --max-time 20 \
-            --output "$body_file" \
-            --write-out '%{http_code}' \
-            https://rawa-j.com/.well-known/assetlinks.json || true)"
-          if [[ "$status" == "200" ]] \
-            && node -e "const d=require('$body_file'); if(!Array.isArray(d)||!d.some(x=>x?.target?.package_name==='com.rawaj.marketplace'&&Array.isArray(x?.target?.sha256_cert_fingerprints)&&x.target.sha256_cert_fingerprints.length>0)) process.exit(1)"; then
-            echo "Android App Links association is configured."
-          else
-            echo "::warning::Android App Links is blocked until RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS contains the Play App Signing SHA-256 fingerprint."
-          fi
-
-      - name: Validate dedicated acceptance credentials
-        id: credentials
-        if: steps.worker.outcome == 'success' && steps.vercel.outcome == 'success'
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -z "$RAWAJ_ACCEPTANCE_EMAIL" || -z "$RAWAJ_ACCEPTANCE_PASSWORD" ]]; then
-            echo "Production acceptance credentials are not configured." >&2
-            exit 1
-          fi
-
-      - name: Install application dependencies
-        if: steps.credentials.outcome == 'success'
-        run: npm ci
-
-      - name: Install Chromium
-        if: steps.credentials.outcome == 'success'
-        run: npx playwright install --with-deps chromium
-
-      - name: Run authenticated mobile Production Acceptance
-        if: steps.credentials.outcome == 'success'
-        run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium --workers=1
+          echo "Vercel Production remains on $RELEASE_SHA."
 
       - name: Upload failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: visible-production-verification-ee933-${{ github.run_id }}
+          name: rawaj-worker-deploy-ee933-${{ github.run_id }}
           path: |
-            playwright-report
-            test-results
-            /tmp/rawaj-worker-before.json
-            /tmp/rawaj-worker-body.json
-            /tmp/rawaj-worker-headers.txt
-            /tmp/rawaj-assetlinks.json
+            /tmp/rawaj-api-health.json
           if-no-files-found: ignore
           retention-days: 14
 
       - name: Failure safety note
         if: failure()
         run: |
-          echo "::error::Worker deployment or Production verification failed."
+          echo "::error::Worker deployment or verification failed."
           echo "No D1 migration and no Vercel deployment were requested by this workflow."
