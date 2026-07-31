@@ -4,6 +4,8 @@ const baseUrl = (
 const expectedReleaseSha = process.env.RAWAJ_WORKER_EXPECTED_RELEASE_SHA?.trim() ?? "";
 const requestIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const RELEASE_VERIFY_ATTEMPTS = 18;
+const RELEASE_VERIFY_DELAY_MS = 5_000;
 
 if (!/^[0-9a-f]{40}$/.test(expectedReleaseSha)) {
   console.error("RAWAJ_WORKER_EXPECTED_RELEASE_SHA must be an exact 40-character Git SHA.");
@@ -61,90 +63,149 @@ const checks = [
   },
 ];
 
-let failed = false;
+function sleep(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
-for (const check of checks) {
-  try {
-    const response = await fetch(`${baseUrl}${check.path}`, {
-      method: check.method,
-      headers: {
-        Accept: "application/json",
-        Origin: check.origin,
-        ...check.headers,
-      },
-      redirect: "manual",
-    });
-    const allowOrigin = response.headers.get("access-control-allow-origin");
-    const allowCredentials = response.headers.get("access-control-allow-credentials");
-    const requestId = response.headers.get("x-request-id");
-    const contentTypeOptions = response.headers.get("x-content-type-options");
-    const referrerPolicy = response.headers.get("referrer-policy");
-    const body = response.status === 204 ? "" : await response.text();
-    const corsOk = allowOrigin === check.origin && allowCredentials === null;
-    const statusOk = response.status === check.expectedStatus;
-    const requestIdOk = Boolean(requestId && requestIdPattern.test(requestId));
-    const securityHeadersOk = contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
-    let releaseOk = true;
-    let actualReleaseSha = null;
+function requestUrl(check, attempt) {
+  const url = new URL(check.path, `${baseUrl}/`);
+  if (check.verifyRelease) {
+    url.searchParams.set(
+      "release_probe",
+      `${expectedReleaseSha}-${attempt}-${Date.now()}-${crypto.randomUUID()}`,
+    );
+  }
+  return url;
+}
 
-    if (check.verifyRelease) {
-      try {
-        const parsed = JSON.parse(body);
-        actualReleaseSha = parsed?.data?.releaseSha ?? null;
-        releaseOk =
-          actualReleaseSha === expectedReleaseSha && parsed?.data?.environment === "production";
-      } catch {
-        releaseOk = false;
-      }
+function inspectResponse(check, response, body) {
+  const allowOrigin = response.headers.get("access-control-allow-origin");
+  const allowCredentials = response.headers.get("access-control-allow-credentials");
+  const requestId = response.headers.get("x-request-id");
+  const contentTypeOptions = response.headers.get("x-content-type-options");
+  const referrerPolicy = response.headers.get("referrer-policy");
+  const corsOk = allowOrigin === check.origin && allowCredentials === null;
+  const statusOk = response.status === check.expectedStatus;
+  const requestIdOk = Boolean(requestId && requestIdPattern.test(requestId));
+  const securityHeadersOk = contentTypeOptions === "nosniff" && referrerPolicy === "no-referrer";
+  let releaseOk = true;
+  let actualReleaseSha = null;
+
+  if (check.verifyRelease) {
+    try {
+      const parsed = JSON.parse(body);
+      actualReleaseSha = parsed?.data?.releaseSha ?? null;
+      releaseOk =
+        actualReleaseSha === expectedReleaseSha && parsed?.data?.environment === "production";
+    } catch {
+      releaseOk = false;
     }
+  }
 
-    if (!corsOk || !statusOk || !releaseOk || !requestIdOk || !securityHeadersOk) {
-      failed = true;
+  return {
+    ok: corsOk && statusOk && releaseOk && requestIdOk && securityHeadersOk,
+    status: response.status,
+    expectedStatus: check.expectedStatus,
+    origin: check.origin,
+    allowOrigin,
+    allowCredentials,
+    credentialFreeCors: allowCredentials === null,
+    requestId,
+    requestIdValid: requestIdOk,
+    contentTypeOptions,
+    referrerPolicy,
+    securityHeadersValid: securityHeadersOk,
+    releaseMatches: releaseOk,
+    actualReleaseSha,
+  };
+}
+
+async function runCheck(check) {
+  const attempts = check.verifyRelease ? RELEASE_VERIFY_ATTEMPTS : 1;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(requestUrl(check, attempt), {
+        method: check.method,
+        headers: {
+          Accept: "application/json",
+          Origin: check.origin,
+          ...(check.verifyRelease ? { "Cache-Control": "no-cache" } : {}),
+          ...check.headers,
+        },
+        redirect: "manual",
+      });
+      const body = response.status === 204 ? "" : await response.text();
+      const result = inspectResponse(check, response, body);
+
+      if (result.ok) {
+        console.log(
+          JSON.stringify({
+            check: check.name,
+            ok: true,
+            status: result.status,
+            origin: result.origin,
+            allowOrigin: result.allowOrigin,
+            credentialFreeCors: true,
+            requestId: result.requestId,
+            securityHeadersValid: result.securityHeadersValid,
+            ...(check.verifyRelease ? { releaseSha: result.actualReleaseSha, attempt } : {}),
+          }),
+        );
+        return true;
+      }
+
+      if (check.verifyRelease && attempt < attempts) {
+        console.warn(
+          JSON.stringify({
+            check: check.name,
+            ok: false,
+            retrying: true,
+            attempt,
+            attempts,
+            actualReleaseSha: result.actualReleaseSha,
+            expectedReleaseSha,
+          }),
+        );
+        await sleep(RELEASE_VERIFY_DELAY_MS);
+        continue;
+      }
+
+      console.error(JSON.stringify({ check: check.name, ok: false, ...result }));
+      return false;
+    } catch (error) {
+      if (check.verifyRelease && attempt < attempts) {
+        console.warn(
+          JSON.stringify({
+            check: check.name,
+            ok: false,
+            retrying: true,
+            attempt,
+            attempts,
+            networkError: error instanceof Error ? error.message : String(error),
+          }),
+        );
+        await sleep(RELEASE_VERIFY_DELAY_MS);
+        continue;
+      }
+
       console.error(
         JSON.stringify({
           check: check.name,
           ok: false,
-          status: response.status,
-          expectedStatus: check.expectedStatus,
-          origin: check.origin,
-          allowOrigin,
-          allowCredentials,
-          credentialFreeCors: allowCredentials === null,
-          requestId,
-          requestIdValid: requestIdOk,
-          contentTypeOptions,
-          referrerPolicy,
-          securityHeadersValid: securityHeadersOk,
-          releaseMatches: releaseOk,
-          actualReleaseSha,
+          networkError: error instanceof Error ? error.message : String(error),
         }),
       );
-      continue;
+      return false;
     }
-
-    console.log(
-      JSON.stringify({
-        check: check.name,
-        ok: true,
-        status: response.status,
-        origin: check.origin,
-        allowOrigin,
-        credentialFreeCors: true,
-        requestId,
-        securityHeadersValid: securityHeadersOk,
-        ...(check.verifyRelease ? { releaseSha: actualReleaseSha } : {}),
-      }),
-    );
-  } catch (error) {
-    failed = true;
-    console.error(
-      JSON.stringify({
-        check: check.name,
-        ok: false,
-        networkError: error instanceof Error ? error.message : String(error),
-      }),
-    );
   }
+
+  return false;
+}
+
+let failed = false;
+for (const check of checks) {
+  if (!(await runCheck(check))) failed = true;
 }
 
 if (failed) {
