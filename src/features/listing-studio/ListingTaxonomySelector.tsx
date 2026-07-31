@@ -99,7 +99,11 @@ export function ListingTaxonomySelector({
 
       {normalizedSearchTerm ? (
         <div className="space-y-3" data-taxonomy-search-results="true">
-          <p className="text-xs font-semibold text-muted-foreground" role="status" aria-live="polite">
+          <p
+            className="text-xs font-semibold text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             {searchResults.length > 0
               ? text(
                   `${searchResults.length} تصنيفاً نهائياً مطابقاً`,
