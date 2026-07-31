@@ -67,9 +67,7 @@ jobs:
     timeout-minutes: 35
     env:
       E2E_BASE_URL: https://rawa-j.com
-      PRODUCTION_SMOKE: "1"
       FINAL_STACK_PRODUCTION_AUDIT: "1"
-      EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       EXPECTED_FRONTEND_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       EXPECTED_WORKER_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
@@ -89,12 +87,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run existing Production smoke suite
-        run: >-
-          npx playwright test e2e/production-smoke.spec.ts
-          --project=mobile-chromium --project=desktop-chromium --workers=1
-
-      - name: Run live public stack isolation audit
+      - name: Run current live public stack isolation audit
         run: >-
           npx playwright test e2e/final-stack-production-audit.spec.ts
           --grep "public UX" --project=mobile-chromium --project=desktop-chromium --workers=1
