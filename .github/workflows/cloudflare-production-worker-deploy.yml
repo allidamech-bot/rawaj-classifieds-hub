@@ -237,6 +237,9 @@ jobs:
           });
           NODE
 
+      - name: Install shared application dependencies
+        run: npm ci --ignore-scripts
+
       - name: Install Worker dependencies
         run: npm ci --prefix cloudflare/worker --ignore-scripts
 
