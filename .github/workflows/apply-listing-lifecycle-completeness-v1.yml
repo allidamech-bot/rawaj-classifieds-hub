@@ -31,6 +31,23 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Apply lifecycle completeness changes
         run: node scripts/apply-listing-lifecycle-completeness-v1.mjs
+      - name: Make lifecycle contract formatting-independent
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/listing-lifecycle-completeness-v1.test.mjs")
+          source = path.read_text(encoding="utf-8")
+          old = '  assert.match(ownerListings, /action: "close", targetStatus: "unavailable"/);'
+          new = '''  assert.match(
+            ownerListings,
+            /action:\\s*"close",[\\s\\S]*?targetStatus:\\s*"unavailable"/,
+          );'''
+          if old not in source:
+              raise SystemExit("Unavailable confirmation assertion was not found.")
+          path.write_text(source.replace(old, new, 1), encoding="utf-8")
+          PY
       - name: Format changed files
         run: npx prettier --write src/routes/profile/listings.tsx scripts/listing-lifecycle-completeness-v1.test.mjs package.json
       - name: Verify focused lifecycle contract
