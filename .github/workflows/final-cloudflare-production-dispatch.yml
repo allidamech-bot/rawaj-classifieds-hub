@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      MAIN_SHA: 5e0d3dc81bbd0648e60a59d039eb6ed6a21c1647
+      MAIN_SHA: 4e19bbe956fff5589204d07de33b088f3b7606d1
       REVIEWED_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       GH_TOKEN: ${{ github.token }}
 
