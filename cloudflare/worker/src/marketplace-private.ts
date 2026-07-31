@@ -1115,6 +1115,9 @@ function mapProfile(row: Row) {
 }
 
 function mapListingRow(row: Row) {
+  const status = stringValue(row.status);
+  const primaryMediaPrefix =
+    status === "approved" ? "/v1/media/assets" : "/v1/account/media/assets";
   return {
     id: stringValue(row.id),
     ownerId: stringValue(row.owner_id),
@@ -1128,7 +1131,7 @@ function mapListingRow(row: Row) {
     currency: "SYP",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
-    status: stringValue(row.status),
+    status,
     districtAr: nullableString(row.district_ar),
     contactName: nullableString(row.contact_name),
     contactOptions: booleanRecord(row.contact_options),
@@ -1145,7 +1148,7 @@ function mapListingRow(row: Row) {
     renewedAt: nullableString(row.renewed_at),
     expiryDays: nullableNumber(row.expiry_days),
     primaryImageUrl: nullableString(row.primary_media_asset_id)
-      ? `/v1/account/media/assets/${encodeURIComponent(String(row.primary_media_asset_id))}`
+      ? `${primaryMediaPrefix}/${encodeURIComponent(String(row.primary_media_asset_id))}`
       : null,
     createdAt: stringValue(row.created_at),
     updatedAt: stringValue(row.updated_at),
