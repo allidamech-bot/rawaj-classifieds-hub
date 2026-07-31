@@ -606,7 +606,8 @@ async function deleteListing(request: Request, env: MarketplaceEnv, cors: Header
   )
     .bind(id, auth.userId)
     .all<{ id: string; object_key: string }>();
-  for (const asset of assets.results ?? []) await env.MEDIA.delete(asset.object_key);
+  if (!assets.success) return databaseError(cors);
+
   const statements = [
     env.DB.prepare("DELETE FROM listing_images WHERE listing_id = ?").bind(id),
     ...(assets.results ?? []).map((asset) =>
@@ -618,11 +619,19 @@ async function deleteListing(request: Request, env: MarketplaceEnv, cors: Header
     env.DB.prepare("DELETE FROM listings WHERE id = ? AND owner_id = ?").bind(id, auth.userId),
   ];
   const results = await env.DB.batch(statements);
-  return results.every((result) => result.success)
-    ? json({ data: { success: true } }, 200, cors)
-    : databaseError(cors);
-}
+  if (results.some((result) => !result.success)) return databaseError(cors);
 
+  for (const asset of assets.results ?? []) {
+    await env.MEDIA.delete(asset.object_key).catch((error) =>
+      console.error("rawaj_listing_media_orphan_cleanup_failed", {
+        listingId: id,
+        assetId: asset.id,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+  return json({ data: { success: true } }, 200, cors);
+}
 async function uploadImage(
   request: Request,
   env: MarketplaceEnv,
@@ -849,26 +858,7 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
     .first<Row>();
   if (!row || row.owner_id !== auth.userId || row.listing_owner !== auth.userId)
     return forbidden(cors);
-  const marked = await env.DB.prepare(
-    "UPDATE media_assets SET status = 'deleted', updated_at = ? WHERE id = ? AND owner_id = ?",
-  )
-    .bind(now(), String(row.asset_id), auth.userId)
-    .run();
-  if (!marked.success) return databaseError(cors);
-  try {
-    await env.MEDIA.delete(String(row.object_key));
-  } catch {
-    await env.DB.prepare(
-      "UPDATE media_assets SET status = 'ready', updated_at = ? WHERE id = ? AND owner_id = ?",
-    )
-      .bind(now(), String(row.asset_id), auth.userId)
-      .run();
-    return json(
-      { error: { code: "storage_error", message: "Image storage deletion failed." } },
-      502,
-      cors,
-    );
-  }
+
   const results = await env.DB.batch([
     env.DB.prepare("DELETE FROM listing_images WHERE id = ?").bind(imageId),
     env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
@@ -876,11 +866,18 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
       auth.userId,
     ),
   ]);
-  return results.every((result) => result.success)
-    ? json({ data: { success: true } }, 200, cors)
-    : databaseError(cors);
-}
+  if (results.some((result) => !result.success)) return databaseError(cors);
 
+  await env.MEDIA.delete(String(row.object_key)).catch((error) =>
+    console.error("rawaj_listing_image_orphan_cleanup_failed", {
+      imageId,
+      listingId: String(row.listing_id),
+      assetId: String(row.asset_id),
+      error: error instanceof Error ? error.message : String(error),
+    }),
+  );
+  return json({ data: { success: true } }, 200, cors);
+}
 async function privateMedia(request: Request, env: MarketplaceEnv, cors: Headers, assetId: string) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
