@@ -23,9 +23,14 @@ test("closing and reactivation require an explicit confirmation dialog", () => {
   assert.match(ownerListings, /role="dialog"/);
   assert.match(ownerListings, /aria-modal="true"/);
   assert.match(ownerListings, /ownerLifecycleConfirmationCopy/);
-  assert.match(ownerListings, /action: "close", targetStatus: "sold"/);
-  assert.match(ownerListings, /action: "close", targetStatus: "rented"/);
-  assert.match(ownerListings, /action:\s*"close",[\s\S]*?targetStatus:\s*"unavailable"/);
+
+  for (const status of ["sold", "rented", "unavailable"]) {
+    assert.match(
+      ownerListings,
+      new RegExp(`action:\\s*"close",[\\s\\S]*?targetStatus:\\s*"${status}"`),
+    );
+  }
+
   assert.match(ownerListings, /action: "reactivate"/);
   assert.doesNotMatch(
     ownerListings,
