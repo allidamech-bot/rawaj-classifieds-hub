@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           for path in /v1/health /v1/system-status; do
-            body_file="/tmp$(echo "$path" | tr '/' '_').json"
+            body_file="/tmp/$(echo "$path" | tr '/' '_').json"
             status="$(curl --silent --show-error --max-time 20 \
               --output "$body_file" \
               --write-out '%{http_code}' \
@@ -35,12 +35,13 @@ jobs:
             echo
             test "$status" = "200"
           done
-          release="$(node -e "try{const d=require('/tmp_v1_health.json');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
-          environment="$(node -e "try{const d=require('/tmp_v1_health.json');process.stdout.write(d?.data?.environment??'')}catch{}")"
+          release="$(node -e "try{const d=require('/tmp/_v1_health.json');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
+          environment="$(node -e "try{const d=require('/tmp/_v1_health.json');process.stdout.write(d?.data?.environment??'')}catch{}")"
           test "$release" = "$EXPECTED_RELEASE_SHA"
           test "$environment" = "production"
 
       - name: Report custom API domain state without mutation
+        if: ${{ always() }}
         shell: bash
         run: |
           set -euo pipefail
