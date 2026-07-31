@@ -53,14 +53,19 @@ test("phase 4 keeps publishing behavior untouched while improving form semantics
   );
 });
 
-test("taxonomy selector keeps the complete category tree visible", () => {
+test("taxonomy selector supports complete-tree browsing and final-category search", () => {
+  assert.match(taxonomySelector, /getTaxonomyRootNodes\(index\)/);
+  assert.match(taxonomySelector, /getTaxonomyChildren\(index, parent\.id\)/);
   assert.match(
     taxonomySelector,
-    /const options = parent \? getTaxonomyChildren\(index, parent\.id\) : getTaxonomyRootNodes\(index\)/,
+    /getTaxonomyLeafDescendants\(index, node\)\.length > 0/,
   );
-  assert.doesNotMatch(taxonomySelector, /selectedPathIsDeadEnd/);
-  assert.doesNotMatch(taxonomySelector, /getTaxonomyRootNodes\(index\)\.filter/);
-  assert.doesNotMatch(taxonomySelector, /hasAvailableLeaf/);
+  assert.match(taxonomySelector, /const MAX_SEARCH_RESULTS = 24/);
+  assert.match(taxonomySelector, /searchTaxonomyNodes\(index, normalizedSearchTerm\)/);
+  assert.match(taxonomySelector, /\.filter\(\(\{ node \}\) => node\.isLeaf\)/);
+  assert.match(taxonomySelector, /data-taxonomy-search-results="true"/);
+  assert.match(taxonomySelector, /taxonomyPathLabel\(resultPath, language\)/);
+  assert.match(taxonomySelector, /if \(node\.isLeaf\) setSearchTerm\(""\)/);
 });
 
 test("listing photos reject unsupported formats and oversized files before upload", () => {
