@@ -22,7 +22,7 @@ jobs:
       D1_DATABASE_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
       R2_BUCKET_NAME: rawaj-listing-images-production
     steps:
-      - name: Verify current Time Travel bookmark and database integrity
+      - name: Verify Time Travel and application-level relational integrity
         shell: bash
         run: |
           set -euo pipefail
@@ -67,6 +67,12 @@ jobs:
             return Array.isArray(statement.results) ? statement.results : [];
           }
 
+          async function expectZero(label, sql) {
+            const rows = await query(sql);
+            const count = Number(rows[0]?.count ?? -1);
+            if (count !== 0) throw new Error(`${label}: found ${count}.`);
+          }
+
           const database = await api(`/d1/database/${databaseId}`);
           if (database?.name !== "rawaj-staging") throw new Error("Unexpected D1 database binding.");
 
@@ -76,46 +82,59 @@ jobs:
           }
           console.log("D1 Time Travel bookmark is available.");
 
-          const integrityRows = await query("PRAGMA integrity_check;");
-          const integrityValue = integrityRows[0]?.integrity_check;
-          if (integrityValue !== "ok") throw new Error(`D1 integrity_check failed: ${integrityValue}`);
-
-          const foreignKeyRows = await query("PRAGMA foreign_key_check;");
-          if (foreignKeyRows.length !== 0) {
-            throw new Error(`D1 foreign_key_check found ${foreignKeyRows.length} violation(s).`);
-          }
-
-          const retiredProviderRows = await query(
+          await expectZero(
+            "Retired authentication-provider rows remain active",
             "SELECT COUNT(*) AS count FROM auth_users WHERE auth_provider = 'supabase';",
           );
-          if (Number(retiredProviderRows[0]?.count ?? -1) !== 0) {
-            throw new Error("Retired authentication provider rows remain active in D1.");
-          }
-
-          const duplicateFirebaseRows = await query(`
-            SELECT COUNT(*) AS count
-            FROM (
-              SELECT auth_user_id
-              FROM auth_users
-              WHERE auth_provider = 'firebase' AND auth_user_id IS NOT NULL
-              GROUP BY auth_user_id
-              HAVING COUNT(*) > 1
-            )
-          `);
-          if (Number(duplicateFirebaseRows[0]?.count ?? -1) !== 0) {
-            throw new Error("Duplicate Firebase identity links exist in D1.");
-          }
-
-          const orphanImageRows = await query(`
-            SELECT COUNT(*) AS count
-            FROM listing_images AS li
-            LEFT JOIN listings AS l ON l.id = li.listing_id
-            LEFT JOIN media_assets AS ma ON ma.id = li.media_asset_id
-            WHERE l.id IS NULL OR ma.id IS NULL
-          `);
-          if (Number(orphanImageRows[0]?.count ?? -1) !== 0) {
-            throw new Error("Orphan listing-image references exist in D1.");
-          }
+          await expectZero(
+            "Duplicate Firebase identity links",
+            `SELECT COUNT(*) AS count FROM (
+               SELECT auth_user_id
+               FROM auth_users
+               WHERE auth_provider = 'firebase' AND auth_user_id IS NOT NULL
+               GROUP BY auth_user_id
+               HAVING COUNT(*) > 1
+             )`,
+          );
+          await expectZero(
+            "Auth users without profiles",
+            `SELECT COUNT(*) AS count
+             FROM auth_users AS au
+             LEFT JOIN public_profiles AS pp ON pp.id = au.id
+             WHERE pp.id IS NULL`,
+          );
+          await expectZero(
+            "Orphan listing-image references",
+            `SELECT COUNT(*) AS count
+             FROM listing_images AS li
+             LEFT JOIN listings AS l ON l.id = li.listing_id
+             LEFT JOIN media_assets AS ma ON ma.id = li.media_asset_id
+             WHERE l.id IS NULL OR ma.id IS NULL`,
+          );
+          await expectZero(
+            "Orphan conversation participants",
+            `SELECT COUNT(*) AS count
+             FROM conversations AS c
+             LEFT JOIN auth_users AS buyer ON buyer.id = c.buyer_id
+             LEFT JOIN auth_users AS seller ON seller.id = c.seller_id
+             WHERE buyer.id IS NULL OR seller.id IS NULL`,
+          );
+          await expectZero(
+            "Orphan conversation messages",
+            `SELECT COUNT(*) AS count
+             FROM conversation_messages AS m
+             LEFT JOIN conversations AS c ON c.id = m.conversation_id
+             LEFT JOIN auth_users AS sender ON sender.id = m.sender_id
+             WHERE c.id IS NULL OR sender.id IS NULL`,
+          );
+          await expectZero(
+            "Orphan favorites",
+            `SELECT COUNT(*) AS count
+             FROM favorites AS f
+             LEFT JOIN auth_users AS u ON u.id = f.user_id
+             LEFT JOIN listings AS l ON l.id = f.listing_id
+             WHERE u.id IS NULL OR l.id IS NULL`,
+          );
 
           const counts = {};
           for (const table of [
@@ -235,35 +254,44 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Audit production application dependencies
+      - name: Audit application and Worker production dependencies
         shell: bash
         run: |
           set -euo pipefail
           npm audit --omit=dev --json > /tmp/root-audit.json || true
-          node <<'NODE'
-          const report = require("/tmp/root-audit.json");
-          const counts = report?.metadata?.vulnerabilities ?? {};
-          console.log("Application production vulnerability counts:", JSON.stringify(counts));
-          const high = Number(counts.high ?? 0);
-          const critical = Number(counts.critical ?? 0);
-          if (high > 0 || critical > 0) {
-            const affected = Object.entries(report.vulnerabilities ?? {})
-              .filter(([, item]) => item?.severity === "high" || item?.severity === "critical")
-              .map(([name, item]) => `${name}:${item.severity}`);
-            throw new Error(`High/critical production dependency findings: ${affected.join(", ")}`);
-          }
-          NODE
-
-      - name: Audit Worker production dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
           npm audit --prefix cloudflare/worker --omit=dev --json > /tmp/worker-audit.json || true
           node <<'NODE'
-          const report = require("/tmp/worker-audit.json");
-          const counts = report?.metadata?.vulnerabilities ?? {};
-          console.log("Worker production vulnerability counts:", JSON.stringify(counts));
-          if (Number(counts.high ?? 0) > 0 || Number(counts.critical ?? 0) > 0) {
-            throw new Error("Worker has high or critical production dependency findings.");
+          const root = require("/tmp/root-audit.json");
+          const worker = require("/tmp/worker-audit.json");
+
+          function inspect(label, report) {
+            const counts = report?.metadata?.vulnerabilities ?? {};
+            console.log(`${label} production vulnerability counts:`, JSON.stringify(counts));
+            const affected = Object.entries(report.vulnerabilities ?? {})
+              .filter(([, item]) => item?.severity === "high" || item?.severity === "critical")
+              .map(([name, item]) => ({
+                name,
+                severity: item.severity,
+                range: item.range,
+                fixAvailable: item.fixAvailable,
+                via: (Array.isArray(item.via) ? item.via : [])
+                  .map((entry) =>
+                    typeof entry === "string"
+                      ? entry
+                      : `${entry?.title ?? "advisory"} (${entry?.url ?? "no-url"})`,
+                  )
+                  .slice(0, 5),
+              }));
+            if (affected.length > 0) console.log(`${label} findings:`, JSON.stringify(affected));
+            return affected;
+          }
+
+          const affected = [...inspect("Application", root), ...inspect("Worker", worker)];
+          if (affected.length > 0) {
+            throw new Error(
+              `High/critical production dependency findings: ${affected
+                .map((item) => `${item.name}:${item.severity}`)
+                .join(", ")}`,
+            );
           }
           NODE
