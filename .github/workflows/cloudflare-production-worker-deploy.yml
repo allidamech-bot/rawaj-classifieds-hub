@@ -41,7 +41,6 @@ jobs:
       CLOUDFLARE_D1_DATABASE_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
       CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging
       CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production
-      CLOUDFLARE_WORKER_CUSTOM_DOMAIN: api.rawa-j.com
 
     steps:
       - name: Validate manual approval and selected SHA
@@ -168,26 +167,6 @@ jobs:
           RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ${{ inputs.reviewed_release_sha }}
           RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
         run: npm --prefix cloudflare/worker run smoke:production:read-only
-
-      - name: Verify custom API domain release
-        shell: bash
-        run: |
-          set -euo pipefail
-          body_file=/tmp/rawaj-api-health.json
-          status="$(curl --silent --show-error --max-time 20 \
-            --output "$body_file" \
-            --write-out '%{http_code}' \
-            --header 'Accept: application/json' \
-            --header 'Origin: https://rawa-j.com' \
-            https://api.rawa-j.com/v1/health || true)"
-          release="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
-          environment="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.environment??'')}catch{}")"
-          if [[ "$status" != "200" || "$release" != "$REVIEWED_RELEASE_SHA" || "$environment" != "production" ]]; then
-            echo "Custom API domain did not expose the reviewed Worker release." >&2
-            cat "$body_file" >&2 || true
-            exit 1
-          fi
-          echo "api.rawa-j.com is serving $REVIEWED_RELEASE_SHA."
 
       - name: Manual rollback instructions
         if: ${{ failure() }}
