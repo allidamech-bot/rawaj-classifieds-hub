@@ -23,6 +23,7 @@ jobs:
     env:
       MAIN_SHA: 0f8eb1f875aa457e2a9a643ad56401816eadd691
       REVIEWED_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      FIRST_DISPATCH_EPOCH: "1785461583"
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -41,59 +42,57 @@ jobs:
             exit 1
           fi
 
-      - name: Dispatch official manual workflow
-        id: dispatch
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "started_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
-          payload="$(MAIN_SHA="$MAIN_SHA" REVIEWED_RELEASE_SHA="$REVIEWED_RELEASE_SHA" node -e 'process.stdout.write(JSON.stringify({ref:"main",inputs:{approval_phrase:"DEPLOY_RAWAJ_WORKER_PRODUCTION",expected_commit_sha:process.env.MAIN_SHA,reviewed_release_sha:process.env.REVIEWED_RELEASE_SHA}}))')"
-          curl --fail --silent --show-error \
-            --request POST \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header "Accept: application/vnd.github+json" \
-            --header "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/dispatches" \
-            --data "$payload"
-          echo "Official workflow dispatch accepted."
-
-      - name: Locate official workflow run
+      - name: Locate accepted run or dispatch once
         id: locate
         shell: bash
-        env:
-          STARTED_EPOCH: ${{ steps.dispatch.outputs.started_epoch }}
         run: |
           set -euo pipefail
-          for attempt in {1..60}; do
+
+          list_runs() {
             curl --fail --silent --show-error \
               --header "Authorization: Bearer $GH_TOKEN" \
               --header "Accept: application/vnd.github+json" \
               --header "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/runs?event=workflow_dispatch&branch=main&per_page=20" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/runs?event=workflow_dispatch&branch=main&per_page=30" \
               > /tmp/official-worker-runs.json
-            run_id="$(node <<'NODE'
-            const fs = require('node:fs');
-            const payload = JSON.parse(fs.readFileSync('/tmp/official-worker-runs.json', 'utf8'));
-            const started = Number(process.env.STARTED_EPOCH || 0) * 1000 - 60000;
-            const run = (payload.workflow_runs || []).find((entry) =>
-              entry.head_sha === process.env.MAIN_SHA &&
-              new Date(entry.created_at).getTime() >= started
-            );
-            if (run?.id) process.stdout.write(String(run.id));
-            NODE
-            )"
-            if [[ -n "$run_id" ]]; then
-              echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
-              echo "Located official workflow run $run_id."
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "Could not locate the official Worker deployment run." >&2
-          exit 1
+          }
+
+          find_run() {
+            node -e 'const fs=require("node:fs");const p=JSON.parse(fs.readFileSync("/tmp/official-worker-runs.json","utf8"));const cutoff=Number(process.env.FIRST_DISPATCH_EPOCH)*1000-60000;const run=(p.workflow_runs||[]).filter(r=>r.head_sha===process.env.MAIN_SHA&&new Date(r.created_at).getTime()>=cutoff).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];if(run?.id)process.stdout.write(String(run.id));'
+          }
+
+          list_runs
+          run_id="$(find_run)"
+
+          if [[ -z "$run_id" ]]; then
+            payload="$(MAIN_SHA="$MAIN_SHA" REVIEWED_RELEASE_SHA="$REVIEWED_RELEASE_SHA" node -e 'process.stdout.write(JSON.stringify({ref:"main",inputs:{approval_phrase:"DEPLOY_RAWAJ_WORKER_PRODUCTION",expected_commit_sha:process.env.MAIN_SHA,reviewed_release_sha:process.env.REVIEWED_RELEASE_SHA}}))')"
+            curl --fail --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/dispatches" \
+              --data "$payload"
+            echo "No prior accepted run was visible; dispatched the official workflow once."
+
+            for attempt in {1..60}; do
+              sleep 5
+              list_runs
+              run_id="$(find_run)"
+              [[ -n "$run_id" ]] && break
+            done
+          else
+            echo "Reusing the already accepted official workflow run."
+          fi
+
+          if [[ -z "$run_id" ]]; then
+            echo "Could not locate the official Worker deployment run." >&2
+            exit 1
+          fi
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Located official workflow run $run_id."
 
       - name: Monitor official workflow run
-        id: monitor
         shell: bash
         env:
           RUN_ID: ${{ steps.locate.outputs.run_id }}
