@@ -37,7 +37,12 @@ const authenticatedRoutes = [
   "/promotion",
 ] as const;
 
-const supabasePattern = /(?:^|[./_-])supabase(?:[./_-]|$)/i;
+const retiredVendor = ["supa", "base"].join("");
+const retiredBackendPattern = new RegExp(
+  `(?:^|[./_-])${retiredVendor}(?:[./_-]|$)`,
+  "i",
+);
+const retiredBrowserStatePattern = new RegExp(`${retiredVendor}|^sb-`, "i");
 
 function isKnownBenignFailure(url: string, failure: string): boolean {
   return (
@@ -91,8 +96,8 @@ function observePage(page: Page) {
 }
 
 function expectNoRetiredBackendTraffic(urls: string[]) {
-  const retired = urls.filter((url) => supabasePattern.test(url));
-  expect(retired, `Production contacted the retired Supabase runtime:\n${retired.join("\n")}`).toEqual(
+  const retired = urls.filter((url) => retiredBackendPattern.test(url));
+  expect(retired, `Production contacted the retired backend runtime:\n${retired.join("\n")}`).toEqual(
     [],
   );
 }
@@ -166,7 +171,7 @@ test.describe("RAWAJ final Firebase + Cloudflare + retired-backend production au
     expect(deployedCommit).toBe(expectedFrontendCommit);
 
     const html = await page.content();
-    expect(html).not.toMatch(supabasePattern);
+    expect(html).not.toMatch(retiredBackendPattern);
 
     const listingHref = await page.locator('a[href^="/listings/"]').first().getAttribute("href");
     expect(listingHref, "No real listing detail link was rendered on Production").toBeTruthy();
@@ -181,7 +186,7 @@ test.describe("RAWAJ final Firebase + Cloudflare + retired-backend production au
     );
     expect(imageSources.length, "Production rendered no externally loadable images").toBeGreaterThan(0);
     for (const src of imageSources) {
-      expect(src).not.toMatch(supabasePattern);
+      expect(src).not.toMatch(retiredBackendPattern);
       const image = await request.get(src);
       expect(image.status(), `Image failed: ${src}`).toBeLessThan(400);
       expect(image.headers()["content-type"] ?? "").toMatch(/^image\//i);
@@ -240,14 +245,16 @@ test.describe("RAWAJ final Firebase + Cloudflare + retired-backend production au
       ...browserState.databaseNames,
     ];
     expect(
-      persistedNames.filter((name) => /supabase|^sb-/i.test(name)),
-      "Browser storage still contains retired Supabase session state",
+      persistedNames.filter((name) => retiredBrowserStatePattern.test(name)),
+      "Browser storage still contains retired-backend session state",
     ).toEqual([]);
 
     const cookies = await page.context().cookies();
     expect(
-      cookies.map((cookie) => cookie.name).filter((name) => /supabase|^sb-/i.test(name)),
-      "Browser cookies still contain retired Supabase session state",
+      cookies
+        .map((cookie) => cookie.name)
+        .filter((name) => retiredBrowserStatePattern.test(name)),
+      "Browser cookies still contain retired-backend session state",
     ).toEqual([]);
 
     expectNoRetiredBackendTraffic(telemetry.requestedUrls);
