@@ -31,6 +31,10 @@ const smokeSource = await readFile(
   new URL("cloudflare/worker/scripts/remote-smoke.mjs", root),
   "utf8",
 );
+const productionFreeze = await readFile(
+  new URL("docs/cloudflare-production-freeze.md", root),
+  "utf8",
+);
 
 const productionMutationPattern =
   /\bwrangler(?:\.cmd)?\s+(?:deploy|versions\s+deploy|rollback|d1\s+migrations\s+apply\b[^\n]*--remote)/i;
@@ -52,7 +56,7 @@ test("push and pull-request workflows cannot mutate Cloudflare Production", () =
   }
 });
 
-test("the only Worker deployment workflow is manual and SHA-gated", () => {
+test("the only Worker deployment workflow is manual, SHA-gated, and permanently credentialed", () => {
   assert.ok(productionWorkflow, "The manual Production Worker workflow must exist");
   const source = productionWorkflow.source;
   assert.match(source, /^\s{2}workflow_dispatch:/m);
@@ -63,6 +67,22 @@ test("the only Worker deployment workflow is manual and SHA-gated", () => {
     (match) => match[1],
   );
   assert.deepEqual(declaredTriggers, ["workflow_dispatch"]);
+  assert.match(source, /environment: production/);
+  assert.match(
+    source,
+    /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_PRODUCTION_API_TOKEN \}\}/,
+  );
+  assert.doesNotMatch(
+    source,
+    /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/,
+  );
+  assert.match(source, /Verify dedicated Production credential/);
+  assert.match(source, /workers\/services\/rawaj-classifieds-hub/);
+  assert.match(source, /CLOUDFLARE_PRODUCTION_API_TOKEN is missing/);
+  assert.match(source, /d0e6496c-9f63-48d3-beeb-d2e219500f6a/);
+  assert.match(source, /CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging/);
+  assert.match(source, /CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production/);
+  assert.match(source, /CLOUDFLARE_WORKER_CUSTOM_DOMAIN: api\.rawa-j\.com/);
   assert.match(source, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
   assert.match(source, /expected_commit_sha/);
   assert.match(source, /DISPATCH_REF: \$\{\{ github\.ref \}\}/);
@@ -74,6 +94,7 @@ test("the only Worker deployment workflow is manual and SHA-gated", () => {
   assert.match(source, /MAIN_HEAD_SHA="\$\(git rev-parse refs\/remotes\/origin\/main\)"/);
   assert.match(source, /\[\[ "\$EXPECTED_COMMIT_SHA" != "\$MAIN_HEAD_SHA" \]\]/);
   assert.match(source, /stale or non-main commits cannot be deployed/);
+  assert.match(source, /docs\/cloudflare-production-freeze\.md/);
   assert.doesNotMatch(source, /DISPATCH_SHA:\s*\$\{\{\s*github\.sha\s*\}\}/);
   assert.doesNotMatch(source, /\$EXPECTED_COMMIT_SHA"\s*!=\s*"\$(?:DISPATCH_SHA|GITHUB_SHA)/);
   assert.match(source, /npm --prefix cloudflare\/worker run deploy:production/);
@@ -90,6 +111,15 @@ test("the only Worker deployment workflow is manual and SHA-gated", () => {
     [],
     "Workflows must deploy only through the guarded package script",
   );
+});
+
+test("the Cloudflare Production freeze is documented as one path", () => {
+  assert.match(productionFreeze, /one path only/i);
+  assert.match(productionFreeze, /CLOUDFLARE_PRODUCTION_API_TOKEN/);
+  assert.match(productionFreeze, /https:\/\/api\.rawa-j\.com/);
+  assert.match(productionFreeze, /No automatic Worker deployment/);
+  assert.match(productionFreeze, /No fallback to the legacy generic/);
+  assert.match(productionFreeze, /No temporary one-shot deployment workflows/);
 });
 
 test("Production package scripts fail closed outside the approved dispatch", () => {
