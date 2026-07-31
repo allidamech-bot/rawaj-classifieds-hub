@@ -1,0 +1,144 @@
+name: RAWAJ One-Shot Official Worker Dispatch ee933
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/trigger-cloudflare-worker-ee933.yml"
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: rawaj-one-shot-official-worker-dispatch-ee933
+  cancel-in-progress: false
+
+jobs:
+  dispatch-and-monitor:
+    name: Dispatch official Worker deployment and monitor it
+    if: contains(github.event.head_commit.message, 'dispatch Cloudflare Worker ee933')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      REVIEWED_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Dispatch the official SHA-gated workflow
+        id: dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          started_epoch="$(date +%s)"
+          echo "started_epoch=$started_epoch" >> "$GITHUB_OUTPUT"
+          payload="$(node -e 'process.stdout.write(JSON.stringify({ref:"main",inputs:{approval_phrase:"DEPLOY_RAWAJ_WORKER_PRODUCTION",expected_commit_sha:process.env.GITHUB_SHA,reviewed_release_sha:process.env.REVIEWED_RELEASE_SHA}}))')"
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/dispatches" \
+            --data "$payload"
+          echo "Official workflow dispatch accepted."
+
+      - name: Locate dispatched workflow run
+        id: locate
+        shell: bash
+        env:
+          STARTED_EPOCH: ${{ steps.dispatch.outputs.started_epoch }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..60}; do
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/runs?event=workflow_dispatch&per_page=20" \
+              > /tmp/rawaj-worker-runs.json
+            run_id="$(node <<'NODE'
+            const fs = require('node:fs');
+            const payload = JSON.parse(fs.readFileSync('/tmp/rawaj-worker-runs.json', 'utf8'));
+            const started = Number(process.env.STARTED_EPOCH || 0) * 1000 - 60000;
+            const run = (payload.workflow_runs || []).find((entry) =>
+              entry.head_sha === process.env.GITHUB_SHA &&
+              new Date(entry.created_at).getTime() >= started
+            );
+            if (run?.id) process.stdout.write(String(run.id));
+            NODE
+            )"
+            if [[ -n "$run_id" ]]; then
+              echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+              echo "Located workflow run $run_id."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Could not locate the dispatched Worker workflow run." >&2
+          exit 1
+
+      - name: Monitor official deployment result
+        id: monitor
+        shell: bash
+        env:
+          RUN_ID: ${{ steps.locate.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..180}; do
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" \
+              > /tmp/rawaj-worker-run.json
+            read -r status conclusion html_url < <(node <<'NODE'
+            const fs = require('node:fs');
+            const run = JSON.parse(fs.readFileSync('/tmp/rawaj-worker-run.json', 'utf8'));
+            process.stdout.write(`${run.status || ''} ${run.conclusion || 'pending'} ${run.html_url || ''}`);
+            NODE
+            )
+            echo "Worker deployment status: $status / $conclusion"
+            if [[ "$status" == "completed" ]]; then
+              echo "conclusion=$conclusion" >> "$GITHUB_OUTPUT"
+              echo "html_url=$html_url" >> "$GITHUB_OUTPUT"
+              if [[ "$conclusion" != "success" ]]; then
+                exit 1
+              fi
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out while monitoring the official Worker workflow." >&2
+          exit 1
+
+      - name: Record deployment result on release PR
+        if: always()
+        shell: bash
+        env:
+          RUN_ID: ${{ steps.locate.outputs.run_id }}
+          CONCLUSION: ${{ steps.monitor.outputs.conclusion }}
+          RUN_URL: ${{ steps.monitor.outputs.html_url }}
+        run: |
+          set -euo pipefail
+          conclusion="${CONCLUSION:-failure}"
+          run_url="${RUN_URL:-https://github.com/${GITHUB_REPOSITORY}/actions}"
+          body="$(cat <<EOF
+          ## Cloudflare Worker official deployment: ${conclusion}
+
+          - Reviewed runtime release: \`${REVIEWED_RELEASE_SHA}\`
+          - Dispatching main commit: \`${GITHUB_SHA}\`
+          - Official workflow run: ${run_url}
+          - D1 migrations: **not requested**
+          - Vercel deployment or Promote: **not requested**
+          EOF
+          )"
+          COMMENT_BODY="$body" node -e 'process.stdout.write(JSON.stringify({body:process.env.COMMENT_BODY}))' > /tmp/rawaj-worker-comment.json
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/548/comments" \
+            --data @/tmp/rawaj-worker-comment.json

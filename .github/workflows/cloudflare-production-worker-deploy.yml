@@ -8,7 +8,11 @@ on:
         required: true
         type: string
       expected_commit_sha:
-        description: "Exact 40-character approved commit SHA selected for this dispatch"
+        description: "Exact current main SHA selected for this dispatch"
+        required: true
+        type: string
+      reviewed_release_sha:
+        description: "Reviewed runtime release SHA exposed by Worker health"
         required: true
         type: string
 
@@ -24,19 +28,16 @@ jobs:
     name: Deploy reviewed Worker SHA
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      REVIEWED_RELEASE_SHA: ${{ inputs.reviewed_release_sha }}
       RAWAJ_EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
       RAWAJ_PRODUCTION_APPROVAL: ${{ inputs.approval_phrase }}
-      RAWAJ_WORKER_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+      RAWAJ_WORKER_RELEASE_SHA: ${{ inputs.reviewed_release_sha }}
       RAWAJ_WORKER_ENVIRONMENT: production
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
-      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
-      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
-      CLOUDFLARE_WORKER_CUSTOM_DOMAIN: ${{ vars.CLOUDFLARE_WORKER_CUSTOM_DOMAIN }}
 
     steps:
       - name: Validate manual approval and selected SHA
@@ -59,6 +60,10 @@ jobs:
           fi
           if [[ ! "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
             echo "expected_commit_sha must be an exact lowercase 40-character Git SHA." >&2
+            exit 1
+          fi
+          if [[ ! "$REVIEWED_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "reviewed_release_sha must be an exact lowercase 40-character Git SHA." >&2
             exit 1
           fi
 
@@ -84,6 +89,25 @@ jobs:
             exit 1
           fi
 
+      - name: Prove runtime source matches reviewed release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$REVIEWED_RELEASE_SHA^{commit}"
+          git merge-base --is-ancestor "$REVIEWED_RELEASE_SHA" "$EXPECTED_COMMIT_SHA"
+          mapfile -t changed_files < <(git diff --name-only "$REVIEWED_RELEASE_SHA" "$EXPECTED_COMMIT_SHA")
+          for path in "${changed_files[@]}"; do
+            case "$path" in
+              .github/workflows/*|.github/deploy/*|vercel.json)
+                ;;
+              *)
+                echo "Runtime-affecting drift exists after the reviewed release: $path" >&2
+                exit 1
+                ;;
+            esac
+          done
+          echo "Runtime source is unchanged since $REVIEWED_RELEASE_SHA."
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -92,6 +116,126 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             cloudflare/worker/package-lock.json
+
+      - name: Resolve existing D1 and active R2 binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "Required Cloudflare credential is missing: $key" >&2
+              exit 1
+            fi
+          done
+
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+          const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+          const apiRoot = `https://api.cloudflare.com/client/v4/accounts/${accountId}`;
+          const authHeaders = { Authorization: `Bearer ${apiToken}` };
+
+          async function jsonRequest(path, init = {}) {
+            const response = await fetch(`${apiRoot}${path}`, {
+              ...init,
+              headers: {
+                ...authHeaders,
+                ...(init.body ? { "Content-Type": "application/json" } : {}),
+                ...(init.headers ?? {}),
+              },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+              const summary = Array.isArray(payload.errors)
+                ? payload.errors.map((entry) => entry?.message).filter(Boolean).join("; ")
+                : "Cloudflare API request failed";
+              throw new Error(`${path}: ${response.status} ${summary}`);
+            }
+            return payload.result;
+          }
+
+          (async () => {
+            const databases = await jsonRequest("/d1/database?name=rawaj-staging&per_page=100");
+            const exactDatabases = (Array.isArray(databases) ? databases : []).filter(
+              (database) => database?.name === "rawaj-staging" && typeof database?.uuid === "string",
+            );
+            if (exactDatabases.length !== 1) {
+              throw new Error(
+                `Expected exactly one D1 database named rawaj-staging; found ${exactDatabases.length}.`,
+              );
+            }
+            const databaseId = exactDatabases[0].uuid;
+
+            const queryResult = await jsonRequest(
+              `/d1/database/${encodeURIComponent(databaseId)}/query`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  sql: `SELECT ma.object_key
+                        FROM media_assets AS ma
+                        INNER JOIN listing_images AS li ON li.media_asset_id = ma.id
+                        WHERE ma.status = 'ready'
+                        ORDER BY ma.updated_at DESC
+                        LIMIT 1`,
+                }),
+              },
+            );
+            const sampleObjectKey = Array.isArray(queryResult)
+              ? queryResult.flatMap((entry) => entry?.results ?? []).find((row) => row?.object_key)?.object_key
+              : undefined;
+            if (typeof sampleObjectKey !== "string" || sampleObjectKey.length === 0) {
+              throw new Error("No ready D1-backed listing image was available to resolve the active R2 bucket.");
+            }
+
+            const r2Result = await jsonRequest(
+              "/r2/buckets?name_contains=rawaj&order=name&direction=asc&per_page=1000",
+            );
+            const rawajBuckets = (Array.isArray(r2Result?.buckets) ? r2Result.buckets : []).filter(
+              (bucket) => typeof bucket?.name === "string" && bucket.name.toLowerCase().includes("rawaj"),
+            );
+            const encodedObjectKey = sampleObjectKey
+              .split("/")
+              .map((segment) => encodeURIComponent(segment))
+              .join("/");
+            const matchingBuckets = [];
+            for (const bucket of rawajBuckets) {
+              const response = await fetch(
+                `${apiRoot}/r2/buckets/${encodeURIComponent(bucket.name)}/objects/${encodedObjectKey}`,
+                { headers: authHeaders },
+              );
+              if (response.status === 200) matchingBuckets.push(bucket.name);
+              else if (response.status !== 404) {
+                const payload = await response.json().catch(() => ({}));
+                const summary = Array.isArray(payload.errors)
+                  ? payload.errors.map((entry) => entry?.message).filter(Boolean).join("; ")
+                  : `HTTP ${response.status}`;
+                throw new Error(`Unable to probe R2 bucket ${bucket.name}: ${summary}`);
+              }
+              await response.body?.cancel().catch(() => {});
+            }
+            if (matchingBuckets.length !== 1) {
+              throw new Error(
+                `Expected the D1-backed media object in exactly one RAWAJ R2 bucket; matched ${matchingBuckets.length}.`,
+              );
+            }
+
+            fs.appendFileSync(
+              process.env.GITHUB_ENV,
+              [
+                `CLOUDFLARE_D1_DATABASE_ID=${databaseId}`,
+                "CLOUDFLARE_D1_DATABASE_NAME=rawaj-staging",
+                `CLOUDFLARE_R2_BUCKET_NAME=${matchingBuckets[0]}`,
+                "CLOUDFLARE_WORKER_CUSTOM_DOMAIN=api.rawa-j.com",
+                "",
+              ].join("\n"),
+            );
+            console.log("Resolved the existing D1 database and uniquely active R2 bucket.");
+          })().catch((error) => {
+            console.error(error instanceof Error ? error.message : String(error));
+            process.exit(1);
+          });
+          NODE
 
       - name: Install Worker dependencies
         run: npm ci --prefix cloudflare/worker --ignore-scripts
@@ -104,9 +248,29 @@ jobs:
 
       - name: Verify deployed Worker release and read-only routes
         env:
-          RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+          RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ${{ inputs.reviewed_release_sha }}
           RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
         run: npm --prefix cloudflare/worker run smoke:production:read-only
+
+      - name: Verify custom API domain release
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_file=/tmp/rawaj-api-health.json
+          status="$(curl --silent --show-error --max-time 20 \
+            --output "$body_file" \
+            --write-out '%{http_code}' \
+            --header 'Accept: application/json' \
+            --header 'Origin: https://rawa-j.com' \
+            https://api.rawa-j.com/v1/health || true)"
+          release="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
+          environment="$(node -e "try{const d=require('$body_file');process.stdout.write(d?.data?.environment??'')}catch{}")"
+          if [[ "$status" != "200" || "$release" != "$REVIEWED_RELEASE_SHA" || "$environment" != "production" ]]; then
+            echo "Custom API domain did not expose the reviewed Worker release." >&2
+            cat "$body_file" >&2 || true
+            exit 1
+          fi
+          echo "api.rawa-j.com is serving $REVIEWED_RELEASE_SHA."
 
       - name: Manual rollback instructions
         if: ${{ failure() }}
