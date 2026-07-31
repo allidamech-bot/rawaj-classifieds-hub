@@ -61,8 +61,12 @@ export function createRawajE2eProfileFixturePlugin(): Plugin {
           return;
         }
 
+        const pushDeviceDetach = /^\/v1\/account\/push-devices\/[^/]+$/.test(path);
         const handled =
-          path === "/api/profile" || path === "/v1/profile" || path === "/v1/account/verifications";
+          path === "/api/profile" ||
+          path === "/v1/profile" ||
+          path === "/v1/account/verifications" ||
+          pushDeviceDetach;
 
         if (!handled) {
           next();
@@ -110,6 +114,11 @@ export function createRawajE2eProfileFixturePlugin(): Plugin {
 
         if (method === "GET" && path === "/v1/account/verifications") {
           sendJson(response, { data: [] });
+          return;
+        }
+
+        if (method === "DELETE" && pushDeviceDetach) {
+          sendJson(response, { data: true });
           return;
         }
 
@@ -197,5 +206,5 @@ function sendJson(response: ServerResponse, payload: unknown, statusCode = 200):
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  response.setHeader("Access-Control-Allow-Methods", "GET, PATCH, OPTIONS");
+  response.setHeader("Access-Control-Allow-Methods", "GET, PATCH, DELETE, OPTIONS");
 }

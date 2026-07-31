@@ -35,7 +35,7 @@ import {
   nativeGoogleAuthErrorMessage,
   requestNativeGoogleIdToken,
 } from "./native-google-auth";
-import { clearLocalNativePushState } from "./native-push";
+import { clearLocalNativePushState, detachNativePushBeforeSignOut } from "./native-push";
 
 function firebaseErrorMessage(error: unknown): string {
   if (!error || typeof error !== "object") return "تعذر إكمال عملية الحساب.";
@@ -194,6 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       googleSignInAttemptRef.current += 1;
       loadRequestIdRef.current += 1;
       profileLoadRef.current = null;
+
+      const detachResult = await detachNativePushBeforeSignOut();
+      if (!detachResult.ok) {
+        return { error: detachResult.error.message };
+      }
+
       const localNotificationCleanup = clearLocalNativePushState();
       const nativeGoogleCleanup = clearNativeGoogleCredentialState();
       const completeLocalCleanup = () =>

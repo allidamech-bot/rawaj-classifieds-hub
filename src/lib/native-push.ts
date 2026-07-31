@@ -1,5 +1,10 @@
 import type { PluginListenerHandle } from "@capacitor/core";
-import { disablePushDevice, registerPushDevice } from "@/lib/api/push-notifications";
+import {
+  disablePushDevice,
+  registerPushDevice,
+  type PushPermissionStatus,
+  type PushPlatform,
+} from "@/lib/api/push-notifications";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { firebaseAuth } from "@/lib/firebase";
 import { notificationOpenPath } from "@/lib/notification-target-path";
@@ -11,16 +16,27 @@ const REGISTRATION_TIMEOUT_MS = 15_000;
 let activeListenerUserId: string | null = null;
 let activeListenerHandles: PluginListenerHandle[] = [];
 let listenerSetup: Promise<void> | null = null;
+let nativePushGeneration = 0;
+let registrationSyncKey: string | null = null;
+let registrationSync: Promise<ClassifiedsResult<string>> | null = null;
+const lastTokenHashByUser = new Map<string, string>();
 
 export interface NativePushCapability {
   available: boolean;
-  platform: "android" | "ios" | "web";
+  platform: PushPlatform;
 }
 
 export interface NativePushRegistration {
   deviceKey: string;
-  permissionStatus: "granted" | "denied" | "prompt";
+  permissionStatus: PushPermissionStatus;
   registered: boolean;
+}
+
+interface PushRegistrationContext {
+  userId: string;
+  locale: string;
+  platform: PushPlatform;
+  generation: number;
 }
 
 export function getOrCreatePushDeviceKey(): string {
@@ -86,14 +102,14 @@ export async function enableNativePush(
 
     const deviceKey = getOrCreatePushDeviceKey();
     if (permission.receive !== "granted") {
-      if (deviceKey) await disableNativePush(false);
+      const permissionStatus: PushPermissionStatus =
+        permission.receive === "denied" ? "denied" : "prompt";
+      await invalidateNativePushSession();
+      await disablePushDevice(deviceKey, false, permissionStatus);
+      await unregisterNativePushLocally();
       return {
         ok: true,
-        data: {
-          deviceKey,
-          permissionStatus: permission.receive === "denied" ? "denied" : "prompt",
-          registered: false,
-        },
+        data: { deviceKey, permissionStatus, registered: false },
       };
     }
 
@@ -107,23 +123,18 @@ export async function enableNativePush(
       });
     }
 
-    await ensureNativePushListeners(accountSnapshot);
+    const context = await ensureNativePushListeners(accountSnapshot, locale, capability.platform);
     const tokenResult = await waitForRegistrationToken(PushNotifications);
     if (!tokenResult.ok) return tokenResult;
 
+    const registration = await syncRegistrationToken(tokenResult.data, context);
+    if (!registration.ok) return registration;
+
     const currentActor = await currentPushAccount();
     if (!currentActor.ok) return currentActor;
-    if (currentActor.data !== accountSnapshot) return stalePushAccountError();
-
-    const registration = await registerPushDevice({
-      deviceKey,
-      deviceToken: tokenResult.data,
-      platform: capability.platform,
-      permissionStatus: "granted",
-      appVersion: null,
-      locale,
-    });
-    if (!registration.ok) return registration;
+    if (currentActor.data !== accountSnapshot || context.generation !== nativePushGeneration) {
+      return stalePushAccountError();
+    }
 
     return {
       ok: true,
@@ -143,18 +154,19 @@ export async function enableNativePush(
 
 export async function disableNativePush(
   disableChannel = true,
+  permissionStatus?: PushPermissionStatus,
 ): Promise<ClassifiedsResult<boolean>> {
+  const actor = await currentPushAccount();
+  if (!actor.ok) return actor;
   const deviceKey = getOrCreatePushDeviceKey();
-  const localCleanup = unregisterNativePushLocally();
+  await invalidateNativePushSession();
 
   try {
-    const result = await disablePushDevice(deviceKey, disableChannel);
-    const locallyUnregistered = await localCleanup;
-    if (result.ok || locallyUnregistered) return { ok: true, data: true };
+    const result = await disablePushDevice(deviceKey, disableChannel, permissionStatus);
+    await unregisterNativePushLocally();
     return result;
   } catch (error) {
-    const locallyUnregistered = await localCleanup;
-    if (locallyUnregistered) return { ok: true, data: true };
+    await unregisterNativePushLocally();
     return {
       ok: false,
       error: {
@@ -166,6 +178,19 @@ export async function disableNativePush(
   }
 }
 
+export async function detachNativePushBeforeSignOut(): Promise<ClassifiedsResult<boolean>> {
+  const actor = await currentPushAccount();
+  if (!actor.ok) return actor;
+  const deviceKey = getOrCreatePushDeviceKey();
+  await invalidateNativePushSession();
+
+  const result = await disablePushDevice(deviceKey, false);
+  if (!result.ok) return result;
+
+  await unregisterNativePushLocally();
+  return { ok: true, data: true };
+}
+
 export async function initializeNativePush(
   locale: string,
 ): Promise<ClassifiedsResult<NativePushRegistration>> {
@@ -173,10 +198,11 @@ export async function initializeNativePush(
 }
 
 export async function resetNativePushSession(): Promise<void> {
-  await clearNativePushListeners();
+  await invalidateNativePushSession();
 }
 
 export async function clearLocalNativePushState(): Promise<void> {
+  await invalidateNativePushSession();
   await unregisterNativePushLocally();
   if (typeof window === "undefined") return;
   try {
@@ -249,20 +275,33 @@ async function waitForRegistrationToken(
   });
 }
 
-async function ensureNativePushListeners(userId: string): Promise<void> {
-  if (activeListenerUserId === userId && activeListenerHandles.length > 0) return;
-  if (listenerSetup) return listenerSetup;
+async function ensureNativePushListeners(
+  userId: string,
+  locale: string,
+  platform: PushPlatform,
+): Promise<PushRegistrationContext> {
+  if (listenerSetup) await listenerSetup;
+  if (activeListenerUserId === userId && activeListenerHandles.length > 0) {
+    return { userId, locale, platform, generation: nativePushGeneration };
+  }
 
+  const generation = ++nativePushGeneration;
   listenerSetup = (async () => {
     await clearNativePushListeners();
     const { PushNotifications } = await import("@capacitor/push-notifications");
+    const context = { userId, locale, platform, generation };
 
+    const registration = await PushNotifications.addListener("registration", (token) => {
+      void syncRegistrationToken(token.value, context);
+    });
     const received = await PushNotifications.addListener("pushNotificationReceived", () => {
+      if (generation !== nativePushGeneration) return;
       emitUnreadActivityChanged();
     });
     const action = await PushNotifications.addListener(
       "pushNotificationActionPerformed",
       (event) => {
+        if (generation !== nativePushGeneration) return;
         emitUnreadActivityChanged();
         if (typeof window === "undefined") return;
         const data = event.notification.data;
@@ -270,13 +309,86 @@ async function ensureNativePushListeners(userId: string): Promise<void> {
       },
     );
 
-    activeListenerHandles = [received, action];
+    const handles = [registration, received, action];
+    if (generation !== nativePushGeneration || firebaseAuth.currentUser?.uid !== userId) {
+      await Promise.all(handles.map((handle) => handle.remove().catch(() => undefined)));
+      return;
+    }
+
+    activeListenerHandles = handles;
     activeListenerUserId = userId;
   })().finally(() => {
     listenerSetup = null;
   });
 
-  return listenerSetup;
+  await listenerSetup;
+  return { userId, locale, platform, generation };
+}
+
+async function syncRegistrationToken(
+  rawToken: string | null | undefined,
+  context: PushRegistrationContext,
+): Promise<ClassifiedsResult<string>> {
+  const token = rawToken?.trim();
+  if (!token || token.length < 20 || token.length > 4096) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تسجيل رمز الإشعارات لهذا الجهاز." },
+    };
+  }
+
+  const tokenHash = await sha256Hex(token);
+  if (
+    context.generation !== nativePushGeneration ||
+    firebaseAuth.currentUser?.uid !== context.userId
+  ) {
+    return stalePushAccountError();
+  }
+  if (lastTokenHashByUser.get(context.userId) === tokenHash) {
+    return { ok: true, data: tokenHash };
+  }
+
+  const syncKey = `${context.userId}:${tokenHash}`;
+  if (registrationSync && registrationSyncKey === syncKey) return registrationSync;
+
+  const request = (async (): Promise<ClassifiedsResult<string>> => {
+    if (
+      context.generation !== nativePushGeneration ||
+      firebaseAuth.currentUser?.uid !== context.userId
+    ) {
+      return stalePushAccountError();
+    }
+
+    const result = await registerPushDevice({
+      deviceKey: getOrCreatePushDeviceKey(),
+      deviceToken: token,
+      platform: context.platform,
+      permissionStatus: "granted",
+      appVersion: null,
+      locale: context.locale,
+    });
+    if (!result.ok) return result;
+
+    if (
+      context.generation !== nativePushGeneration ||
+      firebaseAuth.currentUser?.uid !== context.userId
+    ) {
+      return stalePushAccountError();
+    }
+    lastTokenHashByUser.set(context.userId, tokenHash);
+    return result;
+  })();
+
+  registrationSyncKey = syncKey;
+  registrationSync = request;
+  try {
+    return await request;
+  } finally {
+    if (registrationSync === request) {
+      registrationSync = null;
+      registrationSyncKey = null;
+    }
+  }
 }
 
 async function unregisterNativePushLocally(): Promise<boolean> {
@@ -290,6 +402,13 @@ async function unregisterNativePushLocally(): Promise<boolean> {
   }
   await clearNativePushListeners();
   return unregistered;
+}
+
+async function invalidateNativePushSession(): Promise<void> {
+  nativePushGeneration += 1;
+  registrationSync = null;
+  registrationSyncKey = null;
+  await clearNativePushListeners();
 }
 
 async function clearNativePushListeners(): Promise<void> {
@@ -307,6 +426,11 @@ async function currentPushAccount(): Promise<ClassifiedsResult<string>> {
         ok: false,
         error: { code: "auth_required", message: "يجب تسجيل الدخول لإدارة الإشعارات الفورية." },
       };
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function stalePushAccountError<T>(): ClassifiedsResult<T> {
