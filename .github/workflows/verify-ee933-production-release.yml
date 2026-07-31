@@ -37,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in {1..60}; do
-            rm -f /tmp/rawaj-worker-body.json /tmp/rawaj-worker-headers.txt
+            rm -f /tmp/rawaj-worker-body.json /tmp/rawaj-worker-headers.txt /tmp/rawaj-worker-headers-clean.txt
             status="$(curl --silent --show-error --max-time 20 \
               --output /tmp/rawaj-worker-body.json \
               --dump-header /tmp/rawaj-worker-headers.txt \
@@ -45,14 +45,15 @@ jobs:
               --header 'Accept: application/json' \
               --header 'Origin: https://rawa-j.com' \
               https://rawaj-classifieds-hub.allidamech.workers.dev/v1/health || true)"
+            tr -d '\r' < /tmp/rawaj-worker-headers.txt > /tmp/rawaj-worker-headers-clean.txt || true
             release="$(node -e "try{const d=require('/tmp/rawaj-worker-body.json');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
             environment="$(node -e "try{const d=require('/tmp/rawaj-worker-body.json');process.stdout.write(d?.data?.environment??'')}catch{}")"
             if [[ "$status" == "200" \
               && "$release" == "$RELEASE_SHA" \
               && "$environment" == "production" ]] \
-              && grep -Eiq '^access-control-allow-origin: https://rawa-j\.com\r?$' /tmp/rawaj-worker-headers.txt \
-              && grep -Eiq '^x-content-type-options: nosniff\r?$' /tmp/rawaj-worker-headers.txt \
-              && grep -Eiq '^referrer-policy: no-referrer\r?$' /tmp/rawaj-worker-headers.txt; then
+              && grep -Eiq '^access-control-allow-origin: https://rawa-j\.com$' /tmp/rawaj-worker-headers-clean.txt \
+              && grep -Eiq '^x-content-type-options: nosniff$' /tmp/rawaj-worker-headers-clean.txt \
+              && grep -Eiq '^referrer-policy: no-referrer$' /tmp/rawaj-worker-headers-clean.txt; then
               echo "Cloudflare Worker is serving $RELEASE_SHA"
               exit 0
             fi
@@ -64,6 +65,7 @@ jobs:
 
       - name: Verify Vercel Production release
         id: vercel
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -80,6 +82,7 @@ jobs:
 
       - name: Validate dedicated acceptance credentials
         id: credentials
+        if: steps.worker.outcome == 'success' && steps.vercel.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
@@ -89,19 +92,23 @@ jobs:
           fi
 
       - name: Set up Node.js
+        if: steps.credentials.outcome == 'success'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: steps.credentials.outcome == 'success'
         run: npm ci
 
       - name: Install Chromium
+        if: steps.credentials.outcome == 'success'
         run: npx playwright install --with-deps chromium
 
       - name: Run authenticated mobile Production Acceptance
         id: acceptance
+        if: steps.credentials.outcome == 'success'
         run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium --workers=1
 
       - name: Upload failure diagnostics
@@ -149,7 +156,7 @@ jobs:
           Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           EOF
           )"
-          payload="$(node -e 'process.stdout.write(JSON.stringify({body: process.env.COMMENT_BODY}))' COMMENT_BODY="$body")"
+          payload="$(COMMENT_BODY="$body" node -e 'process.stdout.write(JSON.stringify({body: process.env.COMMENT_BODY}))')"
           curl --fail --silent --show-error \
             --request POST \
             --header "Authorization: Bearer $GITHUB_TOKEN" \
