@@ -20,7 +20,7 @@
     "test:admin-console-v3": "node --test scripts/admin-console-v3.test.mjs",
     "test:responsive-accessibility-v1": "node --test scripts/responsive-accessibility-v1.test.mjs",
     "test:conversations-messaging-realtime": "node --test scripts/cloudflare-chat-cutover.test.mjs",
-    "precheck": "npm run test:conversations-messaging-realtime && npm run test:design-foundation && npm run test:listing-studio-v4 && npm run test:messaging-v4 && npm run test:account-store-activity-v3 && npm run test:auth-support-secondary-v3 && npm run test:admin-console-v3 && npm run test:responsive-accessibility-v1 && npm run test:listings-filters && npm run test:mobile-ux-polish && npm run test:release-polish-v1",
+    "precheck": "npm run test:conversations-messaging-realtime && npm run test:design-foundation && npm run test:listing-studio-v4 && npm run test:listing-lifecycle-completeness && npm run test:messaging-v4 && npm run test:account-store-activity-v3 && npm run test:auth-support-secondary-v3 && npm run test:admin-console-v3 && npm run test:responsive-accessibility-v1 && npm run test:listings-filters && npm run test:mobile-ux-polish && npm run test:release-polish-v1",
     "test:release-polish-v1": "node --test scripts/release-polish-v1.test.mjs",
     "test:audit-ui-v8": "node --test scripts/audit-ui-v8.test.mjs scripts/public-ad-placement-rendering.test.mjs",
     "test:header-navigation": "node --test scripts/header-navigation-contract.test.mjs",
@@ -62,7 +62,8 @@
     "test:d1-migrations": "node scripts/check-migration-ledger.mjs && node scripts/replay-d1-migrations.mjs",
     "test:admin-security": "node --test scripts/admin-security-regression.mjs",
     "check:cloudflare": "npm run test:runtime-boundary && npm run test:local-imports && npm run test:audit-ui-v8 && npm run test:cloudflare-cutover && npm run test:d1-migrations && npm run test:admin-security && npm run typecheck && npx tsc -p cloudflare/worker/tsconfig.json --noEmit && npm run build",
-    "test:local-imports": "node scripts/local-import-integrity.mjs"
+    "test:local-imports": "node scripts/local-import-integrity.mjs",
+    "test:listing-lifecycle-completeness": "node --test scripts/listing-lifecycle-completeness-v1.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",

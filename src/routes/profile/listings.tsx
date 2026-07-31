@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BadgePercent, BookmarkCheck, Eye, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import {
+  BadgePercent,
+  BookmarkCheck,
+  CircleCheckBig,
+  Eye,
+  Pencil,
+  Plus,
+  Star,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,6 +19,7 @@ import {
 } from "@/features/storefront/StorefrontIdentityHero";
 import {
   closeOwnerListing,
+  confirmOwnerListingAvailability,
   deleteOwnerListing,
   fetchCurrentUserListings,
   fetchPublicSellerProfile,
@@ -43,6 +53,15 @@ export const Route = createFileRoute("/profile/listings")({
 });
 
 type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";
+
+type LifecycleConfirmation =
+  { action: "close"; targetStatus: OwnerCloseListingStatus } | { action: "reactivate" };
+
+interface LifecycleConfirmationCopy {
+  title: string;
+  description: string;
+  confirmLabel: string;
+}
 
 function MyListingsPage() {
   const search = Route.useSearch();
@@ -430,6 +449,8 @@ function StoreListingCard({
 }) {
   const { text } = useUiPreferences();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingLifecycleConfirmation, setPendingLifecycleConfirmation] =
+    useState<LifecycleConfirmation | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
@@ -505,6 +526,7 @@ function StoreListingCard({
         return;
       }
       onChanged(userId, result.data);
+      setPendingLifecycleConfirmation(null);
     } catch (caught) {
       setLifecycleError(
         caught instanceof Error
@@ -538,6 +560,30 @@ function StoreListingCard({
     } finally {
       reservationInFlightRef.current = false;
       setReservationBusy(false);
+    }
+  }
+
+  async function handleAvailabilityConfirm() {
+    if (lifecycleInFlightRef.current || listing.status !== "approved") return;
+    lifecycleInFlightRef.current = true;
+    setLifecycleError("");
+    setLifecycleBusy(true);
+    try {
+      const result = await confirmOwnerListingAvailability(userId, listing.id);
+      if (!result.ok) {
+        setLifecycleError(result.error.message);
+        return;
+      }
+      onChanged(userId, result.data);
+    } catch (caught) {
+      setLifecycleError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تأكيد توفر الإعلان.", "Could not confirm listing availability."),
+      );
+    } finally {
+      lifecycleInFlightRef.current = false;
+      setLifecycleBusy(false);
     }
   }
 
@@ -591,6 +637,7 @@ function StoreListingCard({
         return;
       }
       onChanged(userId, result.data);
+      setPendingLifecycleConfirmation(null);
     } catch (caught) {
       setLifecycleError(
         caught instanceof Error
@@ -641,6 +688,10 @@ function StoreListingCard({
           "الإعلان المعتمد ظاهر للزوار ولا يعدل من هنا.",
           "Approved listings are public and are not edited here.",
         );
+
+  const lifecycleConfirmationCopy = pendingLifecycleConfirmation
+    ? ownerLifecycleConfirmationCopy(pendingLifecycleConfirmation, text)
+    : null;
 
   return (
     <>
@@ -715,10 +766,25 @@ function StoreListingCard({
               language,
             )}
           </p>
-          {listing.rejectionReason && (
-            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
-              {listing.rejectionReason}
-            </p>
+          {listing.status === "rejected" && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/8 p-3">
+              <p className="text-[11px] font-bold text-destructive">
+                {text("سبب رفض الإعلان", "Listing rejection reason")}
+              </p>
+              <p className="mt-1 text-[11px] leading-5 text-destructive">
+                {listing.rejectionReason ||
+                  text(
+                    "لم تضف الإدارة ملاحظة تفصيلية. راجع بيانات الإعلان والصور ثم أعد إرساله.",
+                    "No detailed admin note was provided. Review the listing data and photos, then resubmit it.",
+                  )}
+              </p>
+              <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                {text(
+                  "عدّل الملاحظات المطلوبة واحفظ التغييرات، ثم استخدم زر إعادة الإرسال للمراجعة.",
+                  "Address the requested changes, save them, then use the resubmit-for-review action.",
+                )}
+              </p>
+            </div>
           )}
           {lifecycleError && (
             <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
@@ -816,6 +882,17 @@ function StoreListingCard({
             ) : null}
             {canClose && (
               <>
+                <button
+                  type="button"
+                  disabled={lifecycleBusy}
+                  onClick={() => void handleAvailabilityConfirm()}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-emerald-trust/10 px-3 py-2 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
+                >
+                  <CircleCheckBig className="h-3.5 w-3.5" />
+                  {lifecycleBusy
+                    ? text("جارٍ التحديث", "Updating")
+                    : text("تأكيد أنه متوفر", "Confirm availability")}
+                </button>
                 <select
                   value={String(expiryOption)}
                   disabled={lifecycleBusy}
@@ -844,7 +921,9 @@ function StoreListingCard({
                 <button
                   type="button"
                   disabled={lifecycleBusy}
-                  onClick={() => void handleClose("sold")}
+                  onClick={() =>
+                    setPendingLifecycleConfirmation({ action: "close", targetStatus: "sold" })
+                  }
                   className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
                 >
                   {text("تم البيع", "Mark sold")}
@@ -852,7 +931,9 @@ function StoreListingCard({
                 <button
                   type="button"
                   disabled={lifecycleBusy}
-                  onClick={() => void handleClose("rented")}
+                  onClick={() =>
+                    setPendingLifecycleConfirmation({ action: "close", targetStatus: "rented" })
+                  }
                   className="rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold disabled:opacity-60"
                 >
                   {text("تم التأجير", "Mark rented")}
@@ -860,7 +941,12 @@ function StoreListingCard({
                 <button
                   type="button"
                   disabled={lifecycleBusy}
-                  onClick={() => void handleClose("unavailable")}
+                  onClick={() =>
+                    setPendingLifecycleConfirmation({
+                      action: "close",
+                      targetStatus: "unavailable",
+                    })
+                  }
                   className="rounded-lg bg-warning/10 px-2 py-1 text-[10px] font-bold text-warning disabled:opacity-60"
                 >
                   {text("غير متاح", "Unavailable")}
@@ -871,7 +957,7 @@ function StoreListingCard({
               <button
                 type="button"
                 disabled={lifecycleBusy}
-                onClick={() => void handleReactivate()}
+                onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
                 className="rounded-lg bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-60"
               >
                 {lifecycleBusy
@@ -897,6 +983,61 @@ function StoreListingCard({
           </div>
         </div>
       </article>
+
+      {pendingLifecycleConfirmation && lifecycleConfirmationCopy && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`${listing.id}-lifecycle-dialog-title`}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 p-4 backdrop-blur-sm"
+        >
+          <div className="rawaj-color-card rawaj-world-orange w-full max-w-sm rounded-[1.5rem] p-6">
+            <h3
+              id={`${listing.id}-lifecycle-dialog-title`}
+              className="text-base font-extrabold text-foreground"
+            >
+              {lifecycleConfirmationCopy.title}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {lifecycleConfirmationCopy.description}
+            </p>
+            {lifecycleError && (
+              <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+                {lifecycleError}
+              </p>
+            )}
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                disabled={lifecycleBusy}
+                onClick={() => {
+                  if (pendingLifecycleConfirmation.action === "reactivate") {
+                    void handleReactivate();
+                  } else {
+                    void handleClose(pendingLifecycleConfirmation.targetStatus);
+                  }
+                }}
+                className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
+              >
+                {lifecycleBusy
+                  ? text("جارٍ التنفيذ…", "Working…")
+                  : lifecycleConfirmationCopy.confirmLabel}
+              </button>
+              <button
+                type="button"
+                disabled={lifecycleBusy}
+                onClick={() => {
+                  setPendingLifecycleConfirmation(null);
+                  setLifecycleError("");
+                }}
+                className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
+              >
+                {text("إلغاء", "Cancel")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDeleteConfirm && (
         <div
@@ -952,6 +1093,52 @@ function StoreListingCard({
       )}
     </>
   );
+}
+
+function ownerLifecycleConfirmationCopy(
+  confirmation: LifecycleConfirmation,
+  text: (ar: string, en: string) => string,
+): LifecycleConfirmationCopy {
+  if (confirmation.action === "reactivate") {
+    return {
+      title: text("إعادة تفعيل الإعلان؟", "Reactivate this listing?"),
+      description: text(
+        "سيعود الإعلان إلى حالة قيد المراجعة، ولن يظهر للزوار قبل موافقة الإدارة من جديد.",
+        "The listing will return to pending review and will not be public until an admin approves it again.",
+      ),
+      confirmLabel: text("إعادة الإرسال للمراجعة", "Send for review"),
+    };
+  }
+
+  switch (confirmation.targetStatus) {
+    case "sold":
+      return {
+        title: text("تأكيد إغلاق الإعلان كمباع؟", "Mark this listing as sold?"),
+        description: text(
+          "سيختفي الإعلان من النتائج العامة ويُنقل إلى الإعلانات المغلقة. يمكنك إعادة تفعيله لاحقاً وإرساله للمراجعة من جديد.",
+          "The listing will leave public results and move to closed listings. You can reactivate and resubmit it later.",
+        ),
+        confirmLabel: text("نعم، تم البيع", "Yes, mark sold"),
+      };
+    case "rented":
+      return {
+        title: text("تأكيد إغلاق الإعلان كمؤجّر؟", "Mark this listing as rented?"),
+        description: text(
+          "سيختفي الإعلان من النتائج العامة ويُنقل إلى الإعلانات المغلقة. يمكنك إعادة تفعيله لاحقاً وإرساله للمراجعة من جديد.",
+          "The listing will leave public results and move to closed listings. You can reactivate and resubmit it later.",
+        ),
+        confirmLabel: text("نعم، تم التأجير", "Yes, mark rented"),
+      };
+    case "unavailable":
+      return {
+        title: text("تأكيد أن الإعلان لم يعد متاحاً؟", "Mark this listing unavailable?"),
+        description: text(
+          "سيختفي الإعلان من النتائج العامة دون حذفه، ويمكنك إعادة تفعيله لاحقاً بعد مراجعته من الإدارة.",
+          "The listing will be hidden from public results without being deleted, and can be reactivated later after review.",
+        ),
+        confirmLabel: text("تأكيد عدم التوفر", "Confirm unavailable"),
+      };
+  }
 }
 
 function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile | null }) {
