@@ -130,6 +130,13 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     ).toBeVisible();
 
     await clickTwiceInSameTick(approvedCard.getByRole("button", { name: /تم البيع|Mark sold/i }));
+    const soldDialog = page.getByRole("dialog", {
+      name: /تأكيد إغلاق الإعلان كمباع|Mark this listing as sold/i,
+    });
+    await expect(soldDialog).toBeVisible();
+    await clickTwiceInSameTick(
+      soldDialog.getByRole("button", { name: /نعم، تم البيع|Yes, mark sold/i }),
+    );
     await expect(ownerCard(page, APPROVED_TITLE)).toHaveCount(0, { timeout: 30_000 });
     await expectActionCount(lifecycleActions, "sold", 1);
 
@@ -148,6 +155,15 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await clickTwiceInSameTick(
       closedCard.getByRole("button", {
         name: /إعادة التفعيل للمراجعة|Reactivate for review/i,
+      }),
+    );
+    const reactivateDialog = page.getByRole("dialog", {
+      name: /إعادة تفعيل الإعلان|Reactivate this listing/i,
+    });
+    await expect(reactivateDialog).toBeVisible();
+    await clickTwiceInSameTick(
+      reactivateDialog.getByRole("button", {
+        name: /إعادة الإرسال للمراجعة|Send for review/i,
       }),
     );
     await expect(ownerCard(page, APPROVED_TITLE)).toHaveCount(0, { timeout: 30_000 });
