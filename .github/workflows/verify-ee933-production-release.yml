@@ -34,10 +34,6 @@ jobs:
       RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
-      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
-      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
-      CLOUDFLARE_WORKER_CUSTOM_DOMAIN: ${{ vars.CLOUDFLARE_WORKER_CUSTOM_DOMAIN }}
 
     steps:
       - name: Checkout reviewed release source
@@ -78,17 +74,92 @@ jobs:
             package-lock.json
             cloudflare/worker/package-lock.json
 
-      - name: Validate Cloudflare deployment configuration
+      - name: Discover existing Cloudflare bindings
         if: steps.worker_state.outputs.needs_deploy == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_D1_DATABASE_ID CLOUDFLARE_D1_DATABASE_NAME CLOUDFLARE_R2_BUCKET_NAME; do
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
             if [[ -z "${!key:-}" ]]; then
-              echo "Required Cloudflare deployment value is missing: $key" >&2
+              echo "Required Cloudflare credential is missing: $key" >&2
               exit 1
             fi
           done
+
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+          const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+          const scriptName = "rawaj-classifieds-hub";
+          const apiRoot = `https://api.cloudflare.com/client/v4/accounts/${accountId}`;
+
+          async function cloudflare(path) {
+            const response = await fetch(`${apiRoot}${path}`, {
+              headers: {
+                Authorization: `Bearer ${apiToken}`,
+                "Content-Type": "application/json",
+              },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.success === false) {
+              const summary = Array.isArray(payload.errors)
+                ? payload.errors.map((entry) => entry?.message).filter(Boolean).join("; ")
+                : "Cloudflare API request failed";
+              throw new Error(`${path}: ${response.status} ${summary}`);
+            }
+            return payload.result;
+          }
+
+          (async () => {
+            const settings = await cloudflare(`/workers/scripts/${scriptName}/settings`);
+            const bindings = Array.isArray(settings?.bindings) ? settings.bindings : [];
+            const d1 = bindings.find((binding) => binding?.type === "d1" && binding?.name === "DB");
+            const r2 = bindings.find(
+              (binding) => binding?.type === "r2_bucket" && binding?.name === "MEDIA",
+            );
+            const d1Id = d1?.database_id ?? d1?.id;
+            const bucketName = r2?.bucket_name;
+
+            if (!d1Id || !bucketName) {
+              throw new Error("Existing Worker DB/MEDIA bindings could not be resolved safely.");
+            }
+
+            const database = await cloudflare(`/d1/database/${encodeURIComponent(d1Id)}`);
+            const databaseName = database?.name;
+            if (!databaseName) {
+              throw new Error("The bound D1 database name could not be resolved.");
+            }
+
+            const domains = await cloudflare(
+              `/workers/domains?service=${encodeURIComponent(scriptName)}`,
+            );
+            const domainCandidates = (Array.isArray(domains) ? domains : []).filter(
+              (entry) => entry?.service === scriptName && typeof entry?.hostname === "string",
+            );
+            const preferredDomain = domainCandidates.find(
+              (entry) => entry.hostname === "api.rawa-j.com",
+            );
+            const customDomain = preferredDomain?.hostname ??
+              (domainCandidates.length === 1 ? domainCandidates[0].hostname : "");
+
+            if (domainCandidates.length > 1 && !preferredDomain) {
+              throw new Error("Multiple Worker custom domains exist and none is the approved API domain.");
+            }
+
+            const lines = [
+              `CLOUDFLARE_D1_DATABASE_ID=${d1Id}`,
+              `CLOUDFLARE_D1_DATABASE_NAME=${databaseName}`,
+              `CLOUDFLARE_R2_BUCKET_NAME=${bucketName}`,
+            ];
+            if (customDomain) lines.push(`CLOUDFLARE_WORKER_CUSTOM_DOMAIN=${customDomain}`);
+            fs.appendFileSync(process.env.GITHUB_ENV, `${lines.join("\n")}\n`);
+            console.log("Resolved the existing Worker D1, R2, and custom-domain bindings.");
+          })().catch((error) => {
+            console.error(error instanceof Error ? error.message : String(error));
+            process.exit(1);
+          });
+          NODE
 
       - name: Install Worker dependencies
         if: steps.worker_state.outputs.needs_deploy == 'true'
