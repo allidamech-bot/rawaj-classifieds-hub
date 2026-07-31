@@ -1,0 +1,102 @@
+name: Final R2 Retention and App Links Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/final-r2-retention-and-app-links-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  r2-retention:
+    name: R2 lifecycle and deletion protection
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      R2_BUCKET_NAME: rawaj-listing-images-production
+    steps:
+      - name: Read current lifecycle and bucket-lock rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+          const token = process.env.CLOUDFLARE_API_TOKEN;
+          const bucket = process.env.R2_BUCKET_NAME;
+          if (!accountId || !token || !bucket) throw new Error("R2 audit configuration is missing.");
+
+          const root = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${encodeURIComponent(bucket)}`;
+          const headers = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
+          async function get(path) {
+            const response = await fetch(`${root}${path}`, { headers });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload?.success !== true) {
+              const summary = Array.isArray(payload?.errors)
+                ? payload.errors.map((entry) => entry?.message).filter(Boolean).join("; ")
+                : `HTTP ${response.status}`;
+              throw new Error(`${path}: ${summary}`);
+            }
+            return payload.result ?? {};
+          }
+
+          const lifecycle = await get("/lifecycle");
+          const locks = await get("/lock");
+          const lifecycleRules = Array.isArray(lifecycle.rules) ? lifecycle.rules : [];
+          const lockRules = Array.isArray(locks.rules) ? locks.rules : [];
+
+          const destructiveRules = lifecycleRules.filter(
+            (rule) => rule?.enabled !== false && rule?.deleteObjectsTransition,
+          );
+          console.log("R2 lifecycle rules:", JSON.stringify(lifecycleRules));
+          console.log("R2 bucket-lock rules:", JSON.stringify(lockRules));
+          console.log(`Enabled destructive lifecycle rules: ${destructiveRules.length}`);
+          console.log(`Enabled bucket-lock rules: ${lockRules.filter((rule) => rule?.enabled !== false).length}`);
+
+          if (destructiveRules.length > 0) {
+            throw new Error("R2 contains an enabled lifecycle rule that can automatically delete listing media.");
+          }
+          NODE
+
+  android-app-links:
+    name: Android App Links publication
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify assetlinks.json is publicly valid
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=/tmp/assetlinks.json
+          headers=/tmp/assetlinks.headers
+          status="$(curl --silent --show-error --max-time 20 \
+            --output "$body" \
+            --dump-header "$headers" \
+            --write-out '%{http_code}' \
+            https://rawa-j.com/.well-known/assetlinks.json || true)"
+          echo "assetlinks.json HTTP status: $status"
+          cat "$headers" || true
+          cat "$body" || true
+          test "$status" = "200"
+          grep -qi '^content-type:.*application/json' "$headers"
+          node <<'NODE'
+          const fs = require("node:fs");
+          const statements = JSON.parse(fs.readFileSync("/tmp/assetlinks.json", "utf8"));
+          if (!Array.isArray(statements) || statements.length === 0) {
+            throw new Error("assetlinks.json contains no Android association statement.");
+          }
+          const valid = statements.some(
+            (statement) =>
+              statement?.target?.namespace === "android_app" &&
+              statement?.target?.package_name === "com.rawaj.marketplace" &&
+              Array.isArray(statement?.target?.sha256_cert_fingerprints) &&
+              statement.target.sha256_cert_fingerprints.length > 0,
+          );
+          if (!valid) throw new Error("assetlinks.json does not publish the RAWAJ Android package and certificate.");
+          NODE
