@@ -132,7 +132,7 @@ jobs:
           mapfile -t changed_files < <(git diff --name-only "$REVIEWED_RELEASE_SHA" "$EXPECTED_COMMIT_SHA")
           for path in "${changed_files[@]}"; do
             case "$path" in
-              .github/workflows/*|.github/deploy/*|docs/cloudflare-production-freeze.md|vercel.json)
+              .github/workflows/*|.github/deploy/*|docs/cloudflare-production-freeze.md|scripts/cloudflare-deployment-safety-gate.test.mjs|vercel.json)
                 ;;
               *)
                 echo "Runtime-affecting drift exists after the reviewed release: $path" >&2
