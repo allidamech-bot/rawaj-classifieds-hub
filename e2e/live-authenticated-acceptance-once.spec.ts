@@ -62,8 +62,6 @@ async function submitHydratedLogin(page: Page) {
   await expect(passwordInput).toBeVisible();
   await expect(submitButton).toBeVisible();
 
-  // The login form is server-rendered first. Wait for the client bundle before
-  // filling it so React hydration cannot replace the typed values.
   await page.waitForLoadState("networkidle", { timeout: 20_000 });
   await page.waitForTimeout(300);
 
@@ -174,11 +172,9 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
     await logoutButton.click();
     await expect(logoutButton).toHaveCount(0, { timeout: 20_000 });
 
-    // `/profile` intentionally remains a public guest surface after logout.
-    // Verify the session is gone through the rendered guest identity instead
-    // of requiring a redirect that the product does not implement.
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(/زائر غير مسجّل|Guest.*not signed in/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^(زائر|Guest)$/ }).first()).toBeVisible();
+    await expect(page.getByText(/غير مسجّل|Not signed in/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /تسجيل الدخول|Log in/i }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /تسجيل الخروج|Log out/i })).toHaveCount(0);
 
