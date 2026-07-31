@@ -1,0 +1,171 @@
+name: Final Stack Production Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/final-stack-production-audit.yml"
+      - "e2e/final-stack-production-audit.spec.ts"
+
+concurrency:
+  group: final-stack-production-audit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static-runtime-boundary:
+    name: Static runtime and migration boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout current main runtime
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+
+      - name: Install application dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Prove retired backend is absent from runtime
+        run: npm run test:runtime-boundary
+
+      - name: Run full Cloudflare cutover contracts
+        run: npm run test:cloudflare-cutover
+
+      - name: Replay every D1 migration from an empty database
+        run: npm run test:d1-migrations
+
+      - name: Run authorization and administrative regression
+        run: npm run test:admin-security
+
+      - name: Typecheck frontend and Worker
+        run: |
+          npm run typecheck
+          npx tsc -p cloudflare/worker/tsconfig.json --noEmit
+
+      - name: Build the application
+        run: npm run build
+
+  production-public:
+    name: Live public UX and data boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+      PRODUCTION_SMOKE: "1"
+      FINAL_STACK_PRODUCTION_AUDIT: "1"
+      EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      EXPECTED_FRONTEND_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      EXPECTED_WORKER_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+    steps:
+      - name: Checkout audit tests
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run existing Production smoke suite
+        run: >-
+          npx playwright test e2e/production-smoke.spec.ts
+          --project=mobile-chromium --project=desktop-chromium --workers=1
+
+      - name: Run live public stack isolation audit
+        run: >-
+          npx playwright test e2e/final-stack-production-audit.spec.ts
+          --grep "public UX" --project=mobile-chromium --project=desktop-chromium --workers=1
+
+      - name: Upload public audit diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-stack-public-audit-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+  production-authenticated:
+    name: Live Firebase session and protected UX
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: production
+    env:
+      E2E_BASE_URL: https://rawa-j.com
+      PRODUCTION_ACCEPTANCE: "1"
+      FINAL_STACK_PRODUCTION_AUDIT: "1"
+      EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      EXPECTED_FRONTEND_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      EXPECTED_WORKER_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+      RAWAJ_ACCEPTANCE_EMAIL: ${{ secrets.RAWAJ_ACCEPTANCE_EMAIL }}
+      RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
+    steps:
+      - name: Checkout audit tests
+        uses: actions/checkout@v4
+
+      - name: Validate dedicated acceptance credentials
+        shell: bash
+        run: |
+          if [ -z "$RAWAJ_ACCEPTANCE_EMAIL" ] || [ -z "$RAWAJ_ACCEPTANCE_PASSWORD" ]; then
+            echo "Dedicated Production acceptance credentials are missing." >&2
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run existing authenticated Production acceptance
+        run: >-
+          npx playwright test e2e/production-acceptance.spec.ts
+          --project=mobile-chromium --workers=1
+
+      - name: Run Firebase and protected-route live audit
+        run: >-
+          npx playwright test e2e/final-stack-production-audit.spec.ts
+          --grep "Firebase login" --project=mobile-chromium --project=desktop-chromium --workers=1
+
+      - name: Upload authenticated audit diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-stack-authenticated-audit-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
