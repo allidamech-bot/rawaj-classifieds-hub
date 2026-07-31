@@ -5,7 +5,8 @@ const acceptanceEmail = process.env.RAWAJ_ACCEPTANCE_EMAIL ?? "";
 const acceptancePassword = process.env.RAWAJ_ACCEPTANCE_PASSWORD ?? "";
 const expectedFrontendCommit = process.env.EXPECTED_FRONTEND_COMMIT_SHA ?? "";
 const expectedWorkerRelease = process.env.EXPECTED_WORKER_RELEASE_SHA ?? "";
-const workerBase = process.env.RAWAJ_WORKER_BASE_URL ?? "https://rawaj-classifieds-hub.allidamech.workers.dev";
+const workerBase =
+  process.env.RAWAJ_WORKER_BASE_URL ?? "https://rawaj-classifieds-hub.allidamech.workers.dev";
 
 const publicRoutes = [
   "/",
