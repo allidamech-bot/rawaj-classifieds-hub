@@ -6,7 +6,7 @@ Cloudflare Production is intentionally operated through one path only:
 - Trigger: manual `workflow_dispatch` from `main`
 - Runtime release: an explicitly reviewed commit SHA
 - Credential source: the `production` environment secret `CLOUDFLARE_PRODUCTION_API_TOKEN`
-- API domain: `https://api.rawa-j.com`
+- Production API endpoint: `https://rawaj-classifieds-hub.allidamech.workers.dev`
 
 ## Frozen boundaries
 
@@ -15,6 +15,8 @@ Cloudflare Production is intentionally operated through one path only:
 - No Vercel deployment from the Worker deployment workflow.
 - No fallback to the legacy generic `CLOUDFLARE_API_TOKEN` secret.
 - No temporary one-shot deployment workflows.
+- No custom-domain, Zone, route, or DNS mutation during Worker deployment.
+- No dependency on `api.rawa-j.com`.
 - No automatic rollback.
 
 ## Permanent token
@@ -25,4 +27,4 @@ The workflow performs a read-only Worker-service permission preflight before dep
 
 ## Normal operation
 
-Cloudflare dashboard configuration remains frozen. Future reviewed Worker code releases use the same manual workflow and the same dedicated token. If no Worker code changes are required, no Cloudflare action is required.
+The live frontend already uses the fixed workers.dev endpoint above. Cloudflare dashboard configuration remains frozen. Future reviewed Worker code releases use the same manual workflow, the same dedicated token, and the same workers.dev endpoint. If no Worker code changes are required, no Cloudflare action is required.
