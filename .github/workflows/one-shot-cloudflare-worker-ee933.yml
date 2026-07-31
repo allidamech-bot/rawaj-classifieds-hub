@@ -1,0 +1,94 @@
+name: RAWAJ One-Shot Cloudflare Worker ee933
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/one-shot-cloudflare-worker-ee933.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-one-shot-cloudflare-worker-ee933
+  cancel-in-progress: false
+
+jobs:
+  deploy-reviewed-worker:
+    name: Deploy and verify reviewed Worker
+    if: contains(github.event.head_commit.message, 'one-shot Cloudflare Worker ee933')
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    env:
+      APPROVED_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      TRIGGER_SHA: ${{ github.sha }}
+      EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      RAWAJ_EXPECTED_COMMIT_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      RAWAJ_PRODUCTION_APPROVAL: DEPLOY_RAWAJ_WORKER_PRODUCTION
+      RAWAJ_WORKER_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+      RAWAJ_WORKER_ENVIRONMENT: production
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
+      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
+      CLOUDFLARE_WORKER_CUSTOM_DOMAIN: ${{ vars.CLOUDFLARE_WORKER_CUSTOM_DOMAIN }}
+
+    steps:
+      - name: Checkout reviewed release
+        uses: actions/checkout@v4
+        with:
+          ref: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove runtime code has not changed since reviewed release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$TRIGGER_SHA"
+          git merge-base --is-ancestor "$APPROVED_SHA" "$TRIGGER_SHA"
+          mapfile -t changed_files < <(git diff --name-only "$APPROVED_SHA" "$TRIGGER_SHA")
+          for path in "${changed_files[@]}"; do
+            case "$path" in
+              .github/workflows/*|vercel.json)
+                ;;
+              *)
+                echo "Runtime-affecting drift detected after the reviewed release: $path" >&2
+                exit 1
+                ;;
+            esac
+          done
+          echo "Only release-control files changed after $APPROVED_SHA."
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Validate deployment safety contracts
+        run: npm run test:cloudflare-deployment-safety
+
+      - name: Deploy reviewed Worker once
+        run: npm --prefix cloudflare/worker run deploy:production
+
+      - name: Verify Worker release and read-only routes
+        env:
+          RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
+          RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+        run: npm --prefix cloudflare/worker run smoke:production:read-only
+
+      - name: Failure safety note
+        if: failure()
+        run: |
+          echo "::error::The one-shot Worker deployment or verification failed."
+          echo "No D1 migration and no Vercel deployment were requested by this workflow."
