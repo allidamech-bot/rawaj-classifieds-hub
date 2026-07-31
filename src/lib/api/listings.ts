@@ -77,6 +77,21 @@ export function mapListing(
     expiresAt: nullableText(row.expiresAt ?? row.expires_at),
     renewedAt: nullableText(row.renewedAt ?? row.renewed_at),
     expiryDays: expiryDays === 30 || expiryDays === 60 || expiryDays === 90 ? expiryDays : null,
+    recordedViewCount: optionalMetric(
+      row.recordedViewCount ?? row.recorded_view_count ?? row.owner_recorded_view_count,
+    ),
+    favoriteCount: optionalMetric(
+      row.favoriteCount ?? row.favorite_count ?? row.owner_favorite_count,
+    ),
+    conversationCount: optionalMetric(
+      row.conversationCount ?? row.conversation_count ?? row.owner_conversation_count,
+    ),
+    unreadMessageCount: optionalMetric(
+      row.unreadMessageCount ?? row.unread_message_count ?? row.owner_unread_message_count,
+    ),
+    lastInquiryAt: nullableText(
+      row.lastInquiryAt ?? row.last_inquiry_at ?? row.owner_last_inquiry_at,
+    ),
     createdAt: text(row.createdAt ?? row.created_at),
     updatedAt: text(row.updatedAt ?? row.updated_at),
     primaryImageUrl: absoluteMediaUrl(nullableText(row.primaryImageUrl ?? row.primary_image_url)),
@@ -407,6 +422,11 @@ function numberOrNull(value: unknown): number | null {
 
 function numberValue(value: unknown, fallback = 0): number {
   return numberOrNull(value) ?? fallback;
+}
+
+function optionalMetric(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  return Math.max(0, Math.trunc(numberValue(value)));
 }
 
 function booleanValue(value: unknown): boolean {
