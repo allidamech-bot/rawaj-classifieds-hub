@@ -82,8 +82,11 @@ test.describe("RAWAJ production launch health", () => {
 
   test("production category and governorate landing routes are discoverable", async ({ page }) => {
     await expectHealthyDocument(page, "/categories");
-    const categoryHref = await page.locator('a[href^="/category/"]').first().getAttribute("href");
-    expect(categoryHref, "No active category landing URL was rendered").toBeTruthy();
+    const categoryHref = await page
+      .locator('a[href^="/listings?category="], a[href^="/categories?node="]')
+      .first()
+      .getAttribute("href");
+    expect(categoryHref, "No active category discovery URL was rendered").toBeTruthy();
     await expectHealthyDocument(page, categoryHref!);
 
     const sitemap = await readStaticSitemap(page.request);
