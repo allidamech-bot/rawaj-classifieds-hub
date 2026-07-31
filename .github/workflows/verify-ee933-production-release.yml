@@ -1,7 +1,7 @@
-name: Verify RAWAJ Production Release ee933 Rerun
+name: Visible RAWAJ Production Verification ee933
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
@@ -10,11 +10,10 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 concurrency:
-  group: verify-rawaj-production-ee933-rerun-v2
-  cancel-in-progress: false
+  group: visible-production-verification-ee933-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   verify-production:
@@ -87,11 +86,9 @@ jobs:
             https://rawa-j.com/.well-known/assetlinks.json || true)"
           if [[ "$status" == "200" ]] \
             && node -e "const d=require('$body_file'); if(!Array.isArray(d)||!d.some(x=>x?.target?.package_name==='com.rawaj.marketplace'&&Array.isArray(x?.target?.sha256_cert_fingerprints)&&x.target.sha256_cert_fingerprints.length>0)) process.exit(1)"; then
-            echo "state=configured" >> "$GITHUB_OUTPUT"
             echo "Android App Links association is configured."
           else
-            echo "state=blocked_missing_play_fingerprint" >> "$GITHUB_OUTPUT"
-            echo "Android App Links remains blocked until the Play App Signing SHA-256 fingerprint is configured."
+            echo "::warning::Android App Links is blocked until RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS contains the Play App Signing SHA-256 fingerprint."
           fi
 
       - name: Validate dedicated acceptance credentials
@@ -121,7 +118,6 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run authenticated mobile Production Acceptance
-        id: acceptance
         if: steps.credentials.outcome == 'success'
         run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium --workers=1
 
@@ -129,7 +125,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: production-verification-ee933-rerun-${{ github.run_id }}
+          name: visible-production-verification-ee933-${{ github.run_id }}
           path: |
             playwright-report
             test-results
@@ -138,41 +134,3 @@ jobs:
             /tmp/rawaj-assetlinks.json
           if-no-files-found: ignore
           retention-days: 14
-
-      - name: Report verification result on release PR
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          WORKER_OUTCOME: ${{ steps.worker.outcome }}
-          VERCEL_OUTCOME: ${{ steps.vercel.outcome }}
-          APP_LINKS_STATE: ${{ steps.app_links.outputs.state }}
-          CREDENTIALS_OUTCOME: ${{ steps.credentials.outcome }}
-          ACCEPTANCE_OUTCOME: ${{ steps.acceptance.outcome }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "$WORKER_OUTCOME" == "success" \
-            && "$VERCEL_OUTCOME" == "success" \
-            && "$CREDENTIALS_OUTCOME" == "success" \
-            && "$ACCEPTANCE_OUTCOME" == "success" ]]; then
-            core="SUCCESS"
-          else
-            core="FAILURE"
-          fi
-          cat > /tmp/production-verification.md <<EOF
-          ## Production verification rerun: ${core}
-
-          Approved release: \`${RELEASE_SHA}\`
-
-          - Cloudflare Worker release: **${WORKER_OUTCOME}**
-          - Vercel Production identity: **${VERCEL_OUTCOME}**
-          - Acceptance credentials: **${CREDENTIALS_OUTCOME}**
-          - Authenticated mobile Production Acceptance: **${ACCEPTANCE_OUTCOME}**
-          - Android App Links: **${APP_LINKS_STATE:-unknown}**
-
-          Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
-          EOF
-          gh api \
-            --method POST \
-            "repos/${GITHUB_REPOSITORY}/issues/548/comments" \
-            --raw-field body="$(cat /tmp/production-verification.md)"
