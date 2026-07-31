@@ -1,4 +1,4 @@
-name: Verify RAWAJ Production Release ee933
+name: Verify RAWAJ Production Release ee933 Rerun
 
 on:
   push:
@@ -6,19 +6,20 @@ on:
       - main
     paths:
       - ".github/workflows/verify-ee933-production-release.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
   issues: write
 
 concurrency:
-  group: verify-rawaj-production-ee933
+  group: verify-rawaj-production-ee933-rerun-v2
   cancel-in-progress: false
 
 jobs:
   verify-production:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     env:
       RELEASE_SHA: ee933ba68cfde9e621ca6b1e5b0f3f0ea3b85f3e
       E2E_BASE_URL: https://rawa-j.com
@@ -36,7 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in {1..60}; do
+          for attempt in {1..12}; do
             rm -f /tmp/rawaj-worker-body.json /tmp/rawaj-worker-headers.txt /tmp/rawaj-worker-headers-clean.txt
             status="$(curl --silent --show-error --max-time 20 \
               --output /tmp/rawaj-worker-body.json \
@@ -69,16 +70,29 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in {1..30}; do
-            html="$(curl --fail --silent --show-error --max-time 20 https://rawa-j.com/ || true)"
-            if printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$RELEASE_SHA\""; then
-              echo "Vercel Production is serving $RELEASE_SHA"
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "Vercel Production is not serving the approved release SHA." >&2
-          exit 1
+          html="$(curl --fail --silent --show-error --max-time 20 https://rawa-j.com/)"
+          printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$RELEASE_SHA\""
+          echo "Vercel Production is serving $RELEASE_SHA"
+
+      - name: Inspect Android App Links association
+        id: app_links
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          body_file=/tmp/rawaj-assetlinks.json
+          status="$(curl --silent --show-error --max-time 20 \
+            --output "$body_file" \
+            --write-out '%{http_code}' \
+            https://rawa-j.com/.well-known/assetlinks.json || true)"
+          if [[ "$status" == "200" ]] \
+            && node -e "const d=require('$body_file'); if(!Array.isArray(d)||!d.some(x=>x?.target?.package_name==='com.rawaj.marketplace'&&Array.isArray(x?.target?.sha256_cert_fingerprints)&&x.target.sha256_cert_fingerprints.length>0)) process.exit(1)"; then
+            echo "state=configured" >> "$GITHUB_OUTPUT"
+            echo "Android App Links association is configured."
+          else
+            echo "state=blocked_missing_play_fingerprint" >> "$GITHUB_OUTPUT"
+            echo "Android App Links remains blocked until the Play App Signing SHA-256 fingerprint is configured."
+          fi
 
       - name: Validate dedicated acceptance credentials
         id: credentials
@@ -115,21 +129,23 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: production-verification-ee933-${{ github.run_id }}
+          name: production-verification-ee933-rerun-${{ github.run_id }}
           path: |
             playwright-report
             test-results
             /tmp/rawaj-worker-body.json
             /tmp/rawaj-worker-headers.txt
+            /tmp/rawaj-assetlinks.json
           if-no-files-found: ignore
           retention-days: 14
 
       - name: Report verification result on release PR
         if: always()
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           WORKER_OUTCOME: ${{ steps.worker.outcome }}
           VERCEL_OUTCOME: ${{ steps.vercel.outcome }}
+          APP_LINKS_STATE: ${{ steps.app_links.outputs.state }}
           CREDENTIALS_OUTCOME: ${{ steps.credentials.outcome }}
           ACCEPTANCE_OUTCOME: ${{ steps.acceptance.outcome }}
         shell: bash
@@ -139,12 +155,12 @@ jobs:
             && "$VERCEL_OUTCOME" == "success" \
             && "$CREDENTIALS_OUTCOME" == "success" \
             && "$ACCEPTANCE_OUTCOME" == "success" ]]; then
-            overall="SUCCESS"
+            core="SUCCESS"
           else
-            overall="FAILURE"
+            core="FAILURE"
           fi
-          body="$(cat <<EOF
-          ## Production verification: ${overall}
+          cat > /tmp/production-verification.md <<EOF
+          ## Production verification rerun: ${core}
 
           Approved release: \`${RELEASE_SHA}\`
 
@@ -152,15 +168,11 @@ jobs:
           - Vercel Production identity: **${VERCEL_OUTCOME}**
           - Acceptance credentials: **${CREDENTIALS_OUTCOME}**
           - Authenticated mobile Production Acceptance: **${ACCEPTANCE_OUTCOME}**
+          - Android App Links: **${APP_LINKS_STATE:-unknown}**
 
           Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
           EOF
-          )"
-          payload="$(COMMENT_BODY="$body" node -e 'process.stdout.write(JSON.stringify({body: process.env.COMMENT_BODY}))')"
-          curl --fail --silent --show-error \
-            --request POST \
-            --header "Authorization: Bearer $GITHUB_TOKEN" \
-            --header "Accept: application/vnd.github+json" \
-            --header "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/548/comments" \
-            --data "$payload"
+          gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/issues/548/comments" \
+            --raw-field body="$(cat /tmp/production-verification.md)"
