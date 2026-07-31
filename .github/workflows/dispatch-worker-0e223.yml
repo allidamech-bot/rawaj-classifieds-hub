@@ -1,4 +1,4 @@
-name: Deploy Worker 0e223 Monitor
+name: Verify Worker 0e223 After Propagation
 
 on:
   pull_request:
@@ -9,91 +9,64 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 jobs:
-  dispatch-and-monitor:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     env:
-      MAIN_SHA: 0e223288e58f34979e080f19dde7d121f88a9e76
-      REVIEWED_RELEASE_SHA: 0e223288e58f34979e080f19dde7d121f88a9e76
-      GH_TOKEN: ${{ github.token }}
+      EXPECTED_RELEASE_SHA: 0e223288e58f34979e080f19dde7d121f88a9e76
+      WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
     steps:
-      - name: Confirm exact main HEAD
+      - name: Verify propagated release with cache-busting requests
         shell: bash
         run: |
           set -euo pipefail
-          actual="$(curl --fail --silent --show-error \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header "Accept: application/vnd.github+json" \
-            --header "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/ref/heads/main" \
-            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).object.sha))')"
-          test "$actual" = "$MAIN_SHA"
-
-      - name: Dispatch permanent official Worker workflow
-        id: dispatch
-        shell: bash
-        run: |
-          set -euo pipefail
-          started_epoch="$(date +%s)"
-          echo "started_epoch=$started_epoch" >> "$GITHUB_OUTPUT"
-          payload="$(MAIN_SHA="$MAIN_SHA" REVIEWED_RELEASE_SHA="$REVIEWED_RELEASE_SHA" node -e 'process.stdout.write(JSON.stringify({ref:"main",inputs:{approval_phrase:"DEPLOY_RAWAJ_WORKER_PRODUCTION",expected_commit_sha:process.env.MAIN_SHA,reviewed_release_sha:process.env.REVIEWED_RELEASE_SHA}}))')"
-          curl --fail --silent --show-error \
-            --request POST \
-            --header "Authorization: Bearer $GH_TOKEN" \
-            --header "Accept: application/vnd.github+json" \
-            --header "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/dispatches" \
-            --data "$payload"
-
-      - name: Locate official deployment run
-        id: locate
-        shell: bash
-        env:
-          STARTED_EPOCH: ${{ steps.dispatch.outputs.started_epoch }}
-        run: |
-          set -euo pipefail
-          for attempt in {1..60}; do
-            curl --fail --silent --show-error \
-              --header "Authorization: Bearer $GH_TOKEN" \
-              --header "Accept: application/vnd.github+json" \
-              --header "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/cloudflare-production-worker-deploy.yml/runs?event=workflow_dispatch&branch=main&per_page=30" \
-              > /tmp/worker-runs.json
-            run_id="$(node -e 'const fs=require("node:fs");const p=JSON.parse(fs.readFileSync("/tmp/worker-runs.json","utf8"));const cutoff=Number(process.env.STARTED_EPOCH)*1000-60000;const run=(p.workflow_runs||[]).filter(r=>r.head_sha===process.env.MAIN_SHA&&new Date(r.created_at).getTime()>=cutoff).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];if(run?.id)process.stdout.write(String(run.id));')"
-            if [[ -n "$run_id" ]]; then
-              echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
-              echo "Located official deployment run $run_id."
-              exit 0
+          for attempt in {1..30}; do
+            nonce="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-$(date +%s)"
+            body=/tmp/health.json
+            headers=/tmp/health.headers
+            status="$(curl --silent --show-error --max-time 20 \
+              --output "$body" \
+              --dump-header "$headers" \
+              --write-out '%{http_code}' \
+              --header 'Accept: application/json' \
+              --header 'Origin: https://rawa-j.com' \
+              --header 'Cache-Control: no-cache' \
+              "$WORKER_BASE_URL/v1/health?release_probe=$nonce" || true)"
+            release="$(node -e "try{const d=require('$body');process.stdout.write(d?.data?.releaseSha??'')}catch{}")"
+            environment="$(node -e "try{const d=require('$body');process.stdout.write(d?.data?.environment??'')}catch{}")"
+            database="$(node -e "try{const d=require('$body');process.stdout.write(d?.data?.database??'')}catch{}")"
+            allow_origin="$(awk 'BEGIN{IGNORECASE=1} /^access-control-allow-origin:/{gsub(/\r/,""); print $2}' "$headers" | tail -1)"
+            echo "Attempt $attempt: HTTP $status release=$release environment=$environment database=$database"
+            if [[ "$status" == "200" && "$release" == "$EXPECTED_RELEASE_SHA" && "$environment" == "production" && "$database" == "ready" && "$allow_origin" == "https://rawa-j.com" ]]; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              cat "$body" >&2 || true
+              exit 1
             fi
             sleep 5
           done
-          echo "Could not locate official deployment run." >&2
-          exit 1
 
-      - name: Monitor official deployment run
-        shell: bash
-        env:
-          RUN_ID: ${{ steps.locate.outputs.run_id }}
-        run: |
-          set -euo pipefail
-          for attempt in {1..180}; do
-            curl --fail --silent --show-error \
-              --header "Authorization: Bearer $GH_TOKEN" \
-              --header "Accept: application/vnd.github+json" \
-              --header "X-GitHub-Api-Version: 2022-11-28" \
-              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" \
-              > /tmp/worker-run.json
-            status="$(node -e 'const r=require("/tmp/worker-run.json");process.stdout.write(r.status||"")')"
-            conclusion="$(node -e 'const r=require("/tmp/worker-run.json");process.stdout.write(r.conclusion||"pending")')"
-            echo "Official Worker deployment: $status / $conclusion"
-            if [[ "$status" == "completed" ]]; then
-              test "$conclusion" = "success"
-              exit 0
-            fi
-            sleep 10
+          status_body=/tmp/system-status.json
+          status_code="$(curl --silent --show-error --max-time 20 \
+            --output "$status_body" \
+            --write-out '%{http_code}' \
+            --header 'Accept: application/json' \
+            --header 'Origin: https://rawa-j.com' \
+            --header 'Cache-Control: no-cache' \
+            "$WORKER_BASE_URL/v1/system-status?release_probe=$(date +%s)" || true)"
+          test "$status_code" = "200"
+          node <<'NODE'
+          const data = require("/tmp/system-status.json").data;
+          if (data?.maintenanceMode !== false || data?.emergencyReadOnly !== false) {
+            throw new Error("Production system controls are not in normal mode.");
+          }
+          NODE
+
+          for endpoint in "/v1/references" "/v1/listings" "/v1/ad-placements?page=home&device=desktop"; do
+            code="$(curl --silent --show-error --max-time 20 --output /dev/null --write-out '%{http_code}' \
+              --header 'Origin: https://rawa-j.com' "$WORKER_BASE_URL$endpoint" || true)"
+            test "$code" = "200"
           done
-          echo "Timed out monitoring official Worker deployment." >&2
-          exit 1
