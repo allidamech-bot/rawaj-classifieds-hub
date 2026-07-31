@@ -21,4 +21,4 @@ jobs:
         run: |
           set -euo pipefail
           echo '=== private media path references ==='
-          rg -n -C 10 'account/media/assets|primaryImageUrl|primary_image' cloudflare/worker/src src scripts || true
+          git grep -n -C 10 -E 'account/media/assets|primaryImageUrl|primary_image' -- cloudflare/worker/src src scripts || true
