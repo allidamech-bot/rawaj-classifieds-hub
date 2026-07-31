@@ -53,6 +53,27 @@ async function expectAuthenticatedPage(page: Page, path: string) {
   await expect(page.getByText(/تسجيل الدخول مطلوب|Login required/)).toHaveCount(0);
 }
 
+async function submitHydratedLogin(page: Page) {
+  const emailInput = page.locator('input[type="email"]');
+  const passwordInput = page.locator('input[autocomplete="current-password"]');
+  const submitButton = page.locator('form button[type="submit"]');
+
+  await expect(emailInput).toBeVisible();
+  await expect(passwordInput).toBeVisible();
+  await expect(submitButton).toBeVisible();
+
+  // The login form is server-rendered first. Wait for the client bundle before
+  // filling it so React hydration cannot replace the typed values.
+  await page.waitForLoadState("networkidle", { timeout: 20_000 });
+  await page.waitForTimeout(300);
+
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
+  await expect(emailInput).toHaveValue(email);
+  await expect(passwordInput).toHaveValue(password);
+  await submitButton.click();
+}
+
 test.describe("RAWAJ live authenticated stack acceptance", () => {
   test("Firebase session, Cloudflare data paths, retired Supabase boundary, and logout", async ({
     page,
@@ -112,9 +133,7 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
     expect(liveCommit, "Production build identity is missing").toMatch(/^[0-9a-f]{40}$/);
     expect((await page.content()).toLowerCase()).not.toContain("supabase.co");
 
-    await page.locator('input[type="email"]').fill(email);
-    await page.locator('input[autocomplete="current-password"]').fill(password);
-    await page.locator('form button[type="submit"]').click();
+    await submitHydratedLogin(page);
 
     await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
     await expect(page.locator("main")).toBeVisible();
@@ -153,13 +172,15 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
     const logoutButton = page.getByRole("button", { name: /تسجيل الخروج|Log out/i });
     await expect(logoutButton).toBeVisible();
     await logoutButton.click();
-    await page.waitForTimeout(1_000);
+    await expect(logoutButton).toHaveCount(0, { timeout: 20_000 });
 
+    // `/profile` intentionally remains a public guest surface after logout.
+    // Verify the session is gone through the rendered guest identity instead
+    // of requiring a redirect that the product does not implement.
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
-    await expect(page, "Protected route remained available after logout").toHaveURL(
-      /\/login(?:\?|$)/,
-      { timeout: 20_000 },
-    );
+    await expect(page.getByText(/زائر غير مسجّل|Guest.*not signed in/i)).toBeVisible();
+    await expect(page.getByRole("link", { name: /تسجيل الدخول|Log in/i }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /تسجيل الخروج|Log out/i })).toHaveCount(0);
 
     expect(firebaseRequests.length, "No Firebase authentication request was observed").toBeGreaterThan(0);
     expect(cloudflareRequests.length, "No Cloudflare Worker request was observed").toBeGreaterThan(0);
