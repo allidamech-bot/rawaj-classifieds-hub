@@ -97,9 +97,10 @@ function observePage(page: Page) {
 
 function expectNoRetiredBackendTraffic(urls: string[]) {
   const retired = urls.filter((url) => retiredBackendPattern.test(url));
-  expect(retired, `Production contacted the retired backend runtime:\n${retired.join("\n")}`).toEqual(
-    [],
-  );
+  expect(
+    retired,
+    `Production contacted the retired backend runtime:\n${retired.join("\n")}`,
+  ).toEqual([]);
 }
 
 function expectCleanPageTelemetry(telemetry: ReturnType<typeof observePage>) {
@@ -184,7 +185,10 @@ test.describe("RAWAJ final Firebase + Cloudflare + retired-backend production au
         .filter((src) => src.startsWith("http"))
         .slice(0, 8),
     );
-    expect(imageSources.length, "Production rendered no externally loadable images").toBeGreaterThan(0);
+    expect(
+      imageSources.length,
+      "Production rendered no externally loadable images",
+    ).toBeGreaterThan(0);
     for (const src of imageSources) {
       expect(src).not.toMatch(retiredBackendPattern);
       const image = await request.get(src);
@@ -251,9 +255,7 @@ test.describe("RAWAJ final Firebase + Cloudflare + retired-backend production au
 
     const cookies = await page.context().cookies();
     expect(
-      cookies
-        .map((cookie) => cookie.name)
-        .filter((name) => retiredBrowserStatePattern.test(name)),
+      cookies.map((cookie) => cookie.name).filter((name) => retiredBrowserStatePattern.test(name)),
       "Browser cookies still contain retired-backend session state",
     ).toEqual([]);
 
