@@ -45,7 +45,7 @@ function isForbiddenMutation(request: Request) {
 }
 
 async function expectAuthenticatedPage(page: Page, path: string) {
-  const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+  const response = await page.goto(path, { waitUntil: "networkidle" });
   expect(response, `Missing navigation response for ${path}`).not.toBeNull();
   expect(response!.status(), `${path} returned ${response!.status()}`).toBeLessThan(500);
   await expect(page.locator("main"), `${path} did not render its main region`).toBeVisible();
@@ -90,6 +90,7 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
     const firebaseRequests: string[] = [];
     const cloudflareRequests: string[] = [];
     const mediaResponses: string[] = [];
+    const profileResponseStatuses: number[] = [];
 
     page.on("pageerror", (error) => pageErrors.push(error.message));
     page.on("console", (message) => {
@@ -117,6 +118,9 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
       if (response.status() >= 500 && (url.includes("rawa-j.com") || url.includes("workers.dev"))) {
         serverErrors.push(`${response.status()} ${url}`);
       }
+      if (/workers\.dev\/api\/profile(?:\?|$)/.test(url)) {
+        profileResponseStatuses.push(response.status());
+      }
       if (/workers\.dev\/v1\/(?:account\/)?media\/assets\//.test(url) && response.status() < 400) {
         mediaResponses.push(`${response.status()} ${url}`);
       }
@@ -135,6 +139,7 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
 
     await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
     await expect(page.locator("main")).toBeVisible();
+    await page.waitForLoadState("networkidle", { timeout: 20_000 });
 
     const health = await page.request.get(
       `${workerBaseUrl}/v1/health?acceptance_probe=${Date.now()}`,
@@ -153,7 +158,7 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
     expect(healthBody?.data?.environment).toBe("production");
     expect(healthBody?.data?.database).toBe("ready");
 
-    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.reload({ waitUntil: "networkidle" });
     await expect(page, "Firebase session did not survive a full reload").not.toHaveURL(
       /\/login(?:\?|$)/,
     );
@@ -163,16 +168,15 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
       await expectAuthenticatedPage(page, path);
     }
 
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1_500);
+    await page.goto("/", { waitUntil: "networkidle" });
 
-    await page.goto("/more", { waitUntil: "domcontentloaded" });
+    await page.goto("/more", { waitUntil: "networkidle" });
     const logoutButton = page.getByRole("button", { name: /تسجيل الخروج|Log out/i });
     await expect(logoutButton).toBeVisible();
     await logoutButton.click();
     await expect(logoutButton).toHaveCount(0, { timeout: 20_000 });
 
-    await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    await page.goto("/profile", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: /^(زائر|Guest)$/ }).first()).toBeVisible();
     await expect(page.getByText(/غير مسجّل|Not signed in/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /تسجيل الدخول|Log in/i }).first()).toBeVisible();
@@ -180,6 +184,8 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
 
     expect(firebaseRequests.length, "No Firebase authentication request was observed").toBeGreaterThan(0);
     expect(cloudflareRequests.length, "No Cloudflare Worker request was observed").toBeGreaterThan(0);
+    expect(profileResponseStatuses.length, "No completed profile bootstrap response was observed").toBeGreaterThan(0);
+    expect(profileResponseStatuses.every((status) => status === 200)).toBe(true);
     expect(supabaseRequests, "Retired Supabase traffic was observed").toEqual([]);
     expect(forbiddenMutations, "Read-only acceptance triggered an application data mutation").toEqual([]);
     expect(serverErrors, "Production returned 5xx responses").toEqual([]);
@@ -193,6 +199,8 @@ test.describe("RAWAJ live authenticated stack acceptance", () => {
         workerRelease: healthBody?.data?.releaseSha,
         firebaseRequestCount: firebaseRequests.length,
         cloudflareRequestCount: cloudflareRequests.length,
+        completedProfileBootstrapCount: profileResponseStatuses.length,
+        profileResponseStatuses,
         mediaResponseCount: mediaResponses.length,
         testedProtectedRoutes: protectedRoutes.length,
         supabaseRequestCount: supabaseRequests.length,
