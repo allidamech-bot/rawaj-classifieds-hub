@@ -211,7 +211,7 @@ test("health and HEAD requests remain bounded and body-free", async () => {
 });
 
 test("Vercel adapter restores public routes before invoking the isolated gateway", async () => {
-  const selected = await vercelFunction.fetch(
+  const selected = await vercelFunction(
     new Request(
       "https://rawaj-market-gateway.vercel.app/api/gateway?__rawaj_path=/go/SA&scope=customer",
     ),
