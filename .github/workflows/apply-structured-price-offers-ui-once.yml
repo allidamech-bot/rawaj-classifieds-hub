@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/apply-structured-price-offers-ui-once.yml
       - scripts/apply-structured-price-offers-ui-once.py
+      - scripts/fix-structured-price-offers-ui-once.py
 
 permissions:
   contents: write
@@ -34,7 +35,9 @@ jobs:
           cache: npm
 
       - name: Apply UI and contract integration
-        run: python scripts/apply-structured-price-offers-ui-once.py
+        run: |
+          python scripts/apply-structured-price-offers-ui-once.py
+          python scripts/fix-structured-price-offers-ui-once.py
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -55,6 +58,7 @@ jobs:
           set -euo pipefail
           git rm .github/workflows/apply-structured-price-offers-ui-once.yml
           git rm scripts/apply-structured-price-offers-ui-once.py
+          git rm scripts/fix-structured-price-offers-ui-once.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add cloudflare/worker/src/listing-offers.ts \
