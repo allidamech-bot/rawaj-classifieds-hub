@@ -1,0 +1,11 @@
+{
+  "customer_gateway_host_approved": true,
+  "admin_gateway_host_approved": true,
+  "vercel_gateway_project_created": true,
+  "customer_vercel_domain_created": true,
+  "admin_vercel_domain_created": false,
+  "syrian_destination_verified": true,
+  "saudi_destination_verified": true,
+  "admin_destination_auth_verified": false,
+  "production_launch_approved": true
+}

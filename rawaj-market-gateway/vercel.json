@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/gateway?__rawaj_path=/"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/gateway?__rawaj_path=/admin"
+    },
+    {
+      "source": "/resolve",
+      "destination": "/api/gateway?__rawaj_path=/resolve"
+    },
+    {
+      "source": "/go/:market",
+      "destination": "/api/gateway?__rawaj_path=/go/:market"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/gateway?__rawaj_path=/health"
+    }
+  ]
+}
