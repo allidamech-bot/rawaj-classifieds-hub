@@ -32,6 +32,7 @@ export * from "@/lib/api/notification-preferences";
 export * from "@/lib/api/push-notifications";
 export * from "@/lib/api/listing-price-context";
 export * from "@/lib/api/price-drops";
+export * from "@/lib/api/listing-price-offers";
 export { fetchPublicListingsCanonicalAware as fetchPublicListings } from "@/lib/api/location-aware-listings-v2";
 export * from "@/lib/api/seller";
 export { fetchPublicSellerProfileGuarded as fetchPublicSellerProfile } from "@/lib/api/seller-profile-read-guarded";
