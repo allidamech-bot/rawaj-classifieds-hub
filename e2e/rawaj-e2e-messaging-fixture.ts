@@ -207,7 +207,11 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
             sendJson(response, { data: replay });
             return;
           }
-          if (!requestId || current.updatedAt !== expectedUpdatedAt || current.status !== "pending") {
+          if (
+            !requestId ||
+            current.updatedAt !== expectedUpdatedAt ||
+            current.status !== "pending"
+          ) {
             sendJson(
               response,
               { error: { code: "stale_write", message: "Fixture offer changed." } },
@@ -339,7 +343,9 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
     parentOfferId: string | null;
   }): FixtureOffer {
     offerSequence += 1;
-    const timestamp = new Date(Date.parse(FIXTURE_STARTED_AT) + (20 + offerSequence) * 1_000).toISOString();
+    const timestamp = new Date(
+      Date.parse(FIXTURE_STARTED_AT) + (20 + offerSequence) * 1_000,
+    ).toISOString();
     return {
       id: `00000000-0000-4000-8000-${String(44 + offerSequence).padStart(12, "0")}`,
       listingId: LISTING_ID,

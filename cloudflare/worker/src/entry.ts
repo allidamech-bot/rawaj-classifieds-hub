@@ -191,9 +191,7 @@ function requestMethodIndependentListingDetail(path: string): boolean {
 
 function isDiscoveryPath(path: string): boolean {
   return (
-    path === "/v1/listing-facets" ||
-    path === "/v1/listings/nearby" ||
-    /^\/v1\/sitemap\//.test(path)
+    path === "/v1/listing-facets" || path === "/v1/listings/nearby" || /^\/v1\/sitemap\//.test(path)
   );
 }
 

@@ -3,12 +3,7 @@ import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type ListingPriceOfferStatus =
-  | "pending"
-  | "accepted"
-  | "rejected"
-  | "countered"
-  | "withdrawn"
-  | "expired";
+  "pending" | "accepted" | "rejected" | "countered" | "withdrawn" | "expired";
 
 export type ListingPriceOfferAction = "accept" | "reject" | "counter" | "withdraw";
 
