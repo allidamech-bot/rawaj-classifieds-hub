@@ -39,9 +39,7 @@ function normalizeMarketId(value) {
   return normalized === "SY" || normalized === "SA" ? normalized : null;
 }
 function normalizeScope(value) {
-  return typeof value === "string" && value.trim().toLowerCase() === "admin"
-    ? "admin"
-    : "customer";
+  return typeof value === "string" && value.trim().toLowerCase() === "admin" ? "admin" : "customer";
 }
 function preferenceCookieName(scope) {
   return scope === "admin" ? ADMIN_COOKIE : CUSTOMER_COOKIE;
@@ -54,9 +52,7 @@ function parseCookiePreference(cookieHeader, scope) {
     const name = part.slice(0, separator).trim();
     if (name !== expectedName) continue;
     try {
-      return normalizeMarketId(
-        decodeURIComponent(part.slice(separator + 1).trim()),
-      );
+      return normalizeMarketId(decodeURIComponent(part.slice(separator + 1).trim()));
     } catch {
       return null;
     }
@@ -82,11 +78,9 @@ function marketFromCountry(country) {
 }
 function resolveMarketDecision(input) {
   const explicit = normalizeMarketId(input.explicit);
-  if (explicit)
-    return { market: explicit, source: "explicit", mayAutoRedirect: true };
+  if (explicit) return { market: explicit, source: "explicit", mayAutoRedirect: true };
   const stored = normalizeMarketId(input.stored);
-  if (stored)
-    return { market: stored, source: "stored", mayAutoRedirect: true };
+  if (stored) return { market: stored, source: "stored", mayAutoRedirect: true };
   const geo = marketFromCountry(input.country);
   if (geo) return { market: geo, source: "geo", mayAutoRedirect: false };
   return {
@@ -103,8 +97,7 @@ function isAllowedGatewayHost(hostname) {
   const normalized = hostname.trim().toLowerCase();
   const isVercelDeployment =
     normalized === "rawaj-market-gateway.vercel.app" ||
-    (normalized.startsWith("rawaj-market-gateway-") &&
-      normalized.endsWith(".vercel.app"));
+    (normalized.startsWith("rawaj-market-gateway-") && normalized.endsWith(".vercel.app"));
   return (
     normalized === GATEWAY_HOSTS.customer ||
     normalized === GATEWAY_HOSTS.admin ||
@@ -122,8 +115,7 @@ var baseSecurityHeaders = {
     "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   "Referrer-Policy": "no-referrer",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
@@ -175,8 +167,7 @@ function scopeFromRequest(url) {
   const hostname = url.hostname.toLowerCase();
   if (hostname === GATEWAY_HOSTS.admin) return "admin";
   if (hostname === GATEWAY_HOSTS.customer) return "customer";
-  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
-    return "admin";
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return "admin";
   return normalizeScope(url.searchParams.get("scope"));
 }
 function chooserHref(market, scope) {
@@ -204,9 +195,7 @@ function renderMarketCard(marketId, scope, decision, storedMarket) {
       ? `\u0641\u062A\u062D \u0625\u062F\u0627\u0631\u0629 ${market.nameAr}`
       : `\u0641\u062A\u062D \u0631\u0648\u0627\u062C ${market.nameAr}`;
   const actionEn =
-    scope === "admin"
-      ? `Open ${market.nameEn} admin`
-      : `Open RAWAJ ${market.nameEn}`;
+    scope === "admin" ? `Open ${market.nameEn} admin` : `Open RAWAJ ${market.nameEn}`;
   return `<article class="market-card market-${market.id.toLowerCase()}" data-market="${market.id}">
     <div class="card-top">
       <span class="country-code" aria-hidden="true">${market.id}</span>
@@ -234,9 +223,7 @@ function renderGatewayPage(scope, decision, storedMarket) {
   const title = isAdmin
     ? "\u0623\u064A \u0633\u0648\u0642 \u062A\u0631\u064A\u062F \u0625\u062F\u0627\u0631\u062A\u0647\u061F"
     : "\u0627\u062E\u062A\u0631 \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0630\u064A \u062A\u0631\u064A\u062F \u062A\u0635\u0641\u062D\u0647";
-  const titleEn = isAdmin
-    ? "Choose the market to manage"
-    : "Choose the market to browse";
+  const titleEn = isAdmin ? "Choose the market to manage" : "Choose the market to browse";
   const summary = isAdmin
     ? "\u062A\u062F\u062E\u0644 \u0645\u0646 \u0628\u0627\u0628 \u0648\u0627\u062D\u062F\u060C \u062B\u0645 \u062A\u0646\u062A\u0642\u0644 \u0625\u0644\u0649 \u0625\u062F\u0627\u0631\u0629 \u0645\u0633\u062A\u0642\u0644\u0629 \u0644\u0627 \u062A\u0639\u0631\u0636 \u0625\u0644\u0627 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631."
     : "\u0627\u062E\u062A\u0631 \u0633\u0648\u0631\u064A\u0627 \u0623\u0648 \u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629\u060C \u0648\u0633\u064A\u0639\u0631\u0636 \u0644\u0643 \u0631\u0648\u0627\u062C \u0627\u0644\u0645\u062F\u0646 \u0648\u0627\u0644\u0639\u0645\u0644\u0629 \u0648\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631 \u0641\u0642\u0637.";
@@ -339,10 +326,7 @@ function renderGatewayPage(scope, decision, storedMarket) {
 function handleGateway(request) {
   const url = new URL(request.url);
   const scope = scopeFromRequest(url);
-  const storedMarket = parseCookiePreference(
-    request.headers.get("Cookie") ?? "",
-    scope,
-  );
+  const storedMarket = parseCookiePreference(request.headers.get("Cookie") ?? "", scope);
   const decision = resolveMarketDecision({
     explicit: url.searchParams.get("market"),
     stored: storedMarket,
@@ -350,9 +334,7 @@ function handleGateway(request) {
   });
   if (url.pathname === "/resolve" && decision.mayAutoRedirect) {
     const cookie =
-      decision.source === "explicit"
-        ? buildPreferenceCookie(decision.market, scope)
-        : void 0;
+      decision.source === "explicit" ? buildPreferenceCookie(decision.market, scope) : void 0;
     return redirectResponse(marketDestination(decision.market, scope), cookie);
   }
   return htmlResponse(renderGatewayPage(scope, decision, storedMarket));
@@ -361,10 +343,7 @@ function handleMarketChoice(url) {
   const market = normalizeMarketId(url.pathname.split("/").filter(Boolean)[1]);
   if (!market) return jsonResponse({ error: "Unknown market" }, 404);
   const scope = scopeFromRequest(url);
-  return redirectResponse(
-    marketDestination(market, scope),
-    buildPreferenceCookie(market, scope),
-  );
+  return redirectResponse(marketDestination(market, scope), buildPreferenceCookie(market, scope));
 }
 function routeRequest(request) {
   const url = new URL(request.url);
@@ -390,11 +369,7 @@ function routeRequest(request) {
     });
   }
   if (url.pathname.startsWith("/go/")) return handleMarketChoice(url);
-  if (
-    url.pathname === "/" ||
-    url.pathname === "/admin" ||
-    url.pathname === "/resolve"
-  ) {
+  if (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/resolve") {
     return handleGateway(request);
   }
   return jsonResponse({ error: "Not found" }, 404);
@@ -413,10 +388,7 @@ var index_default = {
           error: error instanceof Error ? error.message : "Unknown error",
         }),
       );
-      return headSafe(
-        jsonResponse({ error: "Internal server error" }, 500),
-        request.method,
-      );
+      return headSafe(jsonResponse({ error: "Internal server error" }, 500), request.method);
     }
   },
 };
@@ -437,9 +409,7 @@ function handleWebRequest(request) {
 }
 function requestOrigin(request) {
   const forwardedProto = request.headers["x-forwarded-proto"];
-  const protocol = Array.isArray(forwardedProto)
-    ? forwardedProto[0]
-    : forwardedProto || "https";
+  const protocol = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || "https";
   return `${protocol}://${request.headers.host || "rawaj-market-gateway.vercel.app"}`;
 }
 function requestHeaders(request) {
@@ -455,13 +425,10 @@ function requestHeaders(request) {
 }
 async function handler(request, response) {
   const method = request.method || "GET";
-  const webRequest = new Request(
-    new URL(request.url || "/", requestOrigin(request)),
-    {
-      method,
-      headers: requestHeaders(request),
-    },
-  );
+  const webRequest = new Request(new URL(request.url || "/", requestOrigin(request)), {
+    method,
+    headers: requestHeaders(request),
+  });
   const webResponse = await handleWebRequest(webRequest);
   response.statusCode = webResponse.status;
   webResponse.headers.forEach((value, name) => response.setHeader(name, value));
