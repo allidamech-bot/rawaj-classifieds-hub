@@ -3,29 +3,19 @@ import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
-const [
-  migration,
-  handler,
-  entry,
-  api,
-  component,
-  chats,
-  barrel,
-  fixture,
-  journey,
-  packageJson,
-] = await Promise.all([
-  readFile("cloudflare/d1/migrations/0019_structured_listing_price_offers.sql", "utf8"),
-  readFile("cloudflare/worker/src/listing-offers.ts", "utf8"),
-  readFile("cloudflare/worker/src/entry.ts", "utf8"),
-  readFile("src/lib/api/listing-price-offers.ts", "utf8"),
-  readFile("src/features/communication/ConversationPriceOffers.tsx", "utf8"),
-  readFile("src/routes/chats.tsx", "utf8"),
-  readFile("src/lib/classifieds-api.ts", "utf8"),
-  readFile("e2e/rawaj-e2e-messaging-fixture.ts", "utf8"),
-  readFile("e2e/authenticated-price-offers-journey.spec.ts", "utf8"),
-  readFile("package.json", "utf8"),
-]);
+const [migration, handler, entry, api, component, chats, barrel, fixture, journey, packageJson] =
+  await Promise.all([
+    readFile("cloudflare/d1/migrations/0019_structured_listing_price_offers.sql", "utf8"),
+    readFile("cloudflare/worker/src/listing-offers.ts", "utf8"),
+    readFile("cloudflare/worker/src/entry.ts", "utf8"),
+    readFile("src/lib/api/listing-price-offers.ts", "utf8"),
+    readFile("src/features/communication/ConversationPriceOffers.tsx", "utf8"),
+    readFile("src/routes/chats.tsx", "utf8"),
+    readFile("src/lib/classifieds-api.ts", "utf8"),
+    readFile("e2e/rawaj-e2e-messaging-fixture.ts", "utf8"),
+    readFile("e2e/authenticated-price-offers-journey.spec.ts", "utf8"),
+    readFile("package.json", "utf8"),
+  ]);
 
 function database() {
   const db = new DatabaseSync(":memory:");
@@ -123,6 +113,12 @@ test("Worker contract enforces authentication, participant ownership, blocking a
   assert.match(handler, /Only the buyer can create the first offer/);
   assert.match(handler, /Only the recipient can respond/);
   assert.match(handler, /Only the sender can withdraw/);
+  assert.match(handler, /insertCounterOfferStatement/);
+  assert.match(handler, /notificationAfterTransitionStatement/);
+  assert.match(handler, /touchConversationAfterTransitionStatement/);
+  assert.match(handler, /WHERE EXISTS/);
+  assert.match(handler, /updated\.last_action_request_id !== requestId/);
+  assert.match(handler, /const created = await offerByRequest/);
 });
 
 test("offer lifecycle creates actionable conversation notifications", () => {
@@ -166,8 +162,10 @@ test("typed client and chat UI expose the structured offer journey", () => {
 
 test("authenticated browser fixture covers buyer and seller offer actions", () => {
   assert.match(fixture, /offerRole/);
-  assert.match(fixture, /\/v1\/conversations\/\(\[\^\/\]\+\)\\\/offers/);
-  assert.match(fixture, /\/v1\/offers\/\(\[\^\/\]\+\)/);
+  assert.match(fixture, /offersMatch = path\.match/);
+  assert.match(fixture, /offerMatch = path\.match/);
+  assert.match(fixture, /Boolean\(offersMatch\)/);
+  assert.match(fixture, /Boolean\(offerMatch\)/);
   assert.match(fixture, /initialIncomingOffer/);
   assert.match(journey, /seller reviews and accepts an incoming buyer offer/);
   assert.match(journey, /buyer creates and withdraws a price offer exactly once/);
