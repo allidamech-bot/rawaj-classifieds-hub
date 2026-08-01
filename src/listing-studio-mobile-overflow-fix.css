@@ -39,12 +39,14 @@
       [data-resolved-pathname="/add-listing"],
       [data-resolved-pathname^="/profile/listings/"]
     )
-    .rawaj-studio-trust-strip > div,
+    .rawaj-studio-trust-strip
+    > div,
   .rawaj-app-shell:is(
       [data-resolved-pathname="/add-listing"],
       [data-resolved-pathname^="/profile/listings/"]
     )
-    .rawaj-studio-steps > li {
+    .rawaj-studio-steps
+    > li {
     max-width: calc(100vw - 3rem) !important;
   }
 }
