@@ -1,0 +1,62 @@
+name: Apply Listing Studio Mobile Overflow Fix Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/apply-listing-studio-mobile-overflow-fix-once.yml"
+      - "scripts/apply-listing-studio-mobile-overflow-fix-once.py"
+      - "src/listing-studio-mobile-overflow-fix.css"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'fix/listing-studio-mobile-overflow'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/listing-studio-mobile-overflow
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply permanent stylesheet integration and contract
+        run: python scripts/apply-listing-studio-mobile-overflow-fix-once.py
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Format and validate
+        run: |
+          npx prettier --write \
+            src/lib/route-styles.ts \
+            src/listing-studio-mobile-overflow-fix.css \
+            scripts/listing-studio-v4.test.mjs
+          npm run test:listing-studio-v4
+          npm run typecheck
+          npm run build
+
+      - name: Commit fix and remove temporary files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/apply-listing-studio-mobile-overflow-fix-once.yml
+          git rm scripts/apply-listing-studio-mobile-overflow-fix-once.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/lib/route-styles.ts \
+            src/listing-studio-mobile-overflow-fix.css \
+            scripts/listing-studio-v4.test.mjs
+          git commit -m "fix(listing-studio): contain mobile horizontal strips"
+          git push origin HEAD:fix/listing-studio-mobile-overflow
