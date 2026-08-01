@@ -5,7 +5,7 @@
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "lib": ["ES2022", "WebWorker"],
-    "types": ["./worker-configuration.d.ts"],
+    "types": ["./worker-configuration.d.ts", "node"],
     "strict": true,
     "noEmit": true,
     "noUncheckedIndexedAccess": true,

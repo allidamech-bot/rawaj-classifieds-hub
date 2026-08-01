@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import vercelFunction from "../api/gateway.ts";
+import { handleWebRequest } from "../src/vercel-handler.ts";
 import worker from "../src/index.ts";
 import {
   GATEWAY_HOSTS,
@@ -211,7 +211,7 @@ test("health and HEAD requests remain bounded and body-free", async () => {
 });
 
 test("Vercel adapter restores public routes before invoking the isolated gateway", async () => {
-  const selected = await vercelFunction.fetch(
+  const selected = await handleWebRequest(
     new Request(
       "https://rawaj-market-gateway.vercel.app/api/gateway?__rawaj_path=/go/SA&scope=customer",
     ),
