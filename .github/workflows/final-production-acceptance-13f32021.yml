@@ -1,0 +1,99 @@
+name: Final Production Acceptance 13f32021
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/final-production-acceptance-13f32021.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    env:
+      EXPECTED_COMMIT_SHA: 13f32021ffee5cc9bb40a89521868a31344980be
+      RAWAJ_WORKER_EXPECTED_RELEASE_SHA: 13f32021ffee5cc9bb40a89521868a31344980be
+      RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+      E2E_BASE_URL: https://rawa-j.com
+      PRODUCTION_ACCEPTANCE: "1"
+      RAWAJ_ACCEPTANCE_EMAIL: ${{ secrets.RAWAJ_ACCEPTANCE_EMAIL }}
+      RAWAJ_ACCEPTANCE_PASSWORD: ${{ secrets.RAWAJ_ACCEPTANCE_PASSWORD }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
+      CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging
+      CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production
+      RAWAJ_WORKER_RELEASE_SHA: 13f32021ffee5cc9bb40a89521868a31344980be
+      RAWAJ_WORKER_ENVIRONMENT: production
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+
+      - name: Validate acceptance credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${RAWAJ_ACCEPTANCE_EMAIL:-}"
+          test -n "${RAWAJ_ACCEPTANCE_PASSWORD:-}"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Render Production Worker configuration
+        run: npm --prefix cloudflare/worker run render:production
+
+      - name: Verify Production D1 table
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$(npx wrangler d1 execute DB --remote --config wrangler.generated.jsonc --command "SELECT name FROM sqlite_schema WHERE type='table' AND name='listing_price_offers';")"
+          printf '%s\n' "$output"
+          printf '%s' "$output" | grep -Fq "listing_price_offers"
+
+      - name: Verify Production Worker release
+        run: npm --prefix cloudflare/worker run smoke:production:read-only
+
+      - name: Verify Vercel Production release
+        shell: bash
+        run: |
+          set -euo pipefail
+          html="$(curl --fail --silent --show-error --max-time 30 https://rawa-j.com/)"
+          printf '%s' "$html" | grep -Fq "name=\"rawaj-build-commit\" content=\"$EXPECTED_COMMIT_SHA\""
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run authenticated mobile Production Acceptance
+        run: npx playwright test e2e/production-acceptance.spec.ts --project=mobile-chromium --workers=1
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-production-acceptance-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
