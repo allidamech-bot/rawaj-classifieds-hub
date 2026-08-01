@@ -1,31 +1,33 @@
 // src/gateway.ts
 var GATEWAY_HOSTS = {
   customer: "go.rawa-j.com",
-  admin: "admin.rawa-j.com"
+  admin: "admin.rawa-j.com",
 };
 var GATEWAY_ORIGINS = {
   customer: `https://${GATEWAY_HOSTS.customer}`,
-  admin: `https://${GATEWAY_HOSTS.admin}`
+  admin: `https://${GATEWAY_HOSTS.admin}`,
 };
 var MARKET_DIRECTORY = {
   SY: {
     id: "SY",
     nameAr: "\u0633\u0648\u0631\u064A\u0627",
     nameEn: "Syria",
-    descriptionAr: "\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0645\u062F\u0646 \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0631\u0648\u0627\u062C \u0633\u0648\u0631\u064A\u0627",
+    descriptionAr:
+      "\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0645\u062F\u0646 \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0631\u0648\u0627\u062C \u0633\u0648\u0631\u064A\u0627",
     descriptionEn: "Listings, cities, and accounts for RAWAJ Syria",
     customerUrl: "https://rawa-j.com/",
-    adminUrl: "https://rawa-j.com/admin"
+    adminUrl: "https://rawa-j.com/admin",
   },
   SA: {
     id: "SA",
     nameAr: "\u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629",
     nameEn: "Saudi Arabia",
-    descriptionAr: "\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0645\u0646\u0627\u0637\u0642 \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0631\u0648\u0627\u062C \u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629",
+    descriptionAr:
+      "\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u0645\u0646\u0627\u0637\u0642 \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0631\u0648\u0627\u062C \u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629",
     descriptionEn: "Listings, regions, and accounts for RAWAJ Saudi Arabia",
     customerUrl: "https://sa.rawa-j.com/",
-    adminUrl: "https://sa.rawa-j.com/admin"
-  }
+    adminUrl: "https://sa.rawa-j.com/admin",
+  },
 };
 var MARKET_IDS = Object.freeze(Object.keys(MARKET_DIRECTORY));
 var CUSTOMER_COOKIE = "rawaj.preferredMarket.v1";
@@ -37,7 +39,9 @@ function normalizeMarketId(value) {
   return normalized === "SY" || normalized === "SA" ? normalized : null;
 }
 function normalizeScope(value) {
-  return typeof value === "string" && value.trim().toLowerCase() === "admin" ? "admin" : "customer";
+  return typeof value === "string" && value.trim().toLowerCase() === "admin"
+    ? "admin"
+    : "customer";
 }
 function preferenceCookieName(scope) {
   return scope === "admin" ? ADMIN_COOKIE : CUSTOMER_COOKIE;
@@ -50,7 +54,9 @@ function parseCookiePreference(cookieHeader, scope) {
     const name = part.slice(0, separator).trim();
     if (name !== expectedName) continue;
     try {
-      return normalizeMarketId(decodeURIComponent(part.slice(separator + 1).trim()));
+      return normalizeMarketId(
+        decodeURIComponent(part.slice(separator + 1).trim()),
+      );
     } catch {
       return null;
     }
@@ -64,7 +70,7 @@ function buildPreferenceCookie(market, scope) {
     "Domain=.rawa-j.com",
     `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
     "SameSite=Lax",
-    "Secure"
+    "Secure",
   ].join("; ");
 }
 function marketFromCountry(country) {
@@ -76,15 +82,17 @@ function marketFromCountry(country) {
 }
 function resolveMarketDecision(input) {
   const explicit = normalizeMarketId(input.explicit);
-  if (explicit) return { market: explicit, source: "explicit", mayAutoRedirect: true };
+  if (explicit)
+    return { market: explicit, source: "explicit", mayAutoRedirect: true };
   const stored = normalizeMarketId(input.stored);
-  if (stored) return { market: stored, source: "stored", mayAutoRedirect: true };
+  if (stored)
+    return { market: stored, source: "stored", mayAutoRedirect: true };
   const geo = marketFromCountry(input.country);
   if (geo) return { market: geo, source: "geo", mayAutoRedirect: false };
   return {
     market: input.fallback ?? "SA",
     source: "fallback",
-    mayAutoRedirect: false
+    mayAutoRedirect: false,
   };
 }
 function marketDestination(market, scope) {
@@ -93,21 +101,33 @@ function marketDestination(market, scope) {
 }
 function isAllowedGatewayHost(hostname) {
   const normalized = hostname.trim().toLowerCase();
-  const isVercelDeployment = normalized === "rawaj-market-gateway.vercel.app" || normalized.startsWith("rawaj-market-gateway-") && normalized.endsWith(".vercel.app");
-  return normalized === GATEWAY_HOSTS.customer || normalized === GATEWAY_HOSTS.admin || isVercelDeployment || normalized === "gateway.local" || normalized === "localhost" || normalized === "127.0.0.1";
+  const isVercelDeployment =
+    normalized === "rawaj-market-gateway.vercel.app" ||
+    (normalized.startsWith("rawaj-market-gateway-") &&
+      normalized.endsWith(".vercel.app"));
+  return (
+    normalized === GATEWAY_HOSTS.customer ||
+    normalized === GATEWAY_HOSTS.admin ||
+    isVercelDeployment ||
+    normalized === "gateway.local" ||
+    normalized === "localhost" ||
+    normalized === "127.0.0.1"
+  );
 }
 
 // src/index.ts
 var SERVICE_NAME = "rawaj-market-gateway";
 var baseSecurityHeaders = {
-  "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
+  "Content-Security-Policy":
+    "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  "Permissions-Policy":
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   "Referrer-Policy": "no-referrer",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
-  "X-Robots-Tag": "noindex, nofollow"
+  "X-Robots-Tag": "noindex, nofollow",
 };
 function responseHeaders(contentType) {
   const headers = new Headers(baseSecurityHeaders);
@@ -119,13 +139,13 @@ function responseHeaders(contentType) {
 function htmlResponse(html, status = 200) {
   return new Response(html, {
     status,
-    headers: responseHeaders("text/html; charset=utf-8")
+    headers: responseHeaders("text/html; charset=utf-8"),
   });
 }
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: responseHeaders("application/json; charset=utf-8")
+    headers: responseHeaders("application/json; charset=utf-8"),
   });
 }
 function redirectResponse(destination, cookie) {
@@ -134,7 +154,7 @@ function redirectResponse(destination, cookie) {
   if (cookie) headers.append("Set-Cookie", cookie);
   return new Response("Redirecting to the selected RAWAJ market.", {
     status: 302,
-    headers
+    headers,
   });
 }
 function headSafe(response, method) {
@@ -142,7 +162,7 @@ function headSafe(response, method) {
   return new Response(null, {
     status: response.status,
     statusText: response.statusText,
-    headers: response.headers
+    headers: response.headers,
   });
 }
 function requestCountry(request) {
@@ -155,22 +175,38 @@ function scopeFromRequest(url) {
   const hostname = url.hostname.toLowerCase();
   if (hostname === GATEWAY_HOSTS.admin) return "admin";
   if (hostname === GATEWAY_HOSTS.customer) return "customer";
-  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return "admin";
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
+    return "admin";
   return normalizeScope(url.searchParams.get("scope"));
 }
 function chooserHref(market, scope) {
   return `/go/${market}?scope=${scope}`;
 }
 function escapeHtml(value) {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 function renderMarketCard(marketId, scope, decision, storedMarket) {
   const market = MARKET_DIRECTORY[marketId];
   const suggested = decision.market === marketId && decision.source === "geo";
   const remembered = storedMarket === marketId;
-  const status = suggested ? `<span class="badge suggestion">\u0645\u0642\u062A\u0631\u062D \u062D\u0633\u0628 \u0645\u0648\u0642\u0639\u0643 \xB7 Suggested</span>` : remembered ? `<span class="badge remembered">\u0627\u062E\u062A\u064A\u0627\u0631\u0643 \u0627\u0644\u0645\u062D\u0641\u0648\u0638 \xB7 Remembered</span>` : "";
-  const actionAr = scope === "admin" ? `\u0641\u062A\u062D \u0625\u062F\u0627\u0631\u0629 ${market.nameAr}` : `\u0641\u062A\u062D \u0631\u0648\u0627\u062C ${market.nameAr}`;
-  const actionEn = scope === "admin" ? `Open ${market.nameEn} admin` : `Open RAWAJ ${market.nameEn}`;
+  const status = suggested
+    ? `<span class="badge suggestion">\u0645\u0642\u062A\u0631\u062D \u062D\u0633\u0628 \u0645\u0648\u0642\u0639\u0643 \xB7 Suggested</span>`
+    : remembered
+      ? `<span class="badge remembered">\u0627\u062E\u062A\u064A\u0627\u0631\u0643 \u0627\u0644\u0645\u062D\u0641\u0648\u0638 \xB7 Remembered</span>`
+      : "";
+  const actionAr =
+    scope === "admin"
+      ? `\u0641\u062A\u062D \u0625\u062F\u0627\u0631\u0629 ${market.nameAr}`
+      : `\u0641\u062A\u062D \u0631\u0648\u0627\u062C ${market.nameAr}`;
+  const actionEn =
+    scope === "admin"
+      ? `Open ${market.nameEn} admin`
+      : `Open RAWAJ ${market.nameEn}`;
   return `<article class="market-card market-${market.id.toLowerCase()}" data-market="${market.id}">
     <div class="card-top">
       <span class="country-code" aria-hidden="true">${market.id}</span>
@@ -188,17 +224,31 @@ function renderMarketCard(marketId, scope, decision, storedMarket) {
 }
 function renderGatewayPage(scope, decision, storedMarket) {
   const isAdmin = scope === "admin";
-  const cards = MARKET_IDS.map(
-    (market) => renderMarketCard(market, scope, decision, storedMarket)
+  const cards = MARKET_IDS.map((market) =>
+    renderMarketCard(market, scope, decision, storedMarket),
   ).join("");
-  const eyebrow = isAdmin ? "\u0628\u0648\u0627\u0628\u0629 \u0625\u062F\u0627\u0631\u0629 \u0631\u0648\u0627\u062C" : "\u0628\u0648\u0627\u0628\u0629 \u0631\u0648\u0627\u062C";
+  const eyebrow = isAdmin
+    ? "\u0628\u0648\u0627\u0628\u0629 \u0625\u062F\u0627\u0631\u0629 \u0631\u0648\u0627\u062C"
+    : "\u0628\u0648\u0627\u0628\u0629 \u0631\u0648\u0627\u062C";
   const eyebrowEn = isAdmin ? "RAWAJ Admin Gateway" : "RAWAJ Market Gateway";
-  const title = isAdmin ? "\u0623\u064A \u0633\u0648\u0642 \u062A\u0631\u064A\u062F \u0625\u062F\u0627\u0631\u062A\u0647\u061F" : "\u0627\u062E\u062A\u0631 \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0630\u064A \u062A\u0631\u064A\u062F \u062A\u0635\u0641\u062D\u0647";
-  const titleEn = isAdmin ? "Choose the market to manage" : "Choose the market to browse";
-  const summary = isAdmin ? "\u062A\u062F\u062E\u0644 \u0645\u0646 \u0628\u0627\u0628 \u0648\u0627\u062D\u062F\u060C \u062B\u0645 \u062A\u0646\u062A\u0642\u0644 \u0625\u0644\u0649 \u0625\u062F\u0627\u0631\u0629 \u0645\u0633\u062A\u0642\u0644\u0629 \u0644\u0627 \u062A\u0639\u0631\u0636 \u0625\u0644\u0627 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631." : "\u0627\u062E\u062A\u0631 \u0633\u0648\u0631\u064A\u0627 \u0623\u0648 \u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629\u060C \u0648\u0633\u064A\u0639\u0631\u0636 \u0644\u0643 \u0631\u0648\u0627\u062C \u0627\u0644\u0645\u062F\u0646 \u0648\u0627\u0644\u0639\u0645\u0644\u0629 \u0648\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631 \u0641\u0642\u0637.";
-  const summaryEn = isAdmin ? "Enter through one door, then continue to an isolated admin workspace for the selected market." : "Choose Syria or Saudi Arabia. RAWAJ will show only that market's locations, currency, listings, and accounts.";
-  const privacy = isAdmin ? "\u0643\u0644 \u0642\u0633\u0645 \u0625\u062F\u0627\u0631\u0629 \u064A\u062A\u062D\u0642\u0642 \u0645\u0646 \u062C\u0644\u0633\u062A\u0647 \u0648\u0635\u0644\u0627\u062D\u064A\u0627\u062A\u0647 \u0628\u0634\u0643\u0644 \u0645\u0633\u062A\u0642\u0644. \u0644\u0627 \u062A\u0648\u062C\u062F \u0644\u0648\u062D\u0629 \u062A\u062C\u0645\u0639 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0633\u0648\u0642\u064A\u0646." : "\u0646\u062D\u0641\u0638 \u0631\u0645\u0632 \u0627\u0644\u0633\u0648\u0642 \u0641\u0642\u0637. \u0644\u0627 \u0646\u0646\u0642\u0644 \u0627\u0644\u0628\u0631\u064A\u062F \u0623\u0648 \u0627\u0644\u062C\u0644\u0633\u0629 \u0623\u0648 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0623\u0648 \u0627\u0644\u0645\u0641\u0636\u0644\u0629 \u0628\u064A\u0646 \u0633\u0648\u0631\u064A\u0627 \u0648\u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629.";
-  const privacyEn = isAdmin ? "Each admin workspace verifies its own session and permissions. No dashboard combines both markets." : "Only the market code is stored. Email, sessions, chats, and favorites never move between markets.";
+  const title = isAdmin
+    ? "\u0623\u064A \u0633\u0648\u0642 \u062A\u0631\u064A\u062F \u0625\u062F\u0627\u0631\u062A\u0647\u061F"
+    : "\u0627\u062E\u062A\u0631 \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0630\u064A \u062A\u0631\u064A\u062F \u062A\u0635\u0641\u062D\u0647";
+  const titleEn = isAdmin
+    ? "Choose the market to manage"
+    : "Choose the market to browse";
+  const summary = isAdmin
+    ? "\u062A\u062F\u062E\u0644 \u0645\u0646 \u0628\u0627\u0628 \u0648\u0627\u062D\u062F\u060C \u062B\u0645 \u062A\u0646\u062A\u0642\u0644 \u0625\u0644\u0649 \u0625\u062F\u0627\u0631\u0629 \u0645\u0633\u062A\u0642\u0644\u0629 \u0644\u0627 \u062A\u0639\u0631\u0636 \u0625\u0644\u0627 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631."
+    : "\u0627\u062E\u062A\u0631 \u0633\u0648\u0631\u064A\u0627 \u0623\u0648 \u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629\u060C \u0648\u0633\u064A\u0639\u0631\u0636 \u0644\u0643 \u0631\u0648\u0627\u062C \u0627\u0644\u0645\u062F\u0646 \u0648\u0627\u0644\u0639\u0645\u0644\u0629 \u0648\u0627\u0644\u0625\u0639\u0644\u0627\u0646\u0627\u062A \u0648\u0627\u0644\u062D\u0633\u0627\u0628\u0627\u062A \u0627\u0644\u062E\u0627\u0635\u0629 \u0628\u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0645\u062E\u062A\u0627\u0631 \u0641\u0642\u0637.";
+  const summaryEn = isAdmin
+    ? "Enter through one door, then continue to an isolated admin workspace for the selected market."
+    : "Choose Syria or Saudi Arabia. RAWAJ will show only that market's locations, currency, listings, and accounts.";
+  const privacy = isAdmin
+    ? "\u0643\u0644 \u0642\u0633\u0645 \u0625\u062F\u0627\u0631\u0629 \u064A\u062A\u062D\u0642\u0642 \u0645\u0646 \u062C\u0644\u0633\u062A\u0647 \u0648\u0635\u0644\u0627\u062D\u064A\u0627\u062A\u0647 \u0628\u0634\u0643\u0644 \u0645\u0633\u062A\u0642\u0644. \u0644\u0627 \u062A\u0648\u062C\u062F \u0644\u0648\u062D\u0629 \u062A\u062C\u0645\u0639 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0633\u0648\u0642\u064A\u0646."
+    : "\u0646\u062D\u0641\u0638 \u0631\u0645\u0632 \u0627\u0644\u0633\u0648\u0642 \u0641\u0642\u0637. \u0644\u0627 \u0646\u0646\u0642\u0644 \u0627\u0644\u0628\u0631\u064A\u062F \u0623\u0648 \u0627\u0644\u062C\u0644\u0633\u0629 \u0623\u0648 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0627\u062A \u0623\u0648 \u0627\u0644\u0645\u0641\u0636\u0644\u0629 \u0628\u064A\u0646 \u0633\u0648\u0631\u064A\u0627 \u0648\u0627\u0644\u0633\u0639\u0648\u062F\u064A\u0629.";
+  const privacyEn = isAdmin
+    ? "Each admin workspace verifies its own session and permissions. No dashboard combines both markets."
+    : "Only the market code is stored. Email, sessions, chats, and favorites never move between markets.";
   return `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -289,14 +339,20 @@ function renderGatewayPage(scope, decision, storedMarket) {
 function handleGateway(request) {
   const url = new URL(request.url);
   const scope = scopeFromRequest(url);
-  const storedMarket = parseCookiePreference(request.headers.get("Cookie") ?? "", scope);
+  const storedMarket = parseCookiePreference(
+    request.headers.get("Cookie") ?? "",
+    scope,
+  );
   const decision = resolveMarketDecision({
     explicit: url.searchParams.get("market"),
     stored: storedMarket,
-    country: requestCountry(request)
+    country: requestCountry(request),
   });
   if (url.pathname === "/resolve" && decision.mayAutoRedirect) {
-    const cookie = decision.source === "explicit" ? buildPreferenceCookie(decision.market, scope) : void 0;
+    const cookie =
+      decision.source === "explicit"
+        ? buildPreferenceCookie(decision.market, scope)
+        : void 0;
     return redirectResponse(marketDestination(decision.market, scope), cookie);
   }
   return htmlResponse(renderGatewayPage(scope, decision, storedMarket));
@@ -305,7 +361,10 @@ function handleMarketChoice(url) {
   const market = normalizeMarketId(url.pathname.split("/").filter(Boolean)[1]);
   if (!market) return jsonResponse({ error: "Unknown market" }, 404);
   const scope = scopeFromRequest(url);
-  return redirectResponse(marketDestination(market, scope), buildPreferenceCookie(market, scope));
+  return redirectResponse(
+    marketDestination(market, scope),
+    buildPreferenceCookie(market, scope),
+  );
 }
 function routeRequest(request) {
   const url = new URL(request.url);
@@ -317,18 +376,25 @@ function routeRequest(request) {
   if (!isAllowedGatewayHost(url.hostname)) {
     return jsonResponse({ error: "Misdirected request" }, 421);
   }
-  if (url.hostname.toLowerCase() === GATEWAY_HOSTS.customer && (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))) {
+  if (
+    url.hostname.toLowerCase() === GATEWAY_HOSTS.customer &&
+    (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
+  ) {
     return redirectResponse(`${GATEWAY_ORIGINS.admin}/`);
   }
   if (url.pathname === "/health") {
     return jsonResponse({
       ok: true,
       service: SERVICE_NAME,
-      markets: MARKET_IDS
+      markets: MARKET_IDS,
     });
   }
   if (url.pathname.startsWith("/go/")) return handleMarketChoice(url);
-  if (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/resolve") {
+  if (
+    url.pathname === "/" ||
+    url.pathname === "/admin" ||
+    url.pathname === "/resolve"
+  ) {
     return handleGateway(request);
   }
   return jsonResponse({ error: "Not found" }, 404);
@@ -344,12 +410,15 @@ var index_default = {
           message: "gateway_request_failed",
           method: request.method,
           path: url.pathname,
-          error: error instanceof Error ? error.message : "Unknown error"
-        })
+          error: error instanceof Error ? error.message : "Unknown error",
+        }),
       );
-      return headSafe(jsonResponse({ error: "Internal server error" }, 500), request.method);
+      return headSafe(
+        jsonResponse({ error: "Internal server error" }, 500),
+        request.method,
+      );
     }
-  }
+  },
 };
 
 // src/vercel-handler.ts
@@ -368,7 +437,9 @@ function handleWebRequest(request) {
 }
 function requestOrigin(request) {
   const forwardedProto = request.headers["x-forwarded-proto"];
-  const protocol = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || "https";
+  const protocol = Array.isArray(forwardedProto)
+    ? forwardedProto[0]
+    : forwardedProto || "https";
   return `${protocol}://${request.headers.host || "rawaj-market-gateway.vercel.app"}`;
 }
 function requestHeaders(request) {
@@ -384,10 +455,13 @@ function requestHeaders(request) {
 }
 async function handler(request, response) {
   const method = request.method || "GET";
-  const webRequest = new Request(new URL(request.url || "/", requestOrigin(request)), {
-    method,
-    headers: requestHeaders(request)
-  });
+  const webRequest = new Request(
+    new URL(request.url || "/", requestOrigin(request)),
+    {
+      method,
+      headers: requestHeaders(request),
+    },
+  );
   const webResponse = await handleWebRequest(webRequest);
   response.statusCode = webResponse.status;
   webResponse.headers.forEach((value, name) => response.setHeader(name, value));
@@ -397,7 +471,4 @@ async function handler(request, response) {
   }
   response.end(Buffer.from(await webResponse.arrayBuffer()));
 }
-export {
-  handler as default,
-  handleWebRequest
-};
+export { handler as default, handleWebRequest };
