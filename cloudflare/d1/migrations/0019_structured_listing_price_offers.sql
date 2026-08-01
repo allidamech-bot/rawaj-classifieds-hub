@@ -1,4 +1,5 @@
 -- Structured buyer/seller listing price offers.
+-- Accepted offers never mutate listing lifecycle state automatically.
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE listing_price_offers (
