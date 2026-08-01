@@ -76,8 +76,11 @@ async function resetOffers(page: Page, role: "buyer" | "seller") {
 
 async function openFixtureConversation(page: Page) {
   await page.addInitScript(() => {
+    const marker = "rawaj:e2e:price-offers-storage-cleared";
+    if (window.sessionStorage.getItem(marker) === "1") return;
     window.localStorage.clear();
     window.sessionStorage.clear();
+    window.sessionStorage.setItem(marker, "1");
   });
   await page.goto("/login?returnTo=/chats", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
