@@ -1,0 +1,50 @@
+/* Keep listing-studio horizontal strips inside the mobile viewport.
+ * The steps and trust cards remain touch-scrollable without widening the document.
+ */
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    :is(.rawaj-listing-studio-v2, .rawaj-listing-studio-v3, .rawaj-listing-studio-v4),
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    :is(.rawaj-studio-shell, .rawaj-studio-shell__content) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    :is(.rawaj-studio-trust-strip, .rawaj-studio-steps) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    contain: inline-size;
+    overscroll-behavior-inline: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-trust-strip > div,
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps > li {
+    max-width: calc(100vw - 3rem) !important;
+  }
+}
