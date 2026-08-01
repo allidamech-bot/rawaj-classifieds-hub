@@ -49,9 +49,7 @@ export const MARKET_DIRECTORY: Readonly<Record<MarketId, MarketDefinition>> = {
   },
 } as const;
 
-export const MARKET_IDS = Object.freeze(
-  Object.keys(MARKET_DIRECTORY) as MarketId[],
-);
+export const MARKET_IDS = Object.freeze(Object.keys(MARKET_DIRECTORY) as MarketId[]);
 
 const CUSTOMER_COOKIE = "rawaj.preferredMarket.v1";
 const ADMIN_COOKIE = "rawaj.preferredAdminMarket.v1";
@@ -64,19 +62,14 @@ export function normalizeMarketId(value: unknown): MarketId | null {
 }
 
 export function normalizeScope(value: unknown): GatewayScope {
-  return typeof value === "string" && value.trim().toLowerCase() === "admin"
-    ? "admin"
-    : "customer";
+  return typeof value === "string" && value.trim().toLowerCase() === "admin" ? "admin" : "customer";
 }
 
 export function preferenceCookieName(scope: GatewayScope): string {
   return scope === "admin" ? ADMIN_COOKIE : CUSTOMER_COOKIE;
 }
 
-export function parseCookiePreference(
-  cookieHeader: string,
-  scope: GatewayScope,
-): MarketId | null {
+export function parseCookiePreference(cookieHeader: string, scope: GatewayScope): MarketId | null {
   const expectedName = preferenceCookieName(scope);
   for (const part of cookieHeader.split(";")) {
     const separator = part.indexOf("=");
@@ -85,9 +78,7 @@ export function parseCookiePreference(
     if (name !== expectedName) continue;
 
     try {
-      return normalizeMarketId(
-        decodeURIComponent(part.slice(separator + 1).trim()),
-      );
+      return normalizeMarketId(decodeURIComponent(part.slice(separator + 1).trim()));
     } catch {
       return null;
     }
@@ -95,10 +86,7 @@ export function parseCookiePreference(
   return null;
 }
 
-export function buildPreferenceCookie(
-  market: MarketId,
-  scope: GatewayScope,
-): string {
+export function buildPreferenceCookie(market: MarketId, scope: GatewayScope): string {
   return [
     `${preferenceCookieName(scope)}=${market}`,
     "Path=/",
@@ -124,12 +112,10 @@ export function resolveMarketDecision(input: {
   fallback?: MarketId;
 }): MarketDecision {
   const explicit = normalizeMarketId(input.explicit);
-  if (explicit)
-    return { market: explicit, source: "explicit", mayAutoRedirect: true };
+  if (explicit) return { market: explicit, source: "explicit", mayAutoRedirect: true };
 
   const stored = normalizeMarketId(input.stored);
-  if (stored)
-    return { market: stored, source: "stored", mayAutoRedirect: true };
+  if (stored) return { market: stored, source: "stored", mayAutoRedirect: true };
 
   const geo = marketFromCountry(input.country);
   if (geo) return { market: geo, source: "geo", mayAutoRedirect: false };
@@ -141,10 +127,7 @@ export function resolveMarketDecision(input: {
   };
 }
 
-export function marketDestination(
-  market: MarketId,
-  scope: GatewayScope,
-): string {
+export function marketDestination(market: MarketId, scope: GatewayScope): string {
   const definition = MARKET_DIRECTORY[market];
   return scope === "admin" ? definition.adminUrl : definition.customerUrl;
 }
@@ -153,8 +136,7 @@ export function isAllowedGatewayHost(hostname: string): boolean {
   const normalized = hostname.trim().toLowerCase();
   const isVercelDeployment =
     normalized === "rawaj-market-gateway.vercel.app" ||
-    (normalized.startsWith("rawaj-market-gateway-") &&
-      normalized.endsWith(".vercel.app"));
+    (normalized.startsWith("rawaj-market-gateway-") && normalized.endsWith(".vercel.app"));
   return (
     normalized === GATEWAY_HOSTS.customer ||
     normalized === GATEWAY_HOSTS.admin ||
