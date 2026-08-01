@@ -68,6 +68,7 @@ import authFeedbackSystemV12Css from "../auth-feedback-system-v12.css?url";
 import footerContrastSystemV13Css from "../footer-contrast-system-v13.css?url";
 import lightweightMobileUxPolishCss from "../lightweight-mobile-ux-polish.css?url";
 import homeNotificationOverlayFixCss from "../home-notification-overlay-fix.css?url";
+import listingStudioMobileOverflowFixCss from "../listing-studio-mobile-overflow-fix.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -117,6 +118,7 @@ export const auditedOverrideStyleHrefs = [
   footerContrastSystemV13Css,
   lightweightMobileUxPolishCss,
   homeNotificationOverlayFixCss,
+  listingStudioMobileOverflowFixCss,
 ] as const;
 
 export interface RouteStyleScope {
