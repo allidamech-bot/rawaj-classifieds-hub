@@ -22,8 +22,7 @@ const baseSecurityHeaders = {
     "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   "Referrer-Policy": "no-referrer",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
@@ -83,8 +82,7 @@ function scopeFromRequest(url: URL): GatewayScope {
   const hostname = url.hostname.toLowerCase();
   if (hostname === GATEWAY_HOSTS.admin) return "admin";
   if (hostname === GATEWAY_HOSTS.customer) return "customer";
-  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
-    return "admin";
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return "admin";
   return normalizeScope(url.searchParams.get("scope"));
 }
 
@@ -115,14 +113,9 @@ function renderMarketCard(
     : remembered
       ? `<span class="badge remembered">اختيارك المحفوظ · Remembered</span>`
       : "";
-  const actionAr =
-    scope === "admin"
-      ? `فتح إدارة ${market.nameAr}`
-      : `فتح رواج ${market.nameAr}`;
+  const actionAr = scope === "admin" ? `فتح إدارة ${market.nameAr}` : `فتح رواج ${market.nameAr}`;
   const actionEn =
-    scope === "admin"
-      ? `Open ${market.nameEn} admin`
-      : `Open RAWAJ ${market.nameEn}`;
+    scope === "admin" ? `Open ${market.nameEn} admin` : `Open RAWAJ ${market.nameEn}`;
 
   return `<article class="market-card market-${market.id.toLowerCase()}" data-market="${market.id}">
     <div class="card-top">
@@ -152,9 +145,7 @@ function renderGatewayPage(
   const eyebrow = isAdmin ? "بوابة إدارة رواج" : "بوابة رواج";
   const eyebrowEn = isAdmin ? "RAWAJ Admin Gateway" : "RAWAJ Market Gateway";
   const title = isAdmin ? "أي سوق تريد إدارته؟" : "اختر السوق الذي تريد تصفحه";
-  const titleEn = isAdmin
-    ? "Choose the market to manage"
-    : "Choose the market to browse";
+  const titleEn = isAdmin ? "Choose the market to manage" : "Choose the market to browse";
   const summary = isAdmin
     ? "تدخل من باب واحد، ثم تنتقل إلى إدارة مستقلة لا تعرض إلا بيانات السوق المختار."
     : "اختر سوريا أو السعودية، وسيعرض لك رواج المدن والعملة والإعلانات والحسابات الخاصة بالسوق المختار فقط.";
@@ -259,10 +250,7 @@ function renderGatewayPage(
 function handleGateway(request: Request): Response {
   const url = new URL(request.url);
   const scope = scopeFromRequest(url);
-  const storedMarket = parseCookiePreference(
-    request.headers.get("Cookie") ?? "",
-    scope,
-  );
+  const storedMarket = parseCookiePreference(request.headers.get("Cookie") ?? "", scope);
   const decision = resolveMarketDecision({
     explicit: url.searchParams.get("market"),
     stored: storedMarket,
@@ -271,9 +259,7 @@ function handleGateway(request: Request): Response {
 
   if (url.pathname === "/resolve" && decision.mayAutoRedirect) {
     const cookie =
-      decision.source === "explicit"
-        ? buildPreferenceCookie(decision.market, scope)
-        : undefined;
+      decision.source === "explicit" ? buildPreferenceCookie(decision.market, scope) : undefined;
     return redirectResponse(marketDestination(decision.market, scope), cookie);
   }
 
@@ -284,10 +270,7 @@ function handleMarketChoice(url: URL): Response {
   const market = normalizeMarketId(url.pathname.split("/").filter(Boolean)[1]);
   if (!market) return jsonResponse({ error: "Unknown market" }, 404);
   const scope = scopeFromRequest(url);
-  return redirectResponse(
-    marketDestination(market, scope),
-    buildPreferenceCookie(market, scope),
-  );
+  return redirectResponse(marketDestination(market, scope), buildPreferenceCookie(market, scope));
 }
 
 function routeRequest(request: Request): Response {
@@ -317,11 +300,7 @@ function routeRequest(request: Request): Response {
     });
   }
   if (url.pathname.startsWith("/go/")) return handleMarketChoice(url);
-  if (
-    url.pathname === "/" ||
-    url.pathname === "/admin" ||
-    url.pathname === "/resolve"
-  ) {
+  if (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/resolve") {
     return handleGateway(request);
   }
   return jsonResponse({ error: "Not found" }, 404);
@@ -341,10 +320,7 @@ export default {
           error: error instanceof Error ? error.message : "Unknown error",
         }),
       );
-      return headSafe(
-        jsonResponse({ error: "Internal server error" }, 500),
-        request.method,
-      );
+      return headSafe(jsonResponse({ error: "Internal server error" }, 500), request.method);
     }
   },
 } satisfies ExportedHandler;
