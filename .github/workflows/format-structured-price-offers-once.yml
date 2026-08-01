@@ -1,0 +1,73 @@
+name: Format Structured Price Offers Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/format-structured-price-offers-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'feature/structured-listing-price-offers-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/structured-listing-price-offers-v1
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Format and lint batch files
+        run: |
+          npx prettier --write \
+            cloudflare/worker/src/entry.ts \
+            cloudflare/worker/src/listing-offers.ts \
+            e2e/authenticated-price-offers-journey.spec.ts \
+            e2e/rawaj-e2e-messaging-fixture.ts \
+            scripts/structured-listing-price-offers-v1.test.mjs \
+            src/features/communication/ConversationPriceOffers.tsx \
+            src/lib/api/listing-price-offers.ts \
+            src/lib/classifieds-api.ts \
+            src/routes/chats.tsx
+          npx eslint --quiet \
+            cloudflare/worker/src/entry.ts \
+            cloudflare/worker/src/listing-offers.ts \
+            e2e/authenticated-price-offers-journey.spec.ts \
+            e2e/rawaj-e2e-messaging-fixture.ts \
+            scripts/structured-listing-price-offers-v1.test.mjs \
+            src/features/communication/ConversationPriceOffers.tsx \
+            src/lib/api/listing-price-offers.ts \
+            src/lib/classifieds-api.ts \
+            src/routes/chats.tsx
+
+      - name: Commit formatting and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/format-structured-price-offers-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cloudflare/worker/src/entry.ts \
+            cloudflare/worker/src/listing-offers.ts \
+            e2e/authenticated-price-offers-journey.spec.ts \
+            e2e/rawaj-e2e-messaging-fixture.ts \
+            scripts/structured-listing-price-offers-v1.test.mjs \
+            src/features/communication/ConversationPriceOffers.tsx \
+            src/lib/api/listing-price-offers.ts \
+            src/lib/classifieds-api.ts \
+            src/routes/chats.tsx
+          git commit -m "style(offers): format structured offer lifecycle"
+          git push origin HEAD:feature/structured-listing-price-offers-v1
