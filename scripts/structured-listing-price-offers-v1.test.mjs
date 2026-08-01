@@ -3,10 +3,14 @@ import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
-const [migration, handler, entry, packageJson] = await Promise.all([
+const [migration, handler, entry, api, component, chats, barrel, packageJson] = await Promise.all([
   readFile("cloudflare/d1/migrations/0019_structured_listing_price_offers.sql", "utf8"),
   readFile("cloudflare/worker/src/listing-offers.ts", "utf8"),
   readFile("cloudflare/worker/src/entry.ts", "utf8"),
+  readFile("src/lib/api/listing-price-offers.ts", "utf8"),
+  readFile("src/features/communication/ConversationPriceOffers.tsx", "utf8"),
+  readFile("src/routes/chats.tsx", "utf8"),
+  readFile("src/lib/classifieds-api.ts", "utf8"),
   readFile("package.json", "utf8"),
 ]);
 
@@ -52,26 +56,27 @@ function insertPending(db, overrides = {}) {
     createdAt: "2026-08-01T00:00:00.000Z",
     ...overrides,
   };
-  db.prepare(`INSERT INTO listing_price_offers
+  db.prepare(
+    `INSERT INTO listing_price_offers
     (id, listing_id, conversation_id, buyer_id, seller_id, created_by,
      parent_offer_id, amount, currency, status, expires_at, client_request_id,
      created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`)
-    .run(
-      row.id,
-      row.listingId,
-      row.conversationId,
-      row.buyerId,
-      row.sellerId,
-      row.createdBy,
-      row.parentId,
-      row.amount,
-      row.currency,
-      "2026-08-04T00:00:00.000Z",
-      row.requestId,
-      row.createdAt,
-      row.createdAt,
-    );
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+  ).run(
+    row.id,
+    row.listingId,
+    row.conversationId,
+    row.buyerId,
+    row.sellerId,
+    row.createdBy,
+    row.parentId,
+    row.amount,
+    row.currency,
+    "2026-08-04T00:00:00.000Z",
+    row.requestId,
+    row.createdAt,
+    row.createdAt,
+  );
   return row;
 }
 
@@ -81,10 +86,7 @@ test("migration stores immutable offer history with one pending offer per conver
   assert.throws(() => insertPending(db), /UNIQUE constraint failed/);
   db.exec("UPDATE listing_price_offers SET status = 'countered' WHERE status = 'pending'");
   insertPending(db, { createdBy: "seller" });
-  assert.equal(
-    db.prepare("SELECT count(*) AS count FROM listing_price_offers").get().count,
-    2,
-  );
+  assert.equal(db.prepare("SELECT count(*) AS count FROM listing_price_offers").get().count, 2);
 });
 
 test("migration rejects self offers, unsafe amounts, and duplicate request ids", () => {
@@ -111,15 +113,12 @@ test("Worker contract enforces authentication, participant ownership, blocking a
 });
 
 test("offer lifecycle creates actionable conversation notifications", () => {
-  for (const event of [
-    "offer.received",
-    "offer.countered",
-    "offer.accepted",
-    "offer.rejected",
-    "offer.withdrawn",
-  ]) {
-    assert.match(handler, new RegExp(event.replace(".", "\\.")));
-  }
+  assert.match(handler, /offer\.received/);
+  assert.match(handler, /offer\.countered/);
+  assert.match(handler, /`offer\.\$\{nextStatus\}`/);
+  assert.match(handler, /action === "accept"/);
+  assert.match(handler, /action === "reject"/);
+  assert.match(handler, /action === "withdraw"/);
   assert.match(handler, /targetType: "conversation"/);
   assert.match(handler, /offerId:/);
   assert.match(handler, /amount:/);
@@ -131,6 +130,25 @@ test("offer routes never capture the existing price-drop endpoint", () => {
   const operationsIndex = entry.indexOf("isListingOperationsPath(path)");
   const offersIndex = entry.indexOf("isListingOfferPath(path)");
   assert.ok(operationsIndex >= 0 && offersIndex > operationsIndex);
+});
+
+test("typed client and chat UI expose the structured offer journey", () => {
+  assert.match(api, /fetchConversationPriceOffers/);
+  assert.match(api, /createConversationPriceOffer/);
+  assert.match(api, /transitionListingPriceOffer/);
+  assert.match(api, /expectedUpdatedAt/);
+  assert.match(component, /data-price-offer-panel="true"/);
+  for (const action of ["create", "accept", "reject", "counter", "withdraw"]) {
+    assert.match(component, new RegExp(`data-price-offer-action="${action}"`));
+  }
+  assert.match(component, /does not automatically mark the listing sold/);
+  assert.match(component, /listingAvailable/);
+  assert.match(component, /enabled/);
+  assert.match(chats, /ConversationPriceOffers/);
+  assert.match(chats, /selectedConversation\.status === "active"/);
+  assert.match(barrel, /api\/listing-price-offers/);
+  assert.match(handler, /role: conversation\.buyer_id === auth\.userId/);
+  assert.match(handler, /listingAvailable:/);
 });
 
 test("focused contract is permanently included in precheck", () => {

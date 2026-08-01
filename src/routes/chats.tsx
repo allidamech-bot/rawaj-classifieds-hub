@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { ChatAttachmentImage } from "@/features/communication/ChatAttachmentImage";
+import { ConversationPriceOffers } from "@/features/communication/ConversationPriceOffers";
 import { ChatVoiceAttachment } from "@/features/communication/ChatVoiceAttachment";
 import {
   ChatVoiceRecorder,
@@ -930,6 +931,14 @@ function ChatsPage() {
                     </p>
                   )}
                 </header>
+
+                <ConversationPriceOffers
+                  conversationId={selectedConversation.id}
+                  enabled={
+                    selectedConversation.status === "active" &&
+                    Boolean(selectedConversation.listingId)
+                  }
+                />
 
                 <div className="rawaj-message-stream">
                   {loadingMessages ? (

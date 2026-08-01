@@ -16,10 +16,7 @@ interface ConversationPriceOffersProps {
   enabled: boolean;
 }
 
-export function ConversationPriceOffers({
-  conversationId,
-  enabled,
-}: ConversationPriceOffersProps) {
+export function ConversationPriceOffers({ conversationId, enabled }: ConversationPriceOffersProps) {
   const { language, text } = useUiPreferences();
   const [snapshot, setSnapshot] = useState<ConversationPriceOffersSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,10 +113,7 @@ export function ConversationPriceOffers({
     }
   }
 
-  async function handleTransition(
-    offer: ListingPriceOffer,
-    action: ListingPriceOfferAction,
-  ) {
+  async function handleTransition(offer: ListingPriceOffer, action: ListingPriceOfferAction) {
     if (busyAction) return;
     const amount = action === "counter" ? normalizedAmount(counterInput) : undefined;
     if (action === "counter" && !amount) {
@@ -135,7 +129,7 @@ export function ConversationPriceOffers({
       const result = await transitionListingPriceOffer({
         offerId: offer.id,
         action,
-        amount,
+        amount: amount ?? undefined,
         expectedUpdatedAt: offer.updatedAt,
         requestId: crypto.randomUUID(),
       });
@@ -152,10 +146,7 @@ export function ConversationPriceOffers({
   }
 
   const canCreateInitialOffer =
-    enabled &&
-    snapshot?.listingAvailable === true &&
-    snapshot.role === "buyer" &&
-    !pendingOffer;
+    enabled && snapshot?.listingAvailable === true && snapshot.role === "buyer" && !pendingOffer;
 
   return (
     <section
@@ -188,12 +179,18 @@ export function ConversationPriceOffers({
       </div>
 
       {error ? (
-        <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-[11px] font-semibold text-destructive" role="alert">
+        <p
+          className="mt-2 rounded-lg bg-destructive/10 p-2 text-[11px] font-semibold text-destructive"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
       {notice ? (
-        <p className="mt-2 rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground" role="status">
+        <p
+          className="mt-2 rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground"
+          role="status"
+        >
           {notice}
         </p>
       ) : null}
@@ -213,6 +210,8 @@ export function ConversationPriceOffers({
               language={language}
               busy={Boolean(busyAction)}
               busyAction={busyAction}
+              enabled={enabled}
+              listingAvailable={snapshot?.listingAvailable === true}
               counterInput={counterInput}
               setCounterInput={setCounterInput}
               onTransition={handleTransition}
@@ -282,6 +281,8 @@ function OfferHistoryCard({
   language,
   busy,
   busyAction,
+  enabled,
+  listingAvailable,
   counterInput,
   setCounterInput,
   onTransition,
@@ -290,6 +291,8 @@ function OfferHistoryCard({
   language: "ar" | "en";
   busy: boolean;
   busyAction: string | null;
+  enabled: boolean;
+  listingAvailable: boolean;
   counterInput: string;
   setCounterInput: (value: string) => void;
   onTransition: (offer: ListingPriceOffer, action: ListingPriceOfferAction) => Promise<void>;
@@ -327,7 +330,7 @@ function OfferHistoryCard({
             : ""}
       </p>
 
-      {isPending && offer.createdByMe ? (
+      {isPending && offer.createdByMe && enabled ? (
         <button
           type="button"
           data-price-offer-action="withdraw"
@@ -340,13 +343,13 @@ function OfferHistoryCard({
         </button>
       ) : null}
 
-      {isPending && !offer.createdByMe ? (
+      {isPending && !offer.createdByMe && enabled ? (
         <div className="mt-3 grid gap-2">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               data-price-offer-action="accept"
-              disabled={busy}
+              disabled={busy || !listingAvailable}
               onClick={() => void onTransition(offer, "accept")}
               className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-emerald-trust/15 px-3 text-[10px] font-extrabold text-foreground disabled:opacity-60"
             >
@@ -372,6 +375,7 @@ function OfferHistoryCard({
               min="1"
               step="1"
               value={counterInput}
+              disabled={busy || !listingAvailable}
               onChange={(event) => setCounterInput(event.target.value)}
               placeholder={text("مبلغ العرض المضاد", "Counteroffer amount")}
               className="min-h-10 flex-1 rounded-lg bg-background px-3 text-xs font-bold text-foreground outline-none hairline focus:ring-2 focus:ring-primary/25"
@@ -379,7 +383,7 @@ function OfferHistoryCard({
             <button
               type="button"
               data-price-offer-action="counter"
-              disabled={busy}
+              disabled={busy || !listingAvailable}
               onClick={() => void onTransition(offer, "counter")}
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 text-[10px] font-extrabold text-primary disabled:opacity-60"
             >
@@ -412,7 +416,8 @@ function offerStatusLabel(
 
 function offerTone(status: ListingPriceOfferStatus): string {
   if (status === "accepted") return "border-emerald-trust/30 bg-emerald-trust/8";
-  if (status === "rejected" || status === "expired") return "border-destructive/20 bg-destructive/5";
+  if (status === "rejected" || status === "expired")
+    return "border-destructive/20 bg-destructive/5";
   if (status === "pending") return "border-primary/25 bg-primary/[0.035]";
   return "border-border/70 bg-muted-surface/70";
 }
@@ -429,7 +434,10 @@ function transitionConfirmation(
   }
   if (action === "reject") return text("رفض عرض السعر؟", "Reject this offer?");
   if (action === "withdraw") return text("سحب عرض السعر؟", "Withdraw this offer?");
-  return text("إرسال العرض المضاد وإنهاء العرض الحالي؟", "Send the counteroffer and close the current offer?");
+  return text(
+    "إرسال العرض المضاد وإنهاء العرض الحالي؟",
+    "Send the counteroffer and close the current offer?",
+  );
 }
 
 function transitionSuccess(

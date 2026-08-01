@@ -122,7 +122,16 @@ async function listOffers(
     .all<OfferRow>();
   return result.success
     ? json(
-        { data: { items: (result.results ?? []).map((row) => mapOffer(row, auth.userId)) } },
+        {
+          data: {
+            items: (result.results ?? []).map((row) => mapOffer(row, auth.userId)),
+            role: conversation.buyer_id === auth.userId ? "buyer" : "seller",
+            listingAvailable:
+              conversation.status === "active" &&
+              conversation.listing_status === "approved" &&
+              !conversation.archived_at,
+          },
+        },
         200,
         cors,
       )
@@ -371,11 +380,7 @@ async function mutationReadiness(
   return null;
 }
 
-async function conversationContext(
-  env: ListingOffersEnv,
-  conversationId: string,
-  userId: string,
-) {
+async function conversationContext(env: ListingOffersEnv, conversationId: string, userId: string) {
   return env.DB.prepare(
     `SELECT c.id, c.listing_id, c.buyer_id, c.seller_id, c.status,
       l.status AS listing_status, l.archived_at, l.currency, l.title AS listing_title
@@ -556,9 +561,7 @@ function clean(value: unknown, limit: number): string {
 }
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function now(): string {
@@ -578,11 +581,7 @@ function transitionBody(status: string, listingTitle: string): string {
 }
 
 function unauthorized(cors: Headers) {
-  return json(
-    { error: { code: "auth_required", message: "Authentication required." } },
-    401,
-    cors,
-  );
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
 }
 
 function forbidden(cors: Headers, message: string) {
