@@ -1,2 +1,0 @@
-Reviewed baseline: d268b4753781cbb38a11747fc02d3162896fc52e
-Approved operation: apply pending D1 migrations, deploy matching Worker, publish matching Vercel release, run Production Acceptance, then restore deployment lock.
