@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/apply-structured-offer-race-guard-once.yml
       - scripts/apply-structured-offer-race-guard-once.py
+      - scripts/fix-structured-price-offer-contract-regex-once.py
 
 permissions:
   contents: write
@@ -29,7 +30,11 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: python scripts/apply-structured-offer-race-guard-once.py
+      - name: Apply contract correction and race guard
+        run: |
+          python scripts/fix-structured-price-offer-contract-regex-once.py
+          python scripts/apply-structured-offer-race-guard-once.py
+
       - run: npm ci --ignore-scripts
 
       - name: Format and validate race guard
@@ -46,6 +51,7 @@ jobs:
           set -euo pipefail
           git rm .github/workflows/apply-structured-offer-race-guard-once.yml
           git rm scripts/apply-structured-offer-race-guard-once.py
+          git rm scripts/fix-structured-price-offer-contract-regex-once.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add cloudflare/worker/src/listing-offers.ts scripts/structured-listing-price-offers-v1.test.mjs
