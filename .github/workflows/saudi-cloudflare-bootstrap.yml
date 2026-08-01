@@ -1,0 +1,173 @@
+name: Saudi Cloudflare bootstrap
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-cloudflare-bootstrap.yml
+      - ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-saudi-cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Provision and deploy Saudi API
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      FIREBASE_PROJECT_ID_SECRET: ${{ secrets.RAWAJ_SAUDI_FIREBASE_PROJECT_ID }}
+      D1_NAME: rawaj-saudi-production
+      R2_NAME: rawaj-saudi-media-production
+      WORKER_NAME: rawaj-saudi-classifieds
+      WORKER_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+
+    steps:
+      - name: Check out deployment payload
+        uses: actions/checkout@v4
+
+      - name: Validate required credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "Missing CLOUDFLARE_PRODUCTION_API_TOKEN"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Extract audited Saudi Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64
+          base64 --decode ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64 \
+            > /tmp/rawaj-saudi-cloudflare-bootstrap.tar.gz
+          tar -xzf /tmp/rawaj-saudi-cloudflare-bootstrap.tar.gz
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/worker/package-lock.json
+
+      - name: Install Worker dependencies
+        working-directory: cloudflare/worker
+        run: npm ci
+
+      - name: Type-check Worker
+        working-directory: cloudflare/worker
+        run: npm run typecheck
+
+      - name: Preflight Cloudflare permissions without mutation
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json > /tmp/rawaj-saudi-d1-list.json
+          npx wrangler r2 bucket list > /tmp/rawaj-saudi-r2-list.txt
+          response_file=/tmp/rawaj-worker-access.json
+          status="$(curl --silent --show-error --max-time 20 \
+            --output "$response_file" \
+            --write-out '%{http_code}' \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Accept: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/services/rawaj-classifieds-hub" || true)"
+          success="$(node -e "try{const d=require('$response_file');process.stdout.write(d?.success===true?'true':'false')}catch{process.stdout.write('false')}")"
+          if [ "$status" != "200" ] || [ "$success" != "true" ]; then
+            echo "Cloudflare token cannot access the existing Worker service; stopping before resource creation." >&2
+            exit 1
+          fi
+
+      - name: Create or reuse isolated Saudi resources
+        id: resources
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          d1_id="$(node -e '
+            const fs = require("node:fs");
+            const value = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-d1-list.json", "utf8"));
+            const rows = Array.isArray(value) ? value : (value.result || []);
+            const match = rows.find((row) => row.name === process.env.D1_NAME);
+            if (match) process.stdout.write(match.uuid || match.id || "");
+          ')"
+
+          if [ -z "$d1_id" ]; then
+            npx wrangler d1 create "$D1_NAME"
+            npx wrangler d1 list --json > /tmp/rawaj-saudi-d1-list.json
+            d1_id="$(node -e '
+              const fs = require("node:fs");
+              const value = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-d1-list.json", "utf8"));
+              const rows = Array.isArray(value) ? value : (value.result || []);
+              const match = rows.find((row) => row.name === process.env.D1_NAME);
+              if (!match) process.exit(2);
+              process.stdout.write(match.uuid || match.id || "");
+            ')"
+          fi
+
+          if ! npx wrangler r2 bucket info "$R2_NAME" > /tmp/rawaj-saudi-r2-info.txt 2>&1; then
+            npx wrangler r2 bucket create "$R2_NAME"
+          fi
+
+          test -n "$d1_id"
+          echo "d1_id=$d1_id" >> "$GITHUB_OUTPUT"
+
+      - name: Render production Worker configuration
+        working-directory: cloudflare/worker
+        shell: bash
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_id }}
+        run: |
+          set -euo pipefail
+          export CLOUDFLARE_D1_DATABASE_NAME="$D1_NAME"
+          export CLOUDFLARE_R2_BUCKET_NAME="$R2_NAME"
+          export FIREBASE_PROJECT_ID="${FIREBASE_PROJECT_ID_SECRET:-rawaj-saudi-auth-pending}"
+          export RAWAJ_WORKER_RELEASE_SHA="$GITHUB_SHA"
+          export RAWAJ_WORKER_ENVIRONMENT="production"
+          node scripts/render-config.mjs
+          node -e '
+            const fs = require("node:fs");
+            const config = JSON.parse(fs.readFileSync("wrangler.generated.jsonc", "utf8"));
+            if (config.name !== process.env.WORKER_NAME) throw new Error("Unexpected Worker target");
+            if (config.d1_databases?.[0]?.database_name !== process.env.D1_NAME) throw new Error("Unexpected D1 target");
+            if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) throw new Error("Unexpected R2 target");
+          '
+
+      - name: Apply Saudi D1 migrations
+        working-directory: cloudflare/worker
+        run: npx wrangler d1 migrations apply "$D1_NAME" --remote --config wrangler.generated.jsonc
+
+      - name: Deploy Saudi Worker
+        working-directory: cloudflare/worker
+        run: npx wrangler deploy --config wrangler.generated.jsonc
+
+      - name: Verify health and Saudi references
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 10 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            -H "Origin: https://sa.rawa-j.com" \
+            "$WORKER_URL/v1/health" > /tmp/rawaj-saudi-health.json
+          curl --retry 10 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            -H "Origin: https://sa.rawa-j.com" \
+            "$WORKER_URL/v1/references" > /tmp/rawaj-saudi-references.json
+          node -e '
+            const fs = require("node:fs");
+            const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
+            const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
+            if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
+              throw new Error("Saudi Worker health verification failed");
+            }
+            if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
+            if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
+            console.log(`Saudi API ready: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+          '
