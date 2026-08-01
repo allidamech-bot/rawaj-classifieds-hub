@@ -10,7 +10,7 @@
     "test": "node --experimental-strip-types --test test/*.test.mjs",
     "build": "npm run build:worker && npm run build:vercel",
     "build:worker": "esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2022 --outfile=dist/index.js --log-level=warning",
-    "build:vercel": "esbuild src/vercel-handler.ts --bundle --format=esm --platform=node --target=node22 --outfile=api/gateway.js --log-level=warning && prettier --write api/gateway.js",
+    "build:vercel": "esbuild src/vercel-handler.ts --bundle --format=esm --platform=node --target=node22 --outfile=api/gateway.js --log-level=warning && prettier --write --print-width 100 api/gateway.js",
     "check": "npm run types && npm run typecheck && npm test && npm run build && node --check dist/index.js && node --check api/gateway.js",
     "release:gate": "node scripts/release-gate.mjs"
   },
