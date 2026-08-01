@@ -14,6 +14,7 @@ import { handleSystemControls, type SystemControlsEnv } from "./system-controls"
 import { handleVerification, type VerificationEnv } from "./verification";
 import { handleTrustSupport, type TrustSupportEnv } from "./trust-support";
 import { handleListingOperations, type ListingOperationsEnv } from "./listing-operations";
+import { handleListingOffers, type ListingOffersEnv } from "./listing-offers";
 import { handleDiscovery, type DiscoveryEnv } from "./discovery";
 import { handleAdminCampaigns, type AdminCampaignsEnv } from "./admin-campaigns";
 import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
@@ -37,6 +38,7 @@ type EntryEnv = PublicCoreEnv &
   VerificationEnv &
   TrustSupportEnv &
   ListingOperationsEnv &
+  ListingOffersEnv &
   DiscoveryEnv &
   AdminCampaignsEnv &
   AdminSafetyEnv &
@@ -119,6 +121,9 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   if (isListingOperationsPath(path)) {
     return required(await handleListingOperations(request, env));
   }
+  if (isListingOfferPath(path)) {
+    return required(await handleListingOffers(request, env));
+  }
   if (isDiscoveryPath(path)) {
     return required(await handleDiscovery(request, env));
   }
@@ -186,7 +191,9 @@ function requestMethodIndependentListingDetail(path: string): boolean {
 
 function isDiscoveryPath(path: string): boolean {
   return (
-    path === "/v1/listing-facets" || path === "/v1/listings/nearby" || /^\/v1\/sitemap\//.test(path)
+    path === "/v1/listing-facets" ||
+    path === "/v1/listings/nearby" ||
+    /^\/v1\/sitemap\//.test(path)
   );
 }
 
@@ -197,6 +204,13 @@ function isListingOperationsPath(path: string): boolean {
     path === "/v1/offers/price-drops" ||
     /^\/v1\/(?:account|admin)\/promotions(?:\/|$)/.test(path) ||
     /^\/v1\/admin\/promotion-receipts\//.test(path)
+  );
+}
+
+function isListingOfferPath(path: string): boolean {
+  return (
+    /^\/v1\/conversations\/[^/]+\/offers$/.test(path) ||
+    /^\/v1\/offers\/(?!price-drops$)[^/]+$/.test(path)
   );
 }
 
