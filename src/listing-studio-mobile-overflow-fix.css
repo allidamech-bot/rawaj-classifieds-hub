@@ -1,5 +1,6 @@
 /* Keep listing-studio horizontal strips inside the mobile viewport.
  * The steps and trust cards remain touch-scrollable without widening the document.
+ * Width containment belongs to the scroll containers, not the document root.
  */
 
 @media (max-width: 47.99rem) {
