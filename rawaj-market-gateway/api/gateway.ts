@@ -14,8 +14,6 @@ function restorePublicUrl(request: Request): Request {
   return new Request(url, request);
 }
 
-export default {
-  fetch(request: Request): Promise<Response> {
-    return worker.fetch(restorePublicUrl(request));
-  },
-};
+export default function handler(request: Request): Promise<Response> {
+  return worker.fetch(restorePublicUrl(request));
+}
