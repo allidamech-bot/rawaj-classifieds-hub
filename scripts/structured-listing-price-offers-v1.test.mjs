@@ -3,7 +3,18 @@ import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
-const [migration, handler, entry, api, component, chats, barrel, packageJson] = await Promise.all([
+const [
+  migration,
+  handler,
+  entry,
+  api,
+  component,
+  chats,
+  barrel,
+  fixture,
+  journey,
+  packageJson,
+] = await Promise.all([
   readFile("cloudflare/d1/migrations/0019_structured_listing_price_offers.sql", "utf8"),
   readFile("cloudflare/worker/src/listing-offers.ts", "utf8"),
   readFile("cloudflare/worker/src/entry.ts", "utf8"),
@@ -11,6 +22,8 @@ const [migration, handler, entry, api, component, chats, barrel, packageJson] = 
   readFile("src/features/communication/ConversationPriceOffers.tsx", "utf8"),
   readFile("src/routes/chats.tsx", "utf8"),
   readFile("src/lib/classifieds-api.ts", "utf8"),
+  readFile("e2e/rawaj-e2e-messaging-fixture.ts", "utf8"),
+  readFile("e2e/authenticated-price-offers-journey.spec.ts", "utf8"),
   readFile("package.json", "utf8"),
 ]);
 
@@ -149,6 +162,19 @@ test("typed client and chat UI expose the structured offer journey", () => {
   assert.match(barrel, /api\/listing-price-offers/);
   assert.match(handler, /role: conversation\.buyer_id === auth\.userId/);
   assert.match(handler, /listingAvailable:/);
+});
+
+test("authenticated browser fixture covers buyer and seller offer actions", () => {
+  assert.match(fixture, /offerRole/);
+  assert.match(fixture, /\/v1\/conversations\/\(\[\^\/\]\+\)\\\/offers/);
+  assert.match(fixture, /\/v1\/offers\/\(\[\^\/\]\+\)/);
+  assert.match(fixture, /initialIncomingOffer/);
+  assert.match(journey, /seller reviews and accepts an incoming buyer offer/);
+  assert.match(journey, /buyer creates and withdraws a price offer exactly once/);
+  assert.match(journey, /data-price-offer-card="accepted"/);
+  assert.match(journey, /data-price-offer-card="withdrawn"/);
+  assert.match(journey, /remoteWrites\(\)\)\.toEqual\(\[\]\)/);
+  assert.match(journey, /authorization/);
 });
 
 test("focused contract is permanently included in precheck", () => {
