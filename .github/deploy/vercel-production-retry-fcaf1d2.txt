@@ -1,3 +1,0 @@
-Reviewed frontend baseline: fcaf1d2a4a4f4132213edcd11f13146ce6679554
-Reason: the first Vercel Production deployment remained stuck after repository cloning with no build output or error.
-This marker changes no application or backend behavior and will be removed when the deployment lock is restored.
