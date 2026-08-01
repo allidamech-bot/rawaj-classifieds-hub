@@ -1,9 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-const readinessUrl = new URL(
-  "../config/launch-readiness.json",
-  import.meta.url,
-);
+const readinessUrl = new URL("../config/launch-readiness.json", import.meta.url);
 const readiness = JSON.parse(await readFile(readinessUrl, "utf8"));
 const blockers = Object.entries(readiness)
   .filter(([, ready]) => ready !== true)
