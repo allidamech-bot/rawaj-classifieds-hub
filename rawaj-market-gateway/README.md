@@ -58,3 +58,8 @@ performed.
 
 `npm run release:gate` intentionally fails while any Vercel project/domain or destination check
 remains incomplete. See `docs/vercel-domain-handoff.md` for the controlled release sequence.
+
+## Production source
+
+The Vercel project `rawaj-market-gateway` builds this directory from the `main` branch. Changes are
+released through pull requests after the repository and gateway quality gates pass.
