@@ -15,12 +15,14 @@ test("Saudi Cloudflare server delegates v1 requests through SAUDI_API", async ()
   const server = await readFile("src/server-cloudflare.ts", "utf8");
   assert.match(server, /SAUDI_API\?: WorkerFetcher/);
   assert.match(server, /const serviceBinding = env\.SAUDI_API/);
-  assert.match(server, /serviceBinding\s*\? "https:\/\/sa\.rawa-j\.com"\s*:\s*saudiApiOrigin/);
   assert.match(
     server,
-    /serviceBinding \? serviceBinding\.fetch\(proxiedRequest\) : fetch\(proxiedRequest\)/,
+    /new URL\(`\$\{incomingUrl\.pathname\}\$\{incomingUrl\.search\}`, saudiApiOrigin\)/,
   );
+  assert.match(server, /await serviceBinding\.fetch\(proxiedRequest\)/);
+  assert.match(server, /SAUDI_API_BINDING_FAILURE/);
   assert.match(server, /proxySaudiApi\(request, env\)/);
+  assert.doesNotMatch(server, /\? "https:\/\/sa\.rawa-j\.com"\s*:\s*saudiApiOrigin/);
 });
 
 test("Cloudflare Saudi builds do not render Vercel Analytics", async () => {
