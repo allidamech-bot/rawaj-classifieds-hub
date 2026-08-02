@@ -1,4 +1,4 @@
-# Saudi frontend monitored production release diagnostics: 2026-08-02
+# Saudi frontend monitored production release with Worker-first routing: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
@@ -88,6 +88,7 @@ jobs:
           if (config.main !== "index.mjs") throw new Error("Unexpected Saudi frontend entrypoint");
           if (config.assets?.directory !== "../public") throw new Error("Unexpected Saudi asset directory");
           config.name = process.env.WORKER_NAME;
+          config.assets.run_worker_first = true;
           config.observability = { enabled: true };
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           NODE
