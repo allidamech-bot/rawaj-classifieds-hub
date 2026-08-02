@@ -8,11 +8,7 @@ type ServerEntry = {
 };
 
 function normalizeHostname(value: string | null) {
-  return (value ?? "")
-    .split(",", 1)[0]
-    .trim()
-    .toLowerCase()
-    .replace(/:\d+$/, "");
+  return (value ?? "").split(",", 1)[0].trim().toLowerCase().replace(/:\d+$/, "");
 }
 
 function requestHostname(request: Request) {
