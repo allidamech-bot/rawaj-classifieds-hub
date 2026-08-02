@@ -74,7 +74,7 @@ curl --silent --show-error --fail \
   -H "Authorization: Bearer $id_token" \
   -H "Accept: application/json" \
   "$SITE_URL/v1/profile" >/tmp/rawaj-e2e-profile.json
-app_user_id="$(node - <<'NODE'
+app_user_id="$(TEST_EMAIL="$email" node - <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-profile.json", "utf8"));
 if (!payload?.data?.id || payload.data.email !== process.env.TEST_EMAIL) {
@@ -82,7 +82,7 @@ if (!payload?.data?.id || payload.data.email !== process.env.TEST_EMAIL) {
 }
 process.stdout.write(payload.data.id);
 NODE
-)" TEST_EMAIL="$email"
+)"
 
 curl --silent --show-error --fail "$SITE_URL/v1/references" >/tmp/rawaj-e2e-references.json
 read -r category_id governorate_id < <(node <<'NODE'
