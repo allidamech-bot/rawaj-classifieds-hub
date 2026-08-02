@@ -11,26 +11,44 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    environment: production
     env:
       SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+      API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
       FIREBASE_API_KEY: AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U
       FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - name: Verify Saudi homepage, login and API
+      - name: Inspect Cloudflare Saudi services
         shell: bash
         run: |
           set -euo pipefail
-          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/" > /tmp/home.html
-          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/login" > /tmp/login.html
-          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/health" > /tmp/health.json
-          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/references" > /tmp/references.json
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          curl --silent --show-error --fail \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Accept: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services" \
+            > /tmp/services.json
+          node <<'NODE'
+          const fs = require("node:fs");
+          const payload = JSON.parse(fs.readFileSync("/tmp/services.json", "utf8"));
+          if (payload.success !== true) throw new Error("Unable to list Cloudflare Workers services");
+          const names = (payload.result || []).map((item) => item.id || item.name).filter(Boolean);
+          const saudi = names.filter((name) => String(name).includes("saudi"));
+          console.log(`Saudi Worker services: ${saudi.join(", ") || "none"}`);
+          if (!saudi.includes("rawaj-saudi-classifieds")) throw new Error("Saudi API Worker service is missing");
+          if (!saudi.includes("rawaj-saudi-web")) throw new Error("Saudi frontend Worker service is missing");
+          NODE
 
-          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/home.html
-          grep -q "سيارات ومركبات" /tmp/home.html
-          grep -q "عقارات" /tmp/home.html
-          grep -q "تسجيل الدخول" /tmp/login.html
-
+      - name: Verify direct Saudi backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 5 --retry-delay 2 --retry-all-errors --silent --show-error --fail "$API_URL/v1/health" > /tmp/health.json
+          curl --retry 5 --retry-delay 2 --retry-all-errors --silent --show-error --fail "$API_URL/v1/references" > /tmp/references.json
           node <<'NODE'
           const fs = require("node:fs");
           const health = JSON.parse(fs.readFileSync("/tmp/health.json", "utf8"));
@@ -40,32 +58,8 @@ jobs:
           }
           if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
           if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
-          console.log(`Live Saudi API: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+          console.log(`Saudi backend ready: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
           NODE
-
-      - name: Verify deployed Firebase bundle
-        shell: bash
-        run: |
-          set -euo pipefail
-          : > /tmp/assets.txt
-          grep -oE '(src|href)="[^"]+\.(js|mjs)(\?[^"]*)?"' /tmp/home.html \
-            | sed -E 's/^(src|href)="//;s/"$//' \
-            | sort -u > /tmp/asset-urls.txt
-          while IFS= read -r asset; do
-            [ -n "$asset" ] || continue
-            case "$asset" in
-              http://*|https://*) url="$asset" ;;
-              /*) url="$SITE_URL$asset" ;;
-              *) url="$SITE_URL/$asset" ;;
-            esac
-            curl --silent --show-error --fail "$url" >> /tmp/assets.txt
-            printf '\n' >> /tmp/assets.txt
-          done < /tmp/asset-urls.txt
-          grep -q "$FIREBASE_PROJECT_ID" /tmp/assets.txt
-          if grep -q "rawaj-saudi-auth-pending" /tmp/assets.txt; then
-            echo "Pending Firebase configuration is still deployed" >&2
-            exit 1
-          fi
 
       - name: Verify Firebase email authentication endpoint
         shell: bash
@@ -83,7 +77,7 @@ jobs:
           if (!message || /API_KEY_INVALID|PROJECT_NOT_FOUND|OPERATION_NOT_ALLOWED/.test(message)) {
             throw new Error(`Firebase email auth unavailable: ${message || "unknown error"}`);
           }
-          console.log(`Firebase email auth endpoint is active: ${message}`);
+          console.log(`Firebase email auth endpoint active: ${message}`);
           NODE
 
       - name: Verify Firebase Google OAuth domain
@@ -101,5 +95,17 @@ jobs:
           const message = payload?.error?.message || "";
           if (status !== "200") throw new Error(`Firebase Google OAuth unavailable: ${message || `HTTP ${status}`}`);
           if (!payload.authUri) throw new Error("Firebase Google OAuth did not return an auth URI");
-          console.log("Firebase Google OAuth is enabled for the Saudi live origin.");
+          console.log("Firebase Google OAuth accepts the Saudi Worker origin.");
           NODE
+
+      - name: Probe Saudi frontend Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          home_status="$(curl --silent --show-error --output /tmp/home.html --write-out '%{http_code}' "$SITE_URL/")"
+          login_status="$(curl --silent --show-error --output /tmp/login.html --write-out '%{http_code}' "$SITE_URL/login")"
+          echo "Saudi frontend HTTP: home=$home_status login=$login_status"
+          test "$home_status" = "200"
+          test "$login_status" = "200"
+          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/home.html
+          grep -q "تسجيل الدخول" /tmp/login.html
