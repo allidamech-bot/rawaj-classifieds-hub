@@ -1,3 +1,4 @@
+# Saudi frontend production release trigger: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
