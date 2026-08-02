@@ -1,0 +1,77 @@
+name: Inspect Saudi Finalization Run
+
+"on":
+  pull_request:
+    paths:
+      - .github/workflows/inspect-saudi-finalize-run.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: f32db7704a581bfd0e9303980c623958328361b4
+    steps:
+      - name: Locate Saudi finalization run
+        id: locate
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "/repos/$GITHUB_REPOSITORY/actions/workflows/saudi-finalize-production.yml/runs?branch=main&event=push&per_page=20" > /tmp/runs.json
+          run_id="$(TARGET_SHA="$TARGET_SHA" node <<'NODE'
+          const fs = require("node:fs");
+          const payload = JSON.parse(fs.readFileSync("/tmp/runs.json", "utf8"));
+          const target = (payload.workflow_runs || []).find((run) => run.head_sha === process.env.TARGET_SHA)
+            || (payload.workflow_runs || [])[0];
+          if (!target) process.exit(2);
+          console.log(`Found Saudi finalization run ${target.id}: ${target.status}/${target.conclusion || "pending"}`);
+          process.stdout.write(String(target.id));
+          NODE
+          )"
+          test -n "$run_id"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for Saudi finalization
+        shell: bash
+        env:
+          RUN_ID: ${{ steps.locate.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" > /tmp/run.json
+            read -r status conclusion < <(node <<'NODE'
+            const fs = require("node:fs");
+            const run = JSON.parse(fs.readFileSync("/tmp/run.json", "utf8"));
+            process.stdout.write(`${run.status} ${run.conclusion || "pending"}`);
+            NODE
+            )
+            echo "Saudi finalization attempt $attempt: $status/$conclusion"
+            if [ "$status" = "completed" ]; then
+              gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" > /tmp/jobs.json
+              node <<'NODE'
+              const fs = require("node:fs");
+              const payload = JSON.parse(fs.readFileSync("/tmp/jobs.json", "utf8"));
+              for (const job of payload.jobs || []) {
+                console.log(`Job ${job.id} ${job.name}: ${job.status}/${job.conclusion || "pending"}`);
+                for (const step of job.steps || []) {
+                  console.log(`  - ${step.name}: ${step.status}/${step.conclusion || "pending"}`);
+                }
+              }
+              NODE
+              if [ "$conclusion" != "success" ]; then
+                echo "Saudi finalization failed; printing failed logs." >&2
+                gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed || true
+                exit 1
+              fi
+              echo "Saudi finalization workflow completed successfully."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Saudi finalization did not complete within the inspection window." >&2
+          exit 1
