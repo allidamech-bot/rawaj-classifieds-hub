@@ -26,6 +26,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Stabilize generated contract assertion
+        run: node scripts/fix-saudi-test-generator.mjs
+
       - name: Apply focused location patch
         run: node scripts/apply-saudi-region-fix.mjs
 
@@ -68,6 +71,7 @@ jobs:
           ! grep -q 'CanonicalLocationSelector' 'src/routes/profile/listings.$id.tsx'
           test ! -f .github/workflows/apply-saudi-regions-fix.yml
           test ! -f scripts/apply-saudi-region-fix.mjs
+          test ! -f scripts/fix-saudi-test-generator.mjs
 
       - name: Commit validated fix
         shell: bash
