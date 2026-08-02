@@ -496,7 +496,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       location_node_id, title, description, price, currency, price_type,
       listing_condition, status, district_ar, contact_name, contact_options, details,
       is_featured, search_text_normalized, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SYP', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAR', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
   ).bind(
     id,
     auth.userId,
@@ -1156,7 +1156,7 @@ function mapListingRow(row: Row) {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
     status,
