@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 40
     env:
       GH_TOKEN: ${{ github.token }}
-      TARGET_SHA: d37a80392908e9ee975d963e1a86d2116e8d6a1d
+      TARGET_SHA: 3751d62381a386332e1b59521eea7db407b6d87d
     steps:
       - name: Monitor final Saudi production journey
         shell: bash
