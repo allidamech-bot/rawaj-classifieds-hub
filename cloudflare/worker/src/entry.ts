@@ -20,6 +20,7 @@ import { handleAdminCampaigns, type AdminCampaignsEnv } from "./admin-campaigns"
 import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
 import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-taxonomy-review";
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
+import { applyProfileMediaCachePolicy } from "./profile-media-cache";
 import { corsHeadersForOrigin } from "./cors";
 
 type EntryEnv = PublicCoreEnv &
@@ -165,7 +166,8 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   }
 
   if (isPublicCorePath(path)) {
-    return required(await handlePublicCore(request, env));
+    const response = required(await handlePublicCore(request, env));
+    return applyProfileMediaCachePolicy(path, response, env);
   }
 
   return new Response(
