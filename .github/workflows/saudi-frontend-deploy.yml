@@ -1,4 +1,4 @@
-# Saudi frontend production release trigger: 2026-08-02
+# Saudi frontend production release trigger with internal API binding: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
@@ -75,6 +75,13 @@ jobs:
           if (config.main !== "index.mjs") throw new Error("Unexpected Saudi frontend entrypoint");
           if (config.assets?.directory !== "../public") throw new Error("Unexpected Saudi asset directory");
           config.name = process.env.WORKER_NAME;
+          config.assets.run_worker_first = true;
+          config.services = [
+            {
+              binding: "SAUDI_API",
+              service: "rawaj-saudi-classifieds",
+            },
+          ];
           config.observability = { enabled: true };
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           NODE
