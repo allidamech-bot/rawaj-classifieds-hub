@@ -19,17 +19,17 @@ jobs:
       SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
       API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
     steps:
-      - name: Compare frontend binding with direct API
+      - name: Probe every production verification route
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"
           test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
 
-          timeout 30s npx --yes wrangler@4.118.0 tail rawaj-saudi-web --format json \
+          timeout 35s npx --yes wrangler@4.118.0 tail rawaj-saudi-web --format json \
             >/tmp/rawaj-saudi-web-tail.jsonl 2>/tmp/rawaj-saudi-web-tail.stderr &
           web_tail_pid=$!
-          timeout 30s npx --yes wrangler@4.118.0 tail rawaj-saudi-classifieds --format json \
+          timeout 35s npx --yes wrangler@4.118.0 tail rawaj-saudi-classifieds --format json \
             >/tmp/rawaj-saudi-api-tail.jsonl 2>/tmp/rawaj-saudi-api-tail.stderr &
           api_tail_pid=$!
           sleep 8
@@ -45,12 +45,16 @@ jobs:
               --dump-header "/tmp/headers-${safe_name}.txt" \
               --write-out '%{http_code}' "$url" || true)
             echo "===== $label HTTP $status ====="
-            cat "/tmp/headers-${safe_name}.txt" || true
-            head -c 4000 "/tmp/body-${safe_name}.txt" || true
+            grep -Ei '^(HTTP/|content-type:|location:|x-rawaj-build-commit:|cf-ray:)' "/tmp/headers-${safe_name}.txt" || true
+            echo "BODY_PREFIX:"
+            head -c 1200 "/tmp/body-${safe_name}.txt" || true
             echo
           }
 
           probe "frontend-root" "$SITE_URL/"
+          probe "frontend-login" "$SITE_URL/login"
+          probe "frontend-add-listing" "$SITE_URL/add-listing"
+          probe "frontend-add-listing-slash" "$SITE_URL/add-listing/"
           probe "frontend-health" "$SITE_URL/v1/health"
           probe "frontend-references" "$SITE_URL/v1/references"
           probe "direct-health" "$API_URL/v1/health"
