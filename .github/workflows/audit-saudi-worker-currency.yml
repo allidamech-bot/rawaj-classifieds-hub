@@ -1,0 +1,20 @@
+name: Audit Saudi Worker currency
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inventory SYP runtime references
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -RIn --exclude='*.test.*' --exclude='*.spec.*' --exclude-dir=test --exclude-dir=tests 'SYP' cloudflare/worker/src || true
