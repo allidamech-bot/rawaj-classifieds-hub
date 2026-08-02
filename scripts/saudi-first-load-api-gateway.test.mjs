@@ -11,15 +11,22 @@ test("Saudi browser and SSR data use the custom-domain gateway", async () => {
   );
 });
 
-test("Saudi Cloudflare server delegates v1 requests through SAUDI_API", async () => {
+test("Saudi Cloudflare server delegates v1 requests through Nitro runtime bindings", async () => {
   const server = await readFile("src/server-cloudflare.ts", "utf8");
   assert.match(server, /SAUDI_API\?: WorkerFetcher/);
-  assert.match(server, /const serviceBinding = env\.SAUDI_API/);
-  assert.match(server, /serviceBinding\s*\? "https:\/\/sa\.rawa-j\.com"\s*:\s*saudiApiOrigin/);
+  assert.match(server, /type NitroCloudflareRequest = Request/);
   assert.match(
     server,
-    /serviceBinding \? serviceBinding\.fetch\(proxiedRequest\) : fetch\(proxiedRequest\)/,
+    /explicitEnv \?\? \(request as NitroCloudflareRequest\)\.runtime\?\.cloudflare\?\.env \?\? \{\}/,
   );
+  assert.match(server, /const env = runtimeEnv\(request, explicitEnv\)/);
+  assert.match(server, /const serviceBinding = env\.SAUDI_API/);
+  assert.match(
+    server,
+    /new URL\(`\$\{incomingUrl\.pathname\}\$\{incomingUrl\.search\}`, saudiApiOrigin\)/,
+  );
+  assert.match(server, /await serviceBinding\.fetch\(proxiedRequest\)/);
+  assert.match(server, /SAUDI_API_BINDING_FAILURE/);
   assert.match(server, /proxySaudiApi\(request, env\)/);
 });
 

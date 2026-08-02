@@ -11,7 +11,19 @@ type SaudiCloudflareEnv = {
   SAUDI_API?: WorkerFetcher;
 };
 
+type NitroCloudflareRequest = Request & {
+  runtime?: {
+    cloudflare?: {
+      env?: SaudiCloudflareEnv;
+    };
+  };
+};
+
 const saudiApiOrigin = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
+
+function runtimeEnv(request: Request, explicitEnv?: SaudiCloudflareEnv): SaudiCloudflareEnv {
+  return explicitEnv ?? (request as NitroCloudflareRequest).runtime?.cloudflare?.env ?? {};
+}
 
 function isApiPath(pathname: string): boolean {
   return pathname === "/v1" || pathname.startsWith("/v1/");
@@ -34,10 +46,7 @@ async function proxySaudiApi(
 ): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const serviceBinding = env.SAUDI_API;
-  const targetOrigin = serviceBinding
-    ? "https://sa.rawa-j.com"
-    : saudiApiOrigin;
-  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, targetOrigin);
+  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, saudiApiOrigin);
   const headers = new Headers(request.headers);
 
   for (const name of [
@@ -61,7 +70,30 @@ async function proxySaudiApi(
     redirect: "manual",
   });
 
-  return serviceBinding ? serviceBinding.fetch(proxiedRequest) : fetch(proxiedRequest);
+  try {
+    return serviceBinding
+      ? await serviceBinding.fetch(proxiedRequest)
+      : await fetch(proxiedRequest);
+  } catch (error) {
+    console.error(
+      "SAUDI_API_BINDING_FAILURE",
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : String(error),
+    );
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: "gateway_unavailable",
+          message: "Saudi marketplace data is temporarily unavailable.",
+        },
+      }),
+      {
+        status: 502,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      },
+    );
+  }
 }
 
 function applyProductionHeaders(response: Response, request: Request): Response {
@@ -91,8 +123,9 @@ function applyProductionHeaders(response: Response, request: Request): Response 
 }
 
 export default {
-  async fetch(request: Request, env: SaudiCloudflareEnv): Promise<Response> {
+  async fetch(request: Request, explicitEnv?: SaudiCloudflareEnv): Promise<Response> {
     const url = new URL(request.url);
+    const env = runtimeEnv(request, explicitEnv);
 
     if (isApiPath(url.pathname)) {
       return applyProductionHeaders(await proxySaudiApi(request, env), request);
@@ -105,8 +138,8 @@ export default {
       }
     }
 
-    // This import must remain static. TanStack's Vite plugin replaces the
-    // server-entry module with the generated application handler at build time.
+    // Nitro invokes this SSR service with the augmented Request only. Cloudflare
+    // bindings are therefore read from request.runtime.cloudflare.env above.
     const response = await handler.fetch(request);
     return applyProductionHeaders(response, request);
   },
