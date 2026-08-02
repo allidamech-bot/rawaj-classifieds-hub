@@ -270,12 +270,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const requestPasswordReset = async (email: string) => {
       try {
-        const origin =
-          typeof window === "undefined" ? "https://rawa-j.com" : window.location.origin;
-        await sendPasswordResetEmail(firebaseAuth, normalizeAuthEmail(email), {
-          url: `${origin}/login`,
-          handleCodeInApp: false,
-        });
+        // Use Firebase's project-hosted password action page. A market-specific
+        // continue URL makes reset delivery depend on every market hostname
+        // being allowlisted, while the default handler works for all markets.
+        await sendPasswordResetEmail(firebaseAuth, normalizeAuthEmail(email));
         return { error: null };
       } catch (error) {
         return { error: firebaseErrorMessage(error) };
