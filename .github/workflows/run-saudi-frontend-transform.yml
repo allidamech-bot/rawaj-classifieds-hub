@@ -1,0 +1,78 @@
+name: Run Saudi frontend transform
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/run-saudi-frontend-transform.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: run-saudi-frontend-transform
+  cancel-in-progress: false
+
+jobs:
+  transform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_BRANCH: feature/saudi-vercel-api-binding-20260802
+      REPORT_PR: "599"
+    steps:
+      - name: Check out Saudi feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/saudi-vercel-api-binding-20260802
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply Saudi market transform
+        run: node scripts/apply-saudi-market-transform.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build Saudi frontend
+        run: npm run build
+
+      - name: Commit and push Saudi changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .env .env.example public/manifest.webmanifest src
+          if git diff --cached --quiet; then
+            echo "No transformed files to commit."
+            exit 0
+          fi
+          git commit -m "feat(saudi): localize frontend market and currency"
+          git push origin "HEAD:$TARGET_BRANCH"
+
+      - name: Report success
+        if: success()
+        run: |
+          gh pr comment "$REPORT_PR" --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi frontend transform passed type-check and production build, then pushed the localized changes to the Saudi branch."
+
+      - name: Report failure
+        if: failure()
+        run: |
+          gh pr comment "$REPORT_PR" --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi frontend transform failed before push. The Saudi branch was not merged; inspect this workflow run for the failing step."
