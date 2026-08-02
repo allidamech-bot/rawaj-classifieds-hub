@@ -429,6 +429,9 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       return validation(cors, "Unsupported action.");
   }
 
+  const moderationActionId = crypto.randomUUID();
+  const auditLogId = crypto.randomUUID();
+
   const results = await env.DB.batch([
     env.DB.prepare(updateSql).bind(...updateParams),
     env.DB.prepare(
@@ -437,7 +440,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
          SELECT ?, ?, ?, ?, ?, '{}', ?
          FROM listings WHERE id = ? AND updated_at = ?`,
     ).bind(
-      crypto.randomUUID(),
+      moderationActionId,
       listingId,
       auth.userId,
       moderationAction,
@@ -451,7 +454,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
        SELECT ?, ?, ?, ?, ?, ?, ?
        FROM listings WHERE id = ? AND updated_at = ?`,
     ).bind(
-      crypto.randomUUID(),
+      auditLogId,
       auth.userId,
       auditAction,
       "listings",
@@ -463,27 +466,54 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     ),
   ]);
 
-  if (results.some((result) => !result.success)) return databaseError(cors);
+  if (results.some((result) => !result.success)) {
+    console.error(
+      "rawaj_listing_moderation_batch_failed",
+      results.map((result) => result.error ?? "unknown_error"),
+    );
+    return databaseError(cors);
+  }
 
-  const updateMeta = results[0].meta as { changes?: number } | undefined;
-  const modActionMeta = results[1].meta as { changes?: number } | undefined;
-  const auditMeta = results[2].meta as { changes?: number } | undefined;
+  const persisted = await env.DB.prepare(
+    `SELECT l.status, l.updated_at,
+            EXISTS(
+              SELECT 1 FROM listing_moderation_actions
+               WHERE id = ? AND listing_id = ? AND actor_id = ? AND action = ?
+            ) AS moderation_ok,
+            EXISTS(
+              SELECT 1 FROM audit_logs
+               WHERE id = ? AND actor_id = ? AND action = ?
+                 AND entity_type = 'listings' AND entity_id = ?
+            ) AS audit_ok
+       FROM listings l
+      WHERE l.id = ?`,
+  )
+    .bind(
+      moderationActionId,
+      listingId,
+      auth.userId,
+      moderationAction,
+      auditLogId,
+      auth.userId,
+      auditAction,
+      listingId,
+      listingId,
+    )
+    .first<{
+      status: string;
+      updated_at: string;
+      moderation_ok: number;
+      audit_ok: number;
+    }>();
 
-  if (!updateMeta?.changes || updateMeta.changes !== 1) {
+  if (!persisted || persisted.status !== nextStatus || persisted.updated_at !== timestamp) {
     return json(
       { error: { code: "stale_review", message: "Listing changed since loaded." } },
       409,
       cors,
     );
   }
-  if (
-    !modActionMeta?.changes ||
-    modActionMeta.changes !== 1 ||
-    !auditMeta?.changes ||
-    auditMeta.changes !== 1
-  ) {
-    return databaseError(cors);
-  }
+  if (!persisted.moderation_ok || !persisted.audit_ok) return databaseError(cors);
 
   return json(
     {
