@@ -127,7 +127,7 @@ async function verifyPrivateApiAndStorage() {
       cityArea: "الرياض",
       phone: "+966500000001",
       whatsapp: "+966500000001",
-      preferredContactMethod: "messages",
+      preferredContactMethod: "chat",
     },
   });
   assertStatus(updated, 200, "Same-origin profile update");
