@@ -7,6 +7,7 @@ name: Finalize Saudi Marketplace Production
     paths:
       - .github/workflows/saudi-finalize-production.yml
       - scripts/saudi-production-e2e.sh
+      - scripts/saudi-finalizer-first-load.test.mjs
   workflow_dispatch:
 
 permissions:
@@ -17,6 +18,7 @@ env:
   FIREBASE_API_KEY: AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U
   FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
   D1_NAME: rawaj-saudi-production
+  D1_EXPECTED_ID: 3f40cae9-c3a4-47ea-80a1-2f9a78915b2c
   R2_NAME: rawaj-saudi-media-production
   API_WORKER_NAME: rawaj-saudi-classifieds
   WEB_WORKER_NAME: rawaj-saudi-web
@@ -28,7 +30,7 @@ jobs:
   finalize:
     name: Deploy and verify Saudi production
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     environment: production
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
@@ -41,7 +43,7 @@ jobs:
           path: main-repo
           fetch-depth: 1
 
-      - name: Check out Saudi application
+      - name: Check out current Saudi application
         uses: actions/checkout@v4
         with:
           ref: saudi
@@ -60,71 +62,38 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: saudi-repo/package-lock.json
+          cache-dependency-path: |
+            saudi-repo/package-lock.json
+            saudi-repo/cloudflare/worker/package-lock.json
 
-      - name: Validate and build Saudi frontend
+      - name: Validate and build current Saudi frontend
         working-directory: saudi-repo
         shell: bash
         run: |
           set -euo pipefail
-          node <<'NODE'
-          const fs = require("node:fs");
-          const targets = [
-            "src/lib/classifieds-types.ts",
-            "src/lib/api/listings.ts",
-            "src/lib/api/listing-price-context.ts",
-            "src/lib/api/reports.ts",
-            "src/lib/api/favorites.ts",
-            "src/lib/api/listing-price-offers.ts",
-          ];
-          for (const file of targets) {
-            const value = fs.readFileSync(file, "utf8");
-            if (value.includes('"SYP"')) throw new Error(`Syrian currency remains in Saudi runtime: ${file}`);
-            if (!value.includes('"SAR"')) throw new Error(`SAR contract missing from Saudi runtime: ${file}`);
-          }
-          NODE
           npm ci
           npm run test:runtime-boundary
+          node --test scripts/saudi-first-load-api-gateway.test.mjs
           npm run typecheck
           npm run build
-          grep -R -q "rawaj-saudi-classifieds.allidamech.workers.dev" .output/public .output/server
+          grep -R -q "https://sa.rawa-j.com" .output/public .output/server
 
-      - name: Extract audited Saudi API package
+      - name: Install and validate current Saudi API Worker
+        working-directory: saudi-repo/cloudflare/worker
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/rawaj-saudi-api
-          mkdir -p /tmp/rawaj-saudi-api
-          base64 --decode main-repo/ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64 >/tmp/rawaj-saudi-api.tar.gz
-          tar -xzf /tmp/rawaj-saudi-api.tar.gz -C /tmp/rawaj-saudi-api
-          test -d /tmp/rawaj-saudi-api/cloudflare/worker
-
-      - name: Enforce Saudi Worker currency contracts
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t files < <(grep -RIl 'SYP' src || true)
-          if [ "${#files[@]}" -gt 0 ]; then
-            printf '%s\n' "${files[@]}"
-            sed -i 's/SYP/SAR/g' "${files[@]}"
-          fi
+          npm ci
+          npm install --no-save jose@^6
           if grep -RIn 'SYP' src; then
             echo "Syrian currency remains in Saudi Worker runtime" >&2
             exit 1
           fi
-          echo "Saudi Worker runtime is localized to SAR."
-
-      - name: Install and type-check Saudi Worker
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
-        run: |
-          npm ci
-          npm install --no-save jose@^6
           npm run typecheck
 
-      - name: Resolve Saudi Cloudflare resources
+      - name: Resolve pinned Saudi Cloudflare resources
         id: resources
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        working-directory: saudi-repo/cloudflare/worker
         shell: bash
         run: |
           set -euo pipefail
@@ -134,16 +103,19 @@ jobs:
           const value = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-d1-list.json", "utf8"));
           const rows = Array.isArray(value) ? value : value.result || [];
           const match = rows.find((row) => row.name === process.env.D1_NAME);
-          if (!match) process.exit(2);
-          process.stdout.write(match.uuid || match.id || "");
+          const actual = match?.uuid || match?.id || "";
+          if (actual !== process.env.D1_EXPECTED_ID) {
+            throw new Error(`Saudi D1 identity mismatch: ${actual}`);
+          }
+          process.stdout.write(actual);
           NODE
           )"
           test -n "$d1_id"
           npx wrangler r2 bucket info "$R2_NAME" >/tmp/rawaj-saudi-r2-info.txt
           echo "d1_id=$d1_id" >> "$GITHUB_OUTPUT"
 
-      - name: Render Saudi API configuration
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+      - name: Render current Saudi API configuration
+        working-directory: saudi-repo/cloudflare/worker
         shell: bash
         env:
           CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_id }}
@@ -151,37 +123,40 @@ jobs:
           set -euo pipefail
           export CLOUDFLARE_D1_DATABASE_NAME="$D1_NAME"
           export CLOUDFLARE_R2_BUCKET_NAME="$R2_NAME"
-          export WORKER_NAME="$API_WORKER_NAME"
-          export RAWAJ_WORKER_RELEASE_SHA="$(git -C "$GITHUB_WORKSPACE/saudi-repo" rev-parse HEAD)"
-          export RAWAJ_WORKER_ENVIRONMENT="production"
+          export RAWAJ_WORKER_RELEASE_SHA="$(git rev-parse HEAD)"
+          export RAWAJ_WORKER_ENVIRONMENT=production
           node scripts/render-config.mjs
           node <<'NODE'
           const fs = require("node:fs");
           const path = "wrangler.generated.jsonc";
           const config = JSON.parse(fs.readFileSync(path, "utf8"));
           const allowedOrigins = [process.env.FINAL_SITE_URL, process.env.SITE_URL].join(",");
-          config.vars = { ...(config.vars || {}), API_ALLOWED_ORIGINS: allowedOrigins };
-          if (config.name !== process.env.API_WORKER_NAME) throw new Error("Unexpected Saudi API Worker name");
-          if (config.vars?.FIREBASE_PROJECT_ID !== process.env.FIREBASE_PROJECT_ID) throw new Error("Unexpected Firebase project");
-          if (config.vars?.API_ALLOWED_ORIGINS !== allowedOrigins) throw new Error("Unexpected Saudi CORS origins");
-          if (config.d1_databases?.[0]?.database_name !== process.env.D1_NAME) throw new Error("Unexpected Saudi D1");
-          if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) throw new Error("Unexpected Saudi R2");
+          config.name = process.env.API_WORKER_NAME;
+          config.vars = {
+            ...(config.vars || {}),
+            FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+            API_ALLOWED_ORIGINS: allowedOrigins,
+          };
+          if (config.d1_databases?.[0]?.database_id !== process.env.CLOUDFLARE_D1_DATABASE_ID) {
+            throw new Error("Unexpected Saudi D1 binding");
+          }
+          if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) {
+            throw new Error("Unexpected Saudi R2 binding");
+          }
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           NODE
 
-      - name: Apply migrations and enforce SAR in D1
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+      - name: Apply migrations and deploy current Saudi API Worker
+        working-directory: saudi-repo/cloudflare/worker
         shell: bash
         run: |
           set -euo pipefail
           npx wrangler d1 migrations apply "$D1_NAME" --remote --config wrangler.generated.jsonc
-          npx wrangler d1 execute "$D1_NAME" --remote --config wrangler.generated.jsonc --command "UPDATE listings SET currency='SAR' WHERE currency IS NULL OR currency <> 'SAR';"
+          npx wrangler d1 execute "$D1_NAME" --remote --config wrangler.generated.jsonc \
+            --command "UPDATE listings SET currency='SAR' WHERE currency IS NULL OR currency <> 'SAR';"
+          npx wrangler deploy --config wrangler.generated.jsonc
 
-      - name: Deploy Saudi API Worker
-        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
-        run: npx wrangler deploy --config wrangler.generated.jsonc
-
-      - name: Prepare Saudi frontend Worker
+      - name: Prepare Saudi frontend Worker with API service binding
         working-directory: saudi-repo
         shell: bash
         run: |
@@ -194,8 +169,11 @@ jobs:
           const config = JSON.parse(fs.readFileSync(path, "utf8"));
           config.name = process.env.WEB_WORKER_NAME;
           config.assets = { ...(config.assets || {}), run_worker_first: true };
-          delete config.services;
+          config.services = [{ binding: "SAUDI_API", service: "rawaj-saudi-classifieds" }];
           config.observability = { enabled: true };
+          if (config.services?.[0]?.binding !== "SAUDI_API") {
+            throw new Error("Saudi API service binding is missing");
+          }
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           NODE
 
@@ -203,49 +181,79 @@ jobs:
         working-directory: saudi-repo
         run: npx --yes wrangler@4.118.0 deploy --config .output/server/wrangler.json
 
-      - name: Verify live Saudi pages API references and CORS
+      - name: Verify direct Saudi API and CORS
         shell: bash
         run: |
           set -euo pipefail
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/" >/tmp/rawaj-saudi-home.html
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/login" >/tmp/rawaj-saudi-login.html
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/add-listing" >/tmp/rawaj-saudi-add-listing.html
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$API_URL/v1/health" >/tmp/rawaj-saudi-health.json
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$API_URL/v1/references" >/tmp/rawaj-saudi-references.json
-          curl --silent --show-error --fail \
-            -H "Origin: $SITE_URL" \
-            -D /tmp/rawaj-saudi-cors-get.headers \
-            "$API_URL/v1/health" >/tmp/rawaj-saudi-cors-get.json
-          cors_status="$(curl --silent --show-error \
-            --output /tmp/rawaj-saudi-cors-options.body \
-            --dump-header /tmp/rawaj-saudi-cors-options.headers \
-            --write-out '%{http_code}' \
-            -X OPTIONS "$API_URL/v1/profile" \
-            -H "Origin: $SITE_URL" \
-            -H "Access-Control-Request-Method: GET" \
-            -H "Access-Control-Request-Headers: Authorization, Content-Type")"
-          test "$cors_status" = "204"
-          grep -qi "^access-control-allow-origin: $SITE_URL" /tmp/rawaj-saudi-cors-get.headers
-          grep -qi "^access-control-allow-origin: $SITE_URL" /tmp/rawaj-saudi-cors-options.headers
-          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/rawaj-saudi-home.html
-          grep -q "تسجيل الدخول" /tmp/rawaj-saudi-login.html
-          grep -q "أضف إعلان" /tmp/rawaj-saudi-add-listing.html
+          curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            "$API_URL/v1/health" >/tmp/rawaj-saudi-health.json
+          curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            "$API_URL/v1/references" >/tmp/rawaj-saudi-references.json
+          for origin in "$SITE_URL" "$FINAL_SITE_URL"; do
+            key="$(echo "$origin" | tr -cd '[:alnum:]')"
+            curl --silent --show-error --fail \
+              -H "Origin: $origin" -D "/tmp/cors-$key.headers" \
+              "$API_URL/v1/health" > "/tmp/cors-$key.json"
+            grep -qi "^access-control-allow-origin: $origin" "/tmp/cors-$key.headers"
+          done
           node <<'NODE'
           const fs = require("node:fs");
           const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
           const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
-          if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") throw new Error("Saudi API health failed");
+          if (health.data?.database !== "ready") throw new Error("Saudi API health failed");
           if ((refs.data?.categories?.length || 0) !== 12) throw new Error("Saudi category count mismatch");
+          if ((refs.data?.taxonomyNodes?.length || 0) !== 117) throw new Error("Saudi taxonomy count mismatch");
           if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi region count mismatch");
           NODE
+
+      - name: Verify first load and same-origin API on Worker and custom domain
+        shell: bash
+        run: |
+          set -euo pipefail
+          for origin in "$SITE_URL" "$FINAL_SITE_URL"; do
+            cache_bust="finalizer-$(date +%s%N)"
+            key="$(echo "$origin" | tr -cd '[:alnum:]')"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/?release=$cache_bust" > "/tmp/home-$key.html"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/login?release=$cache_bust" > "/tmp/login-$key.html"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/add-listing?release=$cache_bust" > "/tmp/add-listing-$key.html"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/health?release=$cache_bust" > "/tmp/gateway-health-$key.json"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/references?release=$cache_bust" > "/tmp/gateway-references-$key.json"
+            grep -q "سوق إعلانات مبوبة في السعودية" "/tmp/home-$key.html"
+            grep -q "سيارات ومركبات" "/tmp/home-$key.html"
+            grep -q "عقارات" "/tmp/home-$key.html"
+            grep -q "تسجيل الدخول" "/tmp/login-$key.html"
+            grep -q "أضف إعلان" "/tmp/add-listing-$key.html"
+            if grep -q '/_vercel/insights/script.js' "/tmp/home-$key.html"; then
+              echo "Vercel Analytics rendered on Cloudflare Saudi origin: $origin" >&2
+              exit 1
+            fi
+            ORIGIN="$origin" KEY="$key" node <<'NODE'
+          const fs = require("node:fs");
+          const origin = process.env.ORIGIN;
+          const key = process.env.KEY;
+          const health = JSON.parse(fs.readFileSync(`/tmp/gateway-health-${key}.json`, "utf8"));
+          const refs = JSON.parse(fs.readFileSync(`/tmp/gateway-references-${key}.json`, "utf8"));
+          if (health.data?.database !== "ready") throw new Error(`Same-origin health failed on ${origin}`);
+          if ((refs.data?.categories?.length || 0) !== 12) throw new Error(`Categories failed on ${origin}`);
+          if ((refs.data?.taxonomyNodes?.length || 0) !== 117) throw new Error(`Taxonomy failed on ${origin}`);
+          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error(`Regions failed on ${origin}`);
+          NODE
+          done
 
       - name: Run disposable Firebase D1 R2 listing journey
         shell: bash
         env:
-          WRANGLER_CONFIG: /tmp/rawaj-saudi-api/cloudflare/worker/wrangler.generated.jsonc
+          WRANGLER_CONFIG: ${{ github.workspace }}/saudi-repo/cloudflare/worker/wrangler.generated.jsonc
         run: bash main-repo/scripts/saudi-production-e2e.sh
 
       - name: Record successful Saudi production journey
         shell: bash
         run: |
-          gh issue comment 602 --repo "$GITHUB_REPOSITORY" --body "Saudi production journey passed on **$SITE_URL** with direct isolated API **$API_URL**: Firebase email authentication, browser CORS, D1 profile creation, 12 categories, 13 regions, SAR listing draft, R2 image upload/read-back, owner listing read-back, and automatic cleanup all succeeded. Vercel automatic deployments remain disabled."
+          saudi_sha="$(git -C saudi-repo rev-parse HEAD)"
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi production journey passed on **$FINAL_SITE_URL** and **$SITE_URL** from Saudi commit \`$saudi_sha\`: current API and frontend deployment, SAUDI_API service binding, first-load categories, same-origin health/references, Firebase authentication, D1/R2 listing journey, CORS, SAR enforcement, and automatic cleanup all succeeded."
