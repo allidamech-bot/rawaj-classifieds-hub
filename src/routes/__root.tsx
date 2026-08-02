@@ -42,9 +42,9 @@ import spatialAppShellCss from "../spatial-app-shell.css?url";
 import appCss from "../styles.css?url";
 import visualFoundationCss from "../visual-foundation.css?url";
 
-const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
+const ROOT_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في السعودية";
 const ROOT_DESCRIPTION =
-  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
+  "سوق إعلانات مبوبة في السعودية لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
 
 const LazyDraftRecoveryBanner = lazy(() =>
   import("@/features/listing-studio/DraftRecoveryBanner").then((module) => ({

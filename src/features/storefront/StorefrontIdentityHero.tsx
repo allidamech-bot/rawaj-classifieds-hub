@@ -167,7 +167,7 @@ export function StorefrontIdentityHero({
             <div className="rawaj-storefront-identity__meta">
               <span>
                 <MapPin aria-hidden="true" />
-                {location || text("سوريا", "Syria")}
+                {location || text("السعودية", "Saudi Arabia")}
               </span>
               {joinedLabel ? (
                 <span>

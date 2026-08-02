@@ -1,12 +1,12 @@
 {
-  "name": "رواج RAWAJ",
-  "short_name": "RAWAJ",
-  "description": "سوق إعلانات مبوبة في سوريا",
+  "name": "RAWAJ Saudi Arabia | رواج السعودية",
+  "short_name": "رواج السعودية",
+  "description": "سوق رواج السعودية للإعلانات المبوبة",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "dir": "rtl",
-  "lang": "ar",
+  "lang": "ar-SA",
   "theme_color": "#242529",
   "background_color": "#242529",
   "icons": [

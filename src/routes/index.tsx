@@ -38,9 +38,9 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 
 import "../rawaj-home-signature-v2.css";
 
-const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
+const HOME_TITLE = "RAWAJ / رواج | سوق إعلانات مبوبة في السعودية";
 const HOME_DESCRIPTION =
-  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة منظمة وواضحة.";
+  "سوق إعلانات مبوبة في السعودية لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة منظمة وواضحة.";
 
 const categoryIcons: Record<string, LucideIcon> = {
   car: Car,
@@ -163,7 +163,7 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
       <div className="rawaj-signature-hero__content">
         <span className="rawaj-signature-hero__kicker">
           <Sparkles aria-hidden="true" />
-          {text("السوق السوري الأقرب إليك", "Your closest Syrian marketplace")}
+          {text("السوق السعودي الأقرب إليك", "Your closest Saudi marketplace")}
         </span>
         <h1 id="rawaj-signature-home-title">
           {text("كل ما تبحث عنه… في رواج", "Everything you are looking for… on RAWAJ")}
@@ -183,7 +183,7 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
             aria-label={text("اختيار موقع التصفح", "Choose browse location")}
           >
             <MapPin aria-hidden="true" />
-            <span>{text("كل سوريا", "All Syria")}</span>
+            <span>{text("كل السعودية", "All Saudi Arabia")}</span>
             <ChevronLeft aria-hidden="true" />
           </Link>
 
@@ -221,7 +221,7 @@ function HomeTrustRow({ text }: { text: (ar: string, en: string) => string }) {
   const items = [
     { icon: Plus, ar: "نشر مجاني", en: "Free posting" },
     { icon: Store, ar: "أفراد ومتاجر", en: "People and stores" },
-    { icon: MapPin, ar: "جميع المحافظات", en: "All governorates" },
+    { icon: MapPin, ar: "جميع المناطق", en: "All governorates" },
   ];
 
   return (

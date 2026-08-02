@@ -1,13 +1,16 @@
-// Consistent Arabic price formatting (Arabic-Indic digits + ٬ thousands separator).
-const nf = new Intl.NumberFormat("ar-SY", { maximumFractionDigits: 0 });
+// Consistent Saudi Arabic price formatting (Arabic-Indic digits + ٬ thousands separator).
+const nf = new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 });
 
-export function formatPrice(price: number, currency: "SYP" | "USD" = "SYP") {
+type SupportedCurrency = "SAR" | "SYP" | "USD";
+
+export function formatPrice(price: number, currency: SupportedCurrency = "SAR") {
   if (!price && price !== 0) return "";
   const formatted = nf.format(price);
-  return `${formatted} ${currency === "SYP" ? "ل.س" : "$"}`;
+  const currencyLabel = currency === "SAR" ? "ر.س" : currency === "SYP" ? "ل.س" : "$";
+  return `${formatted} ${currencyLabel}`;
 }
 
-export function priceLabel(price: number, type: string, currency: "SYP" | "USD" = "SYP") {
+export function priceLabel(price: number, type: string, currency: SupportedCurrency = "SAR") {
   switch (type) {
     case "free":
       return "مجاناً";

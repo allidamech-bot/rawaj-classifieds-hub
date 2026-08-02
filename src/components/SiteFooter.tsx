@@ -60,7 +60,7 @@ export function SiteFooter(_props: SiteFooterProps) {
           <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
             <BrandLockup inverse compact />
           </Link>
-          <p>{text("سوق سوريا المجاني للإعلانات", "Syria classifieds marketplace")}</p>
+          <p>{text("سوق سعوديا المجاني للإعلانات", "Saudi Arabia classifieds marketplace")}</p>
         </div>
 
         <nav aria-label={text("روابط الفوتر", "Footer links")}>
@@ -84,8 +84,8 @@ export function SiteFooter(_props: SiteFooterProps) {
             </Link>
             <p className="mt-5 text-sm leading-7 text-primary-foreground/70">
               {text(
-                "سوق سوري منظم للإعلانات المبوبة، صُمم ليجعل الاكتشاف والتواصل أكثر وضوحاً وأماناً.",
-                "A focused Syrian classifieds marketplace built for clearer discovery and safer direct contact.",
+                "سوق سعودي منظم للإعلانات المبوبة، صُمم ليجعل الاكتشاف والتواصل أكثر وضوحاً وأماناً.",
+                "A focused Saudi classifieds marketplace built for clearer discovery and safer direct contact.",
               )}
             </p>
             <span className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary-foreground/15 bg-primary-foreground/5 px-3 py-2 text-xs font-bold text-primary-foreground/80">
@@ -118,12 +118,12 @@ export function SiteFooter(_props: SiteFooterProps) {
             <p className="text-xs text-primary-foreground/55">
               © {year}{" "}
               {text(
-                "رَوَاج · سوق سوريا المجاني للإعلانات",
-                "RAWAJ · Syria classifieds marketplace",
+                "رَوَاج · سوق سعوديا المجاني للإعلانات",
+                "RAWAJ · Saudi Arabia classifieds marketplace",
               )}
             </p>
             <span className="text-xs font-semibold text-primary-foreground/65">
-              {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}
+              {text("السعودية فقط · تصفح آمن", "Saudi Arabia only · Safe browsing")}
             </span>
           </div>
         </div>

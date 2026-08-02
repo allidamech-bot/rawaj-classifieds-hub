@@ -76,23 +76,28 @@ export function governorateName(
   fallback: string | undefined,
   language: Language,
 ) {
-  if (!id) return fallback ?? localized(language, "سوريا", "Syria");
+  if (!id) return fallback ?? localized(language, "السعودية", "Saudi Arabia");
   const label = governorateLabels[id];
-  if (!label) return fallback ?? localized(language, "سوريا", "Syria");
+  if (!label) return fallback ?? localized(language, "السعودية", "Saudi Arabia");
   return language === "ar" ? label.ar : label.en;
 }
 
-const arNumber = new Intl.NumberFormat("ar-SY", { maximumFractionDigits: 0 });
+const arNumber = new Intl.NumberFormat("ar-SA", { maximumFractionDigits: 0 });
 const enNumber = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
 export function formatPriceLocalized(
   price: number,
   type: PriceType | string,
   language: Language,
-  currency: "SYP" | "USD" = "SYP",
+  currency: "SAR" | "SYP" | "USD" = "SAR",
 ) {
   const number = language === "ar" ? arNumber.format(price) : enNumber.format(price);
-  const currencyLabel = currency === "SYP" ? localized(language, "ل.س", "SYP") : "$";
+  const currencyLabel =
+    currency === "SAR"
+      ? localized(language, "ر.س", "SAR")
+      : currency === "SYP"
+        ? localized(language, "ل.س", "SYP")
+        : "$";
   const amount = `${number} ${currencyLabel}`;
 
   switch (type) {
@@ -168,7 +173,7 @@ const uiLabels: Record<string, string> = {
     "The seller has not added a bio yet. Business info, availability, and response time will appear here through the workflow.",
   "وقت الاستجابة:": "Response time:",
   "الموقع:": "Location:",
-  سوريا: "Syria",
+  السعودية: "Saudi Arabia",
   "الإعلانات النشطة": "Active listings",
   "لا توجد إعلانات نشطة لهذا البائع حالياً.": "This seller has no active listings right now.",
   "تنبيه أمان": "Safety note",

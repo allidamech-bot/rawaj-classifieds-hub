@@ -50,7 +50,7 @@ export function QuickFilterRail({
       <button
         type="button"
         onClick={onOpenFilters}
-        data-active={locationLabel !== text("كل سوريا", "All Syria")}
+        data-active={locationLabel !== text("كل السعودية", "All Saudi Arabia")}
       >
         <MapPin aria-hidden="true" />
         <span>{locationLabel}</span>
