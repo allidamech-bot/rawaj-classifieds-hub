@@ -7,7 +7,6 @@ type WorkerFetcher = {
 };
 
 type SaudiCloudflareEnv = {
-  SAUDI_API?: WorkerFetcher;
   ASSETS?: WorkerFetcher;
 };
 
@@ -28,7 +27,7 @@ function isStaticAssetPath(pathname: string): boolean {
   );
 }
 
-async function proxySaudiApi(request: Request, env: SaudiCloudflareEnv): Promise<Response> {
+async function proxySaudiApi(request: Request): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, saudiApiOrigin);
   const headers = new Headers(request.headers);
@@ -54,7 +53,10 @@ async function proxySaudiApi(request: Request, env: SaudiCloudflareEnv): Promise
     redirect: "manual",
   });
 
-  return env.SAUDI_API?.fetch(proxiedRequest) ?? fetch(proxiedRequest);
+  // The public Worker route is the verified production path. Keeping this
+  // server-to-server call avoids browser CORS while preserving Authorization,
+  // multipart uploads, idempotency headers, and streaming response bodies.
+  return fetch(proxiedRequest);
 }
 
 function applyProductionHeaders(response: Response, request: Request): Response {
@@ -88,7 +90,7 @@ export default {
     const url = new URL(request.url);
 
     if (isApiPath(url.pathname)) {
-      return applyProductionHeaders(await proxySaudiApi(request, env), request);
+      return applyProductionHeaders(await proxySaudiApi(request), request);
     }
 
     if (isStaticAssetPath(url.pathname) && env.ASSETS) {
