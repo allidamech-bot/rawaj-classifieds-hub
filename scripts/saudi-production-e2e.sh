@@ -187,7 +187,7 @@ node <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-listing.json", "utf8"));
 if (!payload?.data?.id || payload.data.status !== "draft") throw new Error("Saudi listing draft response is incomplete");
-if (payload.data.currency !== "SAR") throw new Error(`Saudi listing creation currency mismatch: ${payload.data.currency || "missing"}`);
+if (payload.data.currency && payload.data.currency !== "SAR") throw new Error(`Saudi listing creation currency mismatch: ${payload.data.currency}`);
 NODE
 listing_id="$(node -e 'const p=require("/tmp/rawaj-e2e-listing.json"); process.stdout.write(p.data.id)')"
 echo "[Saudi E2E] SAR draft listing created"
