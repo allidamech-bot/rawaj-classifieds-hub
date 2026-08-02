@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
+// This is a release-blocking regression because every signed-in surface uses /api/*.
 test("Saudi gateway proxies both public and authenticated API namespaces", async () => {
   const server = await readFile("src/server-cloudflare.ts", "utf8");
   assert.match(server, /pathname === "\/v1"/);
