@@ -13,6 +13,14 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+type WorkerFetcher = {
+  fetch: (request: Request) => Promise<Response>;
+};
+
+type SaudiFrontendEnv = {
+  SAUDI_API?: WorkerFetcher;
+};
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -37,7 +45,13 @@ function isSaudiApiProxyPath(pathname: string) {
   return pathname === "/v1" || pathname.startsWith("/v1/");
 }
 
-async function proxySaudiApiRequest(request: Request): Promise<Response> {
+function readSaudiApiBinding(env: unknown): WorkerFetcher | null {
+  if (!env || typeof env !== "object" || !("SAUDI_API" in env)) return null;
+  const binding = (env as SaudiFrontendEnv).SAUDI_API;
+  return binding && typeof binding.fetch === "function" ? binding : null;
+}
+
+async function proxySaudiApiRequest(request: Request, env: unknown): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, saudiApiOrigin);
   const headers = new Headers(request.headers);
@@ -58,12 +72,14 @@ async function proxySaudiApiRequest(request: Request): Promise<Response> {
   headers.set("x-rawaj-proxy-market", "saudi");
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
-  return fetch(targetUrl, {
+  const proxyRequest = new Request(targetUrl, {
     method: request.method,
     headers,
     body: hasBody ? request.body : undefined,
     redirect: "manual",
   });
+  const serviceBinding = readSaudiApiBinding(env);
+  return serviceBinding ? serviceBinding.fetch(proxyRequest) : fetch(proxyRequest);
 }
 
 function isPublicDocumentPath(pathname: string) {
@@ -290,7 +306,7 @@ export default {
       const url = new URL(request.url);
 
       if (isSaudiApiProxyPath(url.pathname)) {
-        const response = await proxySaudiApiRequest(request);
+        const response = await proxySaudiApiRequest(request, env);
         return applyResponseHeaders(response, request, Date.now() - startedAt);
       }
 
