@@ -83,6 +83,7 @@ jobs:
             await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
             const regionSelect = page.locator("[data-saudi-region-select]").first();
             await regionSelect.waitFor({ state: "visible", timeout: 45_000 });
+            await regionSelect.locator("option").nth(13).waitFor({ state: "attached", timeout: 45_000 });
 
             const regionOptions = await regionSelect.locator("option").evaluateAll((options) =>
               options.map((option) => ({ value: option.value, text: option.textContent?.trim() || "" })),
@@ -100,7 +101,11 @@ jobs:
             let cityOptions = [];
             for (const regionValue of regionValues) {
               await regionSelect.selectOption(regionValue);
-              await page.waitForTimeout(150);
+              try {
+                await citySelect.locator("option").nth(1).waitFor({ state: "attached", timeout: 3_000 });
+              } catch {
+                continue;
+              }
               cityOptions = await citySelect.locator("option").evaluateAll((options) =>
                 options.slice(1).map((option) => option.textContent?.trim() || "").filter(Boolean),
               );
