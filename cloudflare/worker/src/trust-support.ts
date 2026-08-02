@@ -41,6 +41,7 @@ const SUPPORT_TYPES = new Set([
   "abuse_report",
   "other",
 ]);
+const SUPPORT_PRIORITIES = new Set(["low", "normal", "high", "urgent"]);
 const LISTING_REPORT_TYPES = new Set([
   "suspicious_listing",
   "fraud",
@@ -89,6 +90,18 @@ export async function handleTrustSupport(
   const ownSupport = path.match(/^\/v1\/account\/support-requests\/([^/]+)$/);
   if (ownSupport && request.method === "GET") {
     return getOwnSupportRequest(request, env, cors, decodeURIComponent(ownSupport[1]));
+  }
+  if (path === "/v1/admin/support-requests" && request.method === "GET") {
+    return listSupportRequests(request, env, cors, url);
+  }
+  const adminSupport = path.match(/^\/v1\/admin\/support-requests\/([^/]+)$/);
+  if (adminSupport && request.method === "PATCH") {
+    return moderateSupportRequest(
+      request,
+      env,
+      cors,
+      decodeURIComponent(adminSupport[1]),
+    );
   }
 
   const listingReport = path.match(/^\/v1\/listings\/([^/]+)\/reports$/);
@@ -153,7 +166,7 @@ function relevant(path: string): boolean {
     /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||
     /^\/v1\/sellers\/[^/]+\/(?:review-eligibility|reviews)$/.test(path) ||
     /^\/v1\/reviews\/[^/]+\/(?:response|reports)$/.test(path) ||
-    /^\/v1\/admin\/(?:listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(path)
+    /^\/v1\/admin\/(?:support-requests|listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(path)
   );
 }
 
@@ -253,8 +266,9 @@ async function getOwnSupportRequest(
 }
 
 function supportSelect(): string {
-  return `SELECT id, user_id, type, status, subject, message, related_listing_id,
-    related_report_id, public_response, created_at, updated_at FROM support_requests`;
+  return `SELECT id, user_id, email, type, status, priority, assigned_to, subject, message,
+    related_listing_id, related_report_id, public_response, admin_note, created_at, updated_at
+    FROM support_requests`;
 }
 
 async function readSupportRow(
@@ -265,6 +279,93 @@ async function readSupportRow(
   return env.DB.prepare(`${supportSelect()} WHERE id = ? AND user_id = ?`)
     .bind(id, userId)
     .first<Row>();
+}
+
+async function listSupportRequests(
+  request: Request,
+  env: TrustSupportEnv,
+  cors: Headers,
+  url: URL,
+): Promise<Response> {
+  const auth = await authenticate(request, asAuthEnv(env));
+  if (!auth) return unauthorized(cors);
+  if (!canModerate(auth.roles)) return forbidden(cors);
+  const limit = integer(url.searchParams.get("limit"), 100, 1, 200);
+  const requestedStatus = optionalText(url.searchParams.get("status"), 30);
+  const dbStatus = requestedStatus ? supportStatusToDb(requestedStatus) : null;
+  if (requestedStatus && !dbStatus) return validation(cors, "Invalid support status.");
+  const result = dbStatus
+    ? await env.DB.prepare(`${supportSelect()} WHERE status = ? ORDER BY created_at DESC, id DESC LIMIT ?`)
+        .bind(dbStatus, limit)
+        .all<Row>()
+    : await env.DB.prepare(`${supportSelect()} ORDER BY created_at DESC, id DESC LIMIT ?`)
+        .bind(limit)
+        .all<Row>();
+  return result.success
+    ? json({ data: (result.results ?? []).map(mapAdminSupport) }, 200, cors)
+    : databaseError(cors);
+}
+
+async function moderateSupportRequest(
+  request: Request,
+  env: TrustSupportEnv,
+  cors: Headers,
+  requestIdRaw: string,
+): Promise<Response> {
+  const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
+  if (auth instanceof Response) return auth;
+  if (!canModerate(auth.roles)) return forbidden(cors);
+  const body = await readJson(request);
+  if (!body.ok) return json({ error: body.error }, body.status, cors);
+  const requestId = text(requestIdRaw, 120);
+  const status = text(body.data.status, 30);
+  const expectedUpdatedAt = text(body.data.expectedUpdatedAt, 80);
+  const publicResponse = optionalText(body.data.publicResponse, 3000);
+  const adminNote = optionalText(body.data.adminNote, 2000);
+  const priority = text(body.data.priority, 20) || "normal";
+  const dbStatus = supportStatusToDb(status);
+  if (
+    !requestId ||
+    !dbStatus ||
+    !expectedUpdatedAt ||
+    !SUPPORT_PRIORITIES.has(priority) ||
+    ((dbStatus === "resolved" || dbStatus === "closed") && !publicResponse)
+  ) {
+    return validation(cors, "Invalid support update.");
+  }
+  const timestamp = now();
+  const result = await env.DB.prepare(
+    `UPDATE support_requests SET status = ?, priority = ?, assigned_to = ?,
+      public_response = ?, admin_note = ?, updated_at = ? WHERE id = ? AND updated_at = ?`,
+  )
+    .bind(
+      dbStatus,
+      priority,
+      auth.userId,
+      publicResponse,
+      adminNote,
+      timestamp,
+      requestId,
+      expectedUpdatedAt,
+    )
+    .run();
+  if (!result.success) return databaseError(cors);
+  const persisted = await env.DB.prepare(`${supportSelect()} WHERE id = ?`)
+    .bind(requestId)
+    .first<Row>();
+  if (!persisted) return notFound(cors);
+  if (
+    stringValue(persisted.updated_at) !== timestamp ||
+    stringValue(persisted.status) !== dbStatus ||
+    stringValue(persisted.assigned_to) !== auth.userId
+  ) {
+    return stale(cors);
+  }
+  await insertAudit(env, auth.userId, "support_request.moderated", "support_request", requestId, {
+    status,
+    priority,
+  });
+  return json({ data: mapAdminSupport(persisted) }, 200, cors);
 }
 
 async function createListingReport(
@@ -819,6 +920,16 @@ function mapSupport(row: Row) {
   };
 }
 
+function mapAdminSupport(row: Row) {
+  return {
+    ...mapSupport(row),
+    email: nullableString(row.email),
+    priority: stringValue(row.priority, "normal"),
+    assignedTo: nullableString(row.assigned_to),
+    adminNote: nullableString(row.admin_note),
+  };
+}
+
 function mapListingReport(row: Row) {
   return {
     id: stringValue(row.id),
@@ -876,6 +987,14 @@ function supportStatusFromDb(status: string): string {
   if (status === "resolved") return "resolved";
   if (status === "closed") return "rejected";
   return "new";
+}
+
+function supportStatusToDb(status: string): string | null {
+  if (status === "new") return "open";
+  if (status === "under_review") return "in_progress";
+  if (status === "resolved") return "resolved";
+  if (status === "rejected") return "closed";
+  return null;
 }
 
 function listingReportStatusFromDb(status: string): string {
