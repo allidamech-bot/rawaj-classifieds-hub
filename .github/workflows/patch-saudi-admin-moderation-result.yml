@@ -1,0 +1,65 @@
+name: Patch Saudi admin moderation result
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'fix/saudi-admin-moderation-result-20260802'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/saudi-admin-moderation-result-20260802
+          fetch-depth: 0
+      - name: Replace unreliable D1 batch metadata checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'cloudflare/worker/src/admin.ts';
+          let source = fs.readFileSync(path, 'utf8');
+
+          const batchMarker = '  const results = await env.DB.batch([\n';
+          if (!source.includes(batchMarker)) throw new Error('Moderation batch marker not found');
+          source = source.replace(
+            batchMarker,
+            '  const moderationActionId = crypto.randomUUID();\n' +
+              '  const auditLogId = crypto.randomUUID();\n\n' +
+              batchMarker,
+          );
+
+          const moderationUuid = `    ).bind(\n      crypto.randomUUID(),\n      listingId,\n      auth.userId,\n      moderationAction,`;
+          if (!source.includes(moderationUuid)) throw new Error('Moderation action UUID target not found');
+          source = source.replace(
+            moderationUuid,
+            `    ).bind(\n      moderationActionId,\n      listingId,\n      auth.userId,\n      moderationAction,`,
+          );
+
+          const auditUuid = `    ).bind(\n      crypto.randomUUID(),\n      auth.userId,\n      auditAction,`;
+          if (!source.includes(auditUuid)) throw new Error('Audit UUID target not found');
+          source = source.replace(
+            auditUuid,
+            `    ).bind(\n      auditLogId,\n      auth.userId,\n      auditAction,`,
+          );
+
+          const oldChecks = `  if (results.some((result) => !result.success)) return databaseError(cors);\n\n  const updateMeta = results[0].meta as { changes?: number } | undefined;\n  const modActionMeta = results[1].meta as { changes?: number } | undefined;\n  const auditMeta = results[2].meta as { changes?: number } | undefined;\n\n  if (!updateMeta?.changes || updateMeta.changes !== 1) {\n    return json(\n      { error: { code: "stale_review", message: "Listing changed since loaded." } },\n      409,\n      cors,\n    );\n  }\n  if (\n    !modActionMeta?.changes ||\n    modActionMeta.changes !== 1 ||\n    !auditMeta?.changes ||\n    auditMeta.changes !== 1\n  ) {\n    return databaseError(cors);\n  }`;
+
+          const newChecks = `  if (results.some((result) => !result.success)) {\n    console.error(\n      "rawaj_listing_moderation_batch_failed",\n      results.map((result) => result.error ?? "unknown_error"),\n    );\n    return databaseError(cors);\n  }\n\n  const persisted = await env.DB.prepare(\n    \`SELECT l.status, l.updated_at,\n            EXISTS(\n              SELECT 1 FROM listing_moderation_actions\n               WHERE id = ? AND listing_id = ? AND actor_id = ? AND action = ?\n            ) AS moderation_ok,\n            EXISTS(\n              SELECT 1 FROM audit_logs\n               WHERE id = ? AND actor_id = ? AND action = ?\n                 AND entity_type = 'listings' AND entity_id = ?\n            ) AS audit_ok\n       FROM listings l\n      WHERE l.id = ?\`,\n  )\n    .bind(\n      moderationActionId,\n      listingId,\n      auth.userId,\n      moderationAction,\n      auditLogId,\n      auth.userId,\n      auditAction,\n      listingId,\n      listingId,\n    )\n    .first<{\n      status: string;\n      updated_at: string;\n      moderation_ok: number;\n      audit_ok: number;\n    }>();\n\n  if (!persisted || persisted.status !== nextStatus || persisted.updated_at !== timestamp) {\n    return json(\n      { error: { code: "stale_review", message: "Listing changed since loaded." } },\n      409,\n      cors,\n    );\n  }\n  if (!persisted.moderation_ok || !persisted.audit_ok) return databaseError(cors);`;
+
+          if (!source.includes(oldChecks)) throw new Error('Legacy D1 batch metadata checks not found');
+          source = source.replace(oldChecks, newChecks);
+          fs.writeFileSync(path, source);
+          NODE
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add cloudflare/worker/src/admin.ts
+          git commit -m 'fix(saudi): verify persisted moderation rows'
+          git push origin HEAD:fix/saudi-admin-moderation-result-20260802
