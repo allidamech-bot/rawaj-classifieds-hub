@@ -23,6 +23,7 @@ test("Production auth gate covers Firebase, private gateway, D1 and R2", async (
   assert.match(script, /profile\/media/);
   assert.match(script, /R2 avatar read failed/);
   assert.match(script, /Firebase browser session did not persist/);
+  // The UI label "messages" is normalized to the canonical Worker value "chat".
   assert.match(script, /preferredContactMethod: "chat"/);
   assert.doesNotMatch(script, /preferredContactMethod: "messages"/);
 });
