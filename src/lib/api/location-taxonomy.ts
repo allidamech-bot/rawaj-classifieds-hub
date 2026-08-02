@@ -20,7 +20,7 @@ export interface LocationSearchResult {
 }
 
 export async function fetchLocationRoots(
-  countryCode = "SY",
+  countryCode = "SA",
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
   const result = await fetchCloudflareLocationRoots(countryCode);
   return result.ok ? { ok: true, data: sortLocationNodesForDisplay(result.data) } : result;

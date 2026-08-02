@@ -12,7 +12,7 @@ export type LocationLevel = {
   selectedId: string;
 };
 
-const LOCATION_ROOT_SOURCE_PRIORITY = ["ocha-hdx-cod-ab-syr", "iso3166"];
+const LOCATION_ROOT_SOURCE_PRIORITY = ["iso3166"];
 
 function preferredCountryRoot(nodes: CanonicalLocationNode[]) {
   const countries = nodes.filter((node) => node.nodeType === "country");
@@ -32,7 +32,7 @@ export function useLocationLevels(value?: string | null) {
 
     void (async () => {
       setError(null);
-      const roots = await fetchLocationRoots("SY");
+      const roots = await fetchLocationRoots("SA");
       if (cancelled) return;
       if (!roots.ok) return setError(roots.error.message);
 

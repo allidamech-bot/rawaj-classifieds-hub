@@ -13,7 +13,7 @@ import {
   ListingStudioSteps,
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
-import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";
 import { DynamicListingFields } from "@/features/listing-studio/DynamicListingFields";
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
@@ -2097,24 +2097,20 @@ function AddListingPage() {
                       label={text("الموقع", "Location")}
                       error={fieldErrors.governorateId ?? fieldErrors.district}
                     >
-                      <CanonicalLocationSelector
-                        value={locationNodeId}
-                        onChange={(id, node) => {
-                          setLocationNodeId(id ?? "");
-                          setLocationNodeType(node?.nodeType ?? "");
+                      <SaudiRegionCitySelector
+                        governorates={governorates}
+                        governorateId={governorateId}
+                        districtAr={district}
+                        onChange={(nextGovernorateId, nextDistrictAr) => {
+                          setGovernorateId(nextGovernorateId);
+                          setDistrict(nextDistrictAr);
+                          setLocationNodeId("");
+                          setLocationNodeType("");
                           setLocationLabel(
-                            node
-                              ? language === "en"
-                                ? node.nameEn || node.nameAr
-                                : node.nameAr
-                              : "",
+                            nextDistrictAr ||
+                              governorates.find((item) => item.id === nextGovernorateId)?.nameAr ||
+                              "",
                           );
-                          if (node?.legacyGovernorateId) {
-                            setGovernorateId(node.legacyGovernorateId);
-                          } else if (!id) {
-                            setGovernorateId("");
-                          }
-                          setDistrict(node?.legacyDistrictAr ?? "");
                         }}
                       />
                     </Field>
