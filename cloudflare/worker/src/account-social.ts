@@ -875,8 +875,20 @@ async function sendMessage(
   }
 
   const id = crypto.randomUUID();
+  const notificationId = crypto.randomUUID();
   const timestamp = now();
   const messageType = attachment?.kind === "audio" ? "audio" : attachment ? "image" : "text";
+  const notificationBody =
+    message ||
+    (attachment?.kind === "audio" ? "أرسل لك رسالة صوتية جديدة." : "أرسل لك صورة جديدة.");
+  const notificationData = JSON.stringify({
+    titleEn: "You have a new message",
+    bodyEn: "Open the conversation to view the new message.",
+    targetType: "conversation",
+    targetId: conversationId,
+    conversationId,
+    messageId: id,
+  });
   const statements = [
     env.DB.prepare(
       `INSERT INTO conversation_messages
@@ -897,6 +909,22 @@ async function sendMessage(
     env.DB.prepare(
       "UPDATE conversations SET last_message_at = ?, updated_at = ? WHERE id = ?",
     ).bind(timestamp, timestamp, conversationId),
+    env.DB.prepare(
+      `INSERT INTO notifications (id, user_id, type, title, body, data, created_at)
+       SELECT ?, ?, 'message.received', ?, ?, ?, ?
+       WHERE COALESCE(
+         (SELECT messages_enabled FROM notification_preferences WHERE user_id = ?),
+         1
+       ) = 1`,
+    ).bind(
+      notificationId,
+      otherUserId,
+      "لديك رسالة جديدة",
+      notificationBody.slice(0, 500),
+      notificationData,
+      timestamp,
+      otherUserId,
+    ),
   ];
   if (attachment) {
     statements.push(
