@@ -1,0 +1,275 @@
+name: Finalize Saudi Marketplace Production
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-finalize-production.yml
+      - scripts/saudi-production-e2e.sh
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  FIREBASE_API_KEY: AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U
+  FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
+  D1_NAME: rawaj-saudi-production
+  R2_NAME: rawaj-saudi-media-production
+  API_WORKER_NAME: rawaj-saudi-classifieds
+  WEB_WORKER_NAME: rawaj-saudi-web
+  API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+  SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+
+jobs:
+  finalize:
+    name: Localize, deploy and verify Saudi production
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out deployment control files
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+          fetch-depth: 1
+
+      - name: Check out isolated Saudi branch
+        uses: actions/checkout@v4
+        with:
+          ref: saudi
+          path: saudi-repo
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Validate production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "Missing CLOUDFLARE_PRODUCTION_API_TOKEN"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Localize Saudi frontend currency contracts
+        working-directory: saudi-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+          const targets = [
+            "src/lib/classifieds-types.ts",
+            "src/lib/api/listings.ts",
+            "src/lib/api/listing-price-context.ts",
+            "src/lib/api/reports.ts",
+            "src/lib/api/favorites.ts",
+            "src/lib/api/listing-price-offers.ts",
+            "src/features/listing-detail/PriceChangeBanner.tsx",
+            "src/routes/add-listing.tsx",
+            "src/routes/profile/listings.$id.tsx",
+          ];
+          let replacements = 0;
+          for (const file of targets) {
+            if (!fs.existsSync(file)) throw new Error(`Missing Saudi runtime file: ${file}`);
+            const original = fs.readFileSync(file, "utf8");
+            const localized = original.replaceAll('"SYP"', '"SAR"');
+            replacements += original === localized ? 0 : 1;
+            fs.writeFileSync(file, localized);
+          }
+          if (replacements < 5) throw new Error(`Unexpected Saudi currency localization count: ${replacements}`);
+          for (const file of targets) {
+            const value = fs.readFileSync(file, "utf8");
+            if (value.includes('"SYP"')) throw new Error(`Syrian currency remains in ${file}`);
+          }
+          console.log(`Localized ${replacements} Saudi frontend runtime files to SAR.`);
+          NODE
+          git diff --check
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: saudi-repo/package-lock.json
+
+      - name: Validate localized Saudi frontend
+        working-directory: saudi-repo
+        run: |
+          npm ci
+          npm run test:runtime-boundary
+          npm run typecheck
+          npm run build
+
+      - name: Commit localized Saudi runtime
+        id: saudi_commit
+        working-directory: saudi-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add src/lib/classifieds-types.ts \
+              src/lib/api/listings.ts \
+              src/lib/api/listing-price-context.ts \
+              src/lib/api/reports.ts \
+              src/lib/api/favorites.ts \
+              src/lib/api/listing-price-offers.ts \
+              src/features/listing-detail/PriceChangeBanner.tsx \
+              src/routes/add-listing.tsx \
+              'src/routes/profile/listings.$id.tsx'
+            git commit -m "fix(saudi): enforce SAR across marketplace runtime"
+            git push origin HEAD:saudi
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract audited Saudi API package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/rawaj-saudi-api
+          mkdir -p /tmp/rawaj-saudi-api
+          base64 --decode main-repo/ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64 \
+            >/tmp/rawaj-saudi-api.tar.gz
+          tar -xzf /tmp/rawaj-saudi-api.tar.gz -C /tmp/rawaj-saudi-api
+          test -d /tmp/rawaj-saudi-api/cloudflare/worker
+
+      - name: Localize Saudi Worker currency contracts
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(grep -RIl 'SYP' src || true)
+          test "${#files[@]}" -gt 0
+          printf '%s\n' "${files[@]}"
+          sed -i 's/SYP/SAR/g' "${files[@]}"
+          if grep -RIn 'SYP' src; then
+            echo "Syrian currency remains in Saudi Worker runtime" >&2
+            exit 1
+          fi
+
+      - name: Install and type-check Saudi Worker
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        run: |
+          npm ci
+          npm install --no-save jose@^6
+          npm run typecheck
+
+      - name: Resolve Saudi Cloudflare resources
+        id: resources
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json >/tmp/rawaj-saudi-d1-list.json
+          d1_id="$(node - <<'NODE'
+          const fs = require("node:fs");
+          const value = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-d1-list.json", "utf8"));
+          const rows = Array.isArray(value) ? value : value.result || [];
+          const match = rows.find((row) => row.name === process.env.D1_NAME);
+          if (!match) process.exit(2);
+          process.stdout.write(match.uuid || match.id || "");
+          NODE
+          )"
+          test -n "$d1_id"
+          npx wrangler r2 bucket info "$R2_NAME" >/tmp/rawaj-saudi-r2-info.txt
+          echo "d1_id=$d1_id" >> "$GITHUB_OUTPUT"
+
+      - name: Render Saudi API configuration
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        shell: bash
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_id }}
+        run: |
+          set -euo pipefail
+          export CLOUDFLARE_D1_DATABASE_NAME="$D1_NAME"
+          export CLOUDFLARE_R2_BUCKET_NAME="$R2_NAME"
+          export WORKER_NAME="$API_WORKER_NAME"
+          export RAWAJ_WORKER_RELEASE_SHA="${{ steps.saudi_commit.outputs.sha }}"
+          export RAWAJ_WORKER_ENVIRONMENT="production"
+          node scripts/render-config.mjs
+          node <<'NODE'
+          const fs = require("node:fs");
+          const config = JSON.parse(fs.readFileSync("wrangler.generated.jsonc", "utf8"));
+          if (config.name !== process.env.API_WORKER_NAME) throw new Error("Unexpected Saudi API Worker name");
+          if (config.vars?.FIREBASE_PROJECT_ID !== process.env.FIREBASE_PROJECT_ID) {
+            throw new Error("Unexpected Firebase project in Saudi API config");
+          }
+          if (config.d1_databases?.[0]?.database_name !== process.env.D1_NAME) throw new Error("Unexpected Saudi D1");
+          if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) throw new Error("Unexpected Saudi R2");
+          NODE
+
+      - name: Apply migrations and enforce Saudi currency
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 migrations apply "$D1_NAME" --remote --config wrangler.generated.jsonc
+          npx wrangler d1 execute "$D1_NAME" --remote --config wrangler.generated.jsonc \
+            --command "UPDATE listings SET currency='SAR' WHERE currency IS NULL OR currency <> 'SAR';"
+
+      - name: Deploy Saudi API Worker
+        working-directory: /tmp/rawaj-saudi-api/cloudflare/worker
+        run: npx wrangler deploy --config wrangler.generated.jsonc
+
+      - name: Prepare Saudi frontend Worker configuration
+        working-directory: saudi-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .output/server/index.mjs
+          test -f .output/server/wrangler.json
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = ".output/server/wrangler.json";
+          const config = JSON.parse(fs.readFileSync(path, "utf8"));
+          config.name = process.env.WEB_WORKER_NAME;
+          config.assets = { ...(config.assets || {}), run_worker_first: true };
+          config.services = [{ binding: "SAUDI_API", service: process.env.API_WORKER_NAME }];
+          config.observability = { enabled: true };
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+
+      - name: Deploy Saudi frontend Worker
+        working-directory: saudi-repo
+        run: npx --yes wrangler@4.118.0 deploy --config .output/server/wrangler.json
+
+      - name: Verify live Saudi public routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/" >/tmp/rawaj-saudi-home.html
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/login" >/tmp/rawaj-saudi-login.html
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/add-listing" >/tmp/rawaj-saudi-add-listing.html
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/health" >/tmp/rawaj-saudi-health.json
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/references" >/tmp/rawaj-saudi-references.json
+          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/rawaj-saudi-home.html
+          grep -q "تسجيل الدخول" /tmp/rawaj-saudi-login.html
+          grep -q "أضف إعلان" /tmp/rawaj-saudi-add-listing.html
+          node <<'NODE'
+          const fs = require("node:fs");
+          const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
+          const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
+          if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
+            throw new Error("Saudi API health failed through same-origin Worker binding");
+          }
+          if ((refs.data?.categories?.length || 0) !== 12) throw new Error("Saudi category count mismatch");
+          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi region count mismatch");
+          NODE
+
+      - name: Run disposable Saudi production journey
+        shell: bash
+        env:
+          WRANGLER_CONFIG: /tmp/rawaj-saudi-api/cloudflare/worker/wrangler.generated.jsonc
+        run: bash main-repo/scripts/saudi-production-e2e.sh
+
+      - name: Record successful Saudi cutover
+        shell: bash
+        run: |
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" --body \
+            "Saudi production journey passed on **$SITE_URL** from Saudi commit \`${{ steps.saudi_commit.outputs.sha }}\`: Firebase email authentication, Google OAuth origin, D1 profile creation, 12 categories, 13 regions, SAR listing draft, R2 image upload/read-back, owner listing read-back, and automatic cleanup all succeeded. Vercel automatic deployments remain disabled."
