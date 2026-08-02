@@ -23,6 +23,7 @@ test("internal support fields are only returned to administrators", () => {
   assert.ok(publicStart >= 0 && adminStart > publicStart && adminEnd > adminStart);
   const publicMapper = source.slice(publicStart, adminStart);
   const adminMapper = source.slice(adminStart, adminEnd);
+  assert.match(publicMapper, /publicResponse/);
   assert.doesNotMatch(publicMapper, /adminNote|assignedTo|row\.email|row\.priority/);
   assert.match(adminMapper, /adminNote/);
   assert.match(adminMapper, /assignedTo/);
