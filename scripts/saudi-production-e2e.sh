@@ -148,7 +148,7 @@ const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-references.json", "ut
 const category = payload?.data?.categories?.find((item) => item?.id);
 const governorate = payload?.data?.governorates?.find((item) => item?.id);
 if (!category || !governorate) throw new Error("Saudi listing references are unavailable");
-process.stdout.write(`${category.id} ${governorate.id}`);
+console.log(`${category.id} ${governorate.id}`);
 NODE
 )
 echo "[Saudi E2E] categories and regions loaded"
