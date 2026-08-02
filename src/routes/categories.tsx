@@ -110,10 +110,10 @@ function CategoriesPage() {
         if (categoriesResult.ok) setCategories(categoriesResult.data);
         if (subcategoriesResult.ok) setSubcategories(subcategoriesResult.data);
 
-        if (taxonomyResult.ok) {
+        if (taxonomyResult.ok && taxonomyResult.data.length > 0) {
           setTaxonomyNodes(taxonomyResult.data);
           setTaxonomyAvailable(true);
-        } else if (taxonomyResult.error.code === "schema_missing") {
+        } else if (taxonomyResult.ok || taxonomyResult.error.code === "schema_missing") {
           setTaxonomyNodes([]);
           setTaxonomyAvailable(false);
           if (!categoriesResult.ok) setFetchError(categoriesResult.error);
