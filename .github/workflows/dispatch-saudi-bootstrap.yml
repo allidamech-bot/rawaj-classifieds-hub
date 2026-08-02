@@ -1,0 +1,112 @@
+name: Dispatch and report Saudi bootstrap
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/dispatch-saudi-bootstrap.yml
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: dispatch-rawaj-saudi-cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    name: Run and report Saudi Cloudflare bootstrap
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_WORKFLOW: saudi-cloudflare-bootstrap.yml
+      REPORT_PR: "593"
+    steps:
+      - name: Dispatch Saudi bootstrap
+        id: dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "$TARGET_WORKFLOW" \
+            --event workflow_dispatch \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // 0')"
+
+          gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref main
+
+          run_id=""
+          for _ in $(seq 1 30); do
+            current="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "$TARGET_WORKFLOW" \
+              --event workflow_dispatch \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId // 0')"
+            if [ "$current" != "0" ] && [ "$current" != "$before" ]; then
+              run_id="$current"
+              break
+            fi
+            sleep 2
+          done
+
+          test -n "$run_id" || { echo "Unable to resolve dispatched run id" >&2; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Dispatched Saudi bootstrap run $run_id"
+
+      - name: Wait for Saudi bootstrap
+        id: watch
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          gh run watch "${{ steps.dispatch.outputs.run_id }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --exit-status
+
+      - name: Report detailed result
+        id: report
+        if: always() && steps.dispatch.outputs.run_id != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id="${{ steps.dispatch.outputs.run_id }}"
+          run_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id")"
+          jobs_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?per_page=100")"
+
+          conclusion="$(jq -r '.conclusion // .status // "unknown"' <<<"$run_json")"
+          html_url="$(jq -r '.html_url' <<<"$run_json")"
+          head_sha="$(jq -r '.head_sha' <<<"$run_json")"
+
+          {
+            echo "## Saudi Cloudflare bootstrap: \`$conclusion\`"
+            echo
+            echo "- Run: [$run_id]($html_url)"
+            echo "- Commit: \`$head_sha\`"
+            echo "- Worker: \`rawaj-saudi-classifieds\`"
+            echo "- D1: \`rawaj-saudi-production\`"
+            echo "- R2: \`rawaj-saudi-media-production\`"
+            echo
+            echo "### Jobs and steps"
+            jq -r '
+              .jobs[] |
+              "#### " + .name + " — `" + (.conclusion // .status // "unknown") + "`\n" +
+              ((.steps // []) | map("- " + .name + ": `" + (.conclusion // .status // "unknown") + "`") | join("\n"))
+            ' <<<"$jobs_json"
+          } > /tmp/saudi-bootstrap-report.md
+
+          gh pr comment "$REPORT_PR" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body-file /tmp/saudi-bootstrap-report.md
+
+          if [ "$conclusion" != "success" ]; then
+            exit 1
+          fi
