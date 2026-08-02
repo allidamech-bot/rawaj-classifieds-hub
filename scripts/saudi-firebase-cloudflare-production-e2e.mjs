@@ -251,25 +251,32 @@ async function verifyPasswordReset() {
   const resetResponses = [];
   page.on("response", (response) => {
     if (response.url().includes("accounts:sendOobCode")) {
-      resetResponses.push(response.status());
+      resetResponses.push({ status: response.status(), url: response.url() });
     }
   });
 
-  await page.goto(`${SITE_URL}/login?mode=forgot&releaseGate=${stamp}`, {
-    waitUntil: "domcontentloaded",
-    timeout: 45_000,
+  await waitForInteractiveLogin(page);
+  await page.getByRole("button", { name: /نسيت كلمة المرور|Forgot password/i }).click();
+  const submit = page.getByRole("button", {
+    name: /إرسال رابط إعادة التعيين|Send reset link/i,
   });
-  await page
-    .locator('form[data-interactive="true"]')
-    .waitFor({ state: "visible", timeout: 30_000 });
+  await submit.waitFor({ state: "visible", timeout: 10_000 });
   await page.locator('input[type="email"]').fill(email);
-  await page.locator('form button[type="submit"]').click();
+  await submit.click();
   await page.waitForTimeout(3000);
+
   const body = await page.locator("body").innerText();
-  if (!resetResponses.includes(200)) throw new Error("Firebase password reset request failed");
+  if (!resetResponses.some((item) => item.status === 200)) {
+    await page.screenshot({ path: "artifacts/saudi-password-reset-failure.png", fullPage: true });
+    throw new Error(
+      `Firebase password reset request failed: ${JSON.stringify({ resetResponses, url: page.url(), body })}`,
+    );
+  }
   if (!body.includes("ستصلك") && !body.includes("receive")) {
+    await page.screenshot({ path: "artifacts/saudi-password-reset-failure.png", fullPage: true });
     throw new Error("Password reset success state was not displayed");
   }
+  await page.screenshot({ path: "artifacts/saudi-password-reset-success.png", fullPage: true });
   await context.close();
 }
 
@@ -278,9 +285,15 @@ async function verifyGoogleProvider() {
   const page = await context.newPage();
   await waitForInteractiveLogin(page);
 
-  const popupPromise = page.waitForEvent("popup", { timeout: 15_000 });
+  const popupPromise = page.waitForEvent("popup", { timeout: 15_000 }).catch(() => null);
   await page.getByRole("button", { name: /Google/i }).click();
   const popup = await popupPromise;
+  if (!popup) {
+    await page.waitForTimeout(2000);
+    const body = await page.locator("body").innerText();
+    await page.screenshot({ path: "artifacts/saudi-google-oauth-failure.png", fullPage: true });
+    throw new Error(`Google OAuth popup did not open: ${body}`);
+  }
   await popup.waitForURL((url) => url.hostname.includes("accounts.google.com"), {
     timeout: 20_000,
   });
