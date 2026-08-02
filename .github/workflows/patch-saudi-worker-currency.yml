@@ -1,0 +1,40 @@
+name: Patch Saudi Worker currency
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    if: github.head_ref == 'fix/saudi-worker-currency-20260802'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/saudi-worker-currency-20260802
+          fetch-depth: 0
+      - name: Replace Syrian runtime currency assumptions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(grep -RIl 'SYP' cloudflare/worker/src)
+          test "${#files[@]}" -eq 8
+          count_before="$(grep -RIn 'SYP' cloudflare/worker/src | wc -l | tr -d ' ')"
+          test "$count_before" -eq 11
+          sed -i 's/SYP/SAR/g' "${files[@]}"
+          if grep -RIn 'SYP' cloudflare/worker/src; then
+            echo 'Saudi Worker still contains SYP runtime references.' >&2
+            exit 1
+          fi
+          count_after="$(grep -RIn 'SAR' cloudflare/worker/src | wc -l | tr -d ' ')"
+          test "$count_after" -ge 11
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add cloudflare/worker/src
+          git commit -m 'fix(saudi): use SAR across Worker runtime'
+          git push origin HEAD:fix/saudi-worker-currency-20260802
