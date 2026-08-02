@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "alias": ["rawa-j.com", "www.rawa-j.com", "sa.rawa-j.com"],
   "git": {
     "deploymentEnabled": {
       "*": false,
