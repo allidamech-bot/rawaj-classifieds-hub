@@ -74,7 +74,7 @@ jobs:
           status="$(curl --silent --show-error --output /tmp/firebase-password.json --write-out '%{http_code}' \
             -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$FIREBASE_API_KEY" \
             -H 'Content-Type: application/json' \
-            --data '{"email":"rawaj-live-verification@example.invalid","password":"invalid-password","returnSecureToken":true}')"
+            --data '{"email":"rawaj-live-verification@example.com","password":"invalid-password","returnSecureToken":true}')"
           test "$status" = "400"
           node <<'NODE'
           const fs = require("node:fs");
@@ -93,8 +93,8 @@ jobs:
           status="$(curl --silent --show-error --output /tmp/firebase-google.json --write-out '%{http_code}' \
             -X POST "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=$FIREBASE_API_KEY" \
             -H 'Content-Type: application/json' \
-            --data "{\"identifier\":\"rawaj-live-verification@example.invalid\",\"continueUri\":\"$SITE_URL/login\",\"providerId\":\"google.com\"}")"
-          node <<'NODE'
+            --data "{\"identifier\":\"rawaj-live-verification@example.com\",\"continueUri\":\"$SITE_URL/login\",\"providerId\":\"google.com\"}")"
+          GOOGLE_STATUS="$status" node <<'NODE'
           const fs = require("node:fs");
           const payload = JSON.parse(fs.readFileSync("/tmp/firebase-google.json", "utf8"));
           const status = process.env.GOOGLE_STATUS;
@@ -103,5 +103,3 @@ jobs:
           if (!payload.authUri) throw new Error("Firebase Google OAuth did not return an auth URI");
           console.log("Firebase Google OAuth is enabled for the Saudi live origin.");
           NODE
-        env:
-          GOOGLE_STATUS: ${{ steps.google-status.outputs.status }}
