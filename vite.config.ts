@@ -33,6 +33,12 @@ const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
 const rawajE2eApiProxyPath = "/v1";
 const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
+// This branch is the isolated Saudi market application. These values are intentionally
+// pinned in the bundle so environment variables inherited from the Syrian Vercel project
+// cannot redirect Saudi traffic back to the Syrian Worker.
+const rawajSaudiApiBaseUrl = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
+const rawajSaudiSiteUrl = "https://sa.rawa-j.com";
+
 export default defineConfig({
   vite: {
     plugins: rawajE2eUseFixtures
@@ -85,12 +91,11 @@ export default defineConfig({
       ],
     },
     define: {
-      ...(rawajE2eUseFixtures
-        ? {
-            "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL":
-              JSON.stringify(rawajE2eLocalApiBaseUrl),
-          }
-        : {}),
+      "import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL": JSON.stringify(
+        rawajE2eUseFixtures ? rawajE2eLocalApiBaseUrl : rawajSaudiApiBaseUrl,
+      ),
+      "import.meta.env.VITE_SITE_URL": JSON.stringify(rawajSaudiSiteUrl),
+      "import.meta.env.VITE_RAWAJ_MARKET": JSON.stringify("saudi"),
       __RAWAJ_BUILD_INFO__: JSON.stringify(rawajBuildInfo),
       __RAWAJ_DISABLE_REMOTE_MEDIA__: JSON.stringify(rawajDisableRemoteMedia),
     },
