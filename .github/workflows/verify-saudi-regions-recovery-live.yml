@@ -1,0 +1,141 @@
+name: Verify recovered Saudi regions live
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Saudi live region recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify live Saudi API and browser recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { chromium } from "playwright";
+
+          const siteUrl = "https://sa.rawa-j.com/listings?open_filters=true";
+          const apiUrl = "https://rawaj-saudi-classifieds.allidamech.workers.dev/v1/references";
+          const browser = await chromium.launch({ headless: true });
+
+          try {
+            const apiResponse = await fetch(apiUrl, {
+              headers: { Origin: "https://sa.rawa-j.com", Accept: "application/json" },
+            });
+            if (!apiResponse.ok) throw new Error(`Saudi API returned ${apiResponse.status}`);
+            if (apiResponse.headers.get("access-control-allow-origin") !== "https://sa.rawa-j.com") {
+              throw new Error("Saudi API CORS does not allow the production domain");
+            }
+            const payload = await apiResponse.json();
+            const apiRegions = payload.data?.governorates ?? [];
+            if (apiRegions.length !== 13) throw new Error(`Saudi API returned ${apiRegions.length} regions`);
+            const riyadh = apiRegions.find((region) => region.nameAr?.includes("الرياض"));
+            if (!riyadh || !Array.isArray(riyadh.districtsAr) || riyadh.districtsAr.length === 0) {
+              throw new Error("Riyadh cities are missing from the Saudi API");
+            }
+
+            let lastDiagnostic = "";
+            for (let attempt = 1; attempt <= 6; attempt += 1) {
+              const context = await browser.newContext({
+                locale: "ar-SA",
+                viewport: { width: 1440, height: 1000 },
+                extraHTTPHeaders: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+              });
+              const page = await context.newPage();
+              const apiResponses = [];
+              const failedRequests = [];
+              const consoleErrors = [];
+              page.on("response", (response) => {
+                if (response.url().startsWith(apiUrl)) apiResponses.push(response.status());
+              });
+              page.on("requestfailed", (request) => {
+                failedRequests.push(`${request.url()}: ${request.failure()?.errorText ?? "failed"}`);
+              });
+              page.on("console", (message) => {
+                if (message.type() === "error") consoleErrors.push(message.text());
+              });
+
+              try {
+                await page.goto(siteUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+                const regionSelect = page.locator("[data-saudi-region-select]").first();
+                await regionSelect.waitFor({ state: "visible", timeout: 30_000 });
+                await page.waitForFunction(
+                  () => document.querySelectorAll("[data-saudi-region-select] option").length === 14,
+                  undefined,
+                  { timeout: 45_000 },
+                );
+
+                const regionOptions = await regionSelect.locator("option").evaluateAll((options) =>
+                  options.map((option) => ({ value: option.value, text: option.textContent?.trim() || "" })),
+                );
+                const liveRegions = regionOptions.slice(1).filter((option) => option.value);
+                if (liveRegions.length !== 13) {
+                  throw new Error(`Live UI returned ${liveRegions.length} regions`);
+                }
+                const liveRiyadh = liveRegions.find((option) => option.text.includes("الرياض"));
+                if (!liveRiyadh) throw new Error("Riyadh is missing from the live region selector");
+
+                await regionSelect.selectOption(liveRiyadh.value);
+                const citySelect = page.locator("[data-saudi-city-select]").first();
+                await page.waitForFunction(
+                  () => document.querySelectorAll("[data-saudi-city-select] option").length > 1,
+                  undefined,
+                  { timeout: 15_000 },
+                );
+                const cities = await citySelect.locator("option").evaluateAll((options) =>
+                  options.slice(1).map((option) => option.textContent?.trim() || "").filter(Boolean),
+                );
+                if (cities.length === 0) throw new Error("No Riyadh cities appeared in the live UI");
+
+                console.log(
+                  `LIVE PASS: ${liveRegions.length} Saudi regions; Riyadh has ${cities.length} visible cities; API has ${riyadh.districtsAr.length}.`,
+                );
+                if (apiResponses.length > 0) {
+                  console.log(`Browser direct API responses: ${apiResponses.join(", ")}`);
+                } else {
+                  console.log("References were supplied by SSR; browser fallback was not required on this request.");
+                }
+                await context.close();
+                process.exit(0);
+              } catch (error) {
+                lastDiagnostic = JSON.stringify({
+                  attempt,
+                  error: error instanceof Error ? error.message : String(error),
+                  apiResponses,
+                  failedRequests: failedRequests.slice(-10),
+                  consoleErrors: consoleErrors.slice(-10),
+                  url: page.url(),
+                });
+                console.log(`Attempt ${attempt} not ready: ${lastDiagnostic}`);
+                await context.close();
+                if (attempt < 6) await new Promise((resolve) => setTimeout(resolve, 20_000));
+              }
+            }
+
+            throw new Error(`Live Saudi region verification failed after retries: ${lastDiagnostic}`);
+          } finally {
+            await browser.close();
+          }
+          NODE
