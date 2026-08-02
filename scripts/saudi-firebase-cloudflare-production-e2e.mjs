@@ -11,7 +11,9 @@ const SAUDI_APP_DIR = process.env.SAUDI_APP_DIR ?? "";
 if (!FIREBASE_API_KEY) throw new Error("FIREBASE_API_KEY is required");
 if (!SAUDI_APP_DIR) throw new Error("SAUDI_APP_DIR is required");
 
-const playwrightUrl = pathToFileURL(resolve(SAUDI_APP_DIR, "node_modules/playwright/index.mjs")).href;
+const playwrightUrl = pathToFileURL(
+  resolve(SAUDI_APP_DIR, "node_modules/playwright/index.mjs"),
+).href;
 const { chromium } = await import(playwrightUrl);
 
 const stamp = Date.now();
@@ -72,7 +74,9 @@ async function jsonRequest(origin, path, { method = "GET", token = null, body = 
 
 function assertStatus(result, expected, label) {
   if (result.response.status !== expected) {
-    throw new Error(`${label} expected ${expected}, got ${result.response.status}: ${result.text.slice(0, 1000)}`);
+    throw new Error(
+      `${label} expected ${expected}, got ${result.response.status}: ${result.text.slice(0, 1000)}`,
+    );
   }
 }
 
@@ -86,7 +90,11 @@ async function verifyPublicInfrastructure(origin) {
   const references = await jsonRequest(origin, "/v1/references");
   assertStatus(references, 200, `${origin} references`);
   const data = references.payload?.data;
-  if (data?.categories?.length !== 12 || data?.taxonomyNodes?.length !== 117 || data?.governorates?.length !== 13) {
+  if (
+    data?.categories?.length !== 12 ||
+    data?.taxonomyNodes?.length !== 117 ||
+    data?.governorates?.length !== 13
+  ) {
     throw new Error(`${origin} reference counts are incorrect`);
   }
 }
@@ -180,7 +188,9 @@ async function waitForInteractiveLogin(page) {
     waitUntil: "domcontentloaded",
     timeout: 45_000,
   });
-  await page.locator('form[data-interactive="true"]').waitFor({ state: "visible", timeout: 30_000 });
+  await page
+    .locator('form[data-interactive="true"]')
+    .waitFor({ state: "visible", timeout: 30_000 });
 }
 
 async function verifyBrowserEmailSession() {
@@ -207,7 +217,11 @@ async function verifyBrowserEmailSession() {
   await page.waitForURL((url) => url.pathname !== "/login", { timeout: 30_000 });
   await page.waitForTimeout(1500);
 
-  if (!authResponses.some((item) => item.url.includes("accounts:signInWithPassword") && item.status === 200)) {
+  if (
+    !authResponses.some(
+      (item) => item.url.includes("accounts:signInWithPassword") && item.status === 200,
+    )
+  ) {
     throw new Error("Browser email login did not complete through Firebase");
   }
   if (!authResponses.some((item) => item.url.includes("/api/profile") && item.status === 200)) {
@@ -245,7 +259,9 @@ async function verifyPasswordReset() {
     waitUntil: "domcontentloaded",
     timeout: 45_000,
   });
-  await page.locator('form[data-interactive="true"]').waitFor({ state: "visible", timeout: 30_000 });
+  await page
+    .locator('form[data-interactive="true"]')
+    .waitFor({ state: "visible", timeout: 30_000 });
   await page.locator('input[type="email"]').fill(email);
   await page.locator('form button[type="submit"]').click();
   await page.waitForTimeout(3000);
@@ -265,7 +281,9 @@ async function verifyGoogleProvider() {
   const popupPromise = page.waitForEvent("popup", { timeout: 15_000 });
   await page.getByRole("button", { name: /Google/i }).click();
   const popup = await popupPromise;
-  await popup.waitForURL((url) => url.hostname.includes("accounts.google.com"), { timeout: 20_000 });
+  await popup.waitForURL((url) => url.hostname.includes("accounts.google.com"), {
+    timeout: 20_000,
+  });
   console.log(`Google OAuth popup reached ${popup.url()}`);
   await popup.close();
   await context.close();
@@ -283,7 +301,8 @@ try {
   });
   firebaseUid = created.localId ?? "";
   firebaseIdToken = created.idToken ?? "";
-  if (!firebaseUid || !firebaseIdToken) throw new Error("Firebase did not return a disposable identity");
+  if (!firebaseUid || !firebaseIdToken)
+    throw new Error("Firebase did not return a disposable identity");
   await writeFile("/tmp/rawaj-saudi-auth-firebase-uid", firebaseUid, "utf8");
 
   await verifyPrivateApiAndStorage();
