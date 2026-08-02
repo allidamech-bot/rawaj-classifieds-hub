@@ -34,10 +34,7 @@ async function proxySaudiApi(
 ): Promise<Response> {
   const incomingUrl = new URL(request.url);
   const serviceBinding = env.SAUDI_API;
-  const targetOrigin = serviceBinding
-    ? "https://sa.rawa-j.com"
-    : saudiApiOrigin;
-  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, targetOrigin);
+  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, saudiApiOrigin);
   const headers = new Headers(request.headers);
 
   for (const name of [
@@ -61,7 +58,30 @@ async function proxySaudiApi(
     redirect: "manual",
   });
 
-  return serviceBinding ? serviceBinding.fetch(proxiedRequest) : fetch(proxiedRequest);
+  try {
+    return serviceBinding
+      ? await serviceBinding.fetch(proxiedRequest)
+      : await fetch(proxiedRequest);
+  } catch (error) {
+    console.error(
+      "SAUDI_API_BINDING_FAILURE",
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : String(error),
+    );
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: "gateway_unavailable",
+          message: "Saudi marketplace data is temporarily unavailable.",
+        },
+      }),
+      {
+        status: 502,
+        headers: { "content-type": "application/json; charset=utf-8" },
+      },
+    );
+  }
 }
 
 function applyProductionHeaders(response: Response, request: Request): Response {
