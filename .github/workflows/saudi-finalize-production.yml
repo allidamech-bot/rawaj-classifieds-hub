@@ -81,12 +81,18 @@ jobs:
             replacements += original === localized ? 0 : 1;
             fs.writeFileSync(file, localized);
           }
-          if (replacements < 5) throw new Error(`Unexpected Saudi currency localization count: ${replacements}`);
+          if (replacements !== 0 && replacements < 5) {
+            throw new Error(`Unexpected partial Saudi currency localization count: ${replacements}`);
+          }
           for (const file of targets) {
             const value = fs.readFileSync(file, "utf8");
             if (value.includes('"SYP"')) throw new Error(`Syrian currency remains in ${file}`);
           }
-          console.log(`Localized ${replacements} Saudi frontend runtime files to SAR.`);
+          console.log(
+            replacements === 0
+              ? "Saudi frontend runtime was already localized to SAR."
+              : `Localized ${replacements} Saudi frontend runtime files to SAR.`,
+          );
           NODE
           git diff --check
 
