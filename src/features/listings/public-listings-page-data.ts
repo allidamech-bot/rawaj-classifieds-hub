@@ -68,12 +68,13 @@ export async function loadPublicListingsPageData(
     governoratesResult,
     taxonomyResult,
   );
+  const taxonomyAvailable = taxonomyResult.ok && taxonomyResult.data.length > 0;
   const references: PublicListingsReferencesData = {
     categories: categoriesResult.ok ? categoriesResult.data : [],
     subcategories: subcategoriesResult.ok ? subcategoriesResult.data : [],
     governorates: governoratesResult.ok ? governoratesResult.data : [],
-    taxonomyNodes: taxonomyResult.ok ? taxonomyResult.data : [],
-    taxonomyAvailable: taxonomyResult.ok,
+    taxonomyNodes: taxonomyAvailable ? taxonomyResult.data : [],
+    taxonomyAvailable,
     error: referenceError,
   };
 
@@ -205,7 +206,7 @@ function firstReferenceError(
   if (!categoriesResult.ok) return categoriesResult.error;
   if (!subcategoriesResult.ok) return subcategoriesResult.error;
   if (!governoratesResult.ok) return governoratesResult.error;
-  // Taxonomy is an optional read model here. Any read failure keeps legacy
-  // category/subcategory search available without mutating listing data.
+  // Taxonomy is an optional read model here. Empty or unavailable taxonomy
+  // keeps legacy category/subcategory search available without mutation.
   return null;
 }
