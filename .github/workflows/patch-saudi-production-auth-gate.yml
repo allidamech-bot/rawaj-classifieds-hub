@@ -1,0 +1,124 @@
+name: Patch Saudi production auth gate
+
+"on":
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: patch-saudi-production-auth-gate-${{ github.head_ref }}
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    if: github.head_ref == 'ci/saudi-firebase-cloudflare-release-gate-20260803'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Add release-blocking Firebase Cloudflare gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/saudi-finalize-production.yml')
+          text = path.read_text()
+
+          old_paths = '''      - scripts/saudi-finalizer-first-load.test.mjs
+'''
+          new_paths = old_paths + '''      - scripts/saudi-firebase-cloudflare-production-e2e.mjs
+      - scripts/saudi-production-auth-gate.test.mjs
+'''
+          if old_paths not in text:
+            raise SystemExit('Finalizer path trigger anchor missing')
+          text = text.replace(old_paths, new_paths, 1)
+
+          anchor = '''      - name: Run disposable Firebase D1 R2 listing journey
+        shell: bash
+        env:
+          WRANGLER_CONFIG: ${{ github.workspace }}/saudi-repo/cloudflare/worker/wrangler.generated.jsonc
+        run: bash main-repo/scripts/saudi-production-e2e.sh
+'''
+          gate = '''      - name: Install Chromium for Firebase Cloudflare production gate
+        working-directory: saudi-repo
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Firebase Cloudflare production dependency gate
+        shell: bash
+        env:
+          SAUDI_APP_DIR: ${{ github.workspace }}/saudi-repo
+        run: node main-repo/scripts/saudi-firebase-cloudflare-production-e2e.mjs
+
+      - name: Clean disposable Firebase Cloudflare gate data
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          profile_id=""
+          firebase_uid=""
+          [ -s /tmp/rawaj-saudi-auth-profile-id ] && profile_id="$(cat /tmp/rawaj-saudi-auth-profile-id)"
+          [ -s /tmp/rawaj-saudi-auth-firebase-uid ] && firebase_uid="$(cat /tmp/rawaj-saudi-auth-firebase-uid)"
+          if [ -z "$profile_id" ] && [ -z "$firebase_uid" ]; then
+            echo "No disposable auth identity requires D1 cleanup."
+            exit 0
+          fi
+          escaped_profile="${profile_id//\'/\'\'}"
+          escaped_firebase="${firebase_uid//\'/\'\'}"
+          sql="DELETE FROM seller_follows WHERE follower_id='$escaped_profile' OR seller_id='$escaped_profile'; DELETE FROM seller_reviews WHERE reviewer_id='$escaped_profile' OR seller_id='$escaped_profile'; DELETE FROM notification_preferences WHERE user_id='$escaped_profile'; DELETE FROM notifications WHERE user_id='$escaped_profile'; DELETE FROM media_assets WHERE owner_id='$escaped_profile'; DELETE FROM user_roles WHERE user_id='$escaped_profile'; DELETE FROM public_profiles WHERE id='$escaped_profile'; DELETE FROM auth_users WHERE id='$escaped_profile' OR auth_user_id='$escaped_firebase';"
+          cd saudi-repo/cloudflare/worker
+          npx wrangler d1 execute "$D1_NAME" --remote --config wrangler.generated.jsonc --command "$sql" || true
+
+      - name: Upload Firebase Cloudflare gate diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: saudi-firebase-cloudflare-production-gate
+          path: artifacts
+          if-no-files-found: ignore
+          retention-days: 3
+
+''' + anchor
+          if anchor not in text:
+            raise SystemExit('Disposable listing journey anchor missing')
+          text = text.replace(anchor, gate, 1)
+
+          old_comment = 'Firebase authentication, D1/R2 listing journey, CORS, SAR enforcement, and automatic cleanup all succeeded.'
+          new_comment = 'Firebase email/password, persisted sessions, password reset, Google OAuth, authenticated /api and /v1 Service Binding routes, D1 profile/preferences, R2 media, the D1/R2 listing journey, CORS, SAR enforcement, and automatic cleanup all succeeded.'
+          if old_comment not in text:
+            raise SystemExit('Final success comment anchor missing')
+          text = text.replace(old_comment, new_comment, 1)
+          path.write_text(text)
+
+          Path('scripts/saudi-production-auth-gate.test.mjs').write_text('''import assert from "node:assert/strict";\nimport test from "node:test";\nimport { readFile } from "node:fs/promises";\n\ntest("Saudi finalizer blocks releases on the full Firebase Cloudflare journey", async () => {\n  const workflow = await readFile(".github/workflows/saudi-finalize-production.yml", "utf8");\n  assert.match(workflow, /playwright install --with-deps chromium/);\n  assert.match(workflow, /saudi-firebase-cloudflare-production-e2e\\.mjs/);\n  assert.match(workflow, /Clean disposable Firebase Cloudflare gate data/);\n  assert.match(workflow, /public_profiles/);\n  assert.match(workflow, /auth_users/);\n});\n\ntest("Production auth gate covers Firebase, private gateway, D1 and R2", async () => {\n  const script = await readFile("scripts/saudi-firebase-cloudflare-production-e2e.mjs", "utf8");\n  assert.match(script, /accounts:signUp/);\n  assert.match(script, /accounts:signInWithPassword/);\n  assert.match(script, /accounts:sendOobCode/);\n  assert.match(script, /accounts\\.google\\.com/);\n  assert.match(script, /\\/api\\/profile/);\n  assert.match(script, /notification-preferences/);\n  assert.match(script, /profile\\/media/);\n  assert.match(script, /R2 avatar read failed/);\n  assert.match(script, /Firebase browser session did not persist/);\n});\n''')
+
+          Path('.github/workflows/patch-saudi-production-auth-gate.yml').unlink()
+          PY
+
+      - name: Validate permanent gate
+        run: |
+          node --check scripts/saudi-firebase-cloudflare-production-e2e.mjs
+          node --test scripts/saudi-production-auth-gate.test.mjs
+
+      - name: Commit permanent production gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/saudi-finalize-production.yml scripts/saudi-firebase-cloudflare-production-e2e.mjs scripts/saudi-production-auth-gate.test.mjs .github/workflows/patch-saudi-production-auth-gate.yml
+          git commit -m "ci(saudi): block releases on Firebase Cloudflare journey"
+          git push origin HEAD:${{ github.head_ref }}
