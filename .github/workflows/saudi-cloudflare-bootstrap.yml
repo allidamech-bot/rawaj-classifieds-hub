@@ -63,6 +63,10 @@ jobs:
         working-directory: cloudflare/worker
         run: npm ci
 
+      - name: Restore missing JWT runtime dependency
+        working-directory: cloudflare/worker
+        run: npm install --no-save jose@^6
+
       - name: Type-check Worker
         working-directory: cloudflare/worker
         run: npm run typecheck
