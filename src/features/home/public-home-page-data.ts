@@ -15,22 +15,20 @@ export async function loadPublicHomePageData() {
     fetchPublicCategories(),
   ]);
 
-  const taxonomySchemaMissing =
-    !taxonomyResult.ok && taxonomyResult.error.code === "schema_missing";
-  const categoryWorlds = taxonomyResult.ok
+  const taxonomyAvailable = taxonomyResult.ok && taxonomyResult.data.length > 0;
+  const legacyCategoryFallback = !taxonomyAvailable && categoriesResult.ok;
+  const categoryWorlds = taxonomyAvailable
     ? buildCanonicalHomeCategoryWorlds(taxonomyResult.data)
-    : taxonomySchemaMissing && categoriesResult.ok
+    : legacyCategoryFallback
       ? buildLegacyHomeCategoryWorlds(categoriesResult.data)
       : [];
 
   return {
     listings: listingsResult.ok ? listingsResult.data.items : [],
     categoryWorlds,
-    taxonomyAvailable: taxonomyResult.ok,
-    legacyCategoryFallback: taxonomySchemaMissing,
+    taxonomyAvailable,
+    legacyCategoryFallback,
     listingLoadFailed: !listingsResult.ok,
-    categoryLoadFailed:
-      (!taxonomyResult.ok && !taxonomySchemaMissing) ||
-      (taxonomySchemaMissing && !categoriesResult.ok),
+    categoryLoadFailed: !taxonomyAvailable && !categoriesResult.ok,
   };
 }
