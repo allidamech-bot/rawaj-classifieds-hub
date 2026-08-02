@@ -1,4 +1,4 @@
-name: Audit Saudi Worker currency
+name: Verify Saudi Worker currency
 
 "on":
   pull_request:
@@ -9,12 +9,18 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inventory SYP runtime references
+      - name: Reject Syrian runtime currency assumptions
         shell: bash
         run: |
           set -euo pipefail
-          grep -RIn --exclude='*.test.*' --exclude='*.spec.*' --exclude-dir=test --exclude-dir=tests 'SYP' cloudflare/worker/src || true
+          if grep -RIn --exclude='*.test.*' --exclude='*.spec.*' --exclude-dir=test --exclude-dir=tests 'SYP' cloudflare/worker/src; then
+            echo 'Saudi Worker runtime must not contain SYP defaults or fallbacks.' >&2
+            exit 1
+          fi
+          grep -RIn 'SAR' cloudflare/worker/src >/tmp/saudi-sar-references.txt
+          test "$(wc -l </tmp/saudi-sar-references.txt | tr -d ' ')" -ge 11
+          echo 'Saudi Worker currency contract passed.'
