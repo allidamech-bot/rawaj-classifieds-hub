@@ -6,77 +6,47 @@ on:
       - .github/workflows/diagnose-saudi-web-runtime.yml
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
   diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: production
+    timeout-minutes: 40
     env:
-      SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
-      API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 543b28f7d95fe165871ae1ef180cc1646d0c399e
     steps:
-      - name: Diagnose page content API counts and CORS
+      - name: Monitor final Saudi production journey
         shell: bash
         run: |
           set -euo pipefail
-
-          request() {
-            local label="$1"
-            local url="$2"
-            shift 2
-            local status
-            status=$(curl --silent --show-error \
-              --output "/tmp/${label}.body" \
-              --dump-header "/tmp/${label}.headers" \
-              --write-out '%{http_code}' \
-              "$@" "$url" || true)
-            echo "===== $label HTTP $status ====="
-            cat "/tmp/${label}.headers"
-            echo "BODY_PREFIX:"
-            head -c 1000 "/tmp/${label}.body" || true
-            echo
-          }
-
-          request home "$SITE_URL/"
-          request login "$SITE_URL/login"
-          request add_listing "$SITE_URL/add-listing"
-          request health "$API_URL/v1/health"
-          request references "$API_URL/v1/references"
-          request cors_get "$API_URL/v1/health" -H "Origin: $SITE_URL"
-          request cors_options "$API_URL/v1/profile" \
-            -X OPTIONS \
-            -H "Origin: $SITE_URL" \
-            -H "Access-Control-Request-Method: GET" \
-            -H "Access-Control-Request-Headers: Authorization, Content-Type"
-
-          echo "===== verification predicates ====="
-          for spec in \
-            "home:سوق إعلانات مبوبة في السعودية" \
-            "login:تسجيل الدخول" \
-            "add_listing:أضف إعلان"; do
-            file=${spec%%:*}
-            text=${spec#*:}
-            if grep -q "$text" "/tmp/${file}.body"; then
-              echo "PASS text $file: $text"
-            else
-              echo "FAIL text $file: $text"
-            fi
+          run_id=""
+          for locate_attempt in $(seq 1 40); do
+            gh api "/repos/$GITHUB_REPOSITORY/actions/workflows/saudi-finalize-production.yml/runs?branch=main&event=push&per_page=30" > /tmp/runs.json
+            run_id=$(node -e 'const p=require("/tmp/runs.json"); const r=(p.workflow_runs||[]).find(x=>x.head_sha===process.env.TARGET_SHA); if(r) process.stdout.write(String(r.id));')
+            if [ -n "$run_id" ]; then break; fi
+            echo "Waiting for production run registration: $locate_attempt"
+            sleep 5
           done
+          test -n "$run_id"
+          echo "Tracking Saudi production run $run_id"
 
-          echo "CORS GET allow-origin lines:"
-          grep -i '^access-control-allow-origin:' /tmp/cors_get.headers || true
-          echo "CORS OPTIONS allow-origin lines:"
-          grep -i '^access-control-allow-origin:' /tmp/cors_options.headers || true
-
-          node <<'NODE'
-          const fs = require("node:fs");
-          const health = JSON.parse(fs.readFileSync("/tmp/health.body", "utf8"));
-          const refs = JSON.parse(fs.readFileSync("/tmp/references.body", "utf8"));
-          console.log(JSON.stringify({
-            health: health.data,
-            categories: refs.data?.categories?.length,
-            governorates: refs.data?.governorates?.length,
-          }, null, 2));
-          NODE
+          for attempt in $(seq 1 140); do
+            gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > /tmp/run.json
+            status=$(node -e 'const r=require("/tmp/run.json"); process.stdout.write(r.status)')
+            conclusion=$(node -e 'const r=require("/tmp/run.json"); process.stdout.write(r.conclusion||"pending")')
+            echo "Attempt $attempt: $status/$conclusion"
+            if [ "$status" = "completed" ]; then
+              gh api "/repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs?per_page=100" > /tmp/jobs.json
+              node -e 'const p=require("/tmp/jobs.json"); for(const j of p.jobs||[]){console.log(`Job ${j.id} ${j.name}: ${j.status}/${j.conclusion||"pending"}`); for(const s of j.steps||[]) console.log(`- ${s.name}: ${s.status}/${s.conclusion||"pending"}`)}'
+              if [ "$conclusion" != "success" ]; then
+                gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --log-failed || true
+                exit 1
+              fi
+              echo "Saudi production journey completed successfully."
+              exit 0
+            fi
+            sleep 15
+          done
+          exit 1
