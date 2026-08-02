@@ -27,78 +27,78 @@ jobs:
           const sourcePath = 'cloudflare/worker/src/account-social.ts';
           let source = fs.readFileSync(sourcePath, 'utf8');
 
-          const setupMarker = `  const id = crypto.randomUUID();
-          const timestamp = now();
-          const messageType = attachment?.kind === "audio" ? "audio" : attachment ? "image" : "text";
-          const statements = [`;
-          const setupReplacement = `  const id = crypto.randomUUID();
-          const notificationId = crypto.randomUUID();
-          const timestamp = now();
-          const messageType = attachment?.kind === "audio" ? "audio" : attachment ? "image" : "text";
-          const notificationBody =
-            message ||
-            (attachment?.kind === "audio" ? "أرسل لك رسالة صوتية جديدة." : "أرسل لك صورة جديدة.");
-          const notificationData = JSON.stringify({
-            titleEn: "You have a new message",
-            bodyEn: "Open the conversation to view the new message.",
-            targetType: "conversation",
-            targetId: conversationId,
-            conversationId,
-            messageId: id,
-          });
-          const statements = [`;
-          if (!source.includes(setupMarker)) throw new Error('Message setup marker not found');
-          source = source.replace(setupMarker, setupReplacement);
+          const setupPattern = /  const id = crypto\.randomUUID\(\);\n  const timestamp = now\(\);\n  const messageType = attachment\?\.kind === "audio" \? "audio" : attachment \? "image" : "text";\n  const statements = \[/;
+          const setupReplacement = [
+            '  const id = crypto.randomUUID();',
+            '  const notificationId = crypto.randomUUID();',
+            '  const timestamp = now();',
+            '  const messageType = attachment?.kind === "audio" ? "audio" : attachment ? "image" : "text";',
+            '  const notificationBody =',
+            '    message ||',
+            '    (attachment?.kind === "audio" ? "أرسل لك رسالة صوتية جديدة." : "أرسل لك صورة جديدة.");',
+            '  const notificationData = JSON.stringify({',
+            '    titleEn: "You have a new message",',
+            '    bodyEn: "Open the conversation to view the new message.",',
+            '    targetType: "conversation",',
+            '    targetId: conversationId,',
+            '    conversationId,',
+            '    messageId: id,',
+            '  });',
+            '  const statements = [',
+          ].join('\n');
+          if (!setupPattern.test(source)) throw new Error('Message setup marker not found');
+          source = source.replace(setupPattern, setupReplacement);
 
-          const statementsMarker = `    env.DB.prepare(
-              "UPDATE conversations SET last_message_at = ?, updated_at = ? WHERE id = ?",
-            ).bind(timestamp, timestamp, conversationId),
-          ];`;
-          const statementsReplacement = `    env.DB.prepare(
-              "UPDATE conversations SET last_message_at = ?, updated_at = ? WHERE id = ?",
-            ).bind(timestamp, timestamp, conversationId),
-            env.DB.prepare(
-              \`INSERT INTO notifications (id, user_id, type, title, body, data, created_at)
-               SELECT ?, ?, 'message.received', ?, ?, ?, ?
-               WHERE COALESCE(
-                 (SELECT messages_enabled FROM notification_preferences WHERE user_id = ?),
-                 1
-               ) = 1\`,
-            ).bind(
-              notificationId,
-              otherUserId,
-              "لديك رسالة جديدة",
-              notificationBody.slice(0, 500),
-              notificationData,
-              timestamp,
-              otherUserId,
-            ),
-          ];`;
-          if (!source.includes(statementsMarker)) throw new Error('Message statements marker not found');
-          source = source.replace(statementsMarker, statementsReplacement);
+          const statementsPattern = /    env\.DB\.prepare\(\n      "UPDATE conversations SET last_message_at = \?, updated_at = \? WHERE id = \?",\n    \)\.bind\(timestamp, timestamp, conversationId\),\n  \];/;
+          const statementsReplacement = [
+            '    env.DB.prepare(',
+            '      "UPDATE conversations SET last_message_at = ?, updated_at = ? WHERE id = ?",',
+            '    ).bind(timestamp, timestamp, conversationId),',
+            '    env.DB.prepare(',
+            '      `INSERT INTO notifications (id, user_id, type, title, body, data, created_at)',
+            "       SELECT ?, ?, 'message.received', ?, ?, ?, ?",
+            '       WHERE COALESCE(',
+            '         (SELECT messages_enabled FROM notification_preferences WHERE user_id = ?),',
+            '         1',
+            '       ) = 1`,',
+            '    ).bind(',
+            '      notificationId,',
+            '      otherUserId,',
+            '      "لديك رسالة جديدة",',
+            '      notificationBody.slice(0, 500),',
+            '      notificationData,',
+            '      timestamp,',
+            '      otherUserId,',
+            '    ),',
+            '  ];',
+          ].join('\n');
+          if (!statementsPattern.test(source)) throw new Error('Message statements marker not found');
+          source = source.replace(statementsPattern, statementsReplacement);
           fs.writeFileSync(sourcePath, source);
 
           const testPath = 'cloudflare/worker/test/message-notification.test.mjs';
           fs.writeFileSync(
             testPath,
-            `import assert from "node:assert/strict";
-          import fs from "node:fs";
-          import test from "node:test";
-
-          const source = fs.readFileSync(new URL("../src/account-social.ts", import.meta.url), "utf8");
-
-          test("sending a message atomically creates one recipient notification", () => {
-            assert.match(source, /const notificationId = crypto\\.randomUUID\\(\\)/);
-            assert.match(source, /type, title, body, data, created_at/);
-            assert.match(source, /'message\\.received'/);
-            assert.match(source, /targetType: "conversation"/);
-            assert.match(source, /conversationId,/);
-            assert.match(source, /messageId: id/);
-            assert.match(source, /messages_enabled FROM notification_preferences/);
-            assert.match(source, /COALESCE\\([\\s\\S]*?1[\\s\\S]*?\\) = 1/);
-            assert.ok(source.indexOf("if (existing) return json") < source.indexOf("const notificationId"));
-          });
-          `,
+            [
+              'import assert from "node:assert/strict";',
+              'import fs from "node:fs";',
+              'import test from "node:test";',
+              '',
+              'const source = fs.readFileSync(new URL("../src/account-social.ts", import.meta.url), "utf8");',
+              '',
+              'test("sending a message atomically creates one recipient notification", () => {',
+              '  assert.match(source, /const notificationId = crypto\\.randomUUID\\(\\)/);',
+              '  assert.match(source, /type, title, body, data, created_at/);',
+              '  assert.match(source, /\'message\\.received\'/);',
+              '  assert.match(source, /targetType: "conversation"/);',
+              '  assert.match(source, /conversationId,/);',
+              '  assert.match(source, /messageId: id/);',
+              '  assert.match(source, /messages_enabled FROM notification_preferences/);',
+              '  assert.match(source, /COALESCE\\([\\s\\S]*?1[\\s\\S]*?\\) = 1/);',
+              '  assert.ok(source.indexOf("if (existing) return json") < source.indexOf("const notificationId"));',
+              '});',
+              '',
+            ].join('\n'),
           );
           NODE
 
