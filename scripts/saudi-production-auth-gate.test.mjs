@@ -17,7 +17,11 @@ test("Production auth gate covers Firebase, private gateway, D1 and R2", async (
   assert.match(script, /accounts:signUp/);
   assert.match(script, /accounts:signInWithPassword/);
   assert.match(script, /accounts:sendOobCode/);
+  assert.match(script, /نسيت كلمة المرور\|Forgot password/);
+  assert.match(script, /إرسال رابط إعادة التعيين\|Send reset link/);
+  assert.doesNotMatch(script, /login\?mode=forgot/);
   assert.match(script, /accounts\.google\.com/);
+  assert.match(script, /Google OAuth popup did not open/);
   assert.match(script, /\/api\/profile/);
   assert.match(script, /notification-preferences/);
   assert.match(script, /profile\/media/);
