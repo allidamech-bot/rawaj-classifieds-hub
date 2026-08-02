@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Saudi production finalization trigger: 2026-08-02
 set -Eeuo pipefail
 
 : "${SITE_URL:?SITE_URL is required}"
