@@ -1,7 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "alias": ["rawa-j.com", "www.rawa-j.com"],
+  "alias": ["rawa-j.com", "www.rawa-j.com", "sa.rawa-j.com"],
   "git": {
-    "deploymentEnabled": false
-  }
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "sa.rawa-j.com"
+        }
+      ],
+      "destination": "https://rawaj-saudi-web.allidamech.workers.dev/:path*"
+    }
+  ]
 }
