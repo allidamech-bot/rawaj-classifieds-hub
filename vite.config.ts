@@ -36,7 +36,7 @@ const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 // This branch is the isolated Saudi market application. These values are intentionally
 // pinned in the bundle so environment variables inherited from the Syrian Vercel project
 // cannot redirect Saudi traffic back to the Syrian Worker.
-const rawajSaudiApiBaseUrl = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
+const rawajSaudiApiBaseUrl = "https://sa.rawa-j.com";
 const rawajSaudiSiteUrl = "https://sa.rawa-j.com";
 
 export default defineConfig({

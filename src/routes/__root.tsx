@@ -256,7 +256,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <script {...jsonLdScript(buildSiteStructuredData())} />
-        <Analytics />
+        {rawajBuildInfo.provider === "vercel" ? <Analytics /> : null}
         <Scripts />
       </body>
     </html>
