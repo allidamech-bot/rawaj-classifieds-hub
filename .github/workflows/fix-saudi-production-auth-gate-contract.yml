@@ -1,0 +1,61 @@
+name: Fix Saudi production auth gate contract
+
+"on":
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-saudi-production-auth-gate-contract-${{ github.head_ref }}
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    if: github.head_ref == 'fix/saudi-production-auth-gate-contract-20260803'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Correct private profile API contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/saudi-firebase-cloudflare-production-e2e.mjs')
+          text = path.read_text()
+          old = '      preferredContactMethod: "messages",\n'
+          new = '      preferredContactMethod: "chat",\n'
+          if text.count(old) != 1:
+            raise SystemExit(f'Expected one profile contact contract, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          Path('.github/workflows/fix-saudi-production-auth-gate-contract.yml').unlink()
+          PY
+          npm ci --ignore-scripts
+          npx prettier --check scripts/saudi-firebase-cloudflare-production-e2e.mjs
+          npx eslint --quiet scripts/saudi-firebase-cloudflare-production-e2e.mjs
+          node --check scripts/saudi-firebase-cloudflare-production-e2e.mjs
+          node --test scripts/saudi-production-auth-gate.test.mjs
+
+      - name: Commit permanent contract correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add scripts/saudi-firebase-cloudflare-production-e2e.mjs .github/workflows/fix-saudi-production-auth-gate-contract.yml
+          git commit -m "fix(saudi): use private profile API contract in release gate"
+          git push origin HEAD:${{ github.head_ref }}
