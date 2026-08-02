@@ -12,15 +12,13 @@ const configuredCloudflareApiBaseUrl = normalizeApiBaseUrl(
 );
 
 /**
- * Browser requests use the current site origin and are proxied by the Saudi
- * frontend Worker at /v1/*. Server-side rendering continues to call the
- * isolated Saudi API Worker directly. This keeps production same-origin and
- * allows the public hostname to change without reopening API CORS.
+ * Saudi browser and server requests both use the explicitly configured,
+ * isolated Saudi API Worker. The custom domain is served through Vercel, so
+ * using window.location.origin would incorrectly send /v1 and /api requests
+ * to the frontend gateway instead of the D1/R2 Worker. CORS on the API Worker
+ * already permits the Saudi production origins.
  */
-const cloudflareApiBaseUrl =
-  typeof window === "undefined"
-    ? configuredCloudflareApiBaseUrl
-    : (normalizeApiBaseUrl(window.location.origin) ?? configuredCloudflareApiBaseUrl);
+const cloudflareApiBaseUrl = configuredCloudflareApiBaseUrl;
 
 /**
  * RAWAJ has one runtime data provider: Cloudflare Worker + D1 + R2.
