@@ -1,0 +1,125 @@
+name: Verify Saudi regions live
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Saudi live regions and cities
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify direct Saudi API contract and CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          API_URL="https://rawaj-saudi-classifieds.allidamech.workers.dev"
+          curl --retry 10 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            -H 'Origin: https://sa.rawa-j.com' \
+            -D /tmp/headers.txt \
+            "$API_URL/v1/references" > /tmp/references.json
+          grep -i -q '^access-control-allow-origin: https://sa.rawa-j.com' /tmp/headers.txt
+          node <<'NODE'
+          const fs = require("node:fs");
+          const payload = JSON.parse(fs.readFileSync("/tmp/references.json", "utf8"));
+          const regions = payload.data?.governorates;
+          if (!Array.isArray(regions) || regions.length !== 13) {
+            throw new Error(`Expected 13 Saudi regions, found ${Array.isArray(regions) ? regions.length : 0}`);
+          }
+          if (!regions.some((region) => region.nameAr?.includes("الرياض"))) {
+            throw new Error("Riyadh region is missing from the Saudi API");
+          }
+          const regionWithCities = regions.find(
+            (region) => Array.isArray(region.districtsAr) && region.districtsAr.length > 0,
+          );
+          if (!regionWithCities) throw new Error("Saudi API returned no city options");
+          console.log(
+            `Saudi API verified: ${regions.length} regions; ${regionWithCities.nameAr} has ${regionWithCities.districtsAr.length} cities.`,
+          );
+          NODE
+
+      - name: Verify regions and cities in live browser UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { chromium } from "playwright";
+
+          const pageUrl = "https://sa.rawa-j.com/listings?open_filters=true";
+          const apiOrigin = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
+          const browser = await chromium.launch({ headless: true });
+          try {
+            const page = await browser.newPage({
+              locale: "ar-SA",
+              viewport: { width: 1440, height: 1000 },
+            });
+            const referenceResponses = [];
+            page.on("response", (response) => {
+              if (response.url().startsWith(`${apiOrigin}/v1/references`)) {
+                referenceResponses.push({ url: response.url(), status: response.status() });
+              }
+            });
+
+            await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+            const regionSelect = page.locator("[data-saudi-region-select]").first();
+            await regionSelect.waitFor({ state: "visible", timeout: 45_000 });
+
+            const regionOptions = await regionSelect.locator("option").evaluateAll((options) =>
+              options.map((option) => ({ value: option.value, text: option.textContent?.trim() || "" })),
+            );
+            const regionValues = regionOptions.slice(1).map((option) => option.value).filter(Boolean);
+            if (regionValues.length !== 13) {
+              throw new Error(`Live UI expected 13 regions, found ${regionValues.length}`);
+            }
+            if (!regionOptions.some((option) => option.text.includes("الرياض"))) {
+              throw new Error("Riyadh region is missing from the live UI");
+            }
+
+            const citySelect = page.locator("[data-saudi-city-select]").first();
+            let selectedRegion = "";
+            let cityOptions = [];
+            for (const regionValue of regionValues) {
+              await regionSelect.selectOption(regionValue);
+              await page.waitForTimeout(150);
+              cityOptions = await citySelect.locator("option").evaluateAll((options) =>
+                options.slice(1).map((option) => option.textContent?.trim() || "").filter(Boolean),
+              );
+              if (cityOptions.length > 0) {
+                selectedRegion = regionValue;
+                break;
+              }
+            }
+            if (!selectedRegion || cityOptions.length === 0) {
+              throw new Error("No city options appeared in the live Saudi UI");
+            }
+            if (referenceResponses.length === 0 || referenceResponses.some((item) => item.status !== 200)) {
+              throw new Error(`Browser did not load references successfully from the direct Saudi API: ${JSON.stringify(referenceResponses)}`);
+            }
+
+            console.log(
+              `Live Saudi UI verified: 13 regions, ${cityOptions.length} city options, direct API response 200.`,
+            );
+          } finally {
+            await browser.close();
+          }
+          NODE
