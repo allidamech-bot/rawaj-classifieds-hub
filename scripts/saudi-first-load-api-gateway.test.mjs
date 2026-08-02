@@ -11,7 +11,7 @@ test("Saudi browser and SSR data use the custom-domain gateway", async () => {
   );
 });
 
-test("Saudi Cloudflare server delegates v1 requests through Nitro runtime bindings", async () => {
+test("Saudi Cloudflare server delegates public and private API requests through Nitro runtime bindings", async () => {
   const server = await readFile("src/server-cloudflare.ts", "utf8");
   assert.match(server, /SAUDI_API\?: WorkerFetcher/);
   assert.match(server, /type NitroCloudflareRequest = Request/);
@@ -19,6 +19,10 @@ test("Saudi Cloudflare server delegates v1 requests through Nitro runtime bindin
     server,
     /explicitEnv \?\? \(request as NitroCloudflareRequest\)\.runtime\?\.cloudflare\?\.env \?\? \{\}/,
   );
+  assert.match(server, /pathname === "\/v1"/);
+  assert.match(server, /pathname\.startsWith\("\/v1\/"\)/);
+  assert.match(server, /pathname === "\/api"/);
+  assert.match(server, /pathname\.startsWith\("\/api\/"\)/);
   assert.match(server, /const env = runtimeEnv\(request, explicitEnv\)/);
   assert.match(server, /const serviceBinding = env\.SAUDI_API/);
   assert.match(

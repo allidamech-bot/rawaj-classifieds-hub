@@ -26,7 +26,12 @@ function runtimeEnv(request: Request, explicitEnv?: SaudiCloudflareEnv): SaudiCl
 }
 
 function isApiPath(pathname: string): boolean {
-  return pathname === "/v1" || pathname.startsWith("/v1/");
+  return (
+    pathname === "/v1" ||
+    pathname.startsWith("/v1/") ||
+    pathname === "/api" ||
+    pathname.startsWith("/api/")
+  );
 }
 
 function isStaticAssetPath(pathname: string): boolean {

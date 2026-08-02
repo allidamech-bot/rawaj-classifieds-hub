@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, UserPlus } from "lucide-react";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { AuthExperienceAside, AuthExperienceHeader } from "@/features/account/AccountExperience";
 import { authErrorMessage } from "@/lib/auth-errors";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/login")({
 
 type AuthMode = "login" | "register" | "forgot";
 
-function GoogleButton({ returnTo }: { returnTo: string }) {
+function GoogleButton({ returnTo, interactive }: { returnTo: string; interactive: boolean }) {
   const auth = useAuth();
   const { text } = useUiPreferences();
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
     <div>
       <button
         type="button"
-        disabled={loading || auth.status === "authUnavailable"}
+        disabled={!interactive || loading || auth.status === "authUnavailable"}
         onClick={handleGoogleSignIn}
         className="rawaj-auth-google disabled:opacity-60"
       >
@@ -116,6 +116,11 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const submitInFlightRef = useRef(false);
+  const [interactive, setInteractive] = useState(false);
+
+  useEffect(() => {
+    setInteractive(true);
+  }, []);
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -280,7 +285,9 @@ function LoginPage() {
                 className="space-y-3"
                 noValidate
                 aria-busy={submitting}
+                data-interactive={interactive ? "true" : "false"}
               >
+                <fieldset disabled={!interactive} className="contents">
                 {mode === "register" && (
                   <FieldLabel label={text("اسم الحساب", "Account name")}>
                     <input
@@ -423,6 +430,7 @@ function LoginPage() {
                     {text("العودة لتسجيل الدخول", "Back to login")}
                   </button>
                 )}
+                </fieldset>
               </form>
             )}
 
@@ -436,7 +444,7 @@ function LoginPage() {
                     <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
-                <GoogleButton returnTo={returnTo} />
+                <GoogleButton returnTo={returnTo} interactive={interactive} />
               </>
             )}
 
