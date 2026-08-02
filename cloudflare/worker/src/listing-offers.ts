@@ -691,7 +691,7 @@ function offerAmount(value: unknown): number | null {
 
 function normalizeCurrency(value: unknown): string {
   const currency = clean(value, 8).toUpperCase();
-  return /^[A-Z]{3,8}$/.test(currency) ? currency : "SYP";
+  return /^[A-Z]{3,8}$/.test(currency) ? currency : "SAR";
 }
 
 function clean(value: unknown, limit: number): string {

@@ -751,7 +751,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
     status: "approved",

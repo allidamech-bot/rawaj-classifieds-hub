@@ -251,7 +251,7 @@ async function lifecycleAction(
       env.DB.prepare(
         `INSERT OR IGNORE INTO listing_price_changes
           (id, listing_id, owner_id, old_price, new_price, currency, created_at)
-         SELECT ?, ?, ?, ?, ?, 'SYP', ?
+         SELECT ?, ?, ?, ?, ?, 'SAR', ?
           WHERE EXISTS (SELECT 1 FROM listings WHERE id = ? AND owner_id = ? AND price = ?)`,
       ).bind(
         priceChangeId,
@@ -398,7 +398,7 @@ async function priceContext(
       data: {
         previousPrice,
         currentPrice,
-        currency: "SYP",
+        currency: "SAR",
         direction: currentPrice > previousPrice ? "increased" : "decreased",
       },
     },
@@ -889,7 +889,7 @@ function mapPublicListing(row: Row, origin: string): Row {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
     status: "approved",
