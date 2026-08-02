@@ -1,0 +1,110 @@
+name: Attach Saudi Custom Domain
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/attach-saudi-custom-domain.yml
+
+permissions:
+  contents: read
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      HOSTNAME: sa.rawa-j.com
+      WORKER_SERVICE: rawaj-saudi-web
+      ZONE_NAME: rawa-j.com
+    steps:
+      - name: Validate Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+
+      - name: Inspect current authoritative DNS
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Authoritative nameservers for $ZONE_NAME:"
+          dig NS "$ZONE_NAME" +short || true
+          echo "Current records for $HOSTNAME:"
+          dig CNAME "$HOSTNAME" +short || true
+          dig A "$HOSTNAME" +short || true
+
+      - name: Attach sa.rawa-j.com to Saudi Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json")
+
+          curl --silent --show-error "${auth[@]}" "$api?hostname=$HOSTNAME" > /tmp/existing.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const p = JSON.parse(fs.readFileSync('/tmp/existing.json', 'utf8'));
+          if (p.success === false) {
+            console.log('Could not list existing Worker custom domains:', JSON.stringify(p.errors || []));
+          } else {
+            const rows = Array.isArray(p.result) ? p.result : [];
+            console.log(`Existing matching custom domains: ${rows.length}`);
+            for (const row of rows) console.log(`${row.hostname} -> ${row.service} (${row.zone_name || row.zone_id})`);
+          }
+          NODE
+
+          node <<'NODE' >/tmp/domain-payload.json
+          process.stdout.write(JSON.stringify({
+            hostname: process.env.HOSTNAME,
+            service: process.env.WORKER_SERVICE,
+            zone_name: process.env.ZONE_NAME,
+          }));
+          NODE
+
+          status=$(curl --silent --show-error \
+            --output /tmp/attach.json --write-out '%{http_code}' \
+            -X PUT "${auth[@]}" \
+            --data-binary @/tmp/domain-payload.json \
+            "$api")
+
+          echo "Cloudflare attach HTTP status: $status"
+          node <<'NODE'
+          const fs = require('node:fs');
+          const p = JSON.parse(fs.readFileSync('/tmp/attach.json', 'utf8'));
+          console.log(JSON.stringify({
+            success: p.success,
+            result: p.result ? {
+              id: p.result.id,
+              hostname: p.result.hostname,
+              service: p.result.service,
+              zone_name: p.result.zone_name,
+              cert_id: p.result.cert_id,
+            } : null,
+            errors: p.errors || [],
+            messages: p.messages || [],
+          }, null, 2));
+          if (!p.success) process.exit(1);
+          NODE
+
+      - name: Verify custom domain and TLS
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              --output /tmp/site.html --write-out '%{http_code}' \
+              "https://$HOSTNAME/" || true)
+            echo "Attempt $attempt: HTTPS $status"
+            if [ "$status" = "200" ] && grep -q "سوق إعلانات مبوبة في السعودية" /tmp/site.html; then
+              echo "Saudi custom domain is live: https://$HOSTNAME"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Custom domain was attached but did not become ready within the verification window." >&2
+          exit 1
