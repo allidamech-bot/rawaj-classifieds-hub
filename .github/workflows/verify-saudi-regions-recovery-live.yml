@@ -64,8 +64,13 @@ jobs:
             const apiResponses = [];
             const failedRequests = [];
             const consoleErrors = [];
+            const pageErrors = [];
+            const badResponses = [];
             page.on("response", (response) => {
               if (response.url().startsWith(apiUrl)) apiResponses.push(response.status());
+              if (response.status() >= 400) {
+                badResponses.push({ url: response.url(), status: response.status() });
+              }
             });
             page.on("requestfailed", (request) => {
               failedRequests.push(`${request.url()}: ${request.failure()?.errorText ?? "failed"}`);
@@ -73,16 +78,13 @@ jobs:
             page.on("console", (message) => {
               if (message.type() === "error") consoleErrors.push(message.text());
             });
+            page.on("pageerror", (error) => pageErrors.push(error.message));
 
             try {
               await page.goto(siteUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
               const regionSelect = page.locator("[data-saudi-region-select]").first();
               await regionSelect.waitFor({ state: "visible", timeout: 30_000 });
-              await page.waitForFunction(
-                () => document.querySelectorAll("[data-saudi-region-select] option").length === 14,
-                undefined,
-                { timeout: 45_000 },
-              );
+              await regionSelect.locator("option").nth(13).waitFor({ state: "attached", timeout: 45_000 });
 
               const regionOptions = await regionSelect.locator("option").evaluateAll((options) =>
                 options.map((option) => ({ value: option.value, text: option.textContent?.trim() || "" })),
@@ -96,11 +98,7 @@ jobs:
 
               await regionSelect.selectOption(liveRiyadh.value);
               const citySelect = page.locator("[data-saudi-city-select]").first();
-              await page.waitForFunction(
-                () => document.querySelectorAll("[data-saudi-city-select] option").length > 1,
-                undefined,
-                { timeout: 15_000 },
-              );
+              await citySelect.locator("option").nth(1).waitFor({ state: "attached", timeout: 15_000 });
               const cities = await citySelect.locator("option").evaluateAll((options) =>
                 options.slice(1).map((option) => option.textContent?.trim() || "").filter(Boolean),
               );
@@ -114,13 +112,24 @@ jobs:
               } else {
                 console.log("References were supplied by SSR; browser fallback was not required on this request.");
               }
+              if (badResponses.length > 0) {
+                console.log(`Non-blocking HTTP errors: ${JSON.stringify(badResponses.slice(-10))}`);
+              }
             } catch (error) {
               throw new Error(
                 JSON.stringify({
                   error: error instanceof Error ? error.message : String(error),
                   apiResponses,
+                  badResponses: badResponses.slice(-10),
                   failedRequests: failedRequests.slice(-10),
                   consoleErrors: consoleErrors.slice(-10),
+                  pageErrors: pageErrors.slice(-10),
+                  regionOptionCount: await page
+                    .locator("[data-saudi-region-select]")
+                    .first()
+                    .locator("option")
+                    .count()
+                    .catch(() => -1),
                   url: page.url(),
                 }),
               );
