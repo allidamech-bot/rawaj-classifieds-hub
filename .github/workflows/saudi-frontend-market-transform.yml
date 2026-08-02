@@ -1,3 +1,4 @@
+# Validate Saudi category fallback after backend activation: 2026-08-02
 name: Saudi frontend market transform
 
 "on":
@@ -129,6 +130,9 @@ jobs:
           }
           NODE
 
+      - name: Apply empty taxonomy fallback
+        run: node scripts/fix-saudi-empty-taxonomy-fallback.mjs
+
       - name: Install dependencies
         run: npm ci
 
@@ -149,7 +153,7 @@ jobs:
             echo "No transformed files to commit."
             exit 0
           fi
-          git commit -m "feat(saudi): localize frontend market and currency"
+          git commit -m "fix(saudi): activate category fallback"
           git push origin HEAD:feature/saudi-vercel-api-binding-20260802
 
       - name: Report result
@@ -157,4 +161,4 @@ jobs:
         shell: bash
         run: |
           result="${{ job.status }}"
-          gh pr comment 599 --repo "$GITHUB_REPOSITORY" --body "Saudi frontend market transform finished with status: \`$result\`."
+          gh pr comment 599 --repo "$GITHUB_REPOSITORY" --body "Saudi category fallback validation finished with status: \`$result\`."
