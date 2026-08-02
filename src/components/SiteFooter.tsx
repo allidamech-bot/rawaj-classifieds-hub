@@ -60,7 +60,7 @@ export function SiteFooter(_props: SiteFooterProps) {
           <Link to="/" aria-label={text("رواج — الرئيسية", "RAWAJ — Home")}>
             <BrandLockup inverse compact />
           </Link>
-          <p>{text("سوق سعوديا المجاني للإعلانات", "Saudi Arabia classifieds marketplace")}</p>
+          <p>{text("سوق السعودية المجاني للإعلانات", "Saudi Arabia classifieds marketplace")}</p>
         </div>
 
         <nav aria-label={text("روابط الفوتر", "Footer links")}>
@@ -118,7 +118,7 @@ export function SiteFooter(_props: SiteFooterProps) {
             <p className="text-xs text-primary-foreground/55">
               © {year}{" "}
               {text(
-                "رَوَاج · سوق سعوديا المجاني للإعلانات",
+                "رَوَاج · سوق السعودية المجاني للإعلانات",
                 "RAWAJ · Saudi Arabia classifieds marketplace",
               )}
             </p>
