@@ -1,3 +1,4 @@
+# One-shot Saudi production bootstrap trigger: 2026-08-02
 name: Saudi Cloudflare bootstrap
 
 "on":
