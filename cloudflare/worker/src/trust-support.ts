@@ -302,7 +302,7 @@ async function listSupportRequests(
         .bind(limit)
         .all<Row>();
   return result.success
-    ? json({ data: (result.results ?? []).map(mapSupport) }, 200, cors)
+    ? json({ data: (result.results ?? []).map(mapAdminSupport) }, 200, cors)
     : databaseError(cors);
 }
 
@@ -365,7 +365,7 @@ async function moderateSupportRequest(
     status,
     priority,
   });
-  return json({ data: mapSupport(persisted) }, 200, cors);
+  return json({ data: mapAdminSupport(persisted) }, 200, cors);
 }
 
 async function createListingReport(
@@ -908,19 +908,25 @@ function mapSupport(row: Row) {
   return {
     id: stringValue(row.id),
     userId: stringValue(row.user_id),
-    email: nullableString(row.email),
     type: stringValue(row.type, "other"),
     status: supportStatusFromDb(stringValue(row.status, "open")),
-    priority: stringValue(row.priority, "normal"),
-    assignedTo: nullableString(row.assigned_to),
     subject: stringValue(row.subject),
     message: stringValue(row.message),
     relatedListingId: nullableString(row.related_listing_id),
     relatedReportId: nullableString(row.related_report_id),
     publicResponse: nullableString(row.public_response),
-    adminNote: nullableString(row.admin_note),
     createdAt: stringValue(row.created_at),
     updatedAt: stringValue(row.updated_at),
+  };
+}
+
+function mapAdminSupport(row: Row) {
+  return {
+    ...mapSupport(row),
+    email: nullableString(row.email),
+    priority: stringValue(row.priority, "normal"),
+    assignedTo: nullableString(row.assigned_to),
+    adminNote: nullableString(row.admin_note),
   };
 }
 
