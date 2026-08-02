@@ -155,7 +155,7 @@ jobs:
         working-directory: cloudflare/worker
         run: npx wrangler deploy --config wrangler.generated.jsonc
 
-      - name: Verify health and Saudi references
+      - name: Verify health, Saudi references, and final taxonomy
         shell: bash
         run: |
           set -euo pipefail
@@ -172,7 +172,13 @@ jobs:
             if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
               throw new Error("Saudi Worker health verification failed");
             }
-            if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
-            if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
-            console.log(`Saudi API ready: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+            const categories = refs.data?.categories || [];
+            const governorates = refs.data?.governorates || [];
+            const taxonomyNodes = refs.data?.taxonomyNodes || [];
+            const finalTaxonomyNodes = taxonomyNodes.filter((node) => node.isLeaf === true || node.is_leaf === 1);
+            if (categories.length < 12) throw new Error("Saudi categories are incomplete");
+            if (governorates.length !== 13) throw new Error("Saudi regions are incomplete");
+            if (taxonomyNodes.length < 117) throw new Error(`Saudi taxonomy is incomplete: ${taxonomyNodes.length} nodes`);
+            if (finalTaxonomyNodes.length < 100) throw new Error(`Saudi final taxonomy is incomplete: ${finalTaxonomyNodes.length} leaves`);
+            console.log(`Saudi API ready: ${categories.length} categories, ${governorates.length} regions, ${taxonomyNodes.length} taxonomy nodes, ${finalTaxonomyNodes.length} final categories.`);
           '
