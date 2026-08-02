@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 
+// Keep this gate release-blocking: every signed-in Saudi feature crosses Firebase and Cloudflare.
 test("Saudi finalizer blocks releases on the full Firebase Cloudflare journey", async () => {
   const workflow = await readFile(".github/workflows/saudi-finalize-production.yml", "utf8");
   assert.match(workflow, /playwright install --with-deps chromium/);
