@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Saudi production finalization trigger: 2026-08-02
 set -Eeuo pipefail
 
 : "${SITE_URL:?SITE_URL is required}"
@@ -12,16 +11,22 @@ id_token=""
 listing_id=""
 app_user_id=""
 
+api() {
+  local path="$1"
+  shift
+  curl --silent --show-error "$@" "${API_URL}${path}"
+}
+
 cleanup() {
   local exit_code=$?
   trap - EXIT
   set +e
 
   if [[ -n "$listing_id" && -n "$id_token" ]]; then
-    curl --silent --show-error \
-      -X DELETE "$SITE_URL/v1/listings/$listing_id" \
+    api "/v1/listings/$listing_id" \
+      -X DELETE \
       -H "Authorization: Bearer $id_token" \
-      -H "Accept: application/json" >/tmp/rawaj-e2e-delete-listing.json
+      -H "Accept: application/json" >/tmp/rawaj-e2e-delete-listing-cleanup.json
   fi
 
   if [[ -n "$id_token" ]]; then
@@ -71,10 +76,10 @@ if (process.env.SIGNUP_STATUS !== "200" || !payload.idToken || !payload.localId)
 NODE
 id_token="$(node -e 'const p=require("/tmp/rawaj-e2e-signup.json"); process.stdout.write(p.idToken)')"
 
-curl --silent --show-error --fail \
+api "/v1/profile" \
+  --fail \
   -H "Authorization: Bearer $id_token" \
-  -H "Accept: application/json" \
-  "$SITE_URL/v1/profile" >/tmp/rawaj-e2e-profile.json
+  -H "Accept: application/json" >/tmp/rawaj-e2e-profile.json
 app_user_id="$(TEST_EMAIL="$email" node - <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-profile.json", "utf8"));
@@ -85,7 +90,7 @@ process.stdout.write(payload.data.id);
 NODE
 )"
 
-curl --silent --show-error --fail "$SITE_URL/v1/references" >/tmp/rawaj-e2e-references.json
+api "/v1/references" --fail >/tmp/rawaj-e2e-references.json
 read -r category_id governorate_id < <(node <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-references.json", "utf8"));
@@ -114,9 +119,9 @@ process.stdout.write(JSON.stringify({
 }));
 NODE
 
-listing_status="$(curl --silent --show-error \
+listing_status="$(api "/v1/listings" \
   --output /tmp/rawaj-e2e-listing.json --write-out '%{http_code}' \
-  -X POST "$SITE_URL/v1/listings" \
+  -X POST \
   -H "Authorization: Bearer $id_token" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
@@ -127,15 +132,18 @@ const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-listing.json", "utf8"
 if (![200, 201].includes(Number(process.env.LISTING_STATUS)) || !payload?.data?.id || payload.data.status !== "draft") {
   throw new Error(`Saudi listing draft creation failed: ${payload?.error?.message || `HTTP ${process.env.LISTING_STATUS}`}`);
 }
+if (payload.data.currency !== "SAR") {
+  throw new Error(`Saudi listing creation currency mismatch: ${payload.data.currency || "missing"}`);
+}
 NODE
 listing_id="$(node -e 'const p=require("/tmp/rawaj-e2e-listing.json"); process.stdout.write(p.data.id)')"
 
 printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z3l8AAAAASUVORK5CYII=' \
   | base64 --decode >/tmp/rawaj-e2e-image.png
 
-upload_status="$(curl --silent --show-error \
+upload_status="$(api "/v1/listings/$listing_id/images" \
   --output /tmp/rawaj-e2e-upload.json --write-out '%{http_code}' \
-  -X POST "$SITE_URL/v1/listings/$listing_id/images" \
+  -X POST \
   -H "Authorization: Bearer $id_token" \
   -H "Accept: application/json" \
   -F "file=@/tmp/rawaj-e2e-image.png;type=image/png" \
@@ -148,16 +156,17 @@ if (![200, 201].includes(Number(process.env.UPLOAD_STATUS)) || !payload?.data?.i
 }
 NODE
 image_url="$(node -e 'const p=require("/tmp/rawaj-e2e-upload.json"); process.stdout.write(p.data.publicUrl)')"
+image_fetch_url="$(IMAGE_URL="$image_url" API_URL="$API_URL" node -e 'process.stdout.write(new URL(process.env.IMAGE_URL, `${process.env.API_URL}/`).toString())')"
 
 curl --silent --show-error --fail \
   -H "Authorization: Bearer $id_token" \
-  "$SITE_URL$image_url" >/tmp/rawaj-e2e-downloaded-image.png
+  "$image_fetch_url" >/tmp/rawaj-e2e-downloaded-image.png
 cmp --silent /tmp/rawaj-e2e-image.png /tmp/rawaj-e2e-downloaded-image.png
 
-curl --silent --show-error --fail \
+api "/api/listings/$listing_id" \
+  --fail \
   -H "Authorization: Bearer $id_token" \
-  -H "Accept: application/json" \
-  "$API_URL/api/listings/$listing_id" >/tmp/rawaj-e2e-listing-detail.json
+  -H "Accept: application/json" >/tmp/rawaj-e2e-listing-detail.json
 node <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-listing-detail.json", "utf8"));
@@ -170,10 +179,10 @@ if (!Array.isArray(payload.data.images) || payload.data.images.length !== 1) {
 }
 NODE
 
-curl --silent --show-error --fail \
+api "/v1/account/listings" \
+  --fail \
   -H "Authorization: Bearer $id_token" \
-  -H "Accept: application/json" \
-  "$SITE_URL/v1/account/listings" >/tmp/rawaj-e2e-owner-listings.json
+  -H "Accept: application/json" >/tmp/rawaj-e2e-owner-listings.json
 LISTING_ID="$listing_id" node <<'NODE'
 const fs = require("node:fs");
 const payload = JSON.parse(fs.readFileSync("/tmp/rawaj-e2e-owner-listings.json", "utf8"));
@@ -182,8 +191,9 @@ if (!Array.isArray(payload?.data) || !payload.data.some((item) => item.id === pr
 }
 NODE
 
-curl --silent --show-error --fail \
-  -X DELETE "$SITE_URL/v1/listings/$listing_id" \
+api "/v1/listings/$listing_id" \
+  --fail \
+  -X DELETE \
   -H "Authorization: Bearer $id_token" \
   -H "Accept: application/json" >/tmp/rawaj-e2e-delete-listing.json
 node <<'NODE'
