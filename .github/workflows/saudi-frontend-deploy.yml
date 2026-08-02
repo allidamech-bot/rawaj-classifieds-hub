@@ -1,4 +1,4 @@
-# Saudi frontend monitored production release: 2026-08-02
+# Saudi frontend monitored production release diagnostics: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
@@ -95,25 +95,103 @@ jobs:
       - name: Deploy Saudi frontend Worker
         run: npx --yes wrangler@4.118.0 deploy --config .output/server/wrangler.json
 
+      - name: Capture public route diagnostics
+        id: diagnostics
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -u
+          fetch_route() {
+            local label="$1"
+            local path="$2"
+            local body="/tmp/${label}.body"
+            local headers="/tmp/${label}.headers"
+            local error="/tmp/${label}.error"
+            local status
+            status="$(curl --silent --show-error --max-time 30 \
+              --dump-header "$headers" \
+              --output "$body" \
+              --write-out '%{http_code}' \
+              "$WORKER_URL$path" 2>"$error" || true)"
+            echo "${label}_status=${status:-000}" >> "$GITHUB_OUTPUT"
+            echo "=== $label $path ==="
+            echo "HTTP ${status:-000}"
+            grep -iE '^(content-type|cf-ray|server|location|x-rawaj-build-commit):' "$headers" || true
+            if [ -s "$error" ]; then
+              echo "curl error:"
+              cat "$error"
+            fi
+            echo "body bytes: $(wc -c < "$body" 2>/dev/null || echo 0)"
+            echo "body preview:"
+            head -c 1200 "$body" 2>/dev/null || true
+            echo
+          }
+
+          fetch_route home /
+          fetch_route health /v1/health
+          fetch_route references /v1/references
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          function read(path) {
+            try { return fs.readFileSync(path, "utf8"); } catch { return ""; }
+          }
+          const home = read("/tmp/home.body");
+          const healthText = read("/tmp/health.body");
+          const refsText = read("/tmp/references.body");
+          const report = {
+            home: {
+              hasSaudiTitle: home.includes("سوق إعلانات مبوبة في السعودية"),
+              hasCars: home.includes("سيارات ومركبات"),
+              hasRealEstate: home.includes("عقارات"),
+              hasTechnicalError: home.includes("خطأ تقني") || home.includes("Technical error"),
+            },
+            healthJson: null,
+            referencesJson: null,
+          };
+          try { report.healthJson = JSON.parse(healthText); } catch {}
+          try { report.referencesJson = JSON.parse(refsText); } catch {}
+          fs.writeFileSync("/tmp/saudi-diagnostics.json", JSON.stringify(report, null, 2));
+          console.log("Diagnostic summary:");
+          console.log(JSON.stringify(report, null, 2));
+          NODE
+
+      - name: Publish public route diagnostics
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Saudi frontend public-route diagnostics"
+            echo
+            echo "- Run: \`$GITHUB_RUN_ID\`"
+            echo "- Worker: \`$WORKER_URL\`"
+            echo "- Home HTTP: \`${{ steps.diagnostics.outputs.home_status || 'unknown' }}\`"
+            echo "- Health HTTP: \`${{ steps.diagnostics.outputs.health_status || 'unknown' }}\`"
+            echo "- References HTTP: \`${{ steps.diagnostics.outputs.references_status || 'unknown' }}\`"
+            echo
+            echo '```json'
+            cat /tmp/saudi-diagnostics.json 2>/dev/null || echo '{"diagnostics":"unavailable"}'
+            echo '```'
+          } > /tmp/saudi-public-diagnostics.md
+          gh issue comment 602 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body-file /tmp/saudi-public-diagnostics.md
+
       - name: Verify homepage and same-origin API proxy
         shell: bash
         run: |
           set -euo pipefail
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/" > /tmp/rawaj-saudi-home.html
-          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/rawaj-saudi-home.html
-          grep -q "سيارات ومركبات" /tmp/rawaj-saudi-home.html
-          grep -q "عقارات" /tmp/rawaj-saudi-home.html
-
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/v1/health" > /tmp/rawaj-saudi-health.json
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/v1/references" > /tmp/rawaj-saudi-references.json
+          test "${{ steps.diagnostics.outputs.home_status }}" = "200"
+          test "${{ steps.diagnostics.outputs.health_status }}" = "200"
+          test "${{ steps.diagnostics.outputs.references_status }}" = "200"
+          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/home.body
+          grep -q "سيارات ومركبات" /tmp/home.body
+          grep -q "عقارات" /tmp/home.body
 
           node <<'NODE'
           const fs = require("node:fs");
-          const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
-          const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
+          const health = JSON.parse(fs.readFileSync("/tmp/health.body", "utf8"));
+          const refs = JSON.parse(fs.readFileSync("/tmp/references.body", "utf8"));
           if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
             throw new Error("Saudi API proxy health verification failed");
           }
@@ -136,4 +214,4 @@ jobs:
         run: |
           gh issue comment 602 \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Saudi frontend release failed in workflow run \`$GITHUB_RUN_ID\`. Review the failed step before retrying; no success was recorded."
+            --body "Saudi frontend release failed in workflow run \`$GITHUB_RUN_ID\`. Public-route diagnostics were recorded above."
