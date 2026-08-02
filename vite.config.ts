@@ -101,8 +101,8 @@ export default defineConfig({
     },
   },
   tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+    // Cloudflare requires a static import of TanStack's generated server handler.
+    // This dedicated entry also owns the same-origin Saudi API service binding.
+    server: { entry: "server-cloudflare" },
   },
 });
