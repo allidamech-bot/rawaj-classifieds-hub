@@ -1,0 +1,49 @@
+name: Format Saudi production auth gate
+
+"on":
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: format-saudi-production-auth-gate-${{ github.head_ref }}
+  cancel-in-progress: false
+
+jobs:
+  format:
+    if: github.head_ref == 'ci/saudi-firebase-cloudflare-release-gate-20260803'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Format and validate release gate
+        run: |
+          npm ci --ignore-scripts
+          npx prettier --write scripts/saudi-firebase-cloudflare-production-e2e.mjs scripts/saudi-production-auth-gate.test.mjs
+          npx eslint --quiet scripts/saudi-firebase-cloudflare-production-e2e.mjs scripts/saudi-production-auth-gate.test.mjs
+          node --check scripts/saudi-firebase-cloudflare-production-e2e.mjs
+          node --test scripts/saudi-production-auth-gate.test.mjs
+          rm .github/workflows/format-saudi-production-auth-gate.yml
+
+      - name: Commit formatted permanent files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add scripts/saudi-firebase-cloudflare-production-e2e.mjs scripts/saudi-production-auth-gate.test.mjs .github/workflows/format-saudi-production-auth-gate.yml
+          git commit -m "style(saudi): format production auth gate"
+          git push origin HEAD:${{ github.head_ref }}
