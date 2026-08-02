@@ -12,14 +12,14 @@ import { RealListingCard } from "@/features/listings/RealListingCard";
 import { DynamicListingFacetFilters } from "@/features/listings/DynamicListingFacetFilters";
 import { NearbyDiscoveryControl } from "@/features/listings/NearbyDiscoveryControl";
 import { useNearbyDiscovery } from "@/features/listings/use-nearby-discovery";
-import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";
 import {
   categoryUsesGlobalCondition,
   resolveCategoryFieldKind,
   type CategoryFieldKind,
 } from "@/lib/category-fields";
 import { categoryName, governorateName } from "@/lib/i18n";
-import { fetchLocationPath, type CanonicalLocationNode } from "@/lib/api/location-taxonomy";
+import { fetchLocationPath } from "@/lib/api/location-taxonomy";
 import { createSeo } from "@/lib/seo";
 import {
   buildTaxonomyIndex,
@@ -826,15 +826,6 @@ function ListingsPage() {
     }
   }, [draftCategoryFieldKind]);
 
-  function handleCanonicalLocationChange(id: string | null, node: CanonicalLocationNode | null) {
-    setDistrictAr(id ? `@${id}` : "");
-    setLocationLabel(node ? (language === "en" ? node.nameEn || node.nameAr : node.nameAr) : "");
-    if (node?.legacyGovernorateId) {
-      setGovId(node.legacyGovernorateId);
-    } else if (!id) {
-      setGovId("");
-    }
-  }
 
   function restoreFilterDraftFromSearch() {
     setGovId(search.gov ?? "");
@@ -1144,16 +1135,20 @@ function ListingsPage() {
                   )}
                 </div>
                 <div className="mt-2">
-                  <CanonicalLocationSelector
-                    value={canonicalLocationNodeId || null}
-                    onChange={handleCanonicalLocationChange}
+                  <SaudiRegionCitySelector
+                    governorates={governorates}
+                    governorateId={govId}
+                    districtAr={canonicalLocationNodeId ? "" : districtAr}
+                    onChange={(nextGovernorateId, nextDistrictAr) => {
+                      setGovId(nextGovernorateId);
+                      setDistrictAr(nextDistrictAr);
+                      setLocationLabel(
+                        nextDistrictAr ||
+                          governorates.find((item) => item.id === nextGovernorateId)?.nameAr ||
+                          "",
+                      );
+                    }}
                   />
-                  {districtAr && !canonicalLocationNodeId ? (
-                    <p className="mt-2 text-[11px] text-muted-foreground">
-                      {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
-                      {districtAr}
-                    </p>
-                  ) : null}
                 </div>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <label className="block">
@@ -1356,16 +1351,20 @@ function ListingsPage() {
                 </button>
               ) : null}
             </div>
-            <CanonicalLocationSelector
-              value={canonicalLocationNodeId || null}
-              onChange={handleCanonicalLocationChange}
-            />
-            {districtAr && !canonicalLocationNodeId ? (
-              <p className="text-xs text-muted-foreground">
-                {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
-                {districtAr}
-              </p>
-            ) : null}
+            <SaudiRegionCitySelector
+                    governorates={governorates}
+                    governorateId={govId}
+                    districtAr={canonicalLocationNodeId ? "" : districtAr}
+                    onChange={(nextGovernorateId, nextDistrictAr) => {
+                      setGovId(nextGovernorateId);
+                      setDistrictAr(nextDistrictAr);
+                      setLocationLabel(
+                        nextDistrictAr ||
+                          governorates.find((item) => item.id === nextGovernorateId)?.nameAr ||
+                          "",
+                      );
+                    }}
+                  />
           </section>
 
           <section className="rawaj-filter-sheet__section">

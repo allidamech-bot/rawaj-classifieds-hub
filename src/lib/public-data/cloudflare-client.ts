@@ -194,7 +194,7 @@ export async function fetchCloudflareListingDetail(
 }
 
 export function fetchCloudflareLocationRoots(
-  country = "SY",
+  country = "SA",
 ): Promise<ClassifiedsResult<LocationNode[]>> {
   return requestJson<LocationNode[]>("/v1/locations/roots", { country });
 }

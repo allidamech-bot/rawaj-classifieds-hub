@@ -11,7 +11,7 @@ import {
   ListingStudioSection,
   ListingStudioTrustStrip,
 } from "@/features/listing-studio/listing-studio";
-import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";
+import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";
 import { DynamicListingFields } from "@/features/listing-studio/DynamicListingFields";
 import { ListingTaxonomySelector } from "@/features/listing-studio/ListingTaxonomySelector";
 import {
@@ -1458,25 +1458,19 @@ function ManageListingPage() {
               )}
               <div className="mt-3">
                 <Field label={text("الموقع", "Location")}>
-                  <CanonicalLocationSelector
-                    value={locationNodeId || null}
+                  <SaudiRegionCitySelector
+                    governorates={governorates}
+                    governorateId={governorateId}
+                    districtAr={district}
                     disabled={!isEditable}
-                    onChange={(id, node) => {
-                      setLocationNodeId(id ?? "");
-                      setLocationNodeType(node?.nodeType ?? "");
-                      if (node?.legacyGovernorateId) {
-                        setGovernorateId(node.legacyGovernorateId);
-                      }
-                      setDistrict(node?.legacyDistrictAr ?? "");
+                    onChange={(nextGovernorateId, nextDistrictAr) => {
+                      setGovernorateId(nextGovernorateId);
+                      setDistrict(nextDistrictAr);
+                      setLocationNodeId("");
+                      setLocationNodeType("");
                     }}
                   />
                 </Field>
-                {!locationNodeId && district ? (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {text("الموقع القديم المحفوظ: ", "Saved legacy location: ")}
-                    {district}
-                  </p>
-                ) : null}
               </div>
             </ListingStudioSection>
 

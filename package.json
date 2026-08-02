@@ -37,6 +37,7 @@
     "test:seo-discovery": "node --test scripts/seo-discovery.test.mjs",
     "test:semantic-seo": "node --test scripts/semantic-seo.test.mjs",
     "test:location-classification": "node --test scripts/syria-location-type-classification.test.mjs",
+    "test:saudi-location-regions": "node --test scripts/saudi-region-city-contract.test.mjs",
     "test:listings-filters": "node --test scripts/listings-mobile-category-switch.test.mjs scripts/listings-mobile-filter-draft.test.mjs",
     "test:mobile-ux-polish": "node --test scripts/lightweight-mobile-ux-polish.test.mjs",
     "format": "prettier --write .",
