@@ -53,10 +53,10 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             to="/listings"
             search={{ open_filters: true }}
             className="rawaj-header-location hidden min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold xl:inline-flex"
-            aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
+            aria-label={text("تصفح الإعلانات في كل السعودية", "Browse listings across Saudi Arabia")}
           >
             <MapPin className="h-4 w-4 text-brand-orange" strokeWidth={2.1} />
-            <span>{text("كل سوريا", "All Syria")}</span>
+            <span>{text("كل السعودية", "All Saudi Arabia")}</span>
           </Link>
         ) : null}
 

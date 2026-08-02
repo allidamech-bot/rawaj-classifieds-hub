@@ -110,7 +110,7 @@ export function OwnerStoreWorkspaceSummary({
           {secondaryName && secondaryName !== displayName ? <strong dir="auto">{secondaryName}</strong> : null}
           <span className="rawaj-owner-workspace-summary__location">
             <MapPin aria-hidden="true" />
-            {location || text("سوريا", "Syria")}
+            {location || text("السعودية", "Saudi Arabia")}
           </span>
         </div>
       </div>

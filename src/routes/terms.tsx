@@ -8,7 +8,7 @@ export const Route = createFileRoute("/terms")({
     createSeo({
       title: "شروط الاستخدام | RAWAJ / رواج",
       description:
-        "شروط استخدام رواج للإعلانات المبوبة في سوريا، بما يشمل مسؤولية المستخدمين، الإعلانات، التواصل، البلاغات، وحدود الخدمة.",
+        "شروط استخدام رواج للإعلانات المبوبة في السعودية، بما يشمل مسؤولية المستخدمين، الإعلانات، التواصل، البلاغات، وحدود الخدمة.",
       path: "/terms",
     }),
   component: TermsPage,
@@ -98,7 +98,7 @@ function legalText(value: string, language: Language) {
   const labels: Record<string, string> = {
     "طبيعة المنصة": "Platform nature",
     "رَوَاج منصة إعلانات مبوّبة مجانية موجّهة للمستخدمين داخل الجمهورية العربية السورية، تُتيح للأفراد والمتاجر نشر إعلاناتهم وعرض سلعهم وخدماتهم. لا تتم داخل المنصة أي عملية بيع أو شراء أو دفع مباشر.":
-      "RAWAJ is a free classifieds platform for users in Syria, allowing individuals and stores to publish listings for goods and services. The platform does not directly process sales, purchases, or payments.",
+      "RAWAJ is a free classifieds platform for users in Saudi Arabia, allowing individuals and stores to publish listings for goods and services. The platform does not directly process sales, purchases, or payments.",
     "الاستخدام المقبول": "Acceptable use",
     "يلتزم المستخدمون باستخدام رَوَاج بطريقة قانونية ومسؤولة، واحترام القوانين المحلية، والامتناع عن أي محتوى مسيء أو احتيالي أو مخالف للآداب العامة.":
       "Users must use RAWAJ lawfully and responsibly, respect local laws, and avoid abusive, fraudulent, or inappropriate content.",
@@ -113,7 +113,7 @@ function legalText(value: string, language: Language) {
       "RAWAJ does not guarantee outcomes between users and is not responsible for item or service quality, claims, or buyer or seller reliability.",
     "الإعلانات الممنوعة": "Prohibited listings",
     "يُحظر نشر إعلانات تخالف القوانين السورية، أو تتعلق بالأسلحة، المخدرات، المسروقات، الاحتيال، أو أي محتوى ممنوع. راجع صفحة الإعلانات الممنوعة للقائمة الكاملة.":
-      "Listings that violate Syrian law or involve weapons, drugs, stolen goods, fraud, or other prohibited content are not allowed. See the Prohibited Listings page for the full list.",
+      "Listings that violate Saudi law or involve weapons, drugs, stolen goods, fraud, or other prohibited content are not allowed. See the Prohibited Listings page for the full list.",
     "التواصل بين المستخدمين": "User communication",
     "يتم التواصل بين البائع والمشتري على مسؤوليتهما. لا يتدخل رَوَاج في تفاصيل المفاوضة أو الدفع أو التسليم، ويجب عدم مشاركة كلمات المرور أو رموز التحقق مع أي مستخدم.":
       "Buyer-seller communication is their responsibility. RAWAJ does not intervene in negotiation, payment, or delivery details, and users must never share passwords or verification codes.",
@@ -131,7 +131,7 @@ function legalText(value: string, language: Language) {
       "These terms may be updated as the platform or regulatory requirements evolve. We will publish the updated version and effective date, and continued use of RAWAJ after publication means acceptance of the revised terms.",
     "القانون المعمول به": "Applicable law",
     "تخضع هذه الشروط للقوانين والأنظمة السورية المعمول بها، وأي نزاع يُحلّ ودياً أولاً ثم وفق الاختصاص القانوني المحلي.":
-      "These terms are governed by applicable Syrian laws and regulations. Disputes should first be resolved amicably, then by local jurisdiction.",
+      "These terms are governed by applicable Saudi laws and regulations. Disputes should first be resolved amicably, then by local jurisdiction.",
   };
   return labels[value] ?? value;
 }

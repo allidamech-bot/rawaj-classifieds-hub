@@ -47,7 +47,7 @@ function isPublicDocumentPath(pathname: string) {
     pathname === "/sitemap.xml" ||
     pathname === androidAssetLinksPath ||
     pathname.startsWith("/category/") ||
-    pathname.startsWith("/syria/") ||
+    pathname.startsWith("/saudi/") ||
     pathname.startsWith("/listings/") ||
     pathname.startsWith("/seller/")
   );
@@ -62,8 +62,8 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://apis.google.com"
     : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://apis.google.com";
   const frameSourceDirective = allowVercelPreviewTools
-    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com"
-    : "frame-src 'self' https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com";
+    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://*.firebaseapp.com https://*.web.app"
+    : "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app";
   const manifestSourceDirective = allowVercelPreviewTools
     ? "manifest-src 'self' https://vercel.com"
     : "manifest-src 'self'";
@@ -71,7 +71,7 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     ? ""
     : " http://localhost:8787 http://127.0.0.1:8787";
   const cloudflareApiConnectSource =
-    " https://api.rawa-j.com https://rawaj-classifieds-hub.allidamech.workers.dev https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com";
+    " https://rawaj-saudi-classifieds.allidamech.workers.dev https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com";
 
   const connectSourceDirective = allowVercelPreviewTools
     ? `connect-src 'self'${cloudflareApiConnectSource} https://fonts.googleapis.com https://fonts.gstatic.com https://vitals.vercel-insights.com https://*.vercel-insights.com https://vercel.live wss://vercel.live${localDevelopmentConnectSources}`

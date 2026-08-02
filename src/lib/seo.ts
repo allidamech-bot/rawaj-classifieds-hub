@@ -1,9 +1,9 @@
 export const SITE_URL_ENV_NAME = "VITE_SITE_URL";
 
-const fallbackSiteUrl = "https://rawa-j.com";
-const defaultTitle = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
+const fallbackSiteUrl = "https://sa.rawa-j.com";
+const defaultTitle = "RAWAJ / رواج | سوق إعلانات مبوبة في السعودية";
 const defaultDescription =
-  "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
+  "سوق إعلانات مبوبة في السعودية لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
 const defaultSocialImage = "/brand/rawaj-mark-transparent-512.png";
 const siteName = "RAWAJ / رواج";
 
@@ -59,7 +59,7 @@ export function createSeo(options: SeoOptions = {}) {
       { property: "og:type", content: options.type ?? "website" },
       { property: "og:url", content: url },
       { property: "og:site_name", content: siteName },
-      { property: "og:locale", content: "ar_SY" },
+      { property: "og:locale", content: "ar_SA" },
       { property: "og:locale:alternate", content: "en_US" },
       { property: "og:image", content: image },
       { property: "og:image:alt", content: `${title} — ${siteName}` },

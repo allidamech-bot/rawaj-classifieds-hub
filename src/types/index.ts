@@ -3,7 +3,7 @@
 // favorites, saved_searches, chats, messages, reports, blocks, reviews,
 // promotions, support_tickets, admin_audit_logs, app_config.
 
-export type Currency = "SYP" | "USD";
+export type Currency = "SAR" | "SYP" | "USD";
 
 export type PriceType = "fixed" | "negotiable" | "contact" | "free" | "exchange";
 

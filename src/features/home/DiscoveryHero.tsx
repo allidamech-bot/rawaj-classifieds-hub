@@ -40,7 +40,7 @@ export function DiscoveryHero({
             {text("اكتشف رواج", "Discover RAWAJ")}
           </p>
           <h1 id="rawaj-home-title">
-            {text("كل السوق السوري، في مكان واحد.", "Syria’s marketplace, all in one place.")}
+            {text("كل السوق السعودي، في مكان واحد.", "Saudi Arabia’s marketplace, all in one place.")}
           </h1>
           <p>
             {text(
@@ -54,7 +54,7 @@ export function DiscoveryHero({
           >
             <span>{text("إعلان مجاني", "Free listing")}</span>
             <span>{text("تواصل مباشر", "Direct contact")}</span>
-            <span>{text("جميع المحافظات", "All governorates")}</span>
+            <span>{text("جميع المناطق", "All governorates")}</span>
           </div>
         </div>
 
@@ -88,7 +88,7 @@ export function DiscoveryHero({
           <div className="rawaj-search-overlay__controls">
             <Link to="/listings" search={filterSearch} className="rawaj-search-location">
               <MapPin className="h-4 w-4" strokeWidth={1.9} />
-              <span>{text("كل سوريا", "All Syria")}</span>
+              <span>{text("كل السعودية", "All Saudi Arabia")}</span>
             </Link>
             <Link
               to="/listings"

@@ -68,7 +68,7 @@ export const Route = createFileRoute("/listings/")({
     createSeo({
       title: "تصفح الإعلانات المعتمدة | RAWAJ / رواج",
       description:
-        "تصفح الإعلانات المعتمدة على رواج في سوريا، وابحث في العقارات والسيارات والمنتجات والخدمات حسب القسم أو المحافظة.",
+        "تصفح الإعلانات المعتمدة على رواج في السعودية، وابحث في العقارات والسيارات والمنتجات والخدمات حسب القسم أو المحافظة.",
       path: "/listings",
     }),
   component: ListingsPage,
@@ -1017,7 +1017,7 @@ function ListingsPage() {
               ? locationLabel || text("الموقع", "Location")
               : selectedGovernorate
                 ? governorateName(selectedGovernorate.id, selectedGovernorate.nameAr, language)
-                : text("كل سوريا", "All Syria")
+                : text("كل السعودية", "All Saudi Arabia")
           }
           priceActive={Boolean(priceMin.trim() || priceMax.trim())}
           categoryLabel={
@@ -1139,7 +1139,7 @@ function ListingsPage() {
                       }}
                       className="text-[11px] font-bold text-primary"
                     >
-                      {text("كل سوريا", "All Syria")}
+                      {text("كل السعودية", "All Saudi Arabia")}
                     </button>
                   )}
                 </div>
@@ -1352,7 +1352,7 @@ function ListingsPage() {
                     setDistrictAr("");
                   }}
                 >
-                  {text("كل سوريا", "All Syria")}
+                  {text("كل السعودية", "All Saudi Arabia")}
                 </button>
               ) : null}
             </div>
