@@ -11,7 +11,19 @@ type SaudiCloudflareEnv = {
   SAUDI_API?: WorkerFetcher;
 };
 
+type NitroCloudflareRequest = Request & {
+  runtime?: {
+    cloudflare?: {
+      env?: SaudiCloudflareEnv;
+    };
+  };
+};
+
 const saudiApiOrigin = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
+
+function runtimeEnv(request: Request, explicitEnv?: SaudiCloudflareEnv): SaudiCloudflareEnv {
+  return explicitEnv ?? (request as NitroCloudflareRequest).runtime?.cloudflare?.env ?? {};
+}
 
 function isApiPath(pathname: string): boolean {
   return pathname === "/v1" || pathname.startsWith("/v1/");
@@ -111,8 +123,9 @@ function applyProductionHeaders(response: Response, request: Request): Response 
 }
 
 export default {
-  async fetch(request: Request, env: SaudiCloudflareEnv): Promise<Response> {
+  async fetch(request: Request, explicitEnv?: SaudiCloudflareEnv): Promise<Response> {
     const url = new URL(request.url);
+    const env = runtimeEnv(request, explicitEnv);
 
     if (isApiPath(url.pathname)) {
       return applyProductionHeaders(await proxySaudiApi(request, env), request);
@@ -125,8 +138,8 @@ export default {
       }
     }
 
-    // This import must remain static. TanStack's Vite plugin replaces the
-    // server-entry module with the generated application handler at build time.
+    // Nitro invokes this SSR service with the augmented Request only. Cloudflare
+    // bindings are therefore read from request.runtime.cloudflare.env above.
     const response = await handler.fetch(request);
     return applyProductionHeaders(response, request);
   },
