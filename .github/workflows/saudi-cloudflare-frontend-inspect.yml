@@ -40,40 +40,40 @@ jobs:
       - name: Build Saudi frontend
         run: npm run build
 
-      - name: Inventory Cloudflare build output
+      - name: Inspect build and Saudi API CORS source
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p /tmp/rawaj-saudi-api
+          base64 --decode ops/rawaj-saudi-cloudflare-bootstrap.tar.gz.b64 \
+            > /tmp/rawaj-saudi-api.tar.gz
+          tar -xzf /tmp/rawaj-saudi-api.tar.gz -C /tmp/rawaj-saudi-api
+
           {
             echo "## Saudi frontend Cloudflare build inventory"
             echo
             echo "- Commit: \`$GITHUB_SHA\`"
             echo "- Build: \`success\`"
+            echo "- Output size: \`$(du -sh .output | cut -f1)\`"
             echo
-            echo "### Candidate output directories"
-            for dir in .output dist build; do
-              if [ -d "$dir" ]; then
-                echo "- \`$dir\`: present"
-                du -sh "$dir" | sed 's/^/  - size: `/' | sed 's/$/`/'
-              else
-                echo "- \`$dir\`: missing"
-              fi
-            done
+            echo "### Generated Wrangler config"
+            echo '```json'
+            cat .output/server/wrangler.json
+            echo '```'
             echo
-            echo "### Files"
-            find .output dist build -maxdepth 4 -type f 2>/dev/null \
-              | sort \
-              | head -n 300 \
-              | while IFS= read -r file; do
-                  size="$(wc -c < "$file" | tr -d ' ')"
-                  echo "- \`$file\` — ${size} bytes"
-                done
+            echo "### Entrypoints"
+            find .output -maxdepth 4 -type f \
+              \( -name 'index.mjs' -o -name 'index.js' -o -name 'wrangler.json' -o -name 'nitro.json' \) \
+              | sort | sed 's/^/- `/' | sed 's/$/`/' || true
             echo
-            echo "### Entrypoint hints"
-            find .output dist build -maxdepth 5 -type f 2>/dev/null \
-              \( -name 'index.mjs' -o -name 'index.js' -o -name 'worker.mjs' -o -name 'worker.js' -o -name 'wrangler.json' -o -name 'wrangler.jsonc' \) \
-              | sort \
-              | sed 's/^/- `/' | sed 's/$/`/'
+            echo "### Saudi API origin/CORS references"
+            echo '```text'
+            grep -RInE 'sa\.rawa-j\.com|ALLOWED_ORIGINS|allowedOrigins|cors|origin' \
+              /tmp/rawaj-saudi-api/cloudflare/worker/src \
+              /tmp/rawaj-saudi-api/cloudflare/worker/scripts \
+              /tmp/rawaj-saudi-api/cloudflare/worker/wrangler* 2>/dev/null \
+              | head -n 200 || true
+            echo '```'
           } > /tmp/saudi-cloudflare-build.md
 
           gh issue comment 602 \
@@ -84,10 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rawaj-saudi-frontend-cloudflare-build
-          path: |
-            .output
-            dist
-            build
+          path: .output
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 3
