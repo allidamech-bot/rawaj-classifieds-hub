@@ -6,6 +6,11 @@ name: Inspect Saudi Cloudflare frontend build
       - ops/saudi-cloudflare-frontend-inspect-20260802
     paths:
       - .github/workflows/saudi-cloudflare-frontend-inspect.yml
+  pull_request:
+    branches:
+      - saudi
+    paths:
+      - .github/workflows/saudi-cloudflare-frontend-inspect.yml
   workflow_dispatch:
 
 permissions:
