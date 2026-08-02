@@ -2167,7 +2167,7 @@ function AddListingPage() {
                           inputMode="tel"
                           autoComplete="tel"
                           className="input"
-                          placeholder="+963 ..."
+                          placeholder="+966 ..."
                           data-first-invalid={Boolean(fieldErrors.phone)}
                         />
                       </Field>
@@ -2185,7 +2185,7 @@ function AddListingPage() {
                           inputMode="tel"
                           autoComplete="tel"
                           className="input"
-                          placeholder="+963 ..."
+                          placeholder="+966 ..."
                           data-first-invalid={Boolean(fieldErrors.whatsapp)}
                         />
                       </Field>
@@ -2353,7 +2353,7 @@ function AddListingPage() {
                     : priceType === "contact"
                       ? text("عند التواصل", "On contact")
                       : price
-                        ? `${price} SYP`
+                        ? `${price} SAR`
                         : ""
                 }
                 location={
@@ -2482,7 +2482,7 @@ function priceReviewLabel(
   if (priceType === "free") return text("مجاني", "Free");
   if (priceType === "contact") return text("يُحدد عند التواصل", "Set on contact");
   if (priceType === "exchange") return text("للمبادلة", "Exchange");
-  return price ? `${price} SYP` : "-";
+  return price ? `${price} SAR` : "-";
 }
 
 function listingConditionReviewLabel(
