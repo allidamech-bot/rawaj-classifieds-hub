@@ -1,0 +1,65 @@
+name: Saudi auth isolation validation
+
+"on":
+  push:
+    branches:
+      - feature/saudi-vercel-api-binding-20260802
+    paths:
+      - .github/workflows/saudi-auth-isolation-validation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/saudi-vercel-api-binding-20260802
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply Saudi auth isolation
+        run: node scripts/apply-saudi-auth-isolation.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build Saudi frontend
+        run: npm run build
+
+      - name: Commit validated isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .env.example src/lib/auth.tsx src/server.ts
+          if git diff --cached --quiet; then
+            echo "No auth isolation changes to commit."
+            exit 0
+          fi
+          git commit -m "fix(saudi): fail closed until Saudi Firebase is configured"
+          git push origin HEAD:feature/saudi-vercel-api-binding-20260802
+
+      - name: Report result
+        if: always()
+        shell: bash
+        run: |
+          result="${{ job.status }}"
+          gh pr comment 599 --repo "$GITHUB_REPOSITORY" --body "Saudi auth isolation validation finished with status: \`$result\`."
