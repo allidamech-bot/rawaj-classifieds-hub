@@ -1,0 +1,107 @@
+name: Saudi Live Auth Verification
+
+"on":
+  pull_request:
+    paths:
+      - .github/workflows/saudi-live-auth-verification.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+      FIREBASE_API_KEY: AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U
+      FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
+    steps:
+      - name: Verify Saudi homepage, login and API
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/" > /tmp/home.html
+          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/login" > /tmp/login.html
+          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/health" > /tmp/health.json
+          curl --retry 8 --retry-delay 3 --retry-all-errors --silent --show-error --fail "$SITE_URL/v1/references" > /tmp/references.json
+
+          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/home.html
+          grep -q "سيارات ومركبات" /tmp/home.html
+          grep -q "عقارات" /tmp/home.html
+          grep -q "تسجيل الدخول" /tmp/login.html
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const health = JSON.parse(fs.readFileSync("/tmp/health.json", "utf8"));
+          const refs = JSON.parse(fs.readFileSync("/tmp/references.json", "utf8"));
+          if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
+            throw new Error("Saudi backend health is not ready");
+          }
+          if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
+          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
+          console.log(`Live Saudi API: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+          NODE
+
+      - name: Verify deployed Firebase bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > /tmp/assets.txt
+          grep -oE '(src|href)="[^"]+\.(js|mjs)(\?[^"]*)?"' /tmp/home.html \
+            | sed -E 's/^(src|href)="//;s/"$//' \
+            | sort -u > /tmp/asset-urls.txt
+          while IFS= read -r asset; do
+            [ -n "$asset" ] || continue
+            case "$asset" in
+              http://*|https://*) url="$asset" ;;
+              /*) url="$SITE_URL$asset" ;;
+              *) url="$SITE_URL/$asset" ;;
+            esac
+            curl --silent --show-error --fail "$url" >> /tmp/assets.txt
+            printf '\n' >> /tmp/assets.txt
+          done < /tmp/asset-urls.txt
+          grep -q "$FIREBASE_PROJECT_ID" /tmp/assets.txt
+          if grep -q "rawaj-saudi-auth-pending" /tmp/assets.txt; then
+            echo "Pending Firebase configuration is still deployed" >&2
+            exit 1
+          fi
+
+      - name: Verify Firebase email authentication endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /tmp/firebase-password.json --write-out '%{http_code}' \
+            -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$FIREBASE_API_KEY" \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"rawaj-live-verification@example.invalid","password":"invalid-password","returnSecureToken":true}')"
+          test "$status" = "400"
+          node <<'NODE'
+          const fs = require("node:fs");
+          const payload = JSON.parse(fs.readFileSync("/tmp/firebase-password.json", "utf8"));
+          const message = payload?.error?.message || "";
+          if (!message || /API_KEY_INVALID|PROJECT_NOT_FOUND|OPERATION_NOT_ALLOWED/.test(message)) {
+            throw new Error(`Firebase email auth unavailable: ${message || "unknown error"}`);
+          }
+          console.log(`Firebase email auth endpoint is active: ${message}`);
+          NODE
+
+      - name: Verify Firebase Google OAuth domain
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /tmp/firebase-google.json --write-out '%{http_code}' \
+            -X POST "https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=$FIREBASE_API_KEY" \
+            -H 'Content-Type: application/json' \
+            --data "{\"identifier\":\"rawaj-live-verification@example.invalid\",\"continueUri\":\"$SITE_URL/login\",\"providerId\":\"google.com\"}")"
+          node <<'NODE'
+          const fs = require("node:fs");
+          const payload = JSON.parse(fs.readFileSync("/tmp/firebase-google.json", "utf8"));
+          const status = process.env.GOOGLE_STATUS;
+          const message = payload?.error?.message || "";
+          if (status !== "200") throw new Error(`Firebase Google OAuth unavailable: ${message || `HTTP ${status}`}`);
+          if (!payload.authUri) throw new Error("Firebase Google OAuth did not return an auth URI");
+          console.log("Firebase Google OAuth is enabled for the Saudi live origin.");
+          NODE
+        env:
+          GOOGLE_STATUS: ${{ steps.google-status.outputs.status }}
