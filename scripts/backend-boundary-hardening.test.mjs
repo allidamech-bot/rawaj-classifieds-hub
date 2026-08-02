@@ -78,7 +78,7 @@ test("all committed application environments select the Cloudflare provider", as
     );
     assert.match(
       content,
-      /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/(?:api\.rawa-j\.com|rawaj-classifieds-hub\.allidamech\.workers\.dev)\/?$/m,
+      /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/(?:api\.rawa-j\.com|rawaj-classifieds-hub\.allidamech\.workers\.dev|rawaj-saudi-classifieds\.allidamech\.workers\.dev)\/?$/m,
       `${path} must use an approved Cloudflare API origin`,
     );
   }
