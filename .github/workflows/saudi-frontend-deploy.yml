@@ -1,8 +1,13 @@
-# Saudi frontend production release trigger: 2026-08-02
+# Saudi frontend monitored production release: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
   push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-frontend-deploy.yml
+  pull_request:
     branches:
       - main
     paths:
@@ -14,12 +19,13 @@ permissions:
   issues: write
 
 concurrency:
-  group: rawaj-saudi-frontend-production
+  group: rawaj-saudi-frontend-production-${{ github.event_name }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     name: Build and publish Saudi frontend
+    if: github.event_name != 'pull_request' || github.head_ref == 'release/saudi-frontend-production-20260802'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
@@ -30,6 +36,13 @@ jobs:
       WORKER_NAME: rawaj-saudi-web
       WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev
     steps:
+      - name: Announce monitored release start
+        shell: bash
+        run: |
+          gh issue comment 602 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi frontend monitored release started from workflow run \`$GITHUB_RUN_ID\`."
+
       - name: Check out isolated Saudi branch
         uses: actions/checkout@v4
         with:
@@ -116,3 +129,11 @@ jobs:
           gh issue comment 602 \
             --repo "$GITHUB_REPOSITORY" \
             --body "Saudi public frontend deployed successfully at **$WORKER_URL** from Saudi commit \`$saudi_sha\`. Homepage and same-origin API proxy verification passed with 12 categories and 13 regions."
+
+      - name: Record failed release
+        if: failure()
+        shell: bash
+        run: |
+          gh issue comment 602 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi frontend release failed in workflow run \`$GITHUB_RUN_ID\`. Review the failed step before retrying; no success was recorded."
