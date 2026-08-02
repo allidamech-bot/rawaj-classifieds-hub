@@ -1,4 +1,4 @@
-# Saudi frontend release with shared Firebase authentication: 2026-08-02
+# Saudi frontend release with first-load gateway verification: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
@@ -29,6 +29,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       WORKER_NAME: rawaj-saudi-web
       WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev
+      FINAL_SITE_URL: https://sa.rawa-j.com
       FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
     steps:
       - name: Check out isolated Saudi branch
@@ -55,6 +56,9 @@ jobs:
 
       - name: Verify Saudi runtime boundary
         run: npm run test:runtime-boundary
+
+      - name: Verify Saudi first-load gateway contract
+        run: node --test scripts/saudi-first-load-api-gateway.test.mjs
 
       - name: Type-check Saudi frontend
         run: npm run typecheck
@@ -94,37 +98,62 @@ jobs:
             },
           ];
           config.observability = { enabled: true };
+          if (config.services?.[0]?.binding !== "SAUDI_API") {
+            throw new Error("Saudi API service binding is missing");
+          }
           fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
           NODE
 
       - name: Deploy Saudi frontend Worker
         run: npx --yes wrangler@4.118.0 deploy --config .output/server/wrangler.json
 
-      - name: Verify homepage and same-origin API proxy
+      - name: Verify first load and same-origin API on Worker and custom domain
         shell: bash
         run: |
           set -euo pipefail
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/" > /tmp/rawaj-saudi-home.html
-          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/rawaj-saudi-home.html
-          grep -q "سيارات ومركبات" /tmp/rawaj-saudi-home.html
-          grep -q "عقارات" /tmp/rawaj-saudi-home.html
+          for origin in "$WORKER_URL" "$FINAL_SITE_URL"; do
+            cache_bust="first-load-$(date +%s%N)"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/?release=$cache_bust" > "/tmp/home-$(echo "$origin" | tr -cd '[:alnum:]').html"
+            home_file="/tmp/home-$(echo "$origin" | tr -cd '[:alnum:]').html"
+            grep -q "سوق إعلانات مبوبة في السعودية" "$home_file"
+            grep -q "سيارات ومركبات" "$home_file"
+            grep -q "عقارات" "$home_file"
+            if grep -q '/_vercel/insights/script.js' "$home_file"; then
+              echo "Vercel Analytics was rendered on Cloudflare origin: $origin" >&2
+              exit 1
+            fi
 
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/v1/health" > /tmp/rawaj-saudi-health.json
-          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
-            "$WORKER_URL/v1/references" > /tmp/rawaj-saudi-references.json
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/health?release=$cache_bust" > "/tmp/health-$(echo "$origin" | tr -cd '[:alnum:]').json"
+            curl --retry 18 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/references?release=$cache_bust" > "/tmp/references-$(echo "$origin" | tr -cd '[:alnum:]').json"
+          done
 
           node <<'NODE'
           const fs = require("node:fs");
-          const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
-          const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
-          if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
-            throw new Error("Saudi API proxy health verification failed");
+          const origins = [process.env.WORKER_URL, process.env.FINAL_SITE_URL];
+          const fileKey = (origin) => origin.replace(/[^a-z0-9]/gi, "");
+          for (const origin of origins) {
+            const health = JSON.parse(fs.readFileSync(`/tmp/health-${fileKey(origin)}.json`, "utf8"));
+            const refs = JSON.parse(fs.readFileSync(`/tmp/references-${fileKey(origin)}.json`, "utf8"));
+            if (health.data?.database !== "ready") {
+              throw new Error(`Saudi API proxy health failed on ${origin}`);
+            }
+            if (!new Set(["rawaj-classifieds-hub", "rawaj-saudi-classifieds"]).has(health.data?.service)) {
+              throw new Error(`Unexpected Saudi API service on ${origin}: ${health.data?.service}`);
+            }
+            if ((refs.data?.categories?.length || 0) < 12) {
+              throw new Error(`Saudi categories are incomplete on ${origin}`);
+            }
+            if ((refs.data?.taxonomyNodes?.length || 0) !== 117) {
+              throw new Error(`Saudi taxonomy is incomplete on ${origin}`);
+            }
+            if ((refs.data?.governorates?.length || 0) !== 13) {
+              throw new Error(`Saudi regions are incomplete on ${origin}`);
+            }
           }
-          if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
-          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
-          console.log(`Saudi web release verified with shared Firebase auth: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+          console.log("Saudi first-load release verified on Worker URL and sa.rawa-j.com.");
           NODE
 
       - name: Record successful release
@@ -133,4 +162,4 @@ jobs:
           saudi_sha="$(git rev-parse HEAD)"
           gh issue comment 602 \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Saudi frontend deployed at **$WORKER_URL** from Saudi commit \`$saudi_sha\`. Shared Firebase authentication is bundled, and the homepage/API verification passed with 12 categories and 13 regions."
+            --body "Saudi frontend deployed at **$FINAL_SITE_URL** from Saudi commit \`$saudi_sha\`. First-load HTML, the SAUDI_API service binding, same-origin health/references, 12 categories, 117 taxonomy nodes, 13 regions, and Cloudflare-only analytics behavior all passed on both the Worker URL and custom domain."
