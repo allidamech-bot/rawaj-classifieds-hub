@@ -27,9 +27,43 @@ async function getServerEntry(): Promise<ServerEntry> {
 const sensitiveAuthPaths = ["/auth/callback", "/login", "/reset-password"];
 const androidAssetLinksPath = "/.well-known/assetlinks.json";
 const slowPublicRenderThresholdMs = 2_500;
+const saudiApiOrigin = "https://rawaj-saudi-classifieds.allidamech.workers.dev";
 
 function isSensitiveAuthPath(pathname: string) {
   return sensitiveAuthPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+}
+
+function isSaudiApiProxyPath(pathname: string) {
+  return pathname === "/v1" || pathname.startsWith("/v1/");
+}
+
+async function proxySaudiApiRequest(request: Request): Promise<Response> {
+  const incomingUrl = new URL(request.url);
+  const targetUrl = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, saudiApiOrigin);
+  const headers = new Headers(request.headers);
+
+  for (const header of [
+    "host",
+    "origin",
+    "referer",
+    "cf-connecting-ip",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-proto",
+    "x-real-ip",
+  ]) {
+    headers.delete(header);
+  }
+
+  headers.set("x-rawaj-proxy-market", "saudi");
+
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  return fetch(targetUrl, {
+    method: request.method,
+    headers,
+    body: hasBody ? request.body : undefined,
+    redirect: "manual",
+  });
 }
 
 function isPublicDocumentPath(pathname: string) {
@@ -254,6 +288,12 @@ export default {
     const startedAt = Date.now();
     try {
       const url = new URL(request.url);
+
+      if (isSaudiApiProxyPath(url.pathname)) {
+        const response = await proxySaudiApiRequest(request);
+        return applyResponseHeaders(response, request, Date.now() - startedAt);
+      }
+
       if (request.method === "GET" && url.pathname === androidAssetLinksPath) {
         const response = buildAndroidAssetLinksResponse(env);
         const durationMs = Date.now() - startedAt;
