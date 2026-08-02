@@ -21,6 +21,16 @@ test("Saudi posting and search surfaces use the isolated region-city selector", 
   }
 });
 
+test("Saudi listing filters recover references in the browser when SSR is empty", () => {
+  const hook = read("src/features/listings/use-listings-references.ts");
+  assert.ok(hook.includes("needsBrowserRecovery"));
+  assert.ok(hook.includes("fetchPublicGovernorates()"));
+  assert.ok(hook.includes("fetchPublicCategories()"));
+  assert.ok(hook.includes("browserRecovery ??"));
+  assert.ok(hook.includes("references.categories.length === 0"));
+  assert.ok(hook.includes("references.governorates.length === 0"));
+});
+
 test("Saudi canonical location defaults never request Syria", () => {
   const levels = read("src/features/locations/use-location-levels.ts");
   const api = read("src/lib/api/location-taxonomy.ts");
