@@ -63,12 +63,13 @@ fs.writeFileSync(target, source);
 
 fs.writeFileSync(
   "cloudflare/worker/test/support-admin.test.mjs",
-  `import assert from "node:assert/strict";\nimport fs from "node:fs";\nimport test from "node:test";\n\nconst source = fs.readFileSync(new URL("../src/trust-support.ts", import.meta.url), "utf8");\n\ntest("support requests expose a protected admin moderation contract", () => {\n  assert.match(source, /\\/v1\\/admin\\/support-requests/);\n  assert.match(source, /support_request\\.moderated/);\n  assert.match(source, /public_response = \\?/);\n  assert.match(source, /assigned_to = \\?/);\n  assert.match(source, /stringValue\\(persisted\\.updated_at\\) !== timestamp/);\n  assert.doesNotMatch(source, /moderateSupportRequest[\\s\\S]*changedRows\\(result\\)/);\n});\n`,
+  `import assert from "node:assert/strict";\nimport fs from "node:fs";\nimport test from "node:test";\n\nconst source = fs.readFileSync(new URL("../src/trust-support.ts", import.meta.url), "utf8");\n\ntest("support requests expose a protected admin moderation contract", () => {\n  assert.match(source, /\\/v1\\/admin\\/support-requests/);\n  assert.match(source, /support_request\\.moderated/);\n  assert.match(source, /public_response = \\?/);\n  assert.match(source, /assigned_to = \\?/);\n  assert.match(source, /stringValue\\(persisted\\.updated_at\\) !== timestamp/);\n  const start = source.indexOf("async function moderateSupportRequest(");\n  const end = source.indexOf("async function createListingReport(", start);\n  assert.ok(start >= 0 && end > start);\n  assert.doesNotMatch(source.slice(start, end), /changedRows\\(result\\)/);\n});\n`,
 );
 
 for (const path of [
   "scripts/apply-saudi-admin-support-fix.mjs",
   ".github/workflows/apply-saudi-admin-support-fix.yml",
+  "docs/saudi-admin-support-fix-trigger.txt",
 ]) {
   if (fs.existsSync(path)) fs.unlinkSync(path);
 }
