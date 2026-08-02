@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 const source = fs.readFileSync(new URL("../src/trust-support.ts", import.meta.url), "utf8");
+const entrySource = fs.readFileSync(new URL("../src/entry.ts", import.meta.url), "utf8");
 
 test("support requests expose a protected admin moderation contract", () => {
   assert.match(source, /\/v1\/admin\/support-requests/);
@@ -30,4 +31,12 @@ test("internal support fields are only returned to administrators", () => {
   assert.match(adminMapper, /row\.email/);
   assert.match(source, /map\(mapAdminSupport\)/);
   assert.match(source, /mapAdminSupport\(persisted\)/);
+});
+
+
+test("entry router delegates admin support requests to trust support", () => {
+  const start = entrySource.indexOf("function isTrustSupportPath(");
+  const end = entrySource.indexOf("function isAccountSocialPath(", start);
+  assert.ok(start >= 0 && end > start);
+  assert.match(entrySource.slice(start, end), /support-requests/);
 });
