@@ -1,0 +1,152 @@
+name: Deploy Saudi frontend to Cloudflare
+
+"on":
+  pull_request:
+    branches:
+      - saudi
+  push:
+    branches:
+      - saudi
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: rawaj-saudi-frontend-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  WORKER_NAME: rawaj-saudi-web
+  WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev
+
+jobs:
+  validate:
+    name: Build Saudi frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out Saudi frontend
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build Cloudflare output
+        run: npm run build
+
+      - name: Validate generated Worker package
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .output/server/index.mjs
+          test -f .output/server/wrangler.json
+          test -d .output/public/assets
+          node <<'NODE'
+          const fs = require("node:fs");
+          const config = JSON.parse(fs.readFileSync(".output/server/wrangler.json", "utf8"));
+          if (config.main !== "index.mjs") throw new Error("Unexpected Saudi frontend entrypoint");
+          if (config.assets?.directory !== "../public") throw new Error("Unexpected asset directory");
+          if (!Array.isArray(config.compatibility_flags) || !config.compatibility_flags.includes("nodejs_compat")) {
+            throw new Error("nodejs_compat is required");
+          }
+          NODE
+
+      - name: Prepare isolated Saudi Worker config
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = ".output/server/wrangler.json";
+          const config = JSON.parse(fs.readFileSync(path, "utf8"));
+          config.name = process.env.WORKER_NAME;
+          config.observability = { enabled: true };
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+          node -e '
+            const fs = require("node:fs");
+            const config = JSON.parse(fs.readFileSync(".output/server/wrangler.json", "utf8"));
+            if (config.name !== process.env.WORKER_NAME) throw new Error("Saudi Worker name mismatch");
+          '
+
+      - name: Upload validated Worker package
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-saudi-web-worker-${{ github.sha }}
+          path: .output
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy:
+    name: Publish Saudi frontend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/saudi'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Validate Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "Missing CLOUDFLARE_PRODUCTION_API_TOKEN"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+
+      - name: Download validated Worker package
+        uses: actions/download-artifact@v4
+        with:
+          name: rawaj-saudi-web-worker-${{ github.sha }}
+          path: .output
+
+      - name: Deploy isolated Saudi frontend Worker
+        run: npx --yes wrangler@4.118.0 deploy --config .output/server/wrangler.json
+
+      - name: Verify public Saudi frontend and API proxy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            "$WORKER_URL/" > /tmp/rawaj-saudi-home.html
+          grep -q "سوق إعلانات مبوبة في السعودية" /tmp/rawaj-saudi-home.html
+          grep -q "سيارات ومركبات" /tmp/rawaj-saudi-home.html
+          grep -q "عقارات" /tmp/rawaj-saudi-home.html
+
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            "$WORKER_URL/v1/health" > /tmp/rawaj-saudi-health.json
+          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \
+            "$WORKER_URL/v1/references" > /tmp/rawaj-saudi-references.json
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const health = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-health.json", "utf8"));
+          const refs = JSON.parse(fs.readFileSync("/tmp/rawaj-saudi-references.json", "utf8"));
+          if (health.data?.service !== "rawaj-saudi-classifieds" || health.data?.database !== "ready") {
+            throw new Error("Saudi API proxy health verification failed");
+          }
+          if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
+          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
+          console.log(`Saudi frontend ready with ${refs.data.categories.length} categories and ${refs.data.governorates.length} regions.`);
+          NODE
+
+      - name: Record successful public deployment
+        shell: bash
+        run: |
+          gh issue comment 602 \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi public frontend deployed successfully at **$WORKER_URL** from commit \`$GITHUB_SHA\`. The homepage and same-origin API proxy passed health, 12-category, and 13-region verification."

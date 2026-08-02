@@ -7,9 +7,20 @@ export interface PublicDataRuntimeConfig {
   cloudflareApiBaseUrl: string | null;
 }
 
-const cloudflareApiBaseUrl = normalizeApiBaseUrl(
+const configuredCloudflareApiBaseUrl = normalizeApiBaseUrl(
   String(import.meta.env.VITE_PUBLIC_DATA_API_BASE_URL ?? ""),
 );
+
+/**
+ * Browser requests use the current site origin and are proxied by the Saudi
+ * frontend Worker at /v1/*. Server-side rendering continues to call the
+ * isolated Saudi API Worker directly. This keeps production same-origin and
+ * allows the public hostname to change without reopening API CORS.
+ */
+const cloudflareApiBaseUrl =
+  typeof window === "undefined"
+    ? configuredCloudflareApiBaseUrl
+    : (normalizeApiBaseUrl(window.location.origin) ?? configuredCloudflareApiBaseUrl);
 
 /**
  * RAWAJ has one runtime data provider: Cloudflare Worker + D1 + R2.

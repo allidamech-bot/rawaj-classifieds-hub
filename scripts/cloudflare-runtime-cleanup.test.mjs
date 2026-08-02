@@ -102,7 +102,10 @@ test("CSP and runtime provider fail closed on Cloudflare only", async () => {
     read("src/lib/public-data/config.ts"),
   ]);
   assert.doesNotMatch(server, new RegExp(vendor, "i"));
-  assert.match(server, /https:\/\/api\.rawa-j\.com/);
+  assert.match(
+    server,
+    /https:\/\/(?:api\.rawa-j\.com|rawaj-saudi-classifieds\.allidamech\.workers\.dev)/,
+  );
   assert.match(config, /provider: "cloudflare"/);
   assert.match(config, /export type PublicDataProviderName = "cloudflare"/);
   assert.doesNotMatch(config, /VITE_PUBLIC_DATA_PROVIDER/);
