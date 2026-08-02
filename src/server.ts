@@ -62,8 +62,8 @@ function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreview
     ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://apis.google.com"
     : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://apis.google.com";
   const frameSourceDirective = allowVercelPreviewTools
-    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com"
-    : "frame-src 'self' https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com";
+    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://*.firebaseapp.com https://*.web.app"
+    : "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app";
   const manifestSourceDirective = allowVercelPreviewTools
     ? "manifest-src 'self' https://vercel.com"
     : "manifest-src 'self'";
