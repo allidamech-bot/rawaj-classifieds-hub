@@ -1,0 +1,76 @@
+name: Assign Saudi Vercel Domain
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/assign-saudi-vercel-domain.yml
+
+permissions:
+  contents: read
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      VERCEL_TOKEN_PRIMARY: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TOKEN_FALLBACK: ${{ secrets.VERCEL_ACCESS_TOKEN }}
+      TEAM_ID: team_HjifUInQJEFAzzyuhFW9o6Wh
+      PROJECT_ID: prj_A3tnlWVpP7GduWNjWTWVeMD0asBG
+      PROJECT_NAME: rawaj-classifieds-hub
+      DOMAIN: sa.rawa-j.com
+      DEPLOYMENT_URL: rawaj-classifieds-vgue3ndsh-alidaamishs-projects.vercel.app
+    steps:
+      - name: Resolve Vercel credential
+        id: token
+        shell: bash
+        run: |
+          set -euo pipefail
+          token="${VERCEL_TOKEN_PRIMARY:-${VERCEL_TOKEN_FALLBACK:-}}"
+          if [ -z "$token" ]; then
+            echo "No VERCEL_TOKEN or VERCEL_ACCESS_TOKEN secret is configured." >&2
+            exit 1
+          fi
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Add Saudi domain to Vercel project
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          set -euo pipefail
+          npx --yes vercel@latest domains add "$DOMAIN" "$PROJECT_NAME" \
+            --scope "$TEAM_ID" \
+            --token "$VERCEL_TOKEN" \
+            --force \
+            --yes
+
+      - name: Alias production deployment to Saudi domain
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          set -euo pipefail
+          npx --yes vercel@latest alias set "$DEPLOYMENT_URL" "$DOMAIN" \
+            --scope "$TEAM_ID" \
+            --token "$VERCEL_TOKEN"
+
+      - name: Verify Saudi custom domain
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              --output /tmp/saudi.html --write-out '%{http_code}' \
+              "https://$DOMAIN/" || true)
+            echo "Attempt $attempt: HTTPS $status"
+            if [ "$status" = "200" ] && grep -q "سوق إعلانات مبوبة في السعودية" /tmp/saudi.html; then
+              echo "Saudi custom domain is live: https://$DOMAIN"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Saudi domain did not become ready within the verification window." >&2
+          exit 1
