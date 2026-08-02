@@ -1,0 +1,151 @@
+name: Verify Saudi search views offers journey
+
+"on":
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-saudi-search-views-offers
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      D1_NAME: rawaj-saudi-production
+      D1_EXPECTED_ID: 3f40cae9-c3a4-47ea-80a1-2f9a78915b2c
+      R2_NAME: rawaj-saudi-media-production
+      WORKER_NAME: rawaj-saudi-classifieds
+      FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
+      API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+      SITE_URL: https://sa.rawa-j.com
+      WRANGLER_CONFIG: ${{ github.workspace }}/saudi-repo/cloudflare/worker/wrangler.generated.jsonc
+    steps:
+      - name: Check out verification controls
+        uses: actions/checkout@v4
+
+      - name: Check out current Saudi source
+        uses: actions/checkout@v4
+        with:
+          ref: saudi
+          path: saudi-repo
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: saudi-repo/cloudflare/worker/package-lock.json
+
+      - name: Validate credentials and Firebase config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          firebase_key="$(node - <<'NODE'
+          const fs = require('node:fs');
+          const source = fs.readFileSync('saudi-repo/src/lib/firebase.ts', 'utf8');
+          const match = source.match(/apiKey:\s*"([^"]+)"/);
+          if (!match) throw new Error('Saudi public Firebase API key was not found');
+          process.stdout.write(match[1]);
+          NODE
+          )"
+          test -n "$firebase_key"
+          echo "FIREBASE_API_KEY=$firebase_key" >> "$GITHUB_ENV"
+
+      - name: Install and validate current Saudi Worker
+        working-directory: saudi-repo/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm install --no-save jose@^6
+          if grep -RIn 'SYP' src; then
+            echo 'Saudi Worker source still contains SYP.' >&2
+            exit 1
+          fi
+          npm run typecheck
+          node ../../scripts/structured-listing-price-offers-v1.test.mjs
+
+      - name: Resolve pinned Saudi resources
+        id: resources
+        working-directory: saudi-repo/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler d1 list --json >/tmp/saudi-d1-list.json
+          d1_id="$(node - <<'NODE'
+          const fs = require('node:fs');
+          const value = JSON.parse(fs.readFileSync('/tmp/saudi-d1-list.json', 'utf8'));
+          const rows = Array.isArray(value) ? value : value.result || [];
+          const match = rows.find((row) => row.name === process.env.D1_NAME);
+          const actual = match?.uuid || match?.id || '';
+          if (actual !== process.env.D1_EXPECTED_ID) throw new Error(`Saudi D1 identity mismatch: ${actual}`);
+          process.stdout.write(actual);
+          NODE
+          )"
+          test -n "$d1_id"
+          npx wrangler r2 bucket info "$R2_NAME" >/tmp/saudi-r2-info.txt
+          echo "d1_id=$d1_id" >> "$GITHUB_OUTPUT"
+
+      - name: Render and deploy current Saudi Worker
+        working-directory: saudi-repo/cloudflare/worker
+        shell: bash
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ steps.resources.outputs.d1_id }}
+        run: |
+          set -euo pipefail
+          export CLOUDFLARE_D1_DATABASE_NAME="$D1_NAME"
+          export CLOUDFLARE_R2_BUCKET_NAME="$R2_NAME"
+          export RAWAJ_WORKER_RELEASE_SHA="$(git rev-parse HEAD)"
+          export RAWAJ_WORKER_ENVIRONMENT=production
+          node scripts/render-config.mjs
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'wrangler.generated.jsonc';
+          const config = JSON.parse(fs.readFileSync(path, 'utf8'));
+          config.name = process.env.WORKER_NAME;
+          config.vars = {
+            ...(config.vars || {}),
+            FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+            API_ALLOWED_ORIGINS: [process.env.SITE_URL, 'https://rawaj-saudi-web.allidamech.workers.dev'].join(','),
+          };
+          if (config.d1_databases?.[0]?.database_id !== process.env.CLOUDFLARE_D1_DATABASE_ID) {
+            throw new Error('Unexpected Saudi D1 binding');
+          }
+          if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) {
+            throw new Error('Unexpected Saudi R2 binding');
+          }
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+          npx wrangler d1 migrations apply "$D1_NAME" --remote --config wrangler.generated.jsonc
+          npx wrangler d1 execute "$D1_NAME" --remote --config wrangler.generated.jsonc --command "UPDATE listings SET currency='SAR' WHERE currency IS NULL OR currency <> 'SAR';"
+          npx wrangler deploy --config wrangler.generated.jsonc
+
+      - name: Verify live Saudi contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error --fail "$API_URL/v1/health" >/tmp/health.json
+          curl --retry 12 --retry-delay 2 --retry-all-errors --silent --show-error --fail "$API_URL/v1/references" >/tmp/references.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const health = JSON.parse(fs.readFileSync('/tmp/health.json', 'utf8'));
+          const refs = JSON.parse(fs.readFileSync('/tmp/references.json', 'utf8')).data || {};
+          if (health.data?.database !== 'ready') throw new Error('Saudi D1 is not ready');
+          if ((refs.governorates || []).length !== 13) throw new Error('Saudi regions are incomplete');
+          if ((refs.taxonomyNodes || []).length !== 117) throw new Error('Saudi taxonomy is incomplete');
+          NODE
+
+      - name: Run disposable search views and offers journey
+        run: node scripts/verify-saudi-search-views-offers.mjs
