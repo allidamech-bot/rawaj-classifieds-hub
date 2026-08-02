@@ -123,7 +123,7 @@ function mapListingPriceOffer(row: Record<string, unknown>): ListingPriceOffer {
     createdByMe: row.createdByMe === true,
     parentOfferId: nullableText(row.parentOfferId),
     amount: Math.max(0, Math.trunc(number(row.amount))),
-    currency: text(row.currency) || "SYP",
+    currency: text(row.currency) || "SAR",
     status: offerStatus(row.status),
     expiresAt: text(row.expiresAt),
     respondedAt: nullableText(row.respondedAt),

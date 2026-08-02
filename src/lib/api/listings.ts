@@ -54,7 +54,7 @@ export function mapListing(
     title: text(row.title),
     description: text(row.description),
     price: numberOrNull(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: text(row.priceType ?? row.price_type, "fixed") as PriceType,
     condition: text(
       row.condition ?? row.listingCondition ?? row.listing_condition,

@@ -4,7 +4,7 @@ import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-
 export interface ListingPriceChangeContext {
   previousPrice: number;
   currentPrice: number;
-  currency: "SYP";
+  currency: "SAR";
   direction: "increased" | "decreased";
 }
 

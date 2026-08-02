@@ -120,7 +120,7 @@ export interface ClassifiedListing {
   title: string;
   description: string;
   price: number | null;
-  currency: "SYP";
+  currency: "SAR";
   priceType: PriceType;
   condition: ListingCondition;
   status: ListingStatus;

@@ -111,7 +111,7 @@ function mapAdminListing(row: Record<string, unknown>): ClassifiedListing {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(
       row.priceType ?? row.price_type,
       "fixed",

@@ -84,7 +84,7 @@ export async function fetchFavoriteJourneyItems(
         listingId: favorite.listingId,
         title: listing?.title ?? "إعلان غير متاح",
         price: listing?.price ?? null,
-        currency: listing?.currency ?? "SYP",
+        currency: listing?.currency ?? "SAR",
         status: listing?.status ?? "approved",
         createdAt: favorite.createdAt,
         updatedAt: listing?.updatedAt ?? favorite.createdAt,
