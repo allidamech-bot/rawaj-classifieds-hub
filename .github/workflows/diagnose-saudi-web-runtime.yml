@@ -1,0 +1,49 @@
+name: Diagnose Saudi Web Runtime
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/diagnose-saudi-web-runtime.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+    steps:
+      - name: Capture Worker tail while requesting public routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+
+          timeout 25s npx --yes wrangler@4.118.0 tail rawaj-saudi-web --format json \
+            >/tmp/rawaj-saudi-tail.jsonl 2>/tmp/rawaj-saudi-tail.stderr &
+          tail_pid=$!
+          sleep 7
+
+          for path in / /login /v1/health; do
+            safe_name=$(printf '%s' "$path" | tr '/?' '__')
+            status=$(curl --silent --show-error \
+              --output "/tmp/body-${safe_name}.txt" \
+              --dump-header "/tmp/headers-${safe_name}.txt" \
+              --write-out '%{http_code}' "$SITE_URL$path" || true)
+            echo "===== $path HTTP $status ====="
+            cat "/tmp/headers-${safe_name}.txt" || true
+            head -c 2000 "/tmp/body-${safe_name}.txt" || true
+            echo
+          done
+
+          wait "$tail_pid" || true
+          echo "===== wrangler tail stderr ====="
+          cat /tmp/rawaj-saudi-tail.stderr || true
+          echo "===== wrangler tail events ====="
+          cat /tmp/rawaj-saudi-tail.jsonl || true
