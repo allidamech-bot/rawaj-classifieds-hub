@@ -1,0 +1,412 @@
+name: Apply Saudi region selector fix
+
+"on":
+  push:
+    branches:
+      - fix/saudi-region-city-selectors-20260802
+    paths:
+      - .github/workflows/apply-saudi-regions-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/saudi-region-city-selectors-20260802
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply Saudi region and city selectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          function read(path) {
+            return fs.readFileSync(path, "utf8");
+          }
+
+          function write(path, content) {
+            fs.mkdirSync(path.slice(0, path.lastIndexOf("/")), { recursive: true });
+            fs.writeFileSync(path, content.endsWith("\n") ? content : `${content}\n`);
+          }
+
+          function replaceString(path, search, replacement, expected = 1) {
+            const original = read(path);
+            const count = original.split(search).length - 1;
+            if (count !== expected) {
+              throw new Error(`${path}: expected ${expected} occurrences, found ${count}`);
+            }
+            write(path, original.split(search).join(replacement));
+          }
+
+          function replaceRegex(path, regex, replacement, expected = 1) {
+            const original = read(path);
+            const matches = [...original.matchAll(regex)];
+            if (matches.length !== expected) {
+              throw new Error(`${path}: expected ${expected} regex matches, found ${matches.length}`);
+            }
+            write(path, original.replace(regex, replacement));
+          }
+
+          write(
+            "src/features/locations/SaudiRegionCitySelector.tsx",
+            `import type { ClassifiedGovernorate } from "@/lib/classifieds-types";
+          import { useUiPreferences } from "@/lib/ui-preferences";
+
+          export function SaudiRegionCitySelector({
+            governorates,
+            governorateId,
+            districtAr,
+            onChange,
+            disabled = false,
+          }: {
+            governorates: ClassifiedGovernorate[];
+            governorateId: string;
+            districtAr: string;
+            onChange: (governorateId: string, districtAr: string) => void;
+            disabled?: boolean;
+          }) {
+            const { text } = useUiPreferences();
+            const selectedGovernorate =
+              governorates.find((governorate) => governorate.id === governorateId) ?? null;
+            const cities = selectedGovernorate?.districtsAr ?? [];
+
+            return (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" data-saudi-region-city-selector="true">
+                <select
+                  value={governorateId}
+                  onChange={(event) => onChange(event.target.value, "")}
+                  disabled={disabled}
+                  aria-label={text("المنطقة", "Region")}
+                  data-saudi-region-select="true"
+                  className="input"
+                >
+                  <option value="">{text("اختر المنطقة", "Choose region")}</option>
+                  {governorates.map((governorate) => (
+                    <option key={governorate.id} value={governorate.id}>
+                      {governorate.nameAr}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={districtAr}
+                  onChange={(event) => onChange(governorateId, event.target.value)}
+                  disabled={disabled || !selectedGovernorate || cities.length === 0}
+                  aria-label={text("المدينة", "City")}
+                  data-saudi-city-select="true"
+                  className="input"
+                >
+                  <option value="">
+                    {selectedGovernorate
+                      ? text("اختر المدينة", "Choose city")
+                      : text("اختر المنطقة أولاً", "Choose a region first")}
+                  </option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
+          `.replace(/^          /gm, ""),
+          );
+
+          const addListingPath = "src/routes/add-listing.tsx";
+          replaceString(
+            addListingPath,
+            'import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";',
+            'import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";',
+          );
+          replaceRegex(
+            addListingPath,
+            /<CanonicalLocationSelector\n\s+value=\{locationNodeId\}\n\s+onChange=\{\(id, node\) => \{[\s\S]*?\n\s+\}\}\n\s+\/>/g,
+            `<SaudiRegionCitySelector
+                        governorates={governorates}
+                        governorateId={governorateId}
+                        districtAr={district}
+                        onChange={(nextGovernorateId, nextDistrictAr) => {
+                          setGovernorateId(nextGovernorateId);
+                          setDistrict(nextDistrictAr);
+                          setLocationNodeId("");
+                          setLocationNodeType("");
+                          setLocationLabel(
+                            nextDistrictAr ||
+                              governorates.find((item) => item.id === nextGovernorateId)?.nameAr ||
+                              "",
+                          );
+                        }}
+                      />`,
+          );
+
+          const listingsPath = "src/routes/listings.index.tsx";
+          replaceString(
+            listingsPath,
+            'import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";',
+            'import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";',
+          );
+          replaceString(
+            listingsPath,
+            'import { fetchLocationPath, type CanonicalLocationNode } from "@/lib/api/location-taxonomy";',
+            'import { fetchLocationPath } from "@/lib/api/location-taxonomy";',
+          );
+          replaceRegex(
+            listingsPath,
+            /\n  function handleCanonicalLocationChange\(id: string \| null, node: CanonicalLocationNode \| null\) \{[\s\S]*?\n  \}\n\n  function restoreFilterDraftFromSearch/g,
+            "\n\n  function restoreFilterDraftFromSearch",
+          );
+          replaceRegex(
+            listingsPath,
+            /<CanonicalLocationSelector\n\s+value=\{canonicalLocationNodeId \|\| null\}\n\s+onChange=\{handleCanonicalLocationChange\}\n\s+\/>/g,
+            `<SaudiRegionCitySelector
+                    governorates={governorates}
+                    governorateId={govId}
+                    districtAr={canonicalLocationNodeId ? "" : districtAr}
+                    onChange={(nextGovernorateId, nextDistrictAr) => {
+                      setGovId(nextGovernorateId);
+                      setDistrictAr(nextDistrictAr);
+                      setLocationLabel(
+                        nextDistrictAr ||
+                          governorates.find((item) => item.id === nextGovernorateId)?.nameAr ||
+                          "",
+                      );
+                    }}
+                  />`,
+            2,
+          );
+          replaceRegex(
+            listingsPath,
+            /\n\s+\{districtAr && !canonicalLocationNodeId \? \([\s\S]*?\n\s+\) : null\}/g,
+            "",
+            2,
+          );
+
+          const editPath = "src/routes/profile/listings.$id.tsx";
+          replaceString(
+            editPath,
+            'import { CanonicalLocationSelector } from "@/features/locations/CanonicalLocationSelector";',
+            'import { SaudiRegionCitySelector } from "@/features/locations/SaudiRegionCitySelector";',
+          );
+          replaceRegex(
+            editPath,
+            /<CanonicalLocationSelector\n\s+value=\{locationNodeId \|\| null\}\n\s+disabled=\{!isEditable\}\n\s+onChange=\{\(id, node\) => \{[\s\S]*?\n\s+\}\}\n\s+\/>/g,
+            `<SaudiRegionCitySelector
+                    governorates={governorates}
+                    governorateId={governorateId}
+                    districtAr={district}
+                    disabled={!isEditable}
+                    onChange={(nextGovernorateId, nextDistrictAr) => {
+                      setGovernorateId(nextGovernorateId);
+                      setDistrict(nextDistrictAr);
+                      setLocationNodeId("");
+                      setLocationNodeType("");
+                    }}
+                  />`,
+          );
+          replaceRegex(
+            editPath,
+            /\n\s+\{!locationNodeId && district \? \([\s\S]*?\n\s+\) : null\}/g,
+            "",
+          );
+
+          replaceString(
+            "src/features/locations/use-location-levels.ts",
+            'const LOCATION_ROOT_SOURCE_PRIORITY = ["ocha-hdx-cod-ab-syr", "iso3166"];',
+            'const LOCATION_ROOT_SOURCE_PRIORITY = ["iso3166"];',
+          );
+          replaceString(
+            "src/features/locations/use-location-levels.ts",
+            'const roots = await fetchLocationRoots("SY");',
+            'const roots = await fetchLocationRoots("SA");',
+          );
+          replaceString(
+            "src/lib/api/location-taxonomy.ts",
+            'countryCode = "SY",',
+            'countryCode = "SA",',
+          );
+          replaceString(
+            "src/lib/public-data/cloudflare-client.ts",
+            'country = "SY",',
+            'country = "SA",',
+          );
+
+          write(
+            "scripts/saudi-region-city-contract.test.mjs",
+            `import assert from "node:assert/strict";
+          import fs from "node:fs";
+          import test from "node:test";
+
+          const read = (path) => fs.readFileSync(path, "utf8");
+
+          test("Saudi posting and search surfaces use the isolated region-city selector", () => {
+            const component = read("src/features/locations/SaudiRegionCitySelector.tsx");
+            assert.match(component, /data-saudi-region-select/);
+            assert.match(component, /data-saudi-city-select/);
+            assert.match(component, /governorate\.districtsAr/);
+
+            for (const path of [
+              "src/routes/add-listing.tsx",
+              "src/routes/listings.index.tsx",
+              "src/routes/profile/listings.$id.tsx",
+            ]) {
+              const source = read(path);
+              assert.match(source, /SaudiRegionCitySelector/);
+              assert.doesNotMatch(source, /CanonicalLocationSelector/);
+            }
+          });
+
+          test("Saudi canonical location defaults never request Syria", () => {
+            const levels = read("src/features/locations/use-location-levels.ts");
+            const api = read("src/lib/api/location-taxonomy.ts");
+            const client = read("src/lib/public-data/cloudflare-client.ts");
+            assert.match(levels, /fetchLocationRoots\("SA"\)/);
+            assert.doesNotMatch(levels, /ocha-hdx-cod-ab-syr|fetchLocationRoots\("SY"\)/);
+            assert.match(api, /countryCode = "SA"/);
+            assert.match(client, /country = "SA"/);
+          });
+
+          test("Saudi references remain the authoritative region contract", () => {
+            const references = read("src/lib/api/references.ts");
+            const worker = read("cloudflare/worker/src/index.ts");
+            assert.match(references, /result\.data\.governorates/);
+            assert.match(worker, /governorates: \(results\[2\]\.results/);
+          });
+          `.replace(/^          /gm, ""),
+          );
+
+          replaceString(
+            "package.json",
+            '    "test:location-classification": "node --test scripts/syria-location-type-classification.test.mjs",\n',
+            '    "test:location-classification": "node --test scripts/syria-location-type-classification.test.mjs",\n    "test:saudi-location-regions": "node --test scripts/saudi-region-city-contract.test.mjs",\n',
+          );
+
+          const workflowPath = ".github/workflows/saudi-cloudflare-frontend-inspect.yml";
+          replaceString(
+            workflowPath,
+            "  WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev\n",
+            "  WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev\n  API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev\n  PUBLIC_SITE_URL: https://sa.rawa-j.com\n",
+          );
+          replaceString(
+            workflowPath,
+            "      - name: Type-check\n        run: npm run typecheck\n",
+            "      - name: Verify Saudi region contracts\n        run: npm run test:saudi-location-regions\n\n      - name: Type-check\n        run: npm run typecheck\n",
+          );
+          replaceString(
+            workflowPath,
+            "      - name: Download validated Worker package\n",
+            `      - name: Check out Saudi frontend
+            uses: actions/checkout@v4
+
+          - name: Set up Node.js for live UI verification
+            uses: actions/setup-node@v4
+            with:
+              node-version: 22
+              cache: npm
+
+          - name: Install live verification dependencies
+            run: npm ci
+
+          - name: Install Chromium
+            run: npx playwright install --with-deps chromium
+
+          - name: Download validated Worker package
+          `.replace(/^          /gm, ""),
+          );
+          replaceString(
+            workflowPath,
+            "          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \\\n            \"$WORKER_URL/v1/references\" > /tmp/rawaj-saudi-references.json\n",
+            "          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \\\n            \"$API_URL/v1/references\" > /tmp/rawaj-saudi-references.json\n          curl --retry 12 --retry-delay 3 --retry-all-errors --silent --show-error --fail \\\n            \"$PUBLIC_SITE_URL/listings\" > /tmp/rawaj-saudi-public-listings.html\n",
+          );
+          replaceString(
+            workflowPath,
+            "      - name: Record successful public deployment\n",
+            `      - name: Verify live Saudi region selectors
+            shell: bash
+            run: |
+              set -euo pipefail
+              SITE_URL="$PUBLIC_SITE_URL" node --input-type=module <<'NODE'
+              import { chromium } from "playwright";
+              const browser = await chromium.launch({ headless: true });
+              try {
+                const page = await browser.newPage({ locale: "ar-SA" });
+                await page.goto(`${process.env.SITE_URL}/listings?open_filters=true`, {
+                  waitUntil: "networkidle",
+                  timeout: 60_000,
+                });
+                const regionSelect = page.locator("[data-saudi-region-select]").first();
+                await regionSelect.waitFor({ state: "visible", timeout: 30_000 });
+                const options = await regionSelect.locator("option").allTextContents();
+                if (options.length !== 14) {
+                  throw new Error(`Expected 13 Saudi regions plus placeholder, found ${options.length - 1}`);
+                }
+                if (!options.some((name) => name.includes("الرياض"))) {
+                  throw new Error("Riyadh region is missing from the live selector");
+                }
+                console.log(`Live Saudi selector verified with ${options.length - 1} regions.`);
+              } finally {
+                await browser.close();
+              }
+              NODE
+
+          - name: Record successful public deployment
+          `.replace(/^          /gm, ""),
+          );
+          NODE
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Saudi location contract
+        run: npm run test:saudi-location-regions
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -f src/features/locations/SaudiRegionCitySelector.tsx
+          ! grep -q 'CanonicalLocationSelector' src/routes/add-listing.tsx
+          ! grep -q 'CanonicalLocationSelector' src/routes/listings.index.tsx
+          ! grep -q 'CanonicalLocationSelector' 'src/routes/profile/listings.$id.tsx'
+
+      - name: Commit validated fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-saudi-regions-fix.yml
+          git add .github/workflows/saudi-cloudflare-frontend-inspect.yml \
+            package.json \
+            scripts/saudi-region-city-contract.test.mjs \
+            src/features/locations/SaudiRegionCitySelector.tsx \
+            src/features/locations/use-location-levels.ts \
+            src/lib/api/location-taxonomy.ts \
+            src/lib/public-data/cloudflare-client.ts \
+            src/routes/add-listing.tsx \
+            src/routes/listings.index.tsx \
+            'src/routes/profile/listings.$id.tsx'
+          git commit -m "fix(saudi): show regions and cities across marketplace"
+          git push origin HEAD:fix/saudi-region-city-selectors-20260802
