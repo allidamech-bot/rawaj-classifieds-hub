@@ -6,17 +6,5 @@
       "*": false,
       "main": true
     }
-  },
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "sa.rawa-j.com"
-        }
-      ],
-      "destination": "https://rawaj-saudi-web.allidamech.workers.dev/:path*"
-    }
-  ]
+  }
 }
