@@ -1,4 +1,4 @@
-# Saudi frontend production release trigger with internal API binding: 2026-08-02
+# Saudi frontend release with shared Firebase authentication: 2026-08-02
 name: Deploy Saudi frontend release
 
 "on":
@@ -29,6 +29,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       WORKER_NAME: rawaj-saudi-web
       WORKER_URL: https://rawaj-saudi-web.allidamech.workers.dev
+      FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
     steps:
       - name: Check out isolated Saudi branch
         uses: actions/checkout@v4
@@ -60,6 +61,16 @@ jobs:
 
       - name: Build Cloudflare Worker package
         run: npm run build
+
+      - name: Verify shared Firebase auth bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -R -q "$FIREBASE_PROJECT_ID" .output/public/assets
+          if grep -R -q "rawaj-saudi-auth-pending" .output/public/assets; then
+            echo "Saudi frontend still contains pending Firebase configuration" >&2
+            exit 1
+          fi
 
       - name: Prepare isolated Worker configuration
         shell: bash
@@ -113,7 +124,7 @@ jobs:
           }
           if ((refs.data?.categories?.length || 0) < 12) throw new Error("Saudi categories are incomplete");
           if ((refs.data?.governorates?.length || 0) !== 13) throw new Error("Saudi regions are incomplete");
-          console.log(`Saudi web release verified: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
+          console.log(`Saudi web release verified with shared Firebase auth: ${refs.data.categories.length} categories, ${refs.data.governorates.length} regions.`);
           NODE
 
       - name: Record successful release
@@ -122,4 +133,4 @@ jobs:
           saudi_sha="$(git rev-parse HEAD)"
           gh issue comment 602 \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Saudi public frontend deployed successfully at **$WORKER_URL** from Saudi commit \`$saudi_sha\`. Homepage and same-origin API proxy verification passed with 12 categories and 13 regions."
+            --body "Saudi frontend deployed at **$WORKER_URL** from Saudi commit \`$saudi_sha\`. Shared Firebase authentication is bundled, and the homepage/API verification passed with 12 categories and 13 regions."
