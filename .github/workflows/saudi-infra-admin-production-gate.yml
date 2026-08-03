@@ -7,12 +7,14 @@ name: Saudi Infra and Admin Production Gate
     paths:
       - .github/workflows/saudi-infra-admin-production-gate.yml
       - scripts/saudi-infra-admin-production-e2e.mjs
+      - scripts/saudi-infra-admin-production-strict-e2e.mjs
   push:
     branches:
       - main
     paths:
       - .github/workflows/saudi-infra-admin-production-gate.yml
       - scripts/saudi-infra-admin-production-e2e.mjs
+      - scripts/saudi-infra-admin-production-strict-e2e.mjs
   workflow_dispatch:
 
 permissions:
@@ -45,7 +47,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --check scripts/saudi-infra-admin-production-e2e.mjs
+      - run: |
+          node --check scripts/saudi-infra-admin-production-e2e.mjs
+          node --check scripts/saudi-infra-admin-production-strict-e2e.mjs
 
   production:
     name: Verify Firebase Cloudflare and admin production
@@ -170,7 +174,7 @@ jobs:
         env:
           SAUDI_APP_DIR: ${{ github.workspace }}/saudi-repo
           WRANGLER_CONFIG: ${{ github.workspace }}/saudi-repo/cloudflare/worker/wrangler.generated.jsonc
-        run: node main-repo/scripts/saudi-infra-admin-production-e2e.mjs
+        run: node main-repo/scripts/saudi-infra-admin-production-strict-e2e.mjs
 
       - name: Record successful closure gate
         if: success()
@@ -178,7 +182,7 @@ jobs:
         run: |
           saudi_sha="$(git -C saudi-repo rev-parse HEAD)"
           gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
-            --body "Saudi infrastructure/admin closure gate passed on commit \`$saudi_sha\`: Firebase negative cases and logout, user/moderator/admin/owner boundaries, live admin UI and APIs, full listing submission/approval/rejection/publication, SAR enforcement, Saudi/Syria isolation, D1/R2 cleanup, production dependency audit, and Cloudflare rollback inventories all succeeded."
+            --body "Saudi infrastructure/admin closure gate passed on commit \`$saudi_sha\`: Firebase negative cases and logout, user/moderator/admin/owner boundaries, live admin UI and APIs, full listing submission/approval/rejection/publication, SAR enforcement, exact Saudi/Syria 404 isolation, D1/R2 cleanup including deleted-media cache invalidation, production dependency audit, and Cloudflare rollback inventories all succeeded."
 
       - name: Record closure gate failure
         if: failure()
