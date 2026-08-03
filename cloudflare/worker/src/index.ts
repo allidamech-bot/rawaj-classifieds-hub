@@ -607,6 +607,15 @@ async function mediaAsset(
     return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
 
+  const storedEtag = stringValue(asset.etag);
+  const ifNoneMatch = request.headers.get("If-None-Match");
+  if (ifNoneMatch && ifNoneMatch === storedEtag) {
+    const headers = new Headers(cors);
+    headers.set("ETag", storedEtag);
+    applyRevalidatingMediaCacheHeaders(headers);
+    return new Response(null, { status: 304, headers });
+  }
+
   const object = await env.MEDIA.get(stringValue(asset.object_key));
   if (!object) {
     console.error("rawaj_media_object_missing", { assetId, objectKey: asset.object_key });
@@ -616,20 +625,19 @@ async function mediaAsset(
   const headers = new Headers(cors);
   object.writeHttpMetadata(headers);
   headers.set("Content-Type", stringValue(asset.content_type, "application/octet-stream"));
-  headers.set("ETag", object.httpEtag || stringValue(asset.etag));
-  headers.set(
-    "Cache-Control",
-    `public, max-age=${integerValue(env.MEDIA_CACHE_SECONDS, DEFAULT_MEDIA_CACHE_SECONDS)}, immutable`,
-  );
+  headers.set("ETag", object.httpEtag || storedEtag);
+  applyRevalidatingMediaCacheHeaders(headers);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
 
-  const ifNoneMatch = request.headers.get("If-None-Match");
-  if (ifNoneMatch && ifNoneMatch === headers.get("ETag")) {
-    return new Response(null, { status: 304, headers });
-  }
-
   return new Response(object.body, { status: 200, headers });
+}
+
+function applyRevalidatingMediaCacheHeaders(headers: Headers): void {
+  headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+  headers.set("CDN-Cache-Control", "no-store");
+  headers.set("Cloudflare-CDN-Cache-Control", "no-store");
+  headers.delete("Expires");
 }
 
 function mapCategory(row: JsonRecord): JsonRecord {
