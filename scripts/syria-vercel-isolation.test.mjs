@@ -25,6 +25,9 @@ test("Syria frontend and API rewrites remain Syria-owned", () => {
     /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev$/m,
   );
   for (const rewrite of vercelConfig.rewrites ?? []) {
-    assert.match(rewrite.destination, /^https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev\//);
+    assert.match(
+      rewrite.destination,
+      /^https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev\//,
+    );
   }
 });

@@ -4,7 +4,14 @@ import path from "node:path";
 import test from "node:test";
 
 const repositoryRoot = path.resolve(new URL("..", import.meta.url).pathname);
-const ignoredDirectories = new Set([".git", "node_modules", ".output", "dist", "build", "test-results"]);
+const ignoredDirectories = new Set([
+  ".git",
+  "node_modules",
+  ".output",
+  "dist",
+  "build",
+  "test-results",
+]);
 const ignoredFiles = new Set(["scripts/syria-secret-hygiene.test.mjs", "package-lock.json"]);
 const forbiddenPaths = [
   ".env",

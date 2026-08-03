@@ -26,53 +26,53 @@ Complete this document for the exact approved release commit. Do not include per
 
 ## Before/after counts
 
-| Entity | Before cleanup | Removed as Saudi-owned | Syria after cleanup | Status |
-|---|---:|---:|---:|---|
-| Firebase users | | | | |
-| D1 auth users/profiles | | | | |
-| Listings | | | | |
-| Listing images | | | | |
-| Media assets | | | | |
-| Favorites | | | | |
-| Saved searches | | | | |
-| Conversations | | | | |
-| Messages | | | | |
-| Notifications | | | | |
-| Reviews/reports/support | | | | |
+| Entity                  | Before cleanup | Removed as Saudi-owned | Syria after cleanup | Status |
+| ----------------------- | -------------: | ---------------------: | ------------------: | ------ |
+| Firebase users          |                |                        |                     |        |
+| D1 auth users/profiles  |                |                        |                     |        |
+| Listings                |                |                        |                     |        |
+| Listing images          |                |                        |                     |        |
+| Media assets            |                |                        |                     |        |
+| Favorites               |                |                        |                     |        |
+| Saved searches          |                |                        |                     |        |
+| Conversations           |                |                        |                     |        |
+| Messages                |                |                        |                     |        |
+| Notifications           |                |                        |                     |        |
+| Reviews/reports/support |                |                        |                     |        |
 
 ## Isolation checks
 
 Every value below must be zero after cleanup.
 
-| Check | Result |
-|---|---:|
-| Saudi Firebase UID remaining in Syria project | |
-| Saudi-owned D1 record remaining | |
-| Saudi-owned R2 object remaining | |
-| Non-SY location region/node | |
-| Currency outside SYP/USD | |
-| Missing media checksum/object key | |
-| Broken profile/listing/media relationship | |
-| Broken conversation/message/user relationship | |
-| Foreign-key violations | |
-| Request to Saudi provider origin during Syria acceptance | |
-| Syria repository path linked to Saudi Vercel project | |
+| Check                                                    | Result |
+| -------------------------------------------------------- | -----: |
+| Saudi Firebase UID remaining in Syria project            |        |
+| Saudi-owned D1 record remaining                          |        |
+| Saudi-owned R2 object remaining                          |        |
+| Non-SY location region/node                              |        |
+| Currency outside SYP/USD                                 |        |
+| Missing media checksum/object key                        |        |
+| Broken profile/listing/media relationship                |        |
+| Broken conversation/message/user relationship            |        |
+| Foreign-key violations                                   |        |
+| Request to Saudi provider origin during Syria acceptance |        |
+| Syria repository path linked to Saudi Vercel project     |        |
 
 ## Acceptance journeys
 
-| Journey | Preview | Production | Evidence |
-|---|---|---|---|
-| Public discovery/search | | | |
-| Listing detail/media | | | |
-| Signup/login/logout | | | |
-| Password reset | | | |
-| Google authentication | | | |
-| Listing lifecycle | | | |
-| Favorites/saved searches | | | |
-| Chat/notifications | | | |
-| Reviews/reports/moderation | | | |
-| Admin authorization | | | |
-| Encrypted backup and isolated restore | | | |
+| Journey                               | Preview | Production | Evidence |
+| ------------------------------------- | ------- | ---------- | -------- |
+| Public discovery/search               |         |            |          |
+| Listing detail/media                  |         |            |          |
+| Signup/login/logout                   |         |            |          |
+| Password reset                        |         |            |          |
+| Google authentication                 |         |            |          |
+| Listing lifecycle                     |         |            |          |
+| Favorites/saved searches              |         |            |          |
+| Chat/notifications                    |         |            |          |
+| Reviews/reports/moderation            |         |            |          |
+| Admin authorization                   |         |            |          |
+| Encrypted backup and isolated restore |         |            |          |
 
 ## Rollback readiness
 

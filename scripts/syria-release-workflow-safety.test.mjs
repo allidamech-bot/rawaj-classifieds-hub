@@ -51,10 +51,7 @@ test("Syria reconciliation is manual and aggregate read-only", () => {
   assert.match(reconciliation, /syria-production-audit\.sql/);
   assert.match(reconciliation, /syria-provider-preflight\.mjs/);
   assert.doesNotMatch(reconciliation, /wrangler deploy|d1 migrations apply/);
-  assert.doesNotMatch(
-    reconciliationSql,
-    /\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE)\b/i,
-  );
+  assert.doesNotMatch(reconciliationSql, /\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE)\b/i);
   assert.doesNotMatch(
     reconciliationSql,
     /\b(?:email|phone|whatsapp|display_name|first_name|last_name)\b\s*(?:,|AS)/i,
@@ -69,7 +66,10 @@ test("Syria D1 backup is manual, encrypted, and removes plaintext", () => {
   assert.match(encryptedBackup, /wrangler d1 export/);
   assert.match(encryptedBackup, /openssl enc -aes-256-cbc -pbkdf2 -salt/);
   assert.match(encryptedBackup, /BACKUP_ENCRYPTION_PASSPHRASE/);
-  assert.match(encryptedBackup, /plain="\$output_directory\/rawaj-syria-production-\$\{GITHUB_SHA\}\.sql"/);
+  assert.match(
+    encryptedBackup,
+    /plain="\$output_directory\/rawaj-syria-production-\$\{GITHUB_SHA\}\.sql"/,
+  );
   assert.match(encryptedBackup, /encrypted="\$\{plain\}\.enc"/);
   assert.match(encryptedBackup, /rm -f "\$plain"/);
   assert.match(encryptedBackup, /test ! -e "\$plain"/);
