@@ -1,0 +1,188 @@
+name: Saudi Infra and Admin Production Gate
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-infra-admin-production-gate.yml
+      - scripts/saudi-infra-admin-production-e2e.mjs
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-infra-admin-production-gate.yml
+      - scripts/saudi-infra-admin-production-e2e.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: saudi-infra-admin-production
+  cancel-in-progress: false
+
+env:
+  FIREBASE_API_KEY: AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U
+  FIREBASE_PROJECT_ID: project-af18fcaf-c46e-4ec5-93a
+  D1_NAME: rawaj-saudi-production
+  D1_EXPECTED_ID: 3f40cae9-c3a4-47ea-80a1-2f9a78915b2c
+  R2_NAME: rawaj-saudi-media-production
+  API_WORKER_NAME: rawaj-saudi-classifieds
+  WEB_WORKER_NAME: rawaj-saudi-web
+  API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+  SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+  FINAL_SITE_URL: https://sa.rawa-j.com
+  SYRIA_SITE_URL: https://rawa-j.com
+
+jobs:
+  validate:
+    name: Validate production gate contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check scripts/saudi-infra-admin-production-e2e.mjs
+
+  production:
+    name: Verify Firebase Cloudflare and admin production
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out deployment controls
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+          fetch-depth: 1
+
+      - name: Check out current Saudi application
+        uses: actions/checkout@v4
+        with:
+          ref: saudi
+          path: saudi-repo
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            saudi-repo/package-lock.json
+            saudi-repo/cloudflare/worker/package-lock.json
+
+      - name: Install and audit Saudi frontend
+        working-directory: saudi-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm audit --omit=dev --audit-level=high
+          npm run typecheck
+          npm run build
+
+      - name: Install and validate Saudi API Worker
+        working-directory: saudi-repo/cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm install --no-save jose@^6
+          npm run typecheck
+
+      - name: Render pinned Saudi API configuration
+        working-directory: saudi-repo/cloudflare/worker
+        shell: bash
+        env:
+          CLOUDFLARE_D1_DATABASE_ID: ${{ env.D1_EXPECTED_ID }}
+        run: |
+          set -euo pipefail
+          export CLOUDFLARE_D1_DATABASE_NAME="$D1_NAME"
+          export CLOUDFLARE_R2_BUCKET_NAME="$R2_NAME"
+          export RAWAJ_WORKER_RELEASE_SHA="$(git rev-parse HEAD)"
+          export RAWAJ_WORKER_ENVIRONMENT=production
+          node scripts/render-config.mjs
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = "wrangler.generated.jsonc";
+          const config = JSON.parse(fs.readFileSync(path, "utf8"));
+          config.name = process.env.API_WORKER_NAME;
+          config.vars = {
+            ...(config.vars || {}),
+            FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+            API_ALLOWED_ORIGINS: [process.env.FINAL_SITE_URL, process.env.SITE_URL].join(","),
+          };
+          if (config.d1_databases?.[0]?.database_id !== process.env.CLOUDFLARE_D1_DATABASE_ID) {
+            throw new Error("Saudi D1 binding mismatch");
+          }
+          if (config.r2_buckets?.[0]?.bucket_name !== process.env.R2_NAME) {
+            throw new Error("Saudi R2 binding mismatch");
+          }
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+
+      - name: Prepare Saudi frontend deployment inventory configuration
+        working-directory: saudi-repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = ".output/server/wrangler.json";
+          const config = JSON.parse(fs.readFileSync(path, "utf8"));
+          config.name = process.env.WEB_WORKER_NAME;
+          config.assets = { ...(config.assets || {}), run_worker_first: true };
+          config.services = [{ binding: "SAUDI_API", service: process.env.API_WORKER_NAME }];
+          fs.writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
+          NODE
+
+      - name: Verify rollback inventories exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.118.0 deployments list \
+            --config saudi-repo/cloudflare/worker/wrangler.generated.jsonc \
+            > /tmp/rawaj-saudi-api-deployments.txt
+          npx --yes wrangler@4.118.0 deployments list \
+            --config saudi-repo/.output/server/wrangler.json \
+            > /tmp/rawaj-saudi-web-deployments.txt
+          test -s /tmp/rawaj-saudi-api-deployments.txt
+          test -s /tmp/rawaj-saudi-web-deployments.txt
+          grep -qiE 'created|version|deployment' /tmp/rawaj-saudi-api-deployments.txt
+          grep -qiE 'created|version|deployment' /tmp/rawaj-saudi-web-deployments.txt
+
+      - name: Install Chromium
+        working-directory: saudi-repo
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full Saudi infrastructure and administration journey
+        shell: bash
+        env:
+          SAUDI_APP_DIR: ${{ github.workspace }}/saudi-repo
+          WRANGLER_CONFIG: ${{ github.workspace }}/saudi-repo/cloudflare/worker/wrangler.generated.jsonc
+        run: node main-repo/scripts/saudi-infra-admin-production-e2e.mjs
+
+      - name: Record successful closure gate
+        if: success()
+        shell: bash
+        run: |
+          saudi_sha="$(git -C saudi-repo rev-parse HEAD)"
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi infrastructure/admin closure gate passed on commit \`$saudi_sha\`: Firebase negative cases and logout, user/moderator/admin/owner boundaries, live admin UI and APIs, full listing submission/approval/rejection/publication, SAR enforcement, Saudi/Syria isolation, D1/R2 cleanup, production dependency audit, and Cloudflare rollback inventories all succeeded."
+
+      - name: Record closure gate failure
+        if: failure()
+        shell: bash
+        run: |
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi infrastructure/admin closure gate failed. No completion is being assumed. Protected run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

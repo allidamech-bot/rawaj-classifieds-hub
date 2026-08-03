@@ -1,0 +1,97 @@
+name: Saudi Production Monitor
+
+"on":
+  schedule:
+    - cron: "17 */12 * * *"
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-production-monitor.yml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-production-monitor.yml
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: saudi-production-monitor
+  cancel-in-progress: true
+
+env:
+  API_URL: https://rawaj-saudi-classifieds.allidamech.workers.dev
+  SITE_URL: https://rawaj-saudi-web.allidamech.workers.dev
+  FINAL_SITE_URL: https://sa.rawa-j.com
+
+jobs:
+  validate:
+    name: Validate monitor workflow
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -s .github/workflows/saudi-production-monitor.yml
+
+  monitor:
+    name: Check Saudi public production
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Verify health references pages and CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          for origin in "$API_URL" "$SITE_URL" "$FINAL_SITE_URL"; do
+            key="$(echo "$origin" | tr -cd '[:alnum:]')"
+            curl --retry 5 --retry-delay 4 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/health?monitor=$GITHUB_RUN_ID" > "/tmp/health-$key.json"
+            curl --retry 5 --retry-delay 4 --retry-all-errors --silent --show-error --fail \
+              "$origin/v1/references?monitor=$GITHUB_RUN_ID" > "/tmp/references-$key.json"
+            ORIGIN="$origin" KEY="$key" node <<'NODE'
+          const fs = require("node:fs");
+          const origin = process.env.ORIGIN;
+          const key = process.env.KEY;
+          const health = JSON.parse(fs.readFileSync(`/tmp/health-${key}.json`, "utf8"));
+          const refs = JSON.parse(fs.readFileSync(`/tmp/references-${key}.json`, "utf8"));
+          if (health.data?.database !== "ready") throw new Error(`D1 unavailable on ${origin}`);
+          if ((refs.data?.categories?.length || 0) !== 12) throw new Error(`Category mismatch on ${origin}`);
+          if ((refs.data?.taxonomyNodes?.length || 0) !== 117) throw new Error(`Taxonomy mismatch on ${origin}`);
+          if ((refs.data?.governorates?.length || 0) !== 13) throw new Error(`Region mismatch on ${origin}`);
+          NODE
+          done
+
+          for origin in "$SITE_URL" "$FINAL_SITE_URL"; do
+            key="$(echo "$origin" | tr -cd '[:alnum:]')"
+            curl --retry 5 --retry-delay 4 --retry-all-errors --silent --show-error --fail \
+              "$origin/?monitor=$GITHUB_RUN_ID" > "/tmp/home-$key.html"
+            curl --retry 5 --retry-delay 4 --retry-all-errors --silent --show-error --fail \
+              "$origin/login?monitor=$GITHUB_RUN_ID" > "/tmp/login-$key.html"
+            curl --retry 5 --retry-delay 4 --retry-all-errors --silent --show-error --fail \
+              "$origin/admin?monitor=$GITHUB_RUN_ID" > "/tmp/admin-$key.html"
+            grep -q "سوق إعلانات مبوبة في السعودية" "/tmp/home-$key.html"
+            grep -q "تسجيل الدخول" "/tmp/login-$key.html"
+            grep -q "لوحة الإدارة" "/tmp/admin-$key.html"
+          done
+
+          for origin in "$SITE_URL" "$FINAL_SITE_URL"; do
+            key="$(echo "$origin" | tr -cd '[:alnum:]')"
+            curl --silent --show-error --fail \
+              -H "Origin: $origin" -D "/tmp/cors-$key.headers" \
+              "$API_URL/v1/health" > /dev/null
+            grep -qi "^access-control-allow-origin: $origin" "/tmp/cors-$key.headers"
+          done
+
+      - name: Record monitor failure
+        if: failure()
+        shell: bash
+        run: |
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
+            --body "Saudi production monitor detected a public health, reference, page, admin-shell, or CORS failure. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
