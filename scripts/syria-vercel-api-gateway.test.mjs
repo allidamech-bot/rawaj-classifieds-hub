@@ -16,10 +16,11 @@ const expected = new Map([
   ],
 ]);
 
-test("Syrian Vercel domain proxies Cloudflare API namespaces", () => {
-  assert.equal(config.git?.deploymentEnabled?.main, true);
-  assert.equal(config.git?.deploymentEnabled?.["*"], false);
+test("all automatic Vercel Git deployments stay disabled", () => {
+  assert.equal(config.git?.deploymentEnabled, false);
+});
 
+test("Syrian Vercel domain proxies Cloudflare API namespaces", () => {
   for (const [source, destination] of expected) {
     const matches = rewrites.filter((rewrite) => rewrite?.source === source);
     assert.equal(matches.length, 1, `${source} must have exactly one rewrite`);
