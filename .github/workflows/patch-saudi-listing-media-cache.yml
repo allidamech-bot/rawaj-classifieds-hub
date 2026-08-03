@@ -35,7 +35,8 @@ jobs:
 
           path = Path('cloudflare/worker/src/index.ts')
           text = path.read_text(encoding='utf-8')
-          start = text.index('  const object = await env.MEDIA.get(stringValue(asset.object_key));', text.index('async function mediaAsset('))
+          handler = text.index('async function mediaAsset(')
+          start = text.index('  const object = await env.MEDIA.get(stringValue(asset.object_key));', handler)
           end_marker = '  return new Response(object.body, { status: 200, headers });'
           end = text.index(end_marker, start) + len(end_marker)
           replacement = '''  const storedEtag = stringValue(asset.etag);
@@ -63,7 +64,6 @@ jobs:
 
           return new Response(object.body, { status: 200, headers });'''
           text = text[:start] + replacement + text[end:]
-
           marker = 'function mapCategory(row: JsonRecord): JsonRecord {'
           if text.count(marker) != 1:
               raise SystemExit('mapCategory marker mismatch')
@@ -75,16 +75,19 @@ jobs:
           }
 
           '''
-          text = text.replace(marker, helper + marker)
-          path.write_text(text, encoding='utf-8')
+          path.write_text(text.replace(marker, helper + marker), encoding='utf-8')
 
           path = Path('cloudflare/worker/src/marketplace-private.ts')
           text = path.read_text(encoding='utf-8')
+          upload_start = text.index('async function uploadImage(')
+          upload_end = text.index('async function listImages(', upload_start)
           old = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },'
           new = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },'
-          if text.count(old) != 1:
-              raise SystemExit(f'listing upload metadata mismatch: {text.count(old)}')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          target = text.find(old, upload_start, upload_end)
+          if target < 0 or text.find(old, target + 1, upload_end) >= 0:
+              raise SystemExit('listing upload cache metadata target mismatch')
+          text = text[:target] + new + text[target + len(old):]
+          path.write_text(text, encoding='utf-8')
           PY
 
           cat > cloudflare/worker/test/listing-media-cache-invalidation.test.mjs <<'EOF'
@@ -109,8 +112,11 @@ jobs:
           });
 
           test("new listing media is never marked immutable", () => {
-            assert.match(privateCore, /public, max-age=0, must-revalidate/);
-            assert.doesNotMatch(privateCore, /max-age=31536000, immutable/);
+            const uploadStart = privateCore.indexOf("async function uploadImage(");
+            const uploadEnd = privateCore.indexOf("async function listImages(", uploadStart);
+            const listingUpload = privateCore.slice(uploadStart, uploadEnd);
+            assert.match(listingUpload, /public, max-age=0, must-revalidate/);
+            assert.doesNotMatch(listingUpload, /max-age=31536000, immutable/);
           });
           EOF
 
