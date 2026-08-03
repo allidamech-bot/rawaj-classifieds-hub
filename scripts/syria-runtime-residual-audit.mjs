@@ -18,7 +18,6 @@ const files = [
   "vercel.json",
   "capacitor.config.ts",
   ".env.example",
-  ".env.production",
   "cloudflare/worker/package.json",
   "cloudflare/worker/wrangler.base.jsonc",
 ];
@@ -37,7 +36,10 @@ const forbidden = [
 
 const ignoredPaths = new Set(["scripts/syria-runtime-residual-audit.mjs"]);
 const auditedFiles = [...new Set([...roots.flatMap(collectTextFiles), ...files])]
-  .filter((relative) => !ignoredPaths.has(relative) && fs.existsSync(path.join(repositoryRoot, relative)))
+  .filter(
+    (relative) =>
+      !ignoredPaths.has(relative) && fs.existsSync(path.join(repositoryRoot, relative)),
+  )
   .sort();
 const violations = [];
 
@@ -74,7 +76,11 @@ function collectTextFiles(target) {
   if (stat.isFile()) return [target];
 
   return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
-    if (["node_modules", ".git", ".output", "dist", "build", "test-results"].includes(entry.name)) {
+    if (
+      ["node_modules", ".git", ".output", "dist", "build", "test-results"].includes(
+        entry.name,
+      )
+    ) {
       return [];
     }
     const relative = path.join(target, entry.name);
