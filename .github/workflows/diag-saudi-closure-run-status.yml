@@ -1,0 +1,26 @@
+name: Diagnose Saudi closure run status
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/diag-saudi-closure-run-status.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print latest Saudi workflow runs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=50" \
+            --jq '.workflow_runs[] | select(.name == "Finalize Saudi Marketplace Production" or .name == "Saudi Infra and Admin Production Gate") | [.id,.name,.event,.head_sha,.status,(.conclusion // "pending"),.created_at,.updated_at] | @tsv' \
+            | head -n 12
