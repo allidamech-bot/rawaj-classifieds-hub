@@ -4,6 +4,10 @@ import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 const workerDeploy = read(".github/workflows/cloudflare-production-worker-deploy.yml");
+const reconciliation = read(".github/workflows/syria-cloudflare-reconcile-production.yml");
+const encryptedBackup = read(".github/workflows/syria-cloudflare-backup-production.yml");
+const vercelPreview = read(".github/workflows/syria-vercel-preview.yml");
+const reconciliationSql = read("cloudflare/d1/reconciliation/syria-production-audit.sql");
 const vercelConfig = JSON.parse(read("vercel.json"));
 
 function assertManualMainOnly(workflow) {
@@ -32,9 +36,54 @@ test("Syria Worker deploy uses protected resource variables rather than committe
   ]) {
     assert.match(workerDeploy, new RegExp(`\\$\\{\\{ vars\\.${variable} \\}\\}`));
   }
-  assert.doesNotMatch(workerDeploy, /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i);
+  assert.doesNotMatch(
+    workerDeploy,
+    /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i,
+  );
   assert.doesNotMatch(workerDeploy, /rawaj-staging/);
   assert.doesNotMatch(workerDeploy, /rawaj-saudi/);
+});
+
+test("Syria reconciliation is manual and aggregate read-only", () => {
+  assertManualMainOnly(reconciliation);
+  assert.match(reconciliation, /environment: syria-production/);
+  assert.match(reconciliation, /AUDIT_RAWAJ_SYRIA_PRODUCTION/);
+  assert.match(reconciliation, /syria-production-audit\.sql/);
+  assert.match(reconciliation, /syria-provider-preflight\.mjs/);
+  assert.doesNotMatch(reconciliation, /wrangler deploy|d1 migrations apply/);
+  assert.doesNotMatch(
+    reconciliationSql,
+    /\b(?:INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE)\b/i,
+  );
+  assert.doesNotMatch(
+    reconciliationSql,
+    /\b(?:email|phone|whatsapp|display_name|first_name|last_name)\b\s*(?:,|AS)/i,
+  );
+  assert.match(reconciliationSql, /PRAGMA foreign_key_check/);
+});
+
+test("Syria D1 backup is manual, encrypted, and removes plaintext", () => {
+  assertManualMainOnly(encryptedBackup);
+  assert.match(encryptedBackup, /environment: syria-production/);
+  assert.match(encryptedBackup, /BACKUP_RAWAJ_SYRIA_PRODUCTION/);
+  assert.match(encryptedBackup, /wrangler d1 export/);
+  assert.match(encryptedBackup, /openssl enc -aes-256-cbc -pbkdf2 -salt/);
+  assert.match(encryptedBackup, /BACKUP_ENCRYPTION_PASSPHRASE/);
+  assert.match(encryptedBackup, /plain="\$output_directory\/rawaj-syria-production-\$\{GITHUB_SHA\}\.sql"/);
+  assert.match(encryptedBackup, /encrypted="\$\{plain\}\.enc"/);
+  assert.match(encryptedBackup, /rm -f "\$plain"/);
+  assert.match(encryptedBackup, /test ! -e "\$plain"/);
+  assert.doesNotMatch(encryptedBackup, /wrangler deploy|d1 migrations apply/);
+});
+
+test("Syria Vercel workflow creates preview only", () => {
+  assertManualMainOnly(vercelPreview);
+  assert.match(vercelPreview, /environment: syria-preview/);
+  assert.match(vercelPreview, /DEPLOY_RAWAJ_SYRIA_PREVIEW/);
+  assert.match(vercelPreview, /vercel@54\.18\.1 deploy --prebuilt/);
+  assert.match(vercelPreview, /syria-provider-preflight\.mjs/);
+  assert.doesNotMatch(vercelPreview, /--prod\b|--target=production|environment=production/);
+  assert.match(vercelPreview, /Production domain was not attached/);
 });
 
 test("Syria Vercel Git auto-deployment remains disabled", () => {
