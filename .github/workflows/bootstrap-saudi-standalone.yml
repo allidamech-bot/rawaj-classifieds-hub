@@ -1,0 +1,208 @@
+name: Bootstrap Saudi standalone repository
+
+on:
+  pull_request:
+    branches:
+      - saudi
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: bootstrap-saudi-standalone
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.event.pull_request.head.ref == 'automation/bootstrap-saudi-standalone'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TARGET_REPOSITORY: allidamech-bot/rawaj-saudi-classifieds
+      SNAPSHOT_SHA: adc3d8a24723f7b8845ad44e45376b06d47063ea
+      TOKEN_GH_ADMIN: ${{ secrets.GH_ADMIN_TOKEN }}
+      TOKEN_REPO_ADMIN: ${{ secrets.REPO_ADMIN_TOKEN }}
+      TOKEN_GITHUB_ADMIN: ${{ secrets.GITHUB_ADMIN_TOKEN }}
+      TOKEN_CODEX_GITHUB: ${{ secrets.CODEX_GITHUB_TOKEN }}
+      TOKEN_GH_PAT: ${{ secrets.GH_PAT }}
+      TOKEN_GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+      TOKEN_PERSONAL_ACCESS: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      TOKEN_REPO: ${{ secrets.REPO_TOKEN }}
+      TOKEN_PAT: ${{ secrets.PAT }}
+      TOKEN_GH: ${{ secrets.GH_TOKEN }}
+    steps:
+      - name: Checkout frozen Saudi snapshot with full history
+        uses: actions/checkout@v4
+        with:
+          ref: migration/saudi-standalone-snapshot-2026-08-03
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify immutable snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$SNAPSHOT_SHA"
+          test "$(git status --porcelain)" = ""
+          echo "Verified frozen Saudi snapshot: $actual"
+
+      - name: Create private repository, disable Actions, and transfer history
+        id: transfer
+        shell: bash
+        env:
+          FALLBACK_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ADMIN_TOKEN=""
+          TOKEN_SOURCE=""
+
+          choose_token() {
+            local name="$1"
+            local value="$2"
+            if [ -z "$ADMIN_TOKEN" ] && [ -n "$value" ]; then
+              ADMIN_TOKEN="$value"
+              TOKEN_SOURCE="$name"
+            fi
+          }
+
+          choose_token GH_ADMIN_TOKEN "$TOKEN_GH_ADMIN"
+          choose_token REPO_ADMIN_TOKEN "$TOKEN_REPO_ADMIN"
+          choose_token GITHUB_ADMIN_TOKEN "$TOKEN_GITHUB_ADMIN"
+          choose_token CODEX_GITHUB_TOKEN "$TOKEN_CODEX_GITHUB"
+          choose_token GH_PAT "$TOKEN_GH_PAT"
+          choose_token GITHUB_PAT "$TOKEN_GITHUB_PAT"
+          choose_token PERSONAL_ACCESS_TOKEN "$TOKEN_PERSONAL_ACCESS"
+          choose_token REPO_TOKEN "$TOKEN_REPO"
+          choose_token PAT "$TOKEN_PAT"
+          choose_token GH_TOKEN "$TOKEN_GH"
+          choose_token github.token "$FALLBACK_GITHUB_TOKEN"
+
+          if [ -z "$ADMIN_TOKEN" ]; then
+            echo "No usable GitHub token was available." >&2
+            exit 1
+          fi
+
+          echo "::add-mask::$ADMIN_TOKEN"
+          api="https://api.github.com"
+          accept="Accept: application/vnd.github+json"
+          version="X-GitHub-Api-Version: 2022-11-28"
+          auth="Authorization: Bearer $ADMIN_TOKEN"
+
+          status="$(curl -sS -o /tmp/target-repo.json -w '%{http_code}' \
+            -H "$accept" -H "$version" -H "$auth" \
+            "$api/repos/$TARGET_REPOSITORY")"
+
+          if [ "$status" = "404" ]; then
+            create_status="$(curl -sS -o /tmp/create-repo.json -w '%{http_code}' \
+              -X POST -H "$accept" -H "$version" -H "$auth" \
+              "$api/user/repos" \
+              -d '{"name":"rawaj-saudi-classifieds","description":"Standalone RAWAJ Saudi Arabia classifieds platform","private":true,"auto_init":false,"has_issues":true,"has_projects":false,"has_wiki":false}')"
+            if [ "$create_status" != "201" ]; then
+              echo "Repository creation failed with HTTP $create_status using $TOKEN_SOURCE." >&2
+              cat /tmp/create-repo.json >&2
+              exit 1
+            fi
+          elif [ "$status" = "200" ]; then
+            echo "Target repository already exists; verifying that it is empty."
+          else
+            echo "Unable to inspect target repository: HTTP $status." >&2
+            cat /tmp/target-repo.json >&2
+            exit 1
+          fi
+
+          refs="$(git ls-remote "https://github.com/$TARGET_REPOSITORY.git" 2>/dev/null || true)"
+          if [ -n "$refs" ]; then
+            echo "Target repository is not empty; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+          actions_status="$(curl -sS -o /tmp/actions-permissions.json -w '%{http_code}' \
+            -X PUT -H "$accept" -H "$version" -H "$auth" \
+            "$api/repos/$TARGET_REPOSITORY/actions/permissions" \
+            -d '{"enabled":false}')"
+          if [ "$actions_status" != "204" ]; then
+            echo "Could not disable Actions before transfer: HTTP $actions_status." >&2
+            cat /tmp/actions-permissions.json >&2
+            exit 1
+          fi
+
+          basic="$(printf 'x-access-token:%s' "$ADMIN_TOKEN" | base64 -w0)"
+          echo "::add-mask::$basic"
+          git -c "http.extraheader=AUTHORIZATION: basic $basic" \
+            push "https://github.com/$TARGET_REPOSITORY.git" \
+            "$SNAPSHOT_SHA:refs/heads/main"
+
+          remote_sha="$(git -c "http.extraheader=AUTHORIZATION: basic $basic" \
+            ls-remote "https://github.com/$TARGET_REPOSITORY.git" refs/heads/main | awk '{print $1}')"
+          test "$remote_sha" = "$SNAPSHOT_SHA"
+
+          patch_status="$(curl -sS -o /tmp/repo-settings.json -w '%{http_code}' \
+            -X PATCH -H "$accept" -H "$version" -H "$auth" \
+            "$api/repos/$TARGET_REPOSITORY" \
+            -d '{"default_branch":"main","allow_auto_merge":false,"delete_branch_on_merge":true}')"
+          if [ "$patch_status" != "200" ]; then
+            echo "Repository transferred, but settings update failed with HTTP $patch_status." >&2
+            cat /tmp/repo-settings.json >&2
+            exit 1
+          fi
+
+          echo "repository=$TARGET_REPOSITORY" >> "$GITHUB_OUTPUT"
+          echo "sha=$remote_sha" >> "$GITHUB_OUTPUT"
+          echo "token_source=$TOKEN_SOURCE" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Saudi repository bootstrap completed"
+            echo "- Repository: \`$TARGET_REPOSITORY\`"
+            echo "- Main SHA: \`$remote_sha\`"
+            echo "- Visibility: private"
+            echo "- GitHub Actions: disabled before first push"
+            echo "- Production deployment: not triggered"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record successful bootstrap in Issue 677
+        if: success()
+        shell: bash
+        env:
+          SOURCE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<'EOF'
+          ✅ Automated Saudi repository bootstrap completed.
+
+          - Repository: `allidamech-bot/rawaj-saudi-classifieds`
+          - Snapshot: `adc3d8a24723f7b8845ad44e45376b06d47063ea`
+          - Visibility: private
+          - GitHub Actions disabled before first push
+          - No production deployment was triggered
+
+          Next: create a hardening branch in the standalone repository, remove Syrian bindings, and validate independent configuration before enabling any CI.
+          EOF
+          )
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $SOURCE_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/677/comments" \
+            -d "$(jq -n --arg body "$body" '{body:$body}')" >/dev/null
+
+      - name: Record failed bootstrap in Issue 677
+        if: failure()
+        shell: bash
+        env:
+          SOURCE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<EOF
+          ⚠️ Automated Saudi repository bootstrap did not complete.
+
+          The frozen snapshot remains unchanged at \`$SNAPSHOT_SHA\`; no merge or production deployment occurred. Inspect workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EOF
+          )
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $SOURCE_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/677/comments" \
+            -d "$(jq -n --arg body "$body" '{body:$body}')" >/dev/null
