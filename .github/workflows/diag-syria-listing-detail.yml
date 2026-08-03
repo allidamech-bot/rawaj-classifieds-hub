@@ -1,0 +1,74 @@
+name: Diagnose Syria listing detail
+
+"on":
+  push:
+    branches:
+      - diag/syria-listing-404-20260803
+    paths:
+      - .github/workflows/diag-syria-listing-detail.yml
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: diag/syria-listing-404-20260803
+          fetch-depth: 0
+      - name: Probe public and direct Syrian listing routes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          site="https://rawa-j.com"
+          worker="https://rawaj-classifieds-hub.allidamech.workers.dev"
+          random_id="00000000-0000-4000-8000-000000000001"
+
+          probe() {
+            local url="$1" body="$2"
+            curl --silent --show-error --max-time 30 -o "$body" -w '%{http_code}' "$url"
+          }
+
+          site_list_status="$(probe "$site/v1/listings?pageSize=1" /tmp/site-list.json)"
+          worker_list_status="$(probe "$worker/v1/listings?pageSize=1" /tmp/worker-list.json)"
+          existing_id="$(node - <<'NODE'
+          const fs = require('node:fs');
+          for (const path of ['/tmp/site-list.json', '/tmp/worker-list.json']) {
+            try {
+              const json = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const items = json?.data?.items ?? json?.data ?? [];
+              if (Array.isArray(items) && items[0]?.id) {
+                process.stdout.write(String(items[0].id));
+                process.exit(0);
+              }
+            } catch {}
+          }
+          NODE
+          )"
+
+          site_random_status="$(probe "$site/v1/listings/$random_id" /tmp/site-random.json)"
+          worker_random_status="$(probe "$worker/v1/listings/$random_id" /tmp/worker-random.json)"
+
+          site_existing_status="none"
+          worker_existing_status="none"
+          if [ -n "$existing_id" ]; then
+            site_existing_status="$(probe "$site/v1/listings/$existing_id" /tmp/site-existing.json)"
+            worker_existing_status="$(probe "$worker/v1/listings/$existing_id" /tmp/worker-existing.json)"
+          fi
+
+          site_random_code="$(node -e "try{const j=require('/tmp/site-random.json');process.stdout.write(String(j?.error?.code||'none'))}catch{process.stdout.write('invalid-json')}" )"
+          worker_random_code="$(node -e "try{const j=require('/tmp/worker-random.json');process.stdout.write(String(j?.error?.code||'none'))}catch{process.stdout.write('invalid-json')}" )"
+
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" --body "Syria listing-detail diagnostic: site list=$site_list_status, direct Worker list=$worker_list_status, site missing-detail=$site_random_status/$site_random_code, direct Worker missing-detail=$worker_random_status/$worker_random_code, site existing-detail=$site_existing_status, direct Worker existing-detail=$worker_existing_status. No private data was logged."
+
+          rm .github/workflows/diag-syria-listing-detail.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/diag-syria-listing-detail.yml
+          git commit -m "chore: remove Syria listing diagnostic"
+          git push origin HEAD:diag/syria-listing-404-20260803
