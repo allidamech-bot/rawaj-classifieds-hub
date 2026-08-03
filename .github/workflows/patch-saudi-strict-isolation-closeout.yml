@@ -33,29 +33,36 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           path = Path('scripts/saudi-infra-admin-production-e2e.mjs')
-          text = path.read_text(encoding='utf-8')
+          lines = path.read_text(encoding='utf-8').splitlines()
 
-          old_pre = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
-          if (syria.response.status === 200) throw new Error("Saudi listing leaked into the Syrian market");'''
-          new_pre = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
-          expectStatus(syria, 404, `${suffix} Syrian market isolation`);'''
+          pre_target = 'const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);'
+          approved_target = 'const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);'
+          pre_matches = [index for index, line in enumerate(lines) if line.strip() == pre_target]
+          approved_matches = [index for index, line in enumerate(lines) if line.strip() == approved_target]
+          if len(pre_matches) != 1 or len(approved_matches) != 1:
+              raise SystemExit(
+                  f'isolation markers mismatch: pre={len(pre_matches)}, approved={len(approved_matches)}'
+              )
 
-          old_approved = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
-          if (syriaApproved.response.status === 200)
-            throw new Error("Approved Saudi listing leaked into Syria");'''
-          new_approved = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
-          expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");'''
+          pre = pre_matches[0]
+          pre_indent = lines[pre][:len(lines[pre]) - len(lines[pre].lstrip())]
+          if pre + 1 >= len(lines) or 'syria.response.status === 200' not in lines[pre + 1]:
+              raise SystemExit('unexpected pre-approval isolation guard')
+          lines[pre + 1] = f'{pre_indent}expectStatus(syria, 404, `${{suffix}} Syrian market isolation`);'
 
-          for old, new, label in [
-              (old_pre, new_pre, 'pre-approval isolation'),
-              (old_approved, new_approved, 'approved isolation'),
-          ]:
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{label}: expected one block, found {count}')
-              text = text.replace(old, new)
+          approved = approved_matches[0]
+          approved_indent = lines[approved][:len(lines[approved]) - len(lines[approved].lstrip())]
+          if (
+              approved + 2 >= len(lines)
+              or 'syriaApproved.response.status === 200' not in lines[approved + 1]
+              or 'Approved Saudi listing leaked into Syria' not in lines[approved + 2]
+          ):
+              raise SystemExit('unexpected approved isolation guard')
+          lines[approved + 1:approved + 3] = [
+              f'{approved_indent}expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");'
+          ]
 
-          path.write_text(text, encoding='utf-8')
+          path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
           npx prettier --write scripts/saudi-infra-admin-production-e2e.mjs
           node --check scripts/saudi-infra-admin-production-e2e.mjs
