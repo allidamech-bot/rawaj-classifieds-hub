@@ -1,0 +1,100 @@
+name: Syria Vercel API Gateway
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - vercel.json
+      - scripts/syria-vercel-api-gateway.test.mjs
+      - .github/workflows/syria-vercel-api-gateway.yml
+  push:
+    branches:
+      - main
+    paths:
+      - vercel.json
+      - scripts/syria-vercel-api-gateway.test.mjs
+      - .github/workflows/syria-vercel-api-gateway.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate:
+    name: Validate Syrian Vercel API gateway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/syria-vercel-api-gateway.test.mjs
+
+  production:
+    name: Verify Syrian custom-domain API routing
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Wait for Vercel rewrite and verify Cloudflare responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing="00000000-0000-4000-8000-000000000001"
+
+          assert_route() {
+            local url="$1"
+            local expected_status="$2"
+            local expected_code="$3"
+            local label="$4"
+            local attempt body status code
+
+            for attempt in $(seq 1 40); do
+              body="$(mktemp)"
+              status="$(curl --silent --show-error --max-time 30 \
+                -H 'Accept: application/json' \
+                -o "$body" -w '%{http_code}' "$url" || true)"
+              code="$(BODY="$body" node - <<'NODE'
+          const fs = require('node:fs');
+          try {
+            const json = JSON.parse(fs.readFileSync(process.env.BODY, 'utf8'));
+            process.stdout.write(String(json?.error?.code || 'none'));
+          } catch {
+            process.stdout.write('invalid-json');
+          }
+          NODE
+              )"
+
+              if [ "$status" = "$expected_status" ] && [ "$code" = "$expected_code" ]; then
+                rm -f "$body"
+                echo "$label verified on attempt $attempt"
+                return 0
+              fi
+
+              echo "$label not ready: status=$status code=$code attempt=$attempt" >&2
+              rm -f "$body"
+              sleep 5
+            done
+
+            echo "$label did not reach expected status=$expected_status code=$expected_code" >&2
+            return 1
+          }
+
+          assert_route \
+            "https://rawa-j.com/v1/health" \
+            "200" "none" "Syrian same-origin health"
+          assert_route \
+            "https://rawa-j.com/v1/listings/$missing" \
+            "404" "not_found" "Syrian same-origin missing listing"
+
+      - name: Record successful Syrian gateway verification
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" \
+            --body "Syrian Vercel API gateway passed: \`rawa-j.com/v1/*\` now proxies to the Syrian Cloudflare Worker, health returns 200, missing listings return exact 404/not_found, and HTML routes remain outside the rewrite scope."
