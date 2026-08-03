@@ -1,0 +1,96 @@
+name: Syria Cloudflare Production Reconciliation
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit_sha:
+        description: Exact main commit SHA approved for reconciliation
+        required: true
+        type: string
+      approval_phrase:
+        description: Type AUDIT_RAWAJ_SYRIA_PRODUCTION
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syria-cloudflare-production-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: github.ref == 'refs/heads/main'
+    environment: syria-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
+      VITE_SITE_URL: https://rawa-j.com
+      VITE_PUBLIC_DATA_API_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+      VITE_SYRIA_FIREBASE_PROJECT_ID: ${{ vars.SYRIA_FIREBASE_PROJECT_ID }}
+      SYRIA_FIREBASE_PROJECT_ID: ${{ vars.SYRIA_FIREBASE_PROJECT_ID }}
+      RAWAJ_WORKER_ENVIRONMENT: production
+      RAWAJ_WORKER_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+
+    steps:
+      - name: Verify explicit approval
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "${{ inputs.approval_phrase }}" = "AUDIT_RAWAJ_SYRIA_PRODUCTION"
+          test "${{ inputs.expected_commit_sha }}" = "$GITHUB_SHA"
+          test "${#GITHUB_SHA}" -eq 40
+
+      - name: Checkout exact approved commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit_sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Verify checked-out identity
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.expected_commit_sha }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/worker/package-lock.json
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Validate Syria provider bindings
+        run: node scripts/syria-provider-preflight.mjs
+
+      - name: Render exact Wrangler configuration
+        run: npm run render:production --prefix cloudflare/worker
+
+      - name: Run aggregate reconciliation report
+        shell: bash
+        working-directory: cloudflare/worker
+        run: |
+          set -Eeuo pipefail
+          npx wrangler d1 execute "$CLOUDFLARE_D1_DATABASE_NAME" \
+            --remote \
+            --config wrangler.generated.jsonc \
+            --file ../d1/reconciliation/syria-production-audit.sql
+
+      - name: Record reconciliation evidence
+        shell: bash
+        run: |
+          {
+            echo "## Syria production reconciliation completed"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Database variable: CLOUDFLARE_D1_DATABASE_NAME"
+            echo "- Report contains aggregate counts and violations only."
+            echo "- Workflow run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
