@@ -36,7 +36,9 @@ const forbidden = [
 
 const ignoredPaths = new Set(["scripts/syria-runtime-residual-audit.mjs"]);
 const auditedFiles = [...new Set([...roots.flatMap(collectTextFiles), ...files])]
-  .filter((relative) => !ignoredPaths.has(relative) && fs.existsSync(path.join(repositoryRoot, relative)))
+  .filter(
+    (relative) => !ignoredPaths.has(relative) && fs.existsSync(path.join(repositoryRoot, relative)),
+  )
   .sort();
 const violations = [];
 
