@@ -98,6 +98,6 @@ export default defineConfig({
   tanstackStart: {
     // Route custom market hosts before delegating to the existing SSR wrapper.
     // nitro/vite builds from this
-    server: { entry: "market-server" },
+    server: { entry: "server" },
   },
 });
