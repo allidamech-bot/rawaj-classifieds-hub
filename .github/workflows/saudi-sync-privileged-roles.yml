@@ -1,0 +1,163 @@
+name: Sync Saudi Privileged Roles
+
+"on":
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-sync-privileged-roles.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rawaj-saudi-privileged-role-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync privileged accounts into Saudi D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SOURCE_D1: rawaj-staging
+      TARGET_D1: rawaj-saudi-production
+    steps:
+      - name: Validate production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+
+      - name: Read privileged identities from Syrian D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          query="SELECT DISTINCT lower(trim(COALESCE(u.auth_provider, ''))) AS auth_provider, trim(COALESCE(u.auth_user_id, '')) AS auth_user_id, lower(trim(COALESCE(u.email_normalized, u.email, ''))) AS email_normalized, ur.role FROM auth_users u JOIN user_roles ur ON ur.user_id = u.id WHERE u.disabled_at IS NULL AND ur.role IN ('moderator', 'admin', 'owner') AND ((u.auth_provider = 'firebase' AND u.auth_user_id IS NOT NULL AND trim(u.auth_user_id) <> '') OR trim(COALESCE(u.email_normalized, u.email, '')) <> '');"
+          npx --yes wrangler@4.118.0 d1 execute "$SOURCE_D1" --remote --json --command "$query" > /tmp/rawaj-source-privileged.json
+
+      - name: Build privacy-safe Saudi role synchronization
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('/tmp/rawaj-source-privileged.json', 'utf8'));
+          const allowedRoles = new Set(['moderator', 'admin', 'owner']);
+          const rows = [];
+          function walk(value) {
+            if (Array.isArray(value)) {
+              for (const item of value) walk(item);
+              return;
+            }
+            if (!value || typeof value !== 'object') return;
+            if (typeof value.role === 'string' && ('auth_user_id' in value || 'email_normalized' in value)) {
+              rows.push(value);
+            }
+            for (const child of Object.values(value)) walk(child);
+          }
+          walk(payload);
+          const quote = (value) => String(value).replaceAll("'", "''");
+          const pairs = new Map();
+          for (const row of rows) {
+            const role = String(row.role || '').trim();
+            if (!allowedRoles.has(role)) continue;
+            const uid = String(row.auth_user_id || '').trim();
+            const email = String(row.email_normalized || '').trim().toLowerCase();
+            if (!uid && !email) continue;
+            pairs.set(`${uid}\u0000${email}\u0000${role}`, { uid, email, role });
+          }
+          if (pairs.size === 0) throw new Error('No privileged Syrian identities were found; refusing a silent no-op.');
+
+          const sync = [];
+          const verifyConditions = [];
+          for (const { uid, email, role } of pairs.values()) {
+            const match = [];
+            const aliasedMatch = [];
+            if (uid) {
+              const safeUid = quote(uid);
+              match.push(`(auth_provider = 'firebase' AND auth_user_id = '${safeUid}')`);
+              aliasedMatch.push(`(u.auth_provider = 'firebase' AND u.auth_user_id = '${safeUid}')`);
+            }
+            if (email) {
+              const safeEmail = quote(email);
+              match.push(`lower(trim(COALESCE(email_normalized, email, ''))) = '${safeEmail}'`);
+              aliasedMatch.push(`lower(trim(COALESCE(u.email_normalized, u.email, ''))) = '${safeEmail}'`);
+            }
+            const where = match.join(' OR ');
+            const order = uid
+              ? `CASE WHEN auth_provider = 'firebase' AND auth_user_id = '${quote(uid)}' THEN 0 ELSE 1 END, id`
+              : 'id';
+            sync.push(
+              `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) ` +
+                `SELECT id, '${role}', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ` +
+                `FROM auth_users WHERE disabled_at IS NULL AND (${where}) ORDER BY ${order} LIMIT 1;`,
+            );
+            verifyConditions.push(`(ur.role = '${role}' AND (${aliasedMatch.join(' OR ')}))`);
+          }
+          fs.writeFileSync('/tmp/rawaj-saudi-role-sync.sql', `${sync.join('\n')}\n`);
+          fs.writeFileSync(
+            '/tmp/rawaj-saudi-role-verify.sql',
+            `SELECT COUNT(DISTINCT ur.user_id || ':' || ur.role) AS matched_count ` +
+              `FROM user_roles ur JOIN auth_users u ON u.id = ur.user_id ` +
+              `WHERE ${verifyConditions.join(' OR ')};\n` +
+              `SELECT COUNT(DISTINCT user_id) AS privileged_users FROM user_roles ` +
+              `WHERE role IN ('moderator', 'admin', 'owner');\n`,
+          );
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `source_pairs=${pairs.size}\n`);
+          NODE
+
+      - name: Apply roles to matching Saudi accounts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.118.0 d1 execute "$TARGET_D1" --remote --file /tmp/rawaj-saudi-role-sync.sql > /tmp/rawaj-saudi-role-sync-result.txt
+
+      - name: Verify Saudi privileged access exists
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.118.0 d1 execute "$TARGET_D1" --remote --json --file /tmp/rawaj-saudi-role-verify.sql > /tmp/rawaj-saudi-role-verify.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('/tmp/rawaj-saudi-role-verify.json', 'utf8'));
+          let matched = null;
+          let privilegedUsers = null;
+          function walk(value) {
+            if (Array.isArray(value)) {
+              for (const item of value) walk(item);
+              return;
+            }
+            if (!value || typeof value !== 'object') return;
+            if (value.matched_count !== undefined) matched = Number(value.matched_count);
+            if (value.privileged_users !== undefined) privilegedUsers = Number(value.privileged_users);
+            for (const child of Object.values(value)) walk(child);
+          }
+          walk(payload);
+          if (!Number.isInteger(matched) || matched < 1) {
+            throw new Error('No matching privileged Syrian account exists in Saudi D1. The owner must sign in to Saudi once before retrying.');
+          }
+          if (!Number.isInteger(privilegedUsers) || privilegedUsers < 1) {
+            throw new Error('Saudi D1 still has no privileged account after synchronization.');
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `matched_pairs=${matched}\nprivileged_users=${privilegedUsers}\n`);
+          NODE
+
+      - name: Record privacy-safe result
+        shell: bash
+        run: |
+          {
+            echo '### Saudi privileged-role synchronization'
+            echo ''
+            echo "- Syrian privileged role pairs discovered: ${{ steps.plan.outputs.source_pairs }}"
+            echo "- Matching role pairs present in Saudi D1: ${{ steps.verify.outputs.matched_pairs }}"
+            echo "- Saudi privileged users after sync: ${{ steps.verify.outputs.privileged_users }}"
+            echo '- No email address, Firebase UID, token, or secret was printed.'
+          } >> "$GITHUB_STEP_SUMMARY"
