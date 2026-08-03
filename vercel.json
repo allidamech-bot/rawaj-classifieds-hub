@@ -5,5 +5,15 @@
       "*": false,
       "main": true
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/v1/:path*",
+      "destination": "https://rawaj-classifieds-hub.allidamech.workers.dev/v1/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://rawaj-classifieds-hub.allidamech.workers.dev/api/:path*"
+    }
+  ]
 }
