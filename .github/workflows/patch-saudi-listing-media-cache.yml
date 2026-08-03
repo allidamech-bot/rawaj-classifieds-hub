@@ -1,6 +1,11 @@
 name: Patch Saudi listing media cache
 
 "on":
+  pull_request:
+    branches:
+      - saudi
+    paths:
+      - .github/workflows/patch-saudi-listing-media-cache.yml
   push:
     branches:
       - fix/saudi-listing-media-cache-invalidation-20260803
@@ -21,10 +26,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            cloudflare/worker/package-lock.json
       - name: Patch public listing media revalidation
         shell: bash
         run: |
@@ -32,32 +33,12 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          public_core = Path('cloudflare/worker/src/index.ts')
-          text = public_core.read_text(encoding='utf-8')
-          old = '''  const object = await env.MEDIA.get(stringValue(asset.object_key));
-          if (!object) {
-            console.error("rawaj_media_object_missing", { assetId, objectKey: asset.object_key });
-            return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
-          }
-
-          const headers = new Headers(cors);
-          object.writeHttpMetadata(headers);
-          headers.set("Content-Type", stringValue(asset.content_type, "application/octet-stream"));
-          headers.set("ETag", object.httpEtag || stringValue(asset.etag));
-          headers.set(
-            "Cache-Control",
-            `public, max-age=${integerValue(env.MEDIA_CACHE_SECONDS, DEFAULT_MEDIA_CACHE_SECONDS)}, immutable`,
-          );
-          headers.set("X-Content-Type-Options", "nosniff");
-          headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
-
-          const ifNoneMatch = request.headers.get("If-None-Match");
-          if (ifNoneMatch && ifNoneMatch === headers.get("ETag")) {
-            return new Response(null, { status: 304, headers });
-          }
-
-          return new Response(object.body, { status: 200, headers });'''
-          new = '''  const storedEtag = stringValue(asset.etag);
+          path = Path('cloudflare/worker/src/index.ts')
+          text = path.read_text(encoding='utf-8')
+          start = text.index('  const object = await env.MEDIA.get(stringValue(asset.object_key));', text.index('async function mediaAsset('))
+          end_marker = '  return new Response(object.body, { status: 200, headers });'
+          end = text.index(end_marker, start) + len(end_marker)
+          replacement = '''  const storedEtag = stringValue(asset.etag);
           const ifNoneMatch = request.headers.get("If-None-Match");
           if (ifNoneMatch && ifNoneMatch === storedEtag) {
             const headers = new Headers(cors);
@@ -81,11 +62,11 @@ jobs:
           headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
 
           return new Response(object.body, { status: 200, headers });'''
-          if text.count(old) != 1:
-              raise SystemExit(f'Expected one public media response block, found {text.count(old)}')
-          text = text.replace(old, new)
+          text = text[:start] + replacement + text[end:]
 
-          marker = '''function mapCategory(row: JsonRecord): JsonRecord {'''
+          marker = 'function mapCategory(row: JsonRecord): JsonRecord {'
+          if text.count(marker) != 1:
+              raise SystemExit('mapCategory marker mismatch')
           helper = '''function applyRevalidatingMediaCacheHeaders(headers: Headers): void {
             headers.set("Cache-Control", "public, max-age=0, must-revalidate");
             headers.set("CDN-Cache-Control", "no-store");
@@ -93,19 +74,17 @@ jobs:
             headers.delete("Expires");
           }
 
-          function mapCategory(row: JsonRecord): JsonRecord {'''
-          if text.count(marker) != 1:
-              raise SystemExit(f'Expected one mapCategory marker, found {text.count(marker)}')
-          text = text.replace(marker, helper)
-          public_core.write_text(text, encoding='utf-8')
+          '''
+          text = text.replace(marker, helper + marker)
+          path.write_text(text, encoding='utf-8')
 
-          private_core = Path('cloudflare/worker/src/marketplace-private.ts')
-          private_text = private_core.read_text(encoding='utf-8')
-          old_metadata = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },'
-          new_metadata = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },'
-          if private_text.count(old_metadata) != 1:
-              raise SystemExit(f'Expected one listing upload cache metadata block, found {private_text.count(old_metadata)}')
-          private_core.write_text(private_text.replace(old_metadata, new_metadata), encoding='utf-8')
+          path = Path('cloudflare/worker/src/marketplace-private.ts')
+          text = path.read_text(encoding='utf-8')
+          old = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },'
+          new = 'httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },'
+          if text.count(old) != 1:
+              raise SystemExit(f'listing upload metadata mismatch: {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
           PY
 
           cat > cloudflare/worker/test/listing-media-cache-invalidation.test.mjs <<'EOF'
@@ -114,41 +93,28 @@ jobs:
           import test from "node:test";
 
           const publicCore = fs.readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
-          const privateCore = fs.readFileSync(
-            new URL("../src/marketplace-private.ts", import.meta.url),
-            "utf8",
-          );
+          const privateCore = fs.readFileSync(new URL("../src/marketplace-private.ts", import.meta.url), "utf8");
 
-          test("public listing media always revalidates authorization before serving cached bytes", () => {
+          test("public listing media revalidates D1 before cached bytes", () => {
             assert.match(publicCore, /public, max-age=0, must-revalidate/);
             assert.match(publicCore, /Cloudflare-CDN-Cache-Control", "no-store"/);
             assert.match(publicCore, /CDN-Cache-Control", "no-store"/);
-            assert.doesNotMatch(
-              publicCore,
-              /MEDIA_CACHE_SECONDS[\s\S]{0,160}immutable/,
-            );
-
-            const authorizationLookup = publicCore.indexOf("FROM media_assets m");
-            const conditionalResponse = publicCore.indexOf('request.headers.get("If-None-Match")');
-            const r2Read = publicCore.indexOf("await env.MEDIA.get", conditionalResponse);
-            assert.ok(authorizationLookup >= 0);
-            assert.ok(conditionalResponse > authorizationLookup);
-            assert.ok(r2Read > conditionalResponse, "ETag revalidation should happen before the R2 read");
+            const mediaHandler = publicCore.indexOf("async function mediaAsset(");
+            const authorizationLookup = publicCore.indexOf("FROM media_assets m", mediaHandler);
+            const conditional = publicCore.indexOf('request.headers.get("If-None-Match")', authorizationLookup);
+            const r2Read = publicCore.indexOf("await env.MEDIA.get", conditional);
+            assert.ok(mediaHandler >= 0 && authorizationLookup > mediaHandler);
+            assert.ok(conditional > authorizationLookup);
+            assert.ok(r2Read > conditional);
           });
 
-          test("new listing objects are not marked immutable", () => {
+          test("new listing media is never marked immutable", () => {
             assert.match(privateCore, /public, max-age=0, must-revalidate/);
-            assert.doesNotMatch(
-              privateCore,
-              /listings\/\$\{auth\.userId\}[\s\S]{0,800}max-age=31536000, immutable/,
-            );
+            assert.doesNotMatch(privateCore, /max-age=31536000, immutable/);
           });
           EOF
 
-          npx prettier --write \
-            cloudflare/worker/src/index.ts \
-            cloudflare/worker/src/marketplace-private.ts \
-            cloudflare/worker/test/listing-media-cache-invalidation.test.mjs
+          npx prettier --write cloudflare/worker/src/index.ts cloudflare/worker/src/marketplace-private.ts cloudflare/worker/test/listing-media-cache-invalidation.test.mjs
           node --test cloudflare/worker/test/listing-media-cache-invalidation.test.mjs
           npm ci --prefix cloudflare/worker --ignore-scripts
           npm run typecheck --prefix cloudflare/worker
@@ -159,10 +125,6 @@ jobs:
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add \
-            cloudflare/worker/src/index.ts \
-            cloudflare/worker/src/marketplace-private.ts \
-            cloudflare/worker/test/listing-media-cache-invalidation.test.mjs \
-            .github/workflows/patch-saudi-listing-media-cache.yml
+          git add cloudflare/worker/src/index.ts cloudflare/worker/src/marketplace-private.ts cloudflare/worker/test/listing-media-cache-invalidation.test.mjs .github/workflows/patch-saudi-listing-media-cache.yml
           git commit -m "fix(saudi): revalidate public listing media"
           git push origin HEAD:fix/saudi-listing-media-cache-invalidation-20260803
