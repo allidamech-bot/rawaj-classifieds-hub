@@ -57,18 +57,18 @@ jobs:
 
           path = Path('vite.config.ts')
           text = path.read_text(encoding='utf-8')
-          old = '''  tanstackStart: {
-            // Route custom market hosts before delegating to the existing SSR wrapper.
-            // nitro/vite builds from this
-            server: { entry: "market-server" },
-          },'''
-          new = '''  tanstackStart: {
-            // Syria owns the production SSR wrapper directly. Market routing is external.
-            server: { entry: "server" },
-          },'''
-          if old not in text:
-              raise SystemExit('Expected market-server Vite block was not found')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          market_entry = 'server: { entry: "market-server" },'
+          syria_entry = 'server: { entry: "server" },'
+          if market_entry in text:
+              text = text.replace(market_entry, syria_entry)
+              text = text.replace(
+                  '// Route custom market hosts before delegating to the existing SSR wrapper.\n'
+                  '        // nitro/vite builds from this',
+                  '// Syria owns the production SSR wrapper directly. Market routing is external.',
+              )
+          elif syria_entry not in text:
+              raise SystemExit('Neither market-server nor Syria server entry was found')
+          path.write_text(text, encoding='utf-8')
           PY
 
       - name: Verify obvious Saudi filenames are gone
@@ -77,6 +77,7 @@ jobs:
           set -Eeuo pipefail
           test ! -d rawaj-market-gateway
           test ! -e src/market-server.ts
+          grep -q 'entry: "server"' vite.config.ts
           if find .github/workflows scripts docs -type f -iname '*saudi*' -print -quit | grep -q .; then
             echo 'Saudi-named files remain after cleanup.' >&2
             find .github/workflows scripts docs -type f -iname '*saudi*' -print >&2
