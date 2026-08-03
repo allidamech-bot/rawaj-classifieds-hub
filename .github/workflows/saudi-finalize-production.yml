@@ -93,6 +93,7 @@ jobs:
           set -euo pipefail
           npm ci
           npm install --no-save jose@^6
+          node --test test/listing-media-cache-invalidation.test.mjs
           if grep -RIn 'SYP' src; then
             echo "Syrian currency remains in Saudi Worker runtime" >&2
             exit 1
