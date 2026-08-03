@@ -25,17 +25,16 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           path = Path('.github/workflows/saudi-finalize-production.yml')
-          text = path.read_text(encoding='utf-8')
-          old = '''          npm ci
-          npm install --no-save jose@^6
-          if grep -RIn 'SYP' src; then'''
-          new = '''          npm ci
-          npm install --no-save jose@^6
-          node --test test/listing-media-cache-invalidation.test.mjs
-          if grep -RIn 'SYP' src; then'''
-          if text.count(old) != 1:
-              raise SystemExit(f'Expected one Saudi Worker install block, found {text.count(old)}')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+          lines = path.read_text(encoding='utf-8').splitlines()
+          matches = [index for index, line in enumerate(lines) if line.strip() == 'npm install --no-save jose@^6']
+          if len(matches) != 1:
+              raise SystemExit(f'Expected one Saudi Worker jose install line, found {len(matches)}')
+          index = matches[0]
+          indent = lines[index][:len(lines[index]) - len(lines[index].lstrip())]
+          test_line = f'{indent}node --test test/listing-media-cache-invalidation.test.mjs'
+          if test_line not in lines:
+              lines.insert(index + 1, test_line)
+          path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
           rm .github/workflows/patch-saudi-finalizer-media-gate.yml
       - name: Commit permanent finalizer gate
