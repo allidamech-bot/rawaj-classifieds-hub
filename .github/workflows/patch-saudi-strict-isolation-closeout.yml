@@ -1,0 +1,66 @@
+name: Patch Saudi strict isolation closeout
+
+"on":
+  push:
+    branches:
+      - test/saudi-strict-isolation-closeout-20260803
+    paths:
+      - .github/workflows/patch-saudi-strict-isolation-closeout.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/saudi-strict-isolation-closeout-20260803
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Require exact Syrian isolation responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/saudi-infra-admin-production-e2e.mjs')
+          text = path.read_text(encoding='utf-8')
+
+          old_pre = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
+          if (syria.response.status === 200) throw new Error("Saudi listing leaked into the Syrian market");'''
+          new_pre = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
+          expectStatus(syria, 404, `${suffix} Syrian market isolation`);'''
+
+          old_approved = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
+          if (syriaApproved.response.status === 200)
+            throw new Error("Approved Saudi listing leaked into Syria");'''
+          new_approved = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
+          expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");'''
+
+          for old, new, label in [
+              (old_pre, new_pre, 'pre-approval isolation'),
+              (old_approved, new_approved, 'approved isolation'),
+          ]:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one block, found {count}')
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+          npx prettier --write scripts/saudi-infra-admin-production-e2e.mjs
+          node --check scripts/saudi-infra-admin-production-e2e.mjs
+          rm .github/workflows/patch-saudi-strict-isolation-closeout.yml
+      - name: Commit strict isolation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add scripts/saudi-infra-admin-production-e2e.mjs .github/workflows/patch-saudi-strict-isolation-closeout.yml
+          git commit -m "test(saudi): require exact Syrian isolation status"
+          git push origin HEAD:test/saudi-strict-isolation-closeout-20260803
