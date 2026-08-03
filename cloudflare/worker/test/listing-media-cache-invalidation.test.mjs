@@ -13,6 +13,8 @@ test("public listing media revalidates D1 before cached bytes", () => {
   assert.match(publicCore, /Cloudflare-CDN-Cache-Control", "no-store"/);
   assert.match(publicCore, /CDN-Cache-Control", "no-store"/);
   const mediaHandler = publicCore.indexOf("async function mediaAsset(");
+  const mediaHandlerEnd = publicCore.indexOf("function mapCategory(", mediaHandler);
+  const publicMediaHandler = publicCore.slice(mediaHandler, mediaHandlerEnd);
   const authorizationLookup = publicCore.indexOf("FROM media_assets m", mediaHandler);
   const conditional = publicCore.indexOf(
     'request.headers.get("If-None-Match")',
@@ -22,6 +24,7 @@ test("public listing media revalidates D1 before cached bytes", () => {
   assert.ok(mediaHandler >= 0 && authorizationLookup > mediaHandler);
   assert.ok(conditional > authorizationLookup);
   assert.ok(r2Read > conditional);
+  assert.doesNotMatch(publicMediaHandler, /immutable/);
 });
 
 test("new listing media is never marked immutable", () => {
