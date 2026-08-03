@@ -15,7 +15,7 @@ const MANIFESTS = [
   "cloudflare/worker/package.json",
   "cloudflare/worker/package-lock.json",
 ];
-const REQUIRED_ENV_FILES = [".env", ".env.example", ".env.production"];
+const COMMITTED_ENVIRONMENT_TEMPLATES = [".env.example"];
 
 const retiredBackendPatterns = [
   ["retired SDK", /@supabase\/supabase-js/i],
@@ -68,8 +68,8 @@ test("Firebase remains authentication-only while Cloudflare owns application dat
   }
 });
 
-test("all committed application environments select the Cloudflare provider", async () => {
-  for (const path of REQUIRED_ENV_FILES) {
+test("the committed application environment template selects the Syria Cloudflare provider", async () => {
+  for (const path of COMMITTED_ENVIRONMENT_TEMPLATES) {
     const content = await read(path);
     assert.match(
       content,
@@ -79,7 +79,12 @@ test("all committed application environments select the Cloudflare provider", as
     assert.match(
       content,
       /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/(?:api\.rawa-j\.com|rawaj-classifieds-hub\.allidamech\.workers\.dev)\/?$/m,
-      `${path} must use an approved Cloudflare API origin`,
+      `${path} must use the Syria Cloudflare API origin`,
+    );
+    assert.match(
+      content,
+      /^VITE_SITE_URL=https:\/\/rawa-j\.com\/?$/m,
+      `${path} must use the Syria frontend origin`,
     );
   }
 });
