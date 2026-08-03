@@ -1,0 +1,46 @@
+name: Saudi Production Dependency Audit
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/saudi-production-dependency-audit.yml
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit Saudi production dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out Saudi application
+        uses: actions/checkout@v4
+        with:
+          ref: saudi
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+      - name: Audit frontend production dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm audit --omit=dev --audit-level=high
+      - name: Audit Worker production dependencies
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm audit --omit=dev --audit-level=high
