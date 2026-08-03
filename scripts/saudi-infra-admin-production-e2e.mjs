@@ -240,7 +240,7 @@ async function verifyBrowserOwnerAndLogout(account) {
     waitUntil: "domcontentloaded",
     timeout: 45_000,
   });
-  const logout = page.getByRole("button", { name: /تسجيل الخروج|Log out/i });
+  const logout = page.getByRole("button", { name: /^(?:خروج|تسجيل الخروج|Log out)$/i });
   await logout.waitFor({ state: "visible", timeout: 20_000 });
   await logout.click();
   await page.waitForTimeout(2000);
