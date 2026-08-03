@@ -125,7 +125,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.118.0 d1 execute "$TARGET_D1" --remote --json --file /tmp/rawaj-saudi-role-verify.sql > /tmp/rawaj-saudi-role-verify.json
+          verify_sql="$(cat /tmp/rawaj-saudi-role-verify.sql)"
+          npx --yes wrangler@4.118.0 d1 execute "$TARGET_D1" --remote --json --command "$verify_sql" > /tmp/rawaj-saudi-role-verify.json
           node <<'NODE'
           const fs = require('node:fs');
           const payload = JSON.parse(fs.readFileSync('/tmp/rawaj-saudi-role-verify.json', 'utf8'));
