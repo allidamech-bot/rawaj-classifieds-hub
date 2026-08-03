@@ -1,14 +1,30 @@
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U",
-  authDomain: "project-af18fcaf-c46e-4ec5-93a.firebaseapp.com",
-  projectId: "project-af18fcaf-c46e-4ec5-93a",
-  messagingSenderId: "165848071823",
-  appId: "1:165848071823:web:4969d4c035ae159ddabafa",
+const firebaseAppName = "rawaj-syria";
+
+const configuredFirebase = {
+  apiKey: import.meta.env.VITE_SYRIA_FIREBASE_API_KEY?.trim() ?? "",
+  authDomain: import.meta.env.VITE_SYRIA_FIREBASE_AUTH_DOMAIN?.trim() ?? "",
+  projectId: import.meta.env.VITE_SYRIA_FIREBASE_PROJECT_ID?.trim() ?? "",
+  messagingSenderId: import.meta.env.VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID?.trim() ?? "",
+  appId: import.meta.env.VITE_SYRIA_FIREBASE_APP_ID?.trim() ?? "",
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const firebaseAuthAvailable = Object.values(configuredFirebase).every(Boolean);
+
+const firebaseConfig = firebaseAuthAvailable
+  ? configuredFirebase
+  : {
+      apiKey: "rawaj-syria-auth-pending",
+      authDomain: "rawaj-syria-auth-pending.firebaseapp.com",
+      projectId: "rawaj-syria-auth-pending",
+      messagingSenderId: "0",
+      appId: "1:0:web:rawaj-syria-auth-pending",
+    };
+
+const app =
+  getApps().find((candidate) => candidate.name === firebaseAppName) ??
+  initializeApp(firebaseConfig, firebaseAppName);
 
 export const firebaseAuth = getAuth(app);

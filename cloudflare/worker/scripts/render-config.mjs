@@ -15,11 +15,19 @@ const d1DatabaseId = local
   ? "00000000-0000-0000-0000-000000000000"
   : process.env.CLOUDFLARE_D1_DATABASE_ID?.trim();
 const r2BucketName = local ? "rawaj-media-local" : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
+const firebaseProjectId = local
+  ? "rawaj-syria-auth-pending"
+  : process.env.SYRIA_FIREBASE_PROJECT_ID?.trim();
 
-if (!d1DatabaseId || !r2BucketName) {
+if (!d1DatabaseId || !r2BucketName || !firebaseProjectId) {
   console.error(
-    "Missing required production Cloudflare configuration: CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_R2_BUCKET_NAME",
+    "Missing required Syria production configuration: CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_R2_BUCKET_NAME, SYRIA_FIREBASE_PROJECT_ID",
   );
+  process.exit(1);
+}
+
+if (!local && firebaseProjectId === "rawaj-syria-auth-pending") {
+  console.error("A configured Syria Firebase project is required for production rendering.");
   process.exit(1);
 }
 
@@ -43,6 +51,7 @@ const generated = {
   vars: {
     ...base.vars,
     API_ALLOWED_ORIGINS: local ? localOrigins : officialOrigins,
+    FIREBASE_PROJECT_ID: firebaseProjectId,
     RAWAJ_WORKER_RELEASE_SHA: releaseSha,
     RAWAJ_WORKER_ENVIRONMENT: workerEnvironment,
   },

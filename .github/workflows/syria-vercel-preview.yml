@@ -1,0 +1,112 @@
+name: Syria Vercel Preview Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit_sha:
+        description: Exact main commit SHA approved for preview
+        required: true
+        type: string
+      approval_phrase:
+        description: Type DEPLOY_RAWAJ_SYRIA_PREVIEW
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syria-vercel-preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/main'
+    environment: syria-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VITE_PUBLIC_DATA_PROVIDER: cloudflare
+      VITE_SITE_URL: https://rawa-j.com
+      VITE_PUBLIC_DATA_API_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
+      VITE_SYRIA_FIREBASE_API_KEY: ${{ vars.VITE_SYRIA_FIREBASE_API_KEY }}
+      VITE_SYRIA_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_SYRIA_FIREBASE_AUTH_DOMAIN }}
+      VITE_SYRIA_FIREBASE_PROJECT_ID: ${{ vars.VITE_SYRIA_FIREBASE_PROJECT_ID }}
+      VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_SYRIA_FIREBASE_APP_ID: ${{ vars.VITE_SYRIA_FIREBASE_APP_ID }}
+      SYRIA_FIREBASE_PROJECT_ID: ${{ vars.VITE_SYRIA_FIREBASE_PROJECT_ID }}
+      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
+      RAWAJ_WORKER_RELEASE_SHA: ${{ inputs.expected_commit_sha }}
+
+    steps:
+      - name: Verify explicit approval
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "${{ inputs.approval_phrase }}" = "DEPLOY_RAWAJ_SYRIA_PREVIEW"
+          test "${{ inputs.expected_commit_sha }}" = "$GITHUB_SHA"
+          test "${#GITHUB_SHA}" -eq 40
+          test -n "$VERCEL_TOKEN"
+          test -n "$VERCEL_ORG_ID"
+          test -n "$VERCEL_PROJECT_ID"
+
+      - name: Checkout exact approved commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.expected_commit_sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Verify checked-out identity
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ inputs.expected_commit_sha }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate Syria provider bindings
+        run: node scripts/syria-provider-preflight.mjs
+
+      - name: Run type-check and production build
+        run: |
+          npm run typecheck
+          npm run build
+
+      - name: Pull isolated Vercel preview settings
+        run: npx vercel@54.18.1 pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build through Vercel
+        run: npx vercel@54.18.1 build --token="$VERCEL_TOKEN"
+
+      - name: Deploy preview without production alias
+        id: deploy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          deployment_url="$(npx vercel@54.18.1 deploy --prebuilt --token="$VERCEL_TOKEN")"
+          case "$deployment_url" in
+            https://*.vercel.app) ;;
+            *) echo "Unexpected Vercel preview URL" >&2; exit 1 ;;
+          esac
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Record preview evidence
+        shell: bash
+        run: |
+          {
+            echo "## Syria Vercel preview deployed"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Preview: ${{ steps.deploy.outputs.url }}"
+            echo "- Production domain was not attached by this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"

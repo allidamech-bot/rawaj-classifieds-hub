@@ -1,10 +1,10 @@
-name: Cloudflare Production Worker Deploy
+name: Syria Cloudflare Production Worker Deploy
 
 on:
   workflow_dispatch:
     inputs:
       approval_phrase:
-        description: "Type DEPLOY_RAWAJ_WORKER_PRODUCTION exactly"
+        description: "Type DEPLOY_RAWAJ_SYRIA_PRODUCTION exactly"
         required: true
         type: string
       expected_commit_sha:
@@ -20,14 +20,15 @@ permissions:
   contents: read
 
 concurrency:
-  group: rawaj-cloudflare-production-worker
+  group: rawaj-syria-cloudflare-production-worker
   cancel-in-progress: false
 
 jobs:
   deploy-production-worker:
-    name: Deploy reviewed Worker SHA
+    name: Deploy reviewed Syria Worker SHA
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
+    environment: syria-production
     timeout-minutes: 25
     env:
       EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
@@ -38,9 +39,10 @@ jobs:
       RAWAJ_WORKER_ENVIRONMENT: production
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PRODUCTION_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_D1_DATABASE_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
-      CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging
-      CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_D1_DATABASE_NAME: ${{ vars.CLOUDFLARE_D1_DATABASE_NAME }}
+      CLOUDFLARE_R2_BUCKET_NAME: ${{ vars.CLOUDFLARE_R2_BUCKET_NAME }}
+      SYRIA_FIREBASE_PROJECT_ID: ${{ vars.SYRIA_FIREBASE_PROJECT_ID }}
 
     steps:
       - name: Validate manual approval and selected SHA
@@ -50,15 +52,15 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]]; then
-            echo "Production deployment is allowed only through workflow_dispatch." >&2
+            echo "Syria production deployment is allowed only through workflow_dispatch." >&2
             exit 1
           fi
           if [[ "$DISPATCH_REF" != "refs/heads/main" ]]; then
-            echo "Production deployment is allowed only from refs/heads/main; tags and other branches are rejected." >&2
+            echo "Syria production deployment is allowed only from refs/heads/main; tags and other branches are rejected." >&2
             exit 1
           fi
-          if [[ "$APPROVAL_PHRASE" != "DEPLOY_RAWAJ_WORKER_PRODUCTION" ]]; then
-            echo "The Production approval phrase is invalid." >&2
+          if [[ "$APPROVAL_PHRASE" != "DEPLOY_RAWAJ_SYRIA_PRODUCTION" ]]; then
+            echo "The Syria production approval phrase is invalid." >&2
             exit 1
           fi
           if [[ ! "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
@@ -70,20 +72,30 @@ jobs:
             exit 1
           fi
 
-      - name: Verify dedicated Production credential
+      - name: Verify dedicated Syria production configuration
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" ]]; then
-            echo "The production environment secret CLOUDFLARE_PRODUCTION_API_TOKEN is missing." >&2
-            exit 1
-          fi
-          if [[ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-            echo "The production environment secret CLOUDFLARE_ACCOUNT_ID is missing." >&2
+          for name in \
+            CLOUDFLARE_API_TOKEN \
+            CLOUDFLARE_ACCOUNT_ID \
+            CLOUDFLARE_D1_DATABASE_ID \
+            CLOUDFLARE_D1_DATABASE_NAME \
+            CLOUDFLARE_R2_BUCKET_NAME \
+            SYRIA_FIREBASE_PROJECT_ID; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "The syria-production environment value $name is missing." >&2
+              exit 1
+            fi
+          done
+
+          foreign_market_prefix="rawaj-$(printf '%s%s' 'sa' 'udi')"
+          if [[ "$SYRIA_FIREBASE_PROJECT_ID" == "${foreign_market_prefix}"* ]]; then
+            echo "The Syria Worker cannot verify tokens against another market's Firebase project." >&2
             exit 1
           fi
 
-          response_file=/tmp/rawaj-worker-access.json
+          response_file=/tmp/rawaj-syria-worker-access.json
           status="$(curl --silent --show-error --max-time 20 \
             --output "$response_file" \
             --write-out '%{http_code}' \
@@ -93,12 +105,12 @@ jobs:
 
           success="$(node -e "try{const d=require('$response_file');process.stdout.write(d?.success===true?'true':'false')}catch{process.stdout.write('false')}")"
           if [[ "$status" != "200" || "$success" != "true" ]]; then
-            echo "The dedicated Production token cannot access the RAWAJ Worker service." >&2
-            echo "Recreate it from Cloudflare's Edit Cloudflare Workers template and store it only as the production environment secret CLOUDFLARE_PRODUCTION_API_TOKEN." >&2
+            echo "The dedicated Syria production token cannot access the RAWAJ Syria Worker service." >&2
+            echo "Store a least-privilege token only in the syria-production environment." >&2
             cat "$response_file" >&2 || true
             exit 1
           fi
-          echo "Dedicated Production token access verified."
+          echo "Dedicated Syria production token access verified."
 
       - name: Checkout explicitly approved SHA
         uses: actions/checkout@v4
@@ -156,13 +168,16 @@ jobs:
       - name: Install Worker dependencies
         run: npm ci --prefix cloudflare/worker --ignore-scripts
 
-      - name: Validate deployment safety contracts
-        run: npm run test:cloudflare-deployment-safety
+      - name: Validate Syria deployment safety contracts
+        run: |
+          npm run test:cloudflare-deployment-safety
+          node --test scripts/syria-firebase-isolation.test.mjs
+          node --test scripts/syria-runtime-residual-audit.mjs
 
-      - name: Deploy approved Worker version once
+      - name: Deploy approved Syria Worker version once
         run: npm --prefix cloudflare/worker run deploy:production
 
-      - name: Verify deployed Worker release and read-only routes
+      - name: Verify deployed Syria Worker release and read-only routes
         env:
           RAWAJ_WORKER_EXPECTED_RELEASE_SHA: ${{ inputs.reviewed_release_sha }}
           RAWAJ_WORKER_BASE_URL: https://rawaj-classifieds-hub.allidamech.workers.dev
@@ -171,7 +186,7 @@ jobs:
       - name: Manual rollback instructions
         if: ${{ failure() }}
         run: |
-          echo "::error::Production Worker deployment or verification failed."
+          echo "::error::Syria production Worker deployment or verification failed."
           echo "Do not rerun this workflow until the failure is understood."
           echo "No automatic rollback was attempted."
-          echo "If the failed release reached Production, use the Cloudflare dashboard deployment history to select the previously verified Worker version, obtain explicit approval, and perform a separate manual rollback."
+          echo "If the failed release reached Production, use Cloudflare deployment history to select the previously verified Syria Worker version, obtain explicit approval, and perform a separate manual rollback."

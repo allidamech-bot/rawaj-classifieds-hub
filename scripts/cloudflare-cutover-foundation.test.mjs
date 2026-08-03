@@ -59,15 +59,18 @@ test("Wrangler configuration has one source of truth and local bindings are gene
   assert.equal(baseConfig.main, "src/entry.ts");
   assert.equal(baseConfig.d1_databases, undefined);
   assert.equal(baseConfig.r2_buckets, undefined);
+  assert.equal(baseConfig.vars.FIREBASE_PROJECT_ID, undefined);
   assert.doesNotMatch(baseConfig.vars.API_ALLOWED_ORIGINS, /localhost|127\.0\.0\.1/);
   assert.match(renderConfig, /process\.argv\.includes\("--local"\)/);
   assert.match(renderConfig, /00000000-0000-0000-0000-000000000000/);
   assert.match(renderConfig, /http:\/\/localhost:8080/);
   assert.match(renderConfig, /CLOUDFLARE_D1_DATABASE_ID/);
   assert.match(renderConfig, /CLOUDFLARE_R2_BUCKET_NAME/);
+  assert.match(renderConfig, /SYRIA_FIREBASE_PROJECT_ID/);
+  assert.match(renderConfig, /FIREBASE_PROJECT_ID: firebaseProjectId/);
 });
 
-test("production migration and deploy commands are separated and approval-gated", () => {
+test("production migration and deploy commands are separated and Syria approval-gated", () => {
   assert.equal(workerPackage.scripts.deploy, undefined);
   assert.equal(workerPackage.scripts["migrate:remote"], undefined);
   assert.match(workerPackage.scripts["migrate:production"], /require-production-approval/);
@@ -76,7 +79,7 @@ test("production migration and deploy commands are separated and approval-gated"
     workerPackage.scripts["deploy:production"],
     /migrations apply|migrate:production/,
   );
-  assert.match(approvalGuard, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
+  assert.match(approvalGuard, /DEPLOY_RAWAJ_SYRIA_PRODUCTION/);
   assert.match(approvalGuard, /workflow_dispatch/);
   assert.match(approvalGuard, /expectedCommitSha !== githubSha/);
 });

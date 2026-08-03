@@ -28,7 +28,7 @@ import {
 import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
 import { loadCloudflareUserProfile } from "./cloudflare-auth";
-import { firebaseAuth } from "./firebase";
+import { firebaseAuth, firebaseAuthAvailable } from "./firebase";
 import {
   clearNativeGoogleCredentialState,
   isNativeAndroidGoogleAuthAvailable,
@@ -72,7 +72,9 @@ async function toAuthSession(user: FirebaseUser): Promise<AuthSession> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [status, setStatus] = useState<AuthStatus>(
+    firebaseAuthAvailable ? "loading" : "authUnavailable",
+  );
   const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reason, setReason] = useState<string | null>(null);
@@ -183,6 +185,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!firebaseAuthAvailable) {
+      setSession(null);
+      setProfile(null);
+      setStatus("authUnavailable");
+      setReason("تسجيل الدخول السوري غير مهيأ في بيئة النشر.");
+      return;
+    }
+
     const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
       queueMicrotask(() => void applyFirebaseUser(nextUser));
     });
