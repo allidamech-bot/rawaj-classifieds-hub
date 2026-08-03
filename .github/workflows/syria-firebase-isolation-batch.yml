@@ -1,0 +1,285 @@
+name: Syria Firebase isolation batch
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/syria-firebase-isolation-batch.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: syria-firebase-isolation-batch
+  cancel-in-progress: false
+
+jobs:
+  isolate:
+    if: github.head_ref == 'migration/syria-standalone-hardening'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Syria hardening branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/syria-standalone-hardening
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Move Syria Firebase configuration to deployment environment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          cat > src/lib/firebase.ts <<'EOF'
+          import { getApps, initializeApp } from "firebase/app";
+          import { getAuth } from "firebase/auth";
+
+          const firebaseAppName = "rawaj-syria";
+
+          const configuredFirebase = {
+            apiKey: import.meta.env.VITE_SYRIA_FIREBASE_API_KEY?.trim() ?? "",
+            authDomain: import.meta.env.VITE_SYRIA_FIREBASE_AUTH_DOMAIN?.trim() ?? "",
+            projectId: import.meta.env.VITE_SYRIA_FIREBASE_PROJECT_ID?.trim() ?? "",
+            messagingSenderId: import.meta.env.VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID?.trim() ?? "",
+            appId: import.meta.env.VITE_SYRIA_FIREBASE_APP_ID?.trim() ?? "",
+          };
+
+          export const firebaseAuthAvailable = Object.values(configuredFirebase).every(Boolean);
+
+          const firebaseConfig = firebaseAuthAvailable
+            ? configuredFirebase
+            : {
+                apiKey: "rawaj-syria-auth-pending",
+                authDomain: "rawaj-syria-auth-pending.firebaseapp.com",
+                projectId: "rawaj-syria-auth-pending",
+                messagingSenderId: "0",
+                appId: "1:0:web:rawaj-syria-auth-pending",
+              };
+
+          const app =
+            getApps().find((candidate) => candidate.name === firebaseAppName) ??
+            initializeApp(firebaseConfig, firebaseAppName);
+
+          export const firebaseAuth = getAuth(app);
+          EOF
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/lib/auth.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old_import = 'import { firebaseAuth } from "./firebase";'
+          new_import = 'import { firebaseAuth, firebaseAuthAvailable } from "./firebase";'
+          if old_import not in text and new_import not in text:
+              raise SystemExit('Expected Firebase auth import not found')
+          text = text.replace(old_import, new_import)
+
+          old_state = '  const [status, setStatus] = useState<AuthStatus>("loading");'
+          new_state = '''  const [status, setStatus] = useState<AuthStatus>(
+            firebaseAuthAvailable ? "loading" : "authUnavailable",
+          );'''
+          if old_state not in text and new_state not in text:
+              raise SystemExit('Expected auth status state not found')
+          text = text.replace(old_state, new_state)
+
+          old_effect = '''  useEffect(() => {
+            const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
+              queueMicrotask(() => void applyFirebaseUser(nextUser));
+            });
+            return unsubscribe;
+          }, [applyFirebaseUser]);'''
+          new_effect = '''  useEffect(() => {
+            if (!firebaseAuthAvailable) {
+              setSession(null);
+              setProfile(null);
+              setStatus("authUnavailable");
+              setReason("تسجيل الدخول السوري غير مهيأ في بيئة النشر.");
+              return;
+            }
+
+            const unsubscribe = onIdTokenChanged(firebaseAuth, (nextUser) => {
+              queueMicrotask(() => void applyFirebaseUser(nextUser));
+            });
+            return unsubscribe;
+          }, [applyFirebaseUser]);'''
+          if old_effect not in text and new_effect not in text:
+              raise SystemExit('Expected Firebase listener effect not found')
+          text = text.replace(old_effect, new_effect)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          cat > .env.example <<'EOF'
+          # Public application data, uploads, and marketplace APIs are served by the Syria Cloudflare Worker.
+          VITE_PUBLIC_DATA_PROVIDER=cloudflare
+          VITE_PUBLIC_DATA_API_BASE_URL=https://rawaj-classifieds-hub.allidamech.workers.dev
+
+          # Public Syria origin for canonical URLs, Open Graph, Twitter cards, JSON-LD, and auth links.
+          VITE_SITE_URL=https://rawa-j.com
+
+          # Syria Firebase Web application. Install real values in Vercel/provider environments only.
+          VITE_SYRIA_FIREBASE_API_KEY=
+          VITE_SYRIA_FIREBASE_AUTH_DOMAIN=
+          VITE_SYRIA_FIREBASE_PROJECT_ID=
+          VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID=
+          VITE_SYRIA_FIREBASE_APP_ID=
+
+          # The Worker must verify tokens against the same Syria Firebase project ID.
+          SYRIA_FIREBASE_PROJECT_ID=
+
+          # Server-only, comma/newline-separated SHA-256 fingerprints from the Play App Signing
+          # certificate. Android remains the existing single RAWAJ application and is not split here.
+          RAWAJ_ANDROID_SHA256_CERT_FINGERPRINTS=
+          EOF
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('cloudflare/worker/wrangler.base.jsonc')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          data.setdefault('vars', {}).pop('FIREBASE_PROJECT_ID', None)
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('cloudflare/worker/scripts/render-config.mjs')
+          text = path.read_text(encoding='utf-8')
+
+          old_bindings = '''const d1DatabaseId = local
+            ? "00000000-0000-0000-0000-000000000000"
+            : process.env.CLOUDFLARE_D1_DATABASE_ID?.trim();
+          const r2BucketName = local ? "rawaj-media-local" : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
+
+          if (!d1DatabaseId || !r2BucketName) {
+            console.error(
+              "Missing required production Cloudflare configuration: CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_R2_BUCKET_NAME",
+            );
+            process.exit(1);
+          }'''
+          new_bindings = '''const d1DatabaseId = local
+            ? "00000000-0000-0000-0000-000000000000"
+            : process.env.CLOUDFLARE_D1_DATABASE_ID?.trim();
+          const r2BucketName = local ? "rawaj-media-local" : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
+          const firebaseProjectId = local
+            ? "rawaj-syria-auth-pending"
+            : process.env.SYRIA_FIREBASE_PROJECT_ID?.trim();
+
+          if (!d1DatabaseId || !r2BucketName || !firebaseProjectId) {
+            console.error(
+              "Missing required Syria production configuration: CLOUDFLARE_D1_DATABASE_ID, CLOUDFLARE_R2_BUCKET_NAME, SYRIA_FIREBASE_PROJECT_ID",
+            );
+            process.exit(1);
+          }
+
+          if (!local && firebaseProjectId === "rawaj-syria-auth-pending") {
+            console.error("A configured Syria Firebase project is required for production rendering.");
+            process.exit(1);
+          }'''
+          if old_bindings not in text and new_bindings not in text:
+              raise SystemExit('Expected Worker binding block not found')
+          text = text.replace(old_bindings, new_bindings)
+
+          old_vars = '''    API_ALLOWED_ORIGINS: local ? localOrigins : officialOrigins,
+              RAWAJ_WORKER_RELEASE_SHA: releaseSha,'''
+          new_vars = '''    API_ALLOWED_ORIGINS: local ? localOrigins : officialOrigins,
+              FIREBASE_PROJECT_ID: firebaseProjectId,
+              RAWAJ_WORKER_RELEASE_SHA: releaseSha,'''
+          if old_vars not in text and new_vars not in text:
+              raise SystemExit('Expected generated vars block not found')
+          text = text.replace(old_vars, new_vars)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          cat > scripts/syria-firebase-isolation.test.mjs <<'EOF'
+          import assert from "node:assert/strict";
+          import { readFileSync } from "node:fs";
+          import test from "node:test";
+
+          const read = (path) => readFileSync(path, "utf8");
+          const firebase = read("src/lib/firebase.ts");
+          const auth = read("src/lib/auth.tsx");
+          const environment = read(".env.example");
+          const workerBase = read("cloudflare/worker/wrangler.base.jsonc");
+          const workerRender = read("cloudflare/worker/scripts/render-config.mjs");
+
+          test("Syria Web Firebase configuration is environment-owned and fail-closed", () => {
+            for (const name of [
+              "VITE_SYRIA_FIREBASE_API_KEY",
+              "VITE_SYRIA_FIREBASE_AUTH_DOMAIN",
+              "VITE_SYRIA_FIREBASE_PROJECT_ID",
+              "VITE_SYRIA_FIREBASE_MESSAGING_SENDER_ID",
+              "VITE_SYRIA_FIREBASE_APP_ID",
+            ]) {
+              assert.match(firebase, new RegExp(name));
+              assert.match(environment, new RegExp(`^${name}=$`, "m"));
+            }
+            assert.match(firebase, /firebaseAppName = "rawaj-syria"/);
+            assert.match(firebase, /rawaj-syria-auth-pending/);
+            assert.match(firebase, /firebaseAuthAvailable/);
+            assert.doesNotMatch(firebase, /AIza[0-9A-Za-z_-]{20,}/);
+            assert.doesNotMatch(firebase, /project-af18fcaf-c46e-4ec5-93a/);
+            assert.doesNotMatch(firebase, /165848071823/);
+          });
+
+          test("authentication UI stops safely when Syria Firebase is not configured", () => {
+            assert.match(auth, /firebaseAuth, firebaseAuthAvailable/);
+            assert.match(auth, /firebaseAuthAvailable \? "loading" : "authUnavailable"/);
+            assert.match(auth, /if \(!firebaseAuthAvailable\)/);
+            assert.match(auth, /تسجيل الدخول السوري غير مهيأ في بيئة النشر/);
+          });
+
+          test("Worker Firebase verification uses the protected Syria project variable", () => {
+            assert.doesNotMatch(workerBase, /FIREBASE_PROJECT_ID/);
+            assert.match(workerRender, /SYRIA_FIREBASE_PROJECT_ID/);
+            assert.match(workerRender, /FIREBASE_PROJECT_ID: firebaseProjectId/);
+            assert.match(workerRender, /rawaj-syria-auth-pending/);
+            assert.match(environment, /^SYRIA_FIREBASE_PROJECT_ID=$/m);
+          });
+          EOF
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Validate Firebase isolation
+        run: node --test scripts/syria-firebase-isolation.test.mjs
+
+      - name: Run boundary and Cloudflare contracts
+        run: |
+          node scripts/syria-runtime-residual-audit.mjs
+          node --test scripts/backend-boundary-hardening.test.mjs
+          node --test scripts/cloudflare-cutover-foundation.test.mjs
+
+      - name: Type-check application and Worker
+        run: |
+          npm run typecheck
+          npm run typecheck --prefix cloudflare/worker
+
+      - name: Build application
+        run: npm run build
+
+      - name: Commit verified Firebase isolation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No Firebase isolation changes to commit.'
+            exit 0
+          fi
+          git commit -m 'chore(syria): isolate Firebase configuration'
+          git push origin HEAD:migration/syria-standalone-hardening
