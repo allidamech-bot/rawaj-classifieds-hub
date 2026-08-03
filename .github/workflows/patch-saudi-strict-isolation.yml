@@ -6,6 +6,11 @@ name: Patch Saudi strict market isolation
       - test/saudi-strict-market-isolation-20260803
     paths:
       - .github/workflows/patch-saudi-strict-isolation.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/patch-saudi-strict-isolation.yml
 
 permissions:
   contents: write
@@ -30,14 +35,14 @@ jobs:
           path = Path('scripts/saudi-infra-admin-production-e2e.mjs')
           text = path.read_text(encoding='utf-8')
           old1 = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
-  if (syria.response.status === 200) throw new Error("Saudi listing leaked into the Syrian market");'''
+          if (syria.response.status === 200) throw new Error("Saudi listing leaked into the Syrian market");'''
           new1 = '''  const syria = await request(SYRIA_SITE_URL, `/v1/listings/${listingId}`);
-  expectStatus(syria, 404, `${suffix} Syrian market isolation`);'''
+          expectStatus(syria, 404, `${suffix} Syrian market isolation`);'''
           old2 = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
-  if (syriaApproved.response.status === 200)
-    throw new Error("Approved Saudi listing leaked into Syria");'''
+          if (syriaApproved.response.status === 200)
+            throw new Error("Approved Saudi listing leaked into Syria");'''
           new2 = '''  const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
-  expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");'''
+          expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");'''
           for old, new, label in [(old1, new1, 'pre-approval'), (old2, new2, 'approved')]:
               if text.count(old) != 1:
                   raise SystemExit(f'Expected exactly one {label} isolation block, found {text.count(old)}')
