@@ -75,12 +75,21 @@ jobs:
           }
           if (pairs.size === 0) throw new Error('No privileged Syrian identities were found; refusing a silent no-op.');
 
-          const sync = ['BEGIN TRANSACTION;'];
+          const sync = [];
           const verifyConditions = [];
           for (const { uid, email, role } of pairs.values()) {
             const match = [];
-            if (uid) match.push(`(auth_provider = 'firebase' AND auth_user_id = '${quote(uid)}')`);
-            if (email) match.push(`lower(trim(COALESCE(email_normalized, email, ''))) = '${quote(email)}'`);
+            const aliasedMatch = [];
+            if (uid) {
+              const safeUid = quote(uid);
+              match.push(`(auth_provider = 'firebase' AND auth_user_id = '${safeUid}')`);
+              aliasedMatch.push(`(u.auth_provider = 'firebase' AND u.auth_user_id = '${safeUid}')`);
+            }
+            if (email) {
+              const safeEmail = quote(email);
+              match.push(`lower(trim(COALESCE(email_normalized, email, ''))) = '${safeEmail}'`);
+              aliasedMatch.push(`lower(trim(COALESCE(u.email_normalized, u.email, ''))) = '${safeEmail}'`);
+            }
             const where = match.join(' OR ');
             const order = uid
               ? `CASE WHEN auth_provider = 'firebase' AND auth_user_id = '${quote(uid)}' THEN 0 ELSE 1 END, id`
@@ -90,9 +99,8 @@ jobs:
                 `SELECT id, '${role}', strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ` +
                 `FROM auth_users WHERE disabled_at IS NULL AND (${where}) ORDER BY ${order} LIMIT 1;`,
             );
-            verifyConditions.push(`(ur.role = '${role}' AND (${where.replaceAll('auth_provider', 'u.auth_provider').replaceAll('auth_user_id', 'u.auth_user_id').replaceAll('email_normalized', 'u.email_normalized').replaceAll("COALESCE(u.email_normalized, email, '')", "COALESCE(u.email_normalized, u.email, '')")}))`);
+            verifyConditions.push(`(ur.role = '${role}' AND (${aliasedMatch.join(' OR ')}))`);
           }
-          sync.push('COMMIT;');
           fs.writeFileSync('/tmp/rawaj-saudi-role-sync.sql', `${sync.join('\n')}\n`);
           fs.writeFileSync(
             '/tmp/rawaj-saudi-role-verify.sql',
@@ -102,7 +110,6 @@ jobs:
               `SELECT COUNT(DISTINCT user_id) AS privileged_users FROM user_roles ` +
               `WHERE role IN ('moderator', 'admin', 'owner');\n`,
           );
-          fs.writeFileSync('/tmp/rawaj-source-role-pairs-count', String(pairs.size));
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `source_pairs=${pairs.size}\n`);
           NODE
 
