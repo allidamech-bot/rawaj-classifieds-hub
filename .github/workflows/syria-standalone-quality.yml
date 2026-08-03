@@ -37,6 +37,7 @@ jobs:
         run: |
           node scripts/syria-runtime-residual-audit.mjs
           node --test scripts/syria-firebase-isolation.test.mjs
+          node --test scripts/syria-provider-preflight.test.mjs
           node --test scripts/syria-secret-hygiene.test.mjs
           node --test scripts/syria-vercel-isolation.test.mjs
           node --test scripts/syria-release-workflow-safety.test.mjs
