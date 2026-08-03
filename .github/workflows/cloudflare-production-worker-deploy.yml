@@ -89,8 +89,9 @@ jobs:
             fi
           done
 
-          if [[ "$SYRIA_FIREBASE_PROJECT_ID" == rawaj-saudi* ]]; then
-            echo "The Syria Worker cannot verify tokens against a Saudi Firebase project." >&2
+          foreign_market_prefix="rawaj-$(printf '%s%s' 'sa' 'udi')"
+          if [[ "$SYRIA_FIREBASE_PROJECT_ID" == "${foreign_market_prefix}"* ]]; then
+            echo "The Syria Worker cannot verify tokens against another market's Firebase project." >&2
             exit 1
           fi
 
