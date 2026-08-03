@@ -1,0 +1,32 @@
+name: RAWAJ No Auto Deploy
+
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - vercel.json
+      - .github/workflows/**
+      - scripts/rawaj-no-auto-deploy.test.mjs
+  push:
+    branches:
+      - main
+    paths:
+      - vercel.json
+      - .github/workflows/**
+      - scripts/rawaj-no-auto-deploy.test.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Verify deployment lock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/rawaj-no-auto-deploy.test.mjs
