@@ -34,7 +34,9 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Audit Syria runtime boundaries
-        run: node scripts/syria-runtime-residual-audit.mjs
+        run: |
+          node scripts/syria-runtime-residual-audit.mjs
+          node --test scripts/syria-firebase-isolation.test.mjs
 
       - name: Type-check
         run: npm run typecheck
