@@ -735,7 +735,7 @@ async function uploadImage(
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
-      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
+      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },
     });
   } catch {
     return databaseError(cors);
