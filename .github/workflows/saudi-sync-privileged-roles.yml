@@ -10,6 +10,7 @@ name: Sync Saudi Privileged Roles
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: rawaj-saudi-privileged-role-sync
@@ -161,3 +162,22 @@ jobs:
             echo "- Saudi privileged users after sync: ${{ steps.verify.outputs.privileged_users }}"
             echo '- No email address, Firebase UID, token, or secret was printed.'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record synchronization outcome on production issue
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+          SOURCE_PAIRS: ${{ steps.plan.outputs.source_pairs }}
+          MATCHED_PAIRS: ${{ steps.verify.outputs.matched_pairs }}
+          PRIVILEGED_USERS: ${{ steps.verify.outputs.privileged_users }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          if [ "$JOB_STATUS" = "success" ]; then
+            body="Saudi privileged-role sync succeeded: Syrian privileged pairs=${SOURCE_PAIRS:-0}, matching Saudi pairs=${MATCHED_PAIRS:-0}, Saudi privileged users=${PRIVILEGED_USERS:-0}. No email, Firebase UID, token, or secret was logged. Run: $RUN_URL"
+          else
+            body="Saudi privileged-role sync failed before confirmation. No privilege result is being assumed. Inspect the protected Actions run: $RUN_URL"
+          fi
+          gh issue comment 602 --repo "$GITHUB_REPOSITORY" --body "$body"
