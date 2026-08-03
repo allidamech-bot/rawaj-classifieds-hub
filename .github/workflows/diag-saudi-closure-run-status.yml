@@ -24,3 +24,52 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=50" \
             --jq '.workflow_runs[] | select(.name == "Finalize Saudi Marketplace Production" or .name == "Saudi Infra and Admin Production Gate") | [.id,.name,.event,.head_sha,.status,(.conclusion // "pending"),.created_at,.updated_at] | @tsv' \
             | head -n 12
+
+      - name: Probe Saudi and Syrian routing surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe() {
+            local label="$1"
+            local url="$2"
+            local accept="${3:-*/*}"
+            local body headers status content_type error_code
+            body="$(mktemp)"
+            headers="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 30 \
+              -H "Accept: $accept" \
+              -D "$headers" -o "$body" -w '%{http_code}' "$url" || true)"
+            content_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{gsub(/\r/,""); value=$0} END{sub(/^[^:]*:[[:space:]]*/,"",value); print value}' "$headers")"
+            error_code="$(BODY="$body" node - <<'NODE'
+          const fs = require('node:fs');
+          const path = process.env.BODY;
+          try {
+            const raw = fs.readFileSync(path, 'utf8');
+            const json = JSON.parse(raw);
+            process.stdout.write(String(json?.error?.code || json?.error || 'none').slice(0, 120));
+          } catch {
+            process.stdout.write('non-json');
+          }
+          NODE
+            )"
+            printf '%s\t%s\t%s\t%s\n' "$label" "$status" "${content_type:-none}" "$error_code"
+            rm -f "$body" "$headers"
+          }
+
+          for origin in \
+            "https://rawaj-saudi-web.allidamech.workers.dev" \
+            "https://sa.rawa-j.com"; do
+            probe "$origin /" "$origin/" "text/html"
+            probe "$origin /login" "$origin/login" "text/html"
+            probe "$origin /add-listing" "$origin/add-listing" "text/html"
+            probe "$origin /v1/health" "$origin/v1/health" "application/json"
+            probe "$origin /v1/references" "$origin/v1/references" "application/json"
+          done
+
+          missing="00000000-0000-4000-8000-000000000001"
+          for origin in \
+            "https://rawa-j.com" \
+            "https://rawaj-classifieds-hub.allidamech.workers.dev"; do
+            probe "$origin /v1/health" "$origin/v1/health" "application/json"
+            probe "$origin missing listing" "$origin/v1/listings/$missing" "application/json"
+          done
