@@ -20,7 +20,9 @@ for (const [name, value] of Object.entries({
   if (!value) throw new Error(`${name} is required`);
 }
 
-const playwrightUrl = pathToFileURL(resolve(SAUDI_APP_DIR, "node_modules/playwright/index.mjs")).href;
+const playwrightUrl = pathToFileURL(
+  resolve(SAUDI_APP_DIR, "node_modules/playwright/index.mjs"),
+).href;
 const { chromium } = await import(playwrightUrl);
 const workerDirectory = dirname(WRANGLER_CONFIG);
 const stamp = `${Date.now()}-${process.env.GITHUB_RUN_ID ?? "local"}`;
@@ -64,7 +66,9 @@ function runD1(command, label) {
     },
   );
   if (result.status !== 0) {
-    throw new Error(`${label} failed: ${(result.stderr || result.stdout || "unknown").slice(0, 2000)}`);
+    throw new Error(
+      `${label} failed: ${(result.stderr || result.stdout || "unknown").slice(0, 2000)}`,
+    );
   }
 }
 
@@ -95,7 +99,9 @@ async function request(origin, path, { method = "GET", token, body, headers = {}
 function expectStatus(result, expected, label) {
   const allowed = Array.isArray(expected) ? expected : [expected];
   if (!allowed.includes(result.response.status)) {
-    throw new Error(`${label} expected ${allowed.join("/")}, got ${result.response.status}: ${result.text.slice(0, 700)}`);
+    throw new Error(
+      `${label} expected ${allowed.join("/")}, got ${result.response.status}: ${result.text.slice(0, 700)}`,
+    );
   }
 }
 
@@ -156,7 +162,8 @@ async function verifyRoleProfile(account, role) {
   expectStatus(profile, 200, `${role} profile read`);
   const roles = profile.payload?.data?.roles ?? [];
   if (!roles.includes("user")) throw new Error(`${role} profile lost the base user role`);
-  if (role !== "user" && !roles.includes(role)) throw new Error(`${role} role did not reach the profile API`);
+  if (role !== "user" && !roles.includes(role))
+    throw new Error(`${role} role did not reach the profile API`);
   if (role === "user" && roles.some((item) => ["moderator", "admin", "owner"].includes(item))) {
     throw new Error("Ordinary account unexpectedly received an administrative role");
   }
@@ -189,7 +196,9 @@ async function loginInBrowser(account) {
     waitUntil: "domcontentloaded",
     timeout: 45_000,
   });
-  await page.locator('form[data-interactive="true"]').waitFor({ state: "visible", timeout: 30_000 });
+  await page
+    .locator('form[data-interactive="true"]')
+    .waitFor({ state: "visible", timeout: 30_000 });
   await page.locator('input[type="email"]').fill(account.email);
   await page.locator('input[type="password"]').fill(account.password);
   await page.locator('form button[type="submit"]').click();
@@ -250,7 +259,8 @@ async function verifyBrowserOwnerAndLogout(account) {
 function fieldValue(field) {
   const options = Array.isArray(field?.options) ? field.options : [];
   const firstOption = options[0]?.key ?? options[0]?.value ?? null;
-  const validation = field?.validation && typeof field.validation === "object" ? field.validation : {};
+  const validation =
+    field?.validation && typeof field.validation === "object" ? field.validation : {};
   const type = String(field?.fieldType ?? "text").toLowerCase();
   if (type.includes("multi") || type.includes("checkbox")) return [firstOption ?? "other"];
   if (firstOption !== null) return firstOption;
@@ -440,7 +450,8 @@ async function verifyListingJourney(seller, admin) {
     throw new Error(`Approved Saudi R2 image is unavailable (${media.status})`);
   }
   const syriaApproved = await request(SYRIA_SITE_URL, `/v1/listings/${approved.id}`);
-  if (syriaApproved.response.status === 200) throw new Error("Approved Saudi listing leaked into Syria");
+  if (syriaApproved.response.status === 200)
+    throw new Error("Approved Saudi listing leaked into Syria");
 
   const rejected = await createSubmittedListing(seller, taxonomy, "رفض");
   await moderate(admin, rejected, "reject", "رفض آلي مؤقت للتحقق من مسار الإدارة");
