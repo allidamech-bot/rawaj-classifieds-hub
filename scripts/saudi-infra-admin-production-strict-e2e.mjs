@@ -43,10 +43,7 @@ lines.splice(
   `${approvedIndent}expectStatus(syriaApproved, 404, "approved Saudi listing Syrian isolation");`,
 );
 
-const temporaryPath = join(
-  tmpdir(),
-  `rawaj-saudi-strict-closure-${process.pid}-${Date.now()}.mjs`,
-);
+const temporaryPath = join(tmpdir(), `rawaj-saudi-strict-closure-${process.pid}-${Date.now()}.mjs`);
 await writeFile(temporaryPath, `${lines.join("\n")}\n`, "utf8");
 
 try {
