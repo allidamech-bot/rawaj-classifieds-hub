@@ -19,8 +19,10 @@ dist-ssr
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+cloudflare/backups/
+backup-output/
 
-# Supabase CLI temp artifacts
+# Temporary provider and migration artifacts
 .tmp-userprofile/
 supabase/.temp/
 
@@ -35,11 +37,15 @@ supabase/.temp/
 *.sln
 *.sw?
 
-# Local env files
+# Local environment files. Keep only the documented template in version control.
 .env
+.env.*
+!.env.example
+
+# Vercel local linkage must never be committed.
+.vercel/
 
 # Android signing credentials and local release material
-# Keep upload keys and their password-bearing property files outside version control.
 *.jks
 *.keystore
 *.p12
@@ -48,14 +54,9 @@ signing.properties
 key.properties
 android/app/google-services.json
 
-# RAWAJ location taxonomy raw/generated artifacts
+# Syria location taxonomy raw/generated artifacts
 data/locations/sources/
 data/locations/syria-ocha-location-nodes.json
 data/locations/syria-ocha-location-nodes.csv
 
-.vercel
-.env*
-
 test-results/
-
-cloudflare/backups/
