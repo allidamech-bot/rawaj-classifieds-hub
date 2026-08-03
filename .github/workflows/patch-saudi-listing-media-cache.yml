@@ -123,6 +123,7 @@ jobs:
           npx prettier --write cloudflare/worker/src/index.ts cloudflare/worker/src/marketplace-private.ts cloudflare/worker/test/listing-media-cache-invalidation.test.mjs
           node --test cloudflare/worker/test/listing-media-cache-invalidation.test.mjs
           npm ci --prefix cloudflare/worker --ignore-scripts
+          npm install --prefix cloudflare/worker --no-save jose@^6
           npm run typecheck --prefix cloudflare/worker
           rm .github/workflows/patch-saudi-listing-media-cache.yml
       - name: Commit fix and remove temporary workflow
