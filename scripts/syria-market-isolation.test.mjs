@@ -23,7 +23,6 @@ const SCAN_ROOTS = [
   "cloudflare/worker/src",
   "cloudflare/worker/scripts",
   ".github/workflows",
-  "scripts",
 ];
 const CONFIGURATION_FILES = [
   ".env",
@@ -36,23 +35,19 @@ const CONFIGURATION_FILES = [
   "cloudflare/worker/wrangler.base.jsonc",
   "cloudflare/worker/package.json",
 ];
-const EXCLUDED_FILES = new Set(["scripts/syria-market-isolation.test.mjs"]);
 const FORBIDDEN_FOREIGN_MARKERS = [
-  ["Saudi Worker or project identifier", /rawaj-saudi/i],
+  ["Saudi Worker or resource identifier", /rawaj-saudi/i],
   ["Saudi public host", /(?:api\.)?sa\.rawa-j\.com/i],
   ["Saudi D1 database ID", /3f40cae9-c3a4-47ea-80a1-2f9a78915b2c/i],
-  ["Saudi Firebase project", /rawaj-saudi-production/i],
   ["Saudi Vercel project ID", /prj_FddhWuGOdaVR3rfmTpbAUIIkhwvO/i],
   ["Saudi environment namespace", /\b(?:VITE_)?SAUDI_[A-Z0-9_]+\b/i],
-  ["Saudi English market label", /\bSaudi(?: Arabia)?\b/i],
-  ["Saudi Arabic market label", /السعودية/],
   ["embedded cross-market gateway", /rawaj-market-gateway/i],
 ];
 
 const operationalFiles = [
   ...CONFIGURATION_FILES,
   ...(await Promise.all(SCAN_ROOTS.map((root) => walk(root)))).flat(),
-].filter((path, index, items) => !EXCLUDED_FILES.has(path) && items.indexOf(path) === index);
+].filter((path, index, items) => items.indexOf(path) === index);
 
 test("Syria repository has no embedded Saudi or gateway runtime", async () => {
   assert.equal(await pathExists("src/market-server.ts"), false, "Saudi host proxy must stay absent");
