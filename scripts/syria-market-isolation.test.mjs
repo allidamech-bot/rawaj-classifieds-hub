@@ -48,10 +48,11 @@ const operationalFiles = [
 
 test("Syria repository has no embedded Saudi or gateway runtime", async () => {
   assert.equal(await pathExists("src/market-server.ts"), false, "Saudi host proxy must stay absent");
-  assert.equal(
-    await pathExists("rawaj-market-gateway"),
-    false,
-    "the independent gateway must not be embedded in the Syria repository",
+  const remainingGatewayFiles = await walkAll("rawaj-market-gateway");
+  assert.deepEqual(
+    remainingGatewayFiles,
+    [],
+    `the independent gateway must not be embedded in the Syria repository: ${remainingGatewayFiles.join(", ")}`,
   );
 
   for (const path of operationalFiles) {
@@ -93,6 +94,11 @@ test("every committed Syria environment uses the Syria API only", async () => {
 });
 
 async function walk(relativeDirectory) {
+  const files = await walkAll(relativeDirectory);
+  return files.filter((path) => SCANNED_EXTENSIONS.has(extname(path)));
+}
+
+async function walkAll(relativeDirectory) {
   const absoluteDirectory = resolve(ROOT, relativeDirectory);
   let entries;
   try {
@@ -113,10 +119,10 @@ async function walk(relativeDirectory) {
     }
     const absolutePath = resolve(absoluteDirectory, entry.name);
     const path = relative(ROOT, absolutePath).replaceAll("\\", "/");
-    if (entry.isDirectory()) output.push(...(await walk(path)));
-    else if (SCANNED_EXTENSIONS.has(extname(entry.name))) output.push(path);
+    if (entry.isDirectory()) output.push(...(await walkAll(path)));
+    else output.push(path);
   }
-  return output;
+  return output.sort();
 }
 
 async function pathExists(path) {
