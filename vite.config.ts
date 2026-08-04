@@ -96,8 +96,7 @@ export default defineConfig({
     },
   },
   tanstackStart: {
-    // Route custom market hosts before delegating to the existing SSR wrapper.
-    // nitro/vite builds from this
-    server: { entry: "market-server" },
+    // Syria uses only its own SSR wrapper. Cross-market routing belongs to the separate gateway.
+    server: { entry: "server" },
   },
 });
