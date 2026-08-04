@@ -64,9 +64,7 @@ const officialOrigins = String(base.vars?.API_ALLOWED_ORIGINS ?? "");
 const localOrigins = [officialOrigins, "http://localhost:8080", "http://127.0.0.1:8080"]
   .filter(Boolean)
   .join(",");
-const customDomain = local
-  ? ""
-  : (process.env.CLOUDFLARE_WORKER_CUSTOM_DOMAIN?.trim() ?? "");
+const customDomain = local ? "" : (process.env.CLOUDFLARE_WORKER_CUSTOM_DOMAIN?.trim() ?? "");
 const releaseSha = local ? "local" : process.env.RAWAJ_WORKER_RELEASE_SHA?.trim();
 const workerEnvironment = local
   ? "local"
