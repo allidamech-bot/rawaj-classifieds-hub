@@ -1,11 +1,17 @@
-# RAWAJ Cloudflare Production Freeze
+# RAWAJ Syria Cloudflare Production Freeze
 
-Cloudflare Production is intentionally operated through one path only:
+Syria Cloudflare Production is intentionally operated through one path only:
 
 - Workflow: `.github/workflows/cloudflare-production-worker-deploy.yml`
 - Trigger: manual `workflow_dispatch` from `main`
 - Runtime release: an explicitly reviewed commit SHA
-- Credential source: the `production` environment secret `CLOUDFLARE_PRODUCTION_API_TOKEN`
+- Protected environment: `syria-production`
+- Credential secrets: `SYRIA_CLOUDFLARE_API_TOKEN` and `SYRIA_CLOUDFLARE_ACCOUNT_ID`
+- Required credential scope variable: `SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE=rawaj-classifieds-hub`
+- Worker: `rawaj-classifieds-hub`
+- D1: `rawaj-staging` (`d0e6496c-9f63-48d3-beeb-d2e219500f6a`)
+- R2: `rawaj-listing-images-production`
+- Firebase project: `project-af18fcaf-c46e-4ec5-93a`
 - Production API endpoint: `https://rawaj-classifieds-hub.allidamech.workers.dev`
 
 ## Frozen boundaries
@@ -13,18 +19,19 @@ Cloudflare Production is intentionally operated through one path only:
 - No automatic Worker deployment from `push` or `pull_request`.
 - No D1 migration in the Worker deployment workflow.
 - No Vercel deployment from the Worker deployment workflow.
-- No fallback to the legacy generic `CLOUDFLARE_API_TOKEN` secret.
+- No fallback to generic or Saudi Cloudflare secrets.
 - No temporary one-shot deployment workflows.
 - No custom-domain, Zone, route, or DNS mutation during Worker deployment.
 - No dependency on `api.rawa-j.com`.
 - No automatic rollback.
+- No access to Saudi Worker, D1, R2, Firebase, Vercel, domain, or deployment resources.
 
-## Permanent token
+## Dedicated credentials
 
-Create one dedicated Cloudflare user API token from the official **Edit Cloudflare Workers** template and name it `RAWAJ Production Worker Deploy`. Store it only as the GitHub `production` environment secret `CLOUDFLARE_PRODUCTION_API_TOKEN`.
+Create credentials specifically scoped for the Syria Worker operation. Store them only in the GitHub `syria-production` environment under the names above. Do not copy a Saudi token, a generic personal token, or a token shared with another project.
 
-The workflow performs a read-only Worker-service permission preflight before dependency installation. If the token is missing, stale, IP-restricted, scoped to another account, or lacks effective Workers Scripts access, the deployment stops immediately with a targeted error.
+The workflow performs a read-only Worker-service permission preflight against `rawaj-classifieds-hub` before dependency installation. Missing credentials, a wrong scope marker, another Worker target, or a different account context stops the deployment before any mutation.
 
 ## Normal operation
 
-The live frontend already uses the fixed workers.dev endpoint above. Cloudflare dashboard configuration remains frozen. Future reviewed Worker code releases use the same manual workflow, the same dedicated token, and the same workers.dev endpoint. If no Worker code changes are required, no Cloudflare action is required.
+The live frontend uses the fixed workers.dev endpoint above. Future reviewed Syria Worker code releases use the same manual workflow, the same Syria-only credential namespace, and the same pinned D1/R2/Firebase identities. If no Syria Worker code changes are required, no Cloudflare action is required.
