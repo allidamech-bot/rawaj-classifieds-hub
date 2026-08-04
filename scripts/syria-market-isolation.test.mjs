@@ -18,7 +18,13 @@ const SCANNED_EXTENSIONS = new Set([
   ".yaml",
   ".sh",
 ]);
-const SCAN_ROOTS = ["src", "cloudflare/worker/src", ".github/workflows", "scripts"];
+const SCAN_ROOTS = [
+  "src",
+  "cloudflare/worker/src",
+  "cloudflare/worker/scripts",
+  ".github/workflows",
+  "scripts",
+];
 const CONFIGURATION_FILES = [
   ".env",
   ".env.example",
@@ -28,13 +34,15 @@ const CONFIGURATION_FILES = [
   "vite.config.ts",
   "capacitor.config.ts",
   "cloudflare/worker/wrangler.base.jsonc",
-  "cloudflare/worker/scripts/render-config.mjs",
   "cloudflare/worker/package.json",
 ];
 const EXCLUDED_FILES = new Set(["scripts/syria-market-isolation.test.mjs"]);
 const FORBIDDEN_FOREIGN_MARKERS = [
   ["Saudi Worker or project identifier", /rawaj-saudi/i],
-  ["Saudi public host", /sa\.rawa-j\.com/i],
+  ["Saudi public host", /(?:api\.)?sa\.rawa-j\.com/i],
+  ["Saudi D1 database ID", /3f40cae9-c3a4-47ea-80a1-2f9a78915b2c/i],
+  ["Saudi Firebase project", /rawaj-saudi-production/i],
+  ["Saudi Vercel project ID", /prj_FddhWuGOdaVR3rfmTpbAUIIkhwvO/i],
   ["Saudi environment namespace", /\b(?:VITE_)?SAUDI_[A-Z0-9_]+\b/i],
   ["Saudi English market label", /\bSaudi(?: Arabia)?\b/i],
   ["Saudi Arabic market label", /السعودية/],
@@ -61,6 +69,21 @@ test("Syria repository has no embedded Saudi or gateway runtime", async () => {
       assert.doesNotMatch(content, pattern, `${path} contains ${label}`);
     }
   }
+});
+
+test("Syria Cloudflare render pins exact D1 R2 and Firebase identities", async () => {
+  const render = await read("cloudflare/worker/scripts/render-config.mjs");
+  assert.match(render, /EXPECTED_PRODUCTION_D1_NAME = "rawaj-staging"/);
+  assert.match(render, /EXPECTED_PRODUCTION_D1_ID = "d0e6496c-9f63-48d3-beeb-d2e219500f6a"/);
+  assert.match(render, /EXPECTED_PRODUCTION_R2_NAME = "rawaj-listing-images-production"/);
+  assert.match(render, /EXPECTED_FIREBASE_PROJECT_ID = "project-af18fcaf-c46e-4ec5-93a"/);
+  assert.match(render, /d1DatabaseId !== EXPECTED_PRODUCTION_D1_ID/);
+  assert.match(render, /d1DatabaseName !== EXPECTED_PRODUCTION_D1_NAME/);
+  assert.match(render, /r2BucketName !== EXPECTED_PRODUCTION_R2_NAME/);
+  assert.match(render, /firebaseProjectId !== EXPECTED_FIREBASE_PROJECT_ID/);
+  assert.match(render, /LOCAL_D1_NAME = "rawaj-syria-local"/);
+  assert.match(render, /LOCAL_R2_NAME = "rawaj-syria-media-local"/);
+  assert.match(render, /if \(!local && customDomain\)/);
 });
 
 test("Syria SSR and frontend API stay pinned to Syria services", async () => {
