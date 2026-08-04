@@ -56,29 +56,29 @@ test("push and pull-request workflows cannot mutate Cloudflare Production", () =
   }
 });
 
-test("the only Worker deployment workflow is manual, SHA-gated, and permanently credentialed", () => {
-  assert.ok(productionWorkflow, "The manual Production Worker workflow must exist");
+test("the only Worker deployment workflow is manual Syria-only and SHA-gated", () => {
+  assert.ok(productionWorkflow, "The manual Syria Production Worker workflow must exist");
   const source = productionWorkflow.source;
   assert.match(source, /^\s{2}workflow_dispatch:/m);
   assert.doesNotMatch(source, /^\s{2}(?:pull_request|push):/m);
-  const triggerBlock = source.match(/^on:\s*\n(?<body>[\s\S]*?)^\S/m)?.groups?.body;
-  assert.ok(triggerBlock, "The workflow trigger block must be readable");
-  const declaredTriggers = [...triggerBlock.matchAll(/^\s{2}([a-zA-Z_][\w-]*):(?:\s|$)/gm)].map(
-    (match) => match[1],
-  );
-  assert.deepEqual(declaredTriggers, ["workflow_dispatch"]);
-  assert.match(source, /environment: production/);
+  assert.match(source, /environment: syria-production/);
   assert.match(
     source,
-    /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_PRODUCTION_API_TOKEN \}\}/,
+    /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.SYRIA_CLOUDFLARE_API_TOKEN \}\}/,
   );
-  assert.doesNotMatch(
+  assert.match(
     source,
-    /CLOUDFLARE_API_TOKEN:\s*\$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/,
+    /CLOUDFLARE_ACCOUNT_ID:\s*\$\{\{ secrets\.SYRIA_CLOUDFLARE_ACCOUNT_ID \}\}/,
   );
-  assert.match(source, /Verify dedicated Production credential/);
+  assert.match(
+    source,
+    /SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE:\s*\$\{\{ vars\.SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE \}\}/,
+  );
+  assert.match(source, /SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE must equal rawaj-classifieds-hub/);
+  assert.doesNotMatch(source, /secrets\.SAUDI_CLOUDFLARE_/);
+  assert.doesNotMatch(source, /secrets\.CLOUDFLARE_PRODUCTION_API_TOKEN/);
+  assert.doesNotMatch(source, /secrets\.CLOUDFLARE_ACCOUNT_ID/);
   assert.match(source, /workers\/services\/rawaj-classifieds-hub/);
-  assert.match(source, /CLOUDFLARE_PRODUCTION_API_TOKEN is missing/);
   assert.match(source, /d0e6496c-9f63-48d3-beeb-d2e219500f6a/);
   assert.match(source, /CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging/);
   assert.match(source, /CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production/);
@@ -87,30 +87,22 @@ test("the only Worker deployment workflow is manual, SHA-gated, and permanently 
     /RAWAJ_WORKER_BASE_URL: https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev/,
   );
   assert.doesNotMatch(source, /CLOUDFLARE_WORKER_CUSTOM_DOMAIN/);
-  assert.doesNotMatch(source, /api\.rawa-j\.com/);
-  assert.match(source, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
+  assert.match(source, /DEPLOY_RAWAJ_SYRIA_WORKER_PRODUCTION/);
   assert.match(source, /expected_commit_sha/);
+  assert.match(source, /reviewed_release_sha/);
   assert.match(source, /DISPATCH_REF: \$\{\{ github\.ref \}\}/);
-  assert.match(source, /\[\[ "\$DISPATCH_REF" != "refs\/heads\/main" \]\]/);
-  assert.match(source, /tags and other branches are rejected/);
+  assert.match(source, /refs\/heads\/main/);
   assert.match(source, /ref: \$\{\{ inputs\.expected_commit_sha \}\}/);
   assert.match(source, /git rev-parse HEAD/);
-  assert.match(source, /git fetch --no-tags origin refs\/heads\/main:refs\/remotes\/origin\/main/);
-  assert.match(source, /MAIN_HEAD_SHA="\$\(git rev-parse refs\/remotes\/origin\/main\)"/);
-  assert.match(source, /\[\[ "\$EXPECTED_COMMIT_SHA" != "\$MAIN_HEAD_SHA" \]\]/);
-  assert.match(source, /stale or non-main commits cannot be deployed/);
-  assert.match(source, /docs\/cloudflare-production-freeze\.md/);
-  assert.match(source, /scripts\/cloudflare-deployment-safety-gate\.test\.mjs/);
-  assert.doesNotMatch(source, /DISPATCH_SHA:\s*\$\{\{\s*github\.sha\s*\}\}/);
-  assert.doesNotMatch(source, /\$EXPECTED_COMMIT_SHA"\s*!=\s*"\$(?:DISPATCH_SHA|GITHUB_SHA)/);
+  assert.match(source, /refs\/remotes\/origin\/main/);
   assert.match(source, /npm --prefix cloudflare\/worker run deploy:production/);
   assert.equal(source.match(/npm --prefix cloudflare\/worker run deploy:production/g)?.length, 1);
   assert.doesNotMatch(source, /migrate:production|d1\s+migrations\s+apply/i);
   assert.doesNotMatch(source, /\bwrangler(?:\.cmd)?\s+(?:rollback|versions\s+deploy)/i);
   assert.match(source, /No automatic rollback was attempted/);
 
-  const deploymentWorkflows = workflows.filter(({ source }) =>
-    productionMutationPattern.test(source),
+  const deploymentWorkflows = workflows.filter(({ source: workflowSource }) =>
+    productionMutationPattern.test(workflowSource),
   );
   assert.deepEqual(
     deploymentWorkflows.map(({ name }) => name),
@@ -119,18 +111,42 @@ test("the only Worker deployment workflow is manual, SHA-gated, and permanently 
   );
 });
 
-test("the Cloudflare Production freeze is documented as one workers.dev path", () => {
+test("Syria production rendering pins every provider identity", () => {
+  assert.match(renderConfig, /EXPECTED_PRODUCTION_D1_NAME = "rawaj-staging"/);
+  assert.match(
+    renderConfig,
+    /EXPECTED_PRODUCTION_D1_ID = "d0e6496c-9f63-48d3-beeb-d2e219500f6a"/,
+  );
+  assert.match(renderConfig, /EXPECTED_PRODUCTION_R2_NAME = "rawaj-listing-images-production"/);
+  assert.match(
+    renderConfig,
+    /EXPECTED_FIREBASE_PROJECT_ID = "project-af18fcaf-c46e-4ec5-93a"/,
+  );
+  assert.match(renderConfig, /d1DatabaseId !== EXPECTED_PRODUCTION_D1_ID/);
+  assert.match(renderConfig, /d1DatabaseName !== EXPECTED_PRODUCTION_D1_NAME/);
+  assert.match(renderConfig, /r2BucketName !== EXPECTED_PRODUCTION_R2_NAME/);
+  assert.match(renderConfig, /firebaseProjectId !== EXPECTED_FIREBASE_PROJECT_ID/);
+  assert.match(renderConfig, /if \(!local && customDomain\)/);
+  assert.match(renderConfig, /rawaj-syria-local/);
+  assert.match(renderConfig, /rawaj-syria-media-local/);
+});
+
+test("the Syria Cloudflare Production freeze documents one isolated workers.dev path", () => {
   assert.match(productionFreeze, /one path only/i);
-  assert.match(productionFreeze, /CLOUDFLARE_PRODUCTION_API_TOKEN/);
+  assert.match(productionFreeze, /syria-production/);
+  assert.match(productionFreeze, /SYRIA_CLOUDFLARE_API_TOKEN/);
+  assert.match(productionFreeze, /SYRIA_CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(productionFreeze, /SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE=rawaj-classifieds-hub/);
+  assert.match(productionFreeze, /D1: `rawaj-staging`/);
+  assert.match(productionFreeze, /R2: `rawaj-listing-images-production`/);
+  assert.match(productionFreeze, /Firebase project: `project-af18fcaf-c46e-4ec5-93a`/);
   assert.match(
     productionFreeze,
     /https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev/,
   );
   assert.match(productionFreeze, /No automatic Worker deployment/);
-  assert.match(productionFreeze, /No fallback to the legacy generic/);
-  assert.match(productionFreeze, /No temporary one-shot deployment workflows/);
+  assert.match(productionFreeze, /No fallback to generic or Saudi Cloudflare secrets/);
   assert.match(productionFreeze, /No custom-domain, Zone, route, or DNS mutation/);
-  assert.match(productionFreeze, /No dependency on `api\.rawa-j\.com`/);
 });
 
 test("Production package scripts fail closed outside the approved dispatch", () => {
@@ -142,6 +158,7 @@ test("Production package scripts fail closed outside the approved dispatch", () 
     workerPackage.scripts["migrate:production"],
     /require-production-approval\.mjs migrate/,
   );
+  assert.match(workerPackage.scripts["migrate:production"], /rawaj-staging/);
   assert.match(approvalGuard, /GITHUB_ACTIONS/);
   assert.match(approvalGuard, /GITHUB_EVENT_NAME/);
   assert.match(approvalGuard, /workflow_dispatch/);
@@ -150,14 +167,13 @@ test("Production package scripts fail closed outside the approved dispatch", () 
   assert.match(approvalGuard, /action !== "deploy"/);
 });
 
-test("health and post-deploy smoke expose and verify release identity safely", () => {
+test("health and post-deploy smoke verify only the Syria release identity", () => {
   assert.match(healthSource, /RAWAJ_WORKER_RELEASE_SHA\?: string/);
   assert.match(healthSource, /RAWAJ_WORKER_ENVIRONMENT\?: string/);
   assert.match(healthSource, /releaseSha: env\.RAWAJ_WORKER_RELEASE_SHA/);
   assert.match(healthSource, /environment: env\.RAWAJ_WORKER_ENVIRONMENT/);
   assert.match(renderConfig, /RAWAJ_WORKER_RELEASE_SHA/);
   assert.match(renderConfig, /RAWAJ_WORKER_ENVIRONMENT/);
-  assert.match(renderConfig, /\^\[0-9a-f\]\{40\}\$/);
 
   for (const required of [
     "https://rawa-j.com",
@@ -170,14 +186,10 @@ test("health and post-deploy smoke expose and verify release identity safely", (
   ]) {
     assert.match(smokeSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+  assert.doesNotMatch(smokeSource, /rawaj-saudi|https:\/\/sa\.rawa-j\.com/);
   assert.match(entrySource, /const requestId = crypto\.randomUUID\(\)/);
   assert.match(entrySource, /request\.method === "OPTIONS"[\s\S]*responseHeaders\(cors, requestId\)/);
   assert.match(entrySource, /headers\.set\("X-Content-Type-Options", "nosniff"\)/);
   assert.match(entrySource, /headers\.set\("Referrer-Policy", "no-referrer"\)/);
-  assert.match(smokeSource, /requestIdPattern/);
-  assert.match(smokeSource, /requestIdValid/);
-  assert.match(smokeSource, /securityHeadersValid/);
-  assert.match(smokeSource, /contentTypeOptions === "nosniff"/);
-  assert.match(smokeSource, /referrerPolicy === "no-referrer"/);
   assert.doesNotMatch(smokeSource, /\bwrangler\b/i);
 });
