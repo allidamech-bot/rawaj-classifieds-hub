@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import "./authenticated-e2e-isolation.test.mjs";
 import "./cloudflare-worker-package-isolation.test.mjs";
+import "./syria-market-isolation.test.mjs";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);

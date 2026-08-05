@@ -48,6 +48,20 @@ test("logout detaches the authenticated device before Firebase sign-out", () => 
   );
 });
 
+test("push-device cleanup failure cannot block Firebase or local sign-out", () => {
+  const signOutStart = auth.indexOf("const signOut = async () =>");
+  const signOutEnd = auth.indexOf("const signInWithPassword", signOutStart);
+  const signOut = auth.slice(signOutStart, signOutEnd);
+
+  assert.notEqual(signOutStart, -1);
+  assert.notEqual(signOutEnd, -1);
+  assert.match(signOut, /try \{\s*const detachResult = await detachNativePushBeforeSignOut\(\)/);
+  assert.match(signOut, /rawaj_push_detach_before_signout_failed/);
+  assert.doesNotMatch(signOut, /return \{ error: detachResult\.error\.message \}/);
+  assert.match(signOut, /clearLocalNativePushState\(\)/);
+  assert.match(signOut, /await firebaseSignOut\(firebaseAuth\)/);
+});
+
 test("Android and account controls are explicit and isolated", () => {
   assert.match(nativePush, /PushNotifications\.checkPermissions\(\)/);
   assert.match(nativePush, /PushNotifications\.createChannel/);

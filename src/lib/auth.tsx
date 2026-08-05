@@ -195,9 +195,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loadRequestIdRef.current += 1;
       profileLoadRef.current = null;
 
-      const detachResult = await detachNativePushBeforeSignOut();
-      if (!detachResult.ok) {
-        return { error: detachResult.error.message };
+      try {
+        const detachResult = await detachNativePushBeforeSignOut();
+        if (!detachResult.ok) {
+          console.warn("rawaj_push_detach_before_signout_failed", {
+            code: detachResult.error.code,
+          });
+        }
+      } catch (error) {
+        console.warn("rawaj_push_detach_before_signout_failed", {
+          code: "unexpected_error",
+          errorName: error instanceof Error ? error.name : "UnknownError",
+        });
       }
 
       const localNotificationCleanup = clearLocalNativePushState();
