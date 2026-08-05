@@ -4,11 +4,13 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
+const expectedMainRelease = "d6fefcecc50e4f9b86a6961896e7f0cd51163374";
 const profile = process.argv[2] ?? "all";
 const allowedProfiles = new Set([
   "all",
   "availability",
   "identity",
+  "current-release",
   "controls",
   "cors-canonical",
   "cors-security",
@@ -80,6 +82,19 @@ const selectors = {
     "reject-random-origin.randomOriginNotAuthorized",
   ],
 };
+
+if (profile === "current-release") {
+  const healthProbe = Array.isArray(report.probes)
+    ? report.probes.find((candidate) => candidate?.name === "health")
+    : null;
+  const liveRelease = healthProbe?.summary?.releaseSha ?? null;
+  const matches = liveRelease === expectedMainRelease;
+  console.log(`Syria Cloudflare live profile current-release: ${matches ? "PASS" : "FAIL"}`);
+  console.log(`EXPECTED_RELEASE=${expectedMainRelease}`);
+  console.log(`LIVE_RELEASE=${liveRelease ?? "missing"}`);
+  if (!matches) process.exit(1);
+  process.exit(0);
+}
 
 const selected = profile === "all" ? Object.values(selectors).flat() : selectors[profile];
 const selectedFailures = [...new Set(selected)].filter((name) => failures.includes(name));
