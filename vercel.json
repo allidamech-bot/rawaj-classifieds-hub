@@ -1,7 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/assert-syria-cloudflare-audit-profile.mjs availability && npm run build",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": true
   },
   "rewrites": [
     {
