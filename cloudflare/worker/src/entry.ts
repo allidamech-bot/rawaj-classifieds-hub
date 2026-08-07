@@ -56,7 +56,10 @@ export default {
     const requestId = crypto.randomUUID();
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: responseHeaders(cors, requestId, request) });
+      return new Response(null, {
+        status: 204,
+        headers: responseHeaders(cors, requestId, request),
+      });
     }
 
     try {
@@ -279,7 +282,10 @@ function responseHeaders(cors: Headers, requestId: string, request: Request): He
   headers.set("X-Frame-Options", "DENY");
   headers.set("Referrer-Policy", "no-referrer");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  headers.set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+  headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  );
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("Cross-Origin-Resource-Policy", "cross-origin");
   if (new URL(request.url).protocol === "https:") {
