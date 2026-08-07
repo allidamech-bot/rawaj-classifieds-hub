@@ -39,7 +39,10 @@ export function logSecurityEvent(input: SecurityEvent): void {
 }
 
 function clean(value: string, maxLength = MAX_FIELD_LENGTH): string {
-  return value.replace(/[\r\n\t]/g, " ").trim().slice(0, maxLength);
+  return value
+    .replace(/[\r\n\t]/g, " ")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function cleanPath(value: string): string {
