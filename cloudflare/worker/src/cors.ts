@@ -20,7 +20,7 @@ export function corsHeadersForOrigin(origin: string | null, env: CorsEnv): Heade
 
   const allowed = new Set<string>(OFFICIAL_ORIGINS);
   for (const configuredOrigin of (env.API_ALLOWED_ORIGINS ?? "").split(",")) {
-    const normalizedOrigin = configuredOrigin.trim();
+    const normalizedOrigin = normalizeConfiguredOrigin(configuredOrigin);
     if (normalizedOrigin) allowed.add(normalizedOrigin);
   }
 
@@ -28,4 +28,20 @@ export function corsHeadersForOrigin(origin: string | null, env: CorsEnv): Heade
     headers.set("Access-Control-Allow-Origin", origin);
   }
   return headers;
+}
+
+function normalizeConfiguredOrigin(value: string): string | null {
+  const candidate = value.trim();
+  if (!candidate || candidate === "*" || candidate === "null") return null;
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    if (parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) {
+      return null;
+    }
+    return parsed.origin;
+  } catch {
+    return null;
+  }
 }
