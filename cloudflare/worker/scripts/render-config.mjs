@@ -12,6 +12,7 @@ const EXPECTED_PRODUCTION_D1_NAME = "rawaj-staging";
 const EXPECTED_PRODUCTION_D1_ID = "d0e6496c-9f63-48d3-beeb-d2e219500f6a";
 const EXPECTED_PRODUCTION_R2_NAME = "rawaj-listing-images-production";
 const EXPECTED_FIREBASE_PROJECT_ID = "project-af18fcaf-c46e-4ec5-93a";
+const EXPECTED_TURNSTILE_HOSTNAMES = "rawa-j.com,www.rawa-j.com";
 const LOCAL_D1_NAME = "rawaj-syria-local";
 const LOCAL_R2_NAME = "rawaj-syria-media-local";
 
@@ -24,6 +25,15 @@ const d1DatabaseId = local
 const d1DatabaseName = local ? LOCAL_D1_NAME : process.env.CLOUDFLARE_D1_DATABASE_NAME?.trim();
 const r2BucketName = local ? LOCAL_R2_NAME : process.env.CLOUDFLARE_R2_BUCKET_NAME?.trim();
 const firebaseProjectId = String(base.vars?.FIREBASE_PROJECT_ID ?? "").trim();
+const turnstileAllowedHostnames = String(base.vars?.TURNSTILE_ALLOWED_HOSTNAMES ?? "").trim();
+const turnstileEnforcement = local
+  ? "off"
+  : (process.env.RAWAJ_TURNSTILE_ENFORCEMENT?.trim().toLowerCase() || "off");
+
+if (!new Set(["off", "enforce"]).has(turnstileEnforcement)) {
+  console.error("Invalid RAWAJ_TURNSTILE_ENFORCEMENT; expected 'off' or 'enforce'.");
+  process.exit(1);
+}
 
 if (!local) {
   const missing = [
@@ -56,6 +66,11 @@ if (!local) {
 
   if (firebaseProjectId !== EXPECTED_FIREBASE_PROJECT_ID) {
     console.error("Refusing production render: Firebase project is not the Syria project.");
+    process.exit(1);
+  }
+
+  if (turnstileAllowedHostnames !== EXPECTED_TURNSTILE_HOSTNAMES) {
+    console.error("Refusing production render: Turnstile hostnames are not Syria-scoped.");
     process.exit(1);
   }
 }
@@ -108,6 +123,8 @@ const generated = {
     RAWAJ_WORKER_RELEASE_SHA: releaseSha,
     RAWAJ_WORKER_ENVIRONMENT: workerEnvironment,
     FIREBASE_PROJECT_ID: firebaseProjectId,
+    TURNSTILE_ENFORCEMENT: turnstileEnforcement,
+    TURNSTILE_ALLOWED_HOSTNAMES: turnstileAllowedHostnames,
   },
   d1_databases: [
     {
