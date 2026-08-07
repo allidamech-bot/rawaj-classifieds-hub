@@ -17,7 +17,10 @@ export async function handleSecuritySummary(
       status: 403,
       reason: "admin_role_required",
     });
-    return json({ error: { code: "permission_denied", message: "Administrative access required." } }, 403);
+    return json(
+      { error: { code: "permission_denied", message: "Administrative access required." } },
+      403,
+    );
   }
 
   const counts24h = await env.DB.prepare(
@@ -38,7 +41,11 @@ export async function handleSecuritySummary(
        FROM audit_logs
       WHERE entity_type = 'admin_security'
         AND julianday(created_at) >= julianday('now', '-7 days')`,
-  ).first<{ total_24h: number | null; total_7d: number | null; network_fingerprints_24h: number | null }>();
+  ).first<{
+    total_24h: number | null;
+    total_7d: number | null;
+    network_fingerprints_24h: number | null;
+  }>();
   const recent = await env.DB.prepare(
     `SELECT action, metadata, created_at
        FROM audit_logs
@@ -57,7 +64,10 @@ export async function handleSecuritySummary(
       status: 500,
       reason: "audit_query_failed",
     });
-    return json({ error: { code: "database_error", message: "Unable to load security summary." } }, 500);
+    return json(
+      { error: { code: "database_error", message: "Unable to load security summary." } },
+      500,
+    );
   }
 
   return json(
@@ -93,9 +103,15 @@ function safeMetadata(value: string): {
     return {
       ...(typeof parsed.requestId === "string" ? { requestId: clean(parsed.requestId, 120) } : {}),
       ...(typeof parsed.method === "string" ? { method: clean(parsed.method, 16) } : {}),
-      ...(typeof parsed.path === "string" ? { path: clean(parsed.path.split("?", 1)[0] ?? "", 180) } : {}),
+      ...(typeof parsed.path === "string"
+        ? { path: clean(parsed.path.split("?", 1)[0] ?? "", 180) }
+        : {}),
       ...(Array.isArray(parsed.roles)
-        ? { roles: parsed.roles.filter((role): role is string => typeof role === "string").slice(0, 8) }
+        ? {
+            roles: parsed.roles
+              .filter((role): role is string => typeof role === "string")
+              .slice(0, 8),
+          }
         : {}),
     };
   } catch {
@@ -108,7 +124,10 @@ function numberValue(value: number | null | undefined): number {
 }
 
 function clean(value: string, maxLength: number): string {
-  return value.replace(/[\r\n\t]/g, " ").trim().slice(0, maxLength);
+  return value
+    .replace(/[\r\n\t]/g, " ")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function json(payload: unknown, status: number): Response {
