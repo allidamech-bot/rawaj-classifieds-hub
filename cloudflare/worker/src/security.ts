@@ -1,5 +1,6 @@
 import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
 import { logSecurityEvent } from "./security-observability";
+import { handleSecuritySummary } from "./security-summary";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
 
 export interface RateLimitBinding {
@@ -91,6 +92,10 @@ export async function enforceRequestSecurity(
 
   const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
   if (adminPerimeter) return adminPerimeter;
+
+  if (request.method === "GET" && path === "/v1/admin/security-summary") {
+    return handleSecuritySummary(request, env, requestId);
+  }
 
   const turnstileAction = protectedTurnstileAction(path, request.method);
   if (turnstileAction) {
