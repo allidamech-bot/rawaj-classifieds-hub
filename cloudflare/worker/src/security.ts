@@ -104,9 +104,7 @@ function isMarketplaceImageUpload(path: string, method: string): boolean {
 }
 
 function isChatAttachmentUpload(path: string, method: string): boolean {
-  return (
-    method.toUpperCase() === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)
-  );
+  return method.toUpperCase() === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path);
 }
 
 function isAbuseProneMutation(path: string, method: string): boolean {
