@@ -55,6 +55,29 @@ jobs:
         continue-on-error: true
         run: npm audit --prefix cloudflare/worker --omit=dev --json
 
+      - name: Generate safe application lockfile remediation
+        run: npm audit fix --package-lock-only --ignore-scripts
+
+      - name: Generate safe Worker toolchain remediation
+        run: npm install --prefix cloudflare/worker --package-lock-only --ignore-scripts --save-dev wrangler@^4.114.0
+
+      - name: Verify remediated application production graph
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify remediated Worker dependency graph
+        run: npm audit --prefix cloudflare/worker --audit-level=high
+
+      - name: Upload dependency remediation files
+        uses: actions/upload-artifact@v4
+        with:
+          name: syria-dependency-remediation
+          if-no-files-found: error
+          path: |
+            package.json
+            package-lock.json
+            cloudflare/worker/package.json
+            cloudflare/worker/package-lock.json
+
       - name: Lint changed source files
         shell: bash
         env:
