@@ -1,4 +1,5 @@
 import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
+import { inspectUploadedImage } from "./image-security";
 import { logSecurityEvent } from "./security-observability";
 import { handleSecuritySummary } from "./security-summary";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
@@ -24,6 +25,8 @@ type LimitDecision = {
 };
 
 const MAX_MARKETPLACE_IMAGE_REQUEST_BYTES = 9 * 1024 * 1024;
+const MAX_MARKETPLACE_IMAGE_BYTES = 8 * 1024 * 1024;
+const MARKETPLACE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function enforceRequestSecurity(
   request: Request,
@@ -90,6 +93,11 @@ export async function enforceRequestSecurity(
     return response;
   }
 
+  if (isMarketplaceImageUpload(path, request.method)) {
+    const imageResponse = await inspectMarketplaceImageRequest(request, requestId, path);
+    if (imageResponse) return imageResponse;
+  }
+
   const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
   if (adminPerimeter) return adminPerimeter;
 
@@ -100,6 +108,91 @@ export async function enforceRequestSecurity(
   const turnstileAction = protectedTurnstileAction(path, request.method);
   if (turnstileAction) {
     return requireTurnstile(request, env, requestId, turnstileAction);
+  }
+
+  return null;
+}
+
+async function inspectMarketplaceImageRequest(
+  request: Request,
+  requestId: string,
+  path: string,
+): Promise<Response | null> {
+  const contentType = request.headers.get("Content-Type")?.toLowerCase() ?? "";
+  if (!contentType.startsWith("multipart/form-data")) return null;
+
+  const form = await request
+    .clone()
+    .formData()
+    .catch(() => null);
+  if (!form) {
+    logSecurityEvent({
+      event: "image_upload_rejected",
+      severity: "warning",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 400,
+      reason: "invalid_multipart",
+    });
+    return securityJson(
+      { error: { code: "invalid_upload", message: "Image upload request is invalid.", requestId } },
+      400,
+    );
+  }
+
+  const file = form.get("file");
+  if (!(file instanceof File) || !MARKETPLACE_IMAGE_TYPES.has(file.type)) return null;
+  if (file.size <= 0 || file.size > MAX_MARKETPLACE_IMAGE_BYTES) {
+    logSecurityEvent({
+      event: "image_upload_rejected",
+      severity: "warning",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 413,
+      reason: "file_size_invalid",
+    });
+    return securityJson(
+      { error: { code: "payload_too_large", message: "Image file is too large.", requestId } },
+      413,
+    );
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const inspection = inspectUploadedImage(bytes, file.type);
+  if (!inspection.ok) {
+    logSecurityEvent({
+      event: "image_upload_rejected",
+      severity: "warning",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 422,
+      reason: inspection.reason,
+    });
+    return securityJson(
+      {
+        error: {
+          code: "invalid_image_structure",
+          message: "Image dimensions or structure are not supported.",
+          requestId,
+        },
+      },
+      422,
+    );
+  }
+
+  if (inspection.data.hasPrivacyMetadata) {
+    logSecurityEvent({
+      event: "image_privacy_metadata_detected",
+      severity: "info",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 200,
+      reason: "metadata_present",
+    });
   }
 
   return null;
