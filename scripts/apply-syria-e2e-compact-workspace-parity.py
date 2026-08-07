@@ -45,6 +45,22 @@ replace_once(
 
 replace_once(
     lifecycle,
+    '      name: /خفض السعر|Drop price/i,',
+    '      name: /خفض|Reduce/i,',
+)
+replace_once(
+    lifecycle,
+    '      name: /تطبيق \\/ تجديد المدة|Apply \\/ renew duration/i,',
+    '      name: /تطبيق|Apply/i,',
+)
+replace_once(
+    lifecycle,
+    'await clickTwiceInSameTick(approvedCard.getByRole("button", { name: /تم البيع|Mark sold/i }));',
+    'await clickTwiceInSameTick(approvedCard.getByRole("button", { name: /تم البيع|Sold|Mark sold/i }));',
+)
+
+replace_once(
+    lifecycle,
     '''    await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await expect(approvedCard.getByLabel(/السعر الجديد|New price/i)).toHaveValue(REDUCED_PRICE, {''',
