@@ -227,7 +227,8 @@ function ManageListingPage() {
     [subcategories, categoryId],
   );
 
-  const isEditable = listing?.status === "draft" || listing?.status === "rejected";
+  const isEditable =
+    listing?.status === "draft" || listing?.status === "rejected" || listing?.status === "approved";
   const isPendingReview = listing?.status === "pending_review";
   const isResubmittable = listing?.status === "draft" || listing?.status === "rejected";
   const isDeletable = Boolean(listing && isOwnerDeletableStatus(listing.status));
@@ -531,6 +532,17 @@ function ManageListingPage() {
     setImages(result.data);
   }, [auth.profile?.id, id]);
 
+  const refreshListingAfterMediaMutation = useCallback(async () => {
+    if (!auth.profile?.id) return null;
+    const result = await fetchOwnerListingDetail(auth.profile.id, id);
+    if (!result.ok) {
+      setUploadError(result.error.message);
+      return null;
+    }
+    setListing(result.data);
+    return result.data;
+  }, [auth.profile?.id, id]);
+
   function captureCurrentFormValues(): EditListingFormValues {
     return {
       categoryId,
@@ -629,10 +641,12 @@ function ManageListingPage() {
       !sameValue(normalizedDynamicAttributes, initialDynamicValuesRef.current);
     const patch = buildChangedListingPatch(initialSnapshot, captured, contentFlags);
     const hasChangedFields = Object.keys(patch).length > 0;
+    const needsApprovedDraftTransition =
+      listing.status === "approved" && (hasChangedFields || taxonomyChanged || attributesChanged);
     let savedListing = listing;
     let completeness: ListingAttributeCompleteness | undefined;
 
-    if (hasChangedFields) {
+    if (hasChangedFields || needsApprovedDraftTransition) {
       const updateResult = await updateOwnerListing(auth.profile?.id ?? null, listing.id, patch);
       if (!updateResult.ok) return { ok: false, message: updateResult.error.message };
       savedListing = updateResult.data;
@@ -971,31 +985,31 @@ function ManageListingPage() {
 
   function handleImageSelection(files: FileList | null) {
     const nextFiles = Array.from(files ?? []);
-    setSelectedImages((current) => {
-      const capacity = Math.max(0, MAX_IMAGES - images.length - current.length);
-      const existing = new Set(current.map((entry) => fileFingerprint(entry.file)));
-      const unique = nextFiles
-        .filter(
-          (file, index, files) =>
-            !existing.has(fileFingerprint(file)) &&
-            files.findIndex((item) => fileFingerprint(item) === fileFingerprint(file)) === index,
-        )
-        .slice(0, capacity)
-        .map((file) => ({
-          id: `${fileFingerprint(file)}-${crypto.randomUUID()}`,
-          file,
-          state: "pending" as const,
-          url: URL.createObjectURL(file),
-        }));
-      const next = [...current, ...unique];
-      selectedImagesRef.current = next;
-      return next;
-    });
-    if (images.length + selectedImagesRef.current.length + nextFiles.length > MAX_IMAGES) {
+    const current = selectedImagesRef.current;
+    const capacity = Math.max(0, MAX_IMAGES - imagesRef.current.length - current.length);
+    const existing = new Set(current.map((entry) => fileFingerprint(entry.file)));
+    const unique = nextFiles
+      .filter(
+        (file, index, files) =>
+          !existing.has(fileFingerprint(file)) &&
+          files.findIndex((item) => fileFingerprint(item) === fileFingerprint(file)) === index,
+      )
+      .slice(0, capacity)
+      .map((file) => ({
+        id: `${fileFingerprint(file)}-${crypto.randomUUID()}`,
+        file,
+        state: "pending" as const,
+        url: URL.createObjectURL(file),
+      }));
+    const next = [...current, ...unique];
+    selectedImagesRef.current = next;
+    setSelectedImages(next);
+    if (imagesRef.current.length + current.length + nextFiles.length > MAX_IMAGES) {
       setUploadError(text("الحد الأقصى 6 صور للإعلان.", "A listing can have up to 6 photos."));
     } else {
       setUploadError(null);
     }
+    if (unique.length > 0) queueMicrotask(() => void handleUploadImages());
   }
 
   function removeSelectedImage(entryId: string) {
@@ -1062,10 +1076,16 @@ function ManageListingPage() {
     const remaining = selectedImagesRef.current.filter((item) => item.id !== entryId);
     selectedImagesRef.current = remaining;
     setSelectedImages(remaining);
+    await refreshListingAfterMediaMutation();
   }
 
   async function retrySelectedImage(entryId: string) {
-    await uploadSelectedImage(entryId);
+    const retryEntries = selectedImagesRef.current.map((item) =>
+      item.id === entryId ? { ...item, state: "pending" as const, error: undefined } : item,
+    );
+    selectedImagesRef.current = retryEntries;
+    setSelectedImages(retryEntries);
+    await handleUploadImages();
   }
 
   async function handleUploadImages() {
@@ -1074,7 +1094,8 @@ function ManageListingPage() {
     setUploading(true);
     setUploadError(null);
     try {
-      for (const entry of [...selectedImagesRef.current]) {
+      const pendingEntries = selectedImagesRef.current.filter((entry) => entry.state === "pending");
+      for (const entry of pendingEntries) {
         await uploadSelectedImage(entry.id);
       }
     } catch (error) {
@@ -1121,6 +1142,7 @@ function ManageListingPage() {
       }
       imagesRef.current = result.data;
       setImages(result.data);
+      await refreshListingAfterMediaMutation();
     } catch (error) {
       imagesRef.current = previous;
       setImages(previous);
@@ -1151,6 +1173,7 @@ function ManageListingPage() {
         const nextImages = imagesRef.current.filter((item) => item.id !== image.id);
         imagesRef.current = nextImages;
         setImages(nextImages);
+        await refreshListingAfterMediaMutation();
       } catch (error) {
         setUploadError(
           error instanceof Error
@@ -1246,6 +1269,17 @@ function ManageListingPage() {
               {text(
                 "هذا الإعلان قيد المراجعة ولا يمكن تعديله الآن. بعد قرار الإدارة سيظهر للعامة عند الموافقة، أو يمكنك تعديل سبب الرفض ثم إعادة إرساله إذا رُفض.",
                 "This listing is under review and cannot be edited now. After the admin decision it will become public if approved, or you can address the rejection and resubmit if rejected.",
+              )}
+            </ListingStudioMessage>
+          </div>
+        )}
+
+        {listing.status === "approved" && (
+          <div className="mb-4">
+            <ListingStudioMessage tone="warning">
+              {text(
+                "عند حفظ أي تعديل أو تغيير صورة، سيتحول الإعلان إلى مسودة خاصة ويختفي مؤقتاً من الموقع. بعد الانتهاء اضغط «إعادة إرسال للمراجعة» ليعود للنشر بعد موافقة الإدارة.",
+                "Saving any change or modifying a photo moves this listing to a private draft and temporarily removes it from the public site. When finished, choose “Resubmit for review” so it can be published again after approval.",
               )}
             </ListingStudioMessage>
           </div>
@@ -1722,7 +1756,7 @@ function ManageListingPage() {
                           ) : null}
                           {index === 0 && preview.state === "pending" ? (
                             <p className="mt-1 font-bold text-gold">
-                              {text("ستظهر أولاً بعد الرفع", "Will appear first after upload")}
+                              {text("سيتم رفعها تلقائياً", "Uploading automatically")}
                             </p>
                           ) : null}
                         </div>
@@ -1807,7 +1841,7 @@ function ManageListingPage() {
                   <div className="space-y-1.5">
                     <button
                       type="button"
-                      disabled={saving}
+                      disabled={saving || uploading || selectedImages.length > 0}
                       onClick={handleSave}
                       className="w-full rounded-[1rem] bg-emerald-trust px-3 py-3 text-xs font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
                     >
@@ -1827,7 +1861,7 @@ function ManageListingPage() {
                   <div className="space-y-1.5">
                     <button
                       type="button"
-                      disabled={resubmitting}
+                      disabled={resubmitting || uploading || selectedImages.length > 0}
                       onClick={handleResubmit}
                       className="rawaj-button-primary w-full rounded-[1rem] px-3 py-3 disabled:opacity-50"
                     >

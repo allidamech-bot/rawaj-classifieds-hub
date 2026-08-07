@@ -267,7 +267,7 @@ export async function uploadListingImage({
     return permissionFailure("لا يمكنك رفع صور لإعلان لا تملكه.");
   }
   if (!isEditableImageStatus(listing.status)) {
-    return permissionFailure("لا يمكن تعديل صور إعلان بعد اعتماده.");
+    return permissionFailure("لا يمكن تعديل صور الإعلان في حالته الحالية.");
   }
 
   const validation = validateImageFile(file);
@@ -403,7 +403,7 @@ function permissionFailure<T>(message: string): ClassifiedsResult<T> {
 }
 
 function isEditableImageStatus(status: ClassifiedListing["status"]): boolean {
-  return status === "draft" || status === "rejected";
+  return status === "draft" || status === "rejected" || status === "approved";
 }
 
 function text(value: unknown, fallback = ""): string {

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Camera, Info, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, CheckCircle2, Info, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   ListingStudioAutosaveStatus,
@@ -234,6 +234,7 @@ function AddListingPage() {
   const normalizedPrice = normalizeNumericInput(price);
   const canContinue = true;
   const canSubmit = step === 3;
+  const submissionSucceeded = draftListing?.status === "pending_review";
   const quality = useMemo(
     () =>
       calculateListingQuality({
@@ -1677,6 +1678,48 @@ function AddListingPage() {
           "Your account is suspended or disabled. Contact support.",
         )}
       />
+    );
+  }
+
+  if (submissionSucceeded && createdListingId) {
+    return (
+      <>
+        <PageHeader title={text("تم إرسال الإعلان", "Listing submitted")} />
+        <main className="container-wide mobile-page-bottom pb-10 pt-6 sm:pt-10">
+          <section className="mx-auto max-w-2xl rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-soft sm:p-10">
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-500/12 text-emerald-600">
+              <CheckCircle2 className="h-11 w-11" aria-hidden="true" />
+            </div>
+            <p className="mt-5 text-xs font-bold text-emerald-600">
+              {text("تمت الخطوة الرابعة بنجاح", "Step four completed successfully")}
+            </p>
+            <h1 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
+              {text("تم إرسال إعلانك للمراجعة بنجاح", "Your listing was submitted for review")}
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
+              {text(
+                "سنراجع الإعلان، وسيظهر للعامة بعد موافقة الإدارة. يمكنك متابعة حالته من صفحة إعلاناتي.",
+                "We will review the listing, and it will become public after admin approval. You can track its status from My listings.",
+              )}
+            </p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <Link
+                to="/profile/listings/$id"
+                params={{ id: createdListingId }}
+                className="rawaj-button-primary min-h-12 justify-center rounded-2xl px-5 py-3"
+              >
+                {text("إدارة الإعلان", "Manage listing")}
+              </Link>
+              <Link
+                to="/profile/listings"
+                className="rawaj-chip min-h-12 justify-center rounded-2xl px-5 py-3 font-bold"
+              >
+                {text("إعلاناتي", "My listings")}
+              </Link>
+            </div>
+          </section>
+        </main>
+      </>
     );
   }
 

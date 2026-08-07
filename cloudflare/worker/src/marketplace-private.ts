@@ -560,7 +560,7 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
     .bind(id)
     .first<{ owner_id: string; status: string; updated_at: string }>();
   if (!existing || existing.owner_id !== auth.userId) return forbidden(cors);
-  if (!["draft", "rejected"].includes(existing.status)) {
+  if (!["draft", "rejected", "approved"].includes(existing.status)) {
     return json(
       { error: { code: "invalid_transition", message: "Listing cannot be edited." } },
       409,
@@ -580,7 +580,11 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
     const submissionError = await validateListingSubmission(env, cors, id, input);
     if (submissionError) return submissionError;
   }
-  const status = input.submit ? "pending_review" : existing.status;
+  const status = input.submit
+    ? "pending_review"
+    : existing.status === "approved"
+      ? "draft"
+      : existing.status;
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE listings SET category_id = ?, subcategory_id = ?, governorate_id = ?,
@@ -672,7 +676,7 @@ async function uploadImage(
     .bind(listingId)
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
-  if (!["draft", "rejected"].includes(listing.status)) return forbidden(cors);
+  if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
     return json(
       { error: { code: "unsupported_media_type", message: "Multipart form required." } },
@@ -743,7 +747,16 @@ async function uploadImage(
   const sortOrder = count?.count ?? 0;
   const altAr = clean(form.get("altAr"), 200);
   const timestamp = now();
+  const listingTransition =
+    listing.status === "approved"
+      ? [
+          env.DB.prepare(
+            "UPDATE listings SET status = 'draft', updated_at = ? WHERE id = ? AND owner_id = ? AND status = 'approved'",
+          ).bind(timestamp, listingId, auth.userId),
+        ]
+      : [];
   const results = await env.DB.batch([
+    ...listingTransition,
     env.DB.prepare(
       `INSERT INTO media_assets (id, owner_id, object_key, content_type, byte_size,
         checksum_sha256, etag, status, created_at, updated_at)
@@ -835,7 +848,7 @@ async function reorderImages(
     .bind(listingId)
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
-  if (!["draft", "rejected"].includes(listing.status)) return forbidden(cors);
+  if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);
   const body = await readJson(request);
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const imageIds = Array.isArray(body.data.imageIds)
