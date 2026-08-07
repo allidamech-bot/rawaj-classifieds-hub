@@ -76,7 +76,7 @@ export function OwnerStoreWorkspaceSummary({
   ] as const;
 
   return (
-    <section className="rawaj-owner-workspace-summary" aria-labelledby="rawaj-owner-workspace-title">
+    <section className="rawaj-owner-workspace-summary rawaj-owner-workspace-summary--compact" aria-labelledby="rawaj-owner-workspace-title">
       <div className="rawaj-owner-workspace-summary__identity">
         <div className="rawaj-owner-workspace-summary__avatar">
           {showAvatar ? (
@@ -126,17 +126,17 @@ export function OwnerStoreWorkspaceSummary({
       </div>
 
       <div className="rawaj-owner-workspace-summary__actions">
-        <Link to="/add-listing" data-tone="primary">
+        <Link to="/add-listing" data-tone="primary" aria-label={text("إضافة إعلان", "Post listing")} title={text("إضافة إعلان", "Post listing")}>
           <Plus aria-hidden="true" />
-          {text("إضافة إعلان", "Post listing")}
+          <span className="sr-only">{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/seller/$id" params={{ id: sellerId }}>
+        <Link to="/seller/$id" params={{ id: sellerId }} aria-label={text("عرض المتجر العام", "View public store")} title={text("عرض المتجر العام", "View public store")}>
           <Eye aria-hidden="true" />
-          {text("عرض المتجر العام", "View public store")}
+          <span className="sr-only">{text("عرض المتجر العام", "View public store")}</span>
         </Link>
-        <Link to="/profile">
+        <Link to="/profile" aria-label={text("تعديل الهوية", "Edit identity")} title={text("تعديل الهوية", "Edit identity")}>
           <Pencil aria-hidden="true" />
-          {text("تعديل الهوية", "Edit identity")}
+          <span className="sr-only">{text("تعديل الهوية", "Edit identity")}</span>
         </Link>
       </div>
     </section>
