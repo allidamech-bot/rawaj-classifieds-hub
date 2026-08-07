@@ -22,6 +22,28 @@ jobs:
           node-version: 22
           cache: npm
       - run: python3 scripts/apply-syria-owner-compact-parity.py
+      - name: Preserve Syria metric transparency
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/profile/listings.tsx')
+          source = path.read_text()
+          old_ar = 'الأرقام تراكمية لكل الإعلانات المتتبعة.'
+          new_ar = 'الأرقام تراكمية لكل الإعلانات المتتبعة. المشاهدات المسجلة لا تشمل الزوار غير المسجلين.'
+          old_en = 'Metrics are lifetime totals for all tracked listings.'
+          new_en = 'Metrics are lifetime totals for all tracked listings. Recorded views do not include signed-out visitors.'
+          old_window_ar = ' يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`'
+          new_window_ar = ' يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل. المشاهدات المسجلة لا تشمل الزوار غير المسجلين.`'
+          old_window_en = ' days, not event-by-event history.`'
+          new_window_en = ' days, not event-by-event history. Recorded views do not include signed-out visitors.`'
+          if old_ar not in source or old_en not in source or old_window_ar not in source or old_window_en not in source:
+              raise SystemExit('missing metric transparency anchor')
+          source = source.replace(old_ar, new_ar, 1)
+          source = source.replace(old_en, new_en, 1)
+          source = source.replace(old_window_ar, new_window_ar, 1)
+          source = source.replace(old_window_en, new_window_en, 1)
+          path.write_text(source)
+          PY
       - run: npm ci
       - run: npx prettier --write src/routes/profile/listings.tsx
       - run: npm run typecheck
@@ -41,6 +63,7 @@ jobs:
           grep -Fq 'aria-expanded={managementOpen}' src/routes/profile/listings.tsx
           grep -Fq 'scopeNote={text(' src/routes/profile/listings.tsx
           grep -Fq 'const visibleMetrics = metrics.filter((metric) => metric.value > 0);' src/routes/profile/listings.tsx
+          grep -Fq 'المشاهدات المسجلة لا تشمل الزوار غير المسجلين' src/routes/profile/listings.tsx
       - name: Reject Saudi runtime identity
         run: |
           if grep -nE 'sa\.rawa-j\.com|rawaj-saudi|SAUDI_|Saudi Arabia|السعودية|\bSAR\b' src/routes/profile/listings.tsx; then
