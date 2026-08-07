@@ -37,7 +37,13 @@ function normalizeConfiguredOrigin(value: string): string | null {
   try {
     const parsed = new URL(candidate);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
-    if (parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    if (
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== "/" ||
+      parsed.search ||
+      parsed.hash
+    ) {
       return null;
     }
     return parsed.origin;
