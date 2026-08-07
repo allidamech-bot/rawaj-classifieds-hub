@@ -2,9 +2,9 @@
 name: Apply Syria Saudi UI parity bundle
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/syria-match-saudi-owner-listings
+      - main
     paths:
       - .github/workflows/apply-syria-saudi-ui-parity.yml
 
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   apply:
-    if: contains(github.event.head_commit.message, '[sync-saudi-ui-to-syria]')
+    if: github.head_ref == 'feat/syria-match-saudi-owner-listings'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
