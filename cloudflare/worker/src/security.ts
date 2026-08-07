@@ -1,7 +1,4 @@
-import {
-  enforceAdminSecurityPerimeter,
-  type AdminSecurityEnv,
-} from "./admin-security";
+import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
 
 export interface RateLimitBinding {
