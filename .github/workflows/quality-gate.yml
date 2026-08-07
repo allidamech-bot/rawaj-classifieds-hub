@@ -39,6 +39,14 @@ jobs:
       - name: Install Worker dependencies
         run: npm ci --prefix cloudflare/worker --ignore-scripts
 
+      - name: Report application dependency advisories
+        continue-on-error: true
+        run: npm audit --json
+
+      - name: Report Worker dependency advisories
+        continue-on-error: true
+        run: npm audit --prefix cloudflare/worker --json
+
       - name: Lint changed source files
         shell: bash
         env:
