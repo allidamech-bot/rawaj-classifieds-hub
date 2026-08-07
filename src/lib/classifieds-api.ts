@@ -11,7 +11,11 @@ export * from "@/lib/api/listings";
 export { fetchListingDetailGuarded as fetchListingDetail } from "@/lib/api/listing-detail-read-guarded";
 export { fetchListingImages } from "@/lib/api/listing-images-read-guarded";
 export { fetchOwnerListingDetail } from "@/lib/api/listing-owner-read-guarded";
-export { createOwnerDraftListing } from "@/lib/api/listing-draft-create-guarded";
+export {
+  createOwnerDraftCopyRequestId,
+  createOwnerDraftListing,
+  createOwnerDraftListingCopy,
+} from "@/lib/api/listing-draft-create-guarded";
 export { completeOwnerDraftCreationFlow } from "@/lib/api/listing-draft-creation-flow";
 export {
   submitOwnerListingForReview,
