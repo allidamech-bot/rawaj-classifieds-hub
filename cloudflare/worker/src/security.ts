@@ -1,10 +1,14 @@
+import {
+  enforceAdminSecurityPerimeter,
+  type AdminSecurityEnv,
+} from "./admin-security";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
 
 export interface RateLimitBinding {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
-export interface SecurityEnv extends TurnstileEnv {
+export interface SecurityEnv extends TurnstileEnv, AdminSecurityEnv {
   RATE_LIMIT_PUBLIC: RateLimitBinding;
   RATE_LIMIT_WRITE: RateLimitBinding;
   RATE_LIMIT_ABUSE: RateLimitBinding;
@@ -76,6 +80,9 @@ export async function enforceRequestSecurity(
     response.headers.set("Retry-After", "60");
     return response;
   }
+
+  const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
+  if (adminPerimeter) return adminPerimeter;
 
   const turnstileAction = protectedTurnstileAction(path, request.method);
   if (turnstileAction) {
