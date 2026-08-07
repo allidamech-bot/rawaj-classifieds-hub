@@ -153,7 +153,8 @@ async function recordAdminSecurityEvent(
   roles: string[],
   action: string,
 ): Promise<void> {
-  const status = action === "admin_auth_required" || action === "admin_recent_auth_required" ? 401 : 403;
+  const status =
+    action === "admin_auth_required" || action === "admin_recent_auth_required" ? 401 : 403;
   logSecurityEvent({
     event: action,
     severity: action === "admin_role_denied" ? "critical" : "warning",
