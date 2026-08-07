@@ -22,6 +22,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: python3 scripts/apply-syria-listing-editor-parity.py
+      - name: Align Syria review status
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/add-listing.tsx')
+          source = path.read_text()
+          old = 'draftListing?.status === "pending"'
+          if old not in source:
+              raise SystemExit('missing Saudi pending status anchor')
+          path.write_text(source.replace(old, 'draftListing?.status === "pending_review"', 1))
+          PY
       - run: npm ci
       - run: npx prettier --write 'src/routes/profile/listings.$id.tsx' src/routes/add-listing.tsx src/lib/api/listings.ts cloudflare/worker/src/marketplace-private.ts
       - run: npm run typecheck
