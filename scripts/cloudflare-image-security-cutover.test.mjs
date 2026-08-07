@@ -50,7 +50,9 @@ test("privacy-bearing metadata is removed losslessly before marketplace handlers
   assert.match(security, /image_privacy_metadata_stripped/);
   assert.match(security, /metadata_sanitization_failed/);
   assert.match(security, /rebuildImageUploadRequest/);
-  assert.match(security, /new File\(\[sanitizedBytes\]/);
+  assert.match(security, /const sanitizedBuffer = sanitizedBytes\.buffer\.slice/);
+  assert.match(security, /new File\(\[sanitizedBuffer\]/);
+  assert.match(security, /form\.forEach\(\(value, key\)/);
   assert.doesNotMatch(security, /EXIF payload|GPS|metadataValue|metadataContent/);
 });
 
