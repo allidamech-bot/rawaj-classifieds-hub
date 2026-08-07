@@ -1,4 +1,5 @@
 import { authenticate, type AuthEnv } from "./auth";
+import { logSecurityEvent } from "./security-observability";
 
 export interface AdminSecurityEnv extends AuthEnv {
   ADMIN_SECURITY_ENFORCEMENT?: string;
@@ -152,6 +153,17 @@ async function recordAdminSecurityEvent(
   roles: string[],
   action: string,
 ): Promise<void> {
+  const status = action === "admin_auth_required" || action === "admin_recent_auth_required" ? 401 : 403;
+  logSecurityEvent({
+    event: action,
+    severity: action === "admin_role_denied" ? "critical" : "warning",
+    requestId,
+    method: request.method,
+    pathname: normalizedPath,
+    status,
+    reason: action,
+  });
+
   try {
     const ip = request.headers.get("CF-Connecting-IP")?.trim() ?? "";
     const userAgent = request.headers.get("User-Agent")?.trim() ?? "";
@@ -177,12 +189,26 @@ async function recordAdminSecurityEvent(
       )
       .run();
     if (!result.success) {
-      console.warn(
-        JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }),
-      );
+      logSecurityEvent({
+        event: "admin_security_audit_write_failed",
+        severity: "critical",
+        requestId,
+        method: request.method,
+        pathname: normalizedPath,
+        status: 500,
+        reason: action,
+      });
     }
   } catch {
-    console.warn(JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }));
+    logSecurityEvent({
+      event: "admin_security_audit_write_failed",
+      severity: "critical",
+      requestId,
+      method: request.method,
+      pathname: normalizedPath,
+      status: 500,
+      reason: action,
+    });
   }
 }
 
