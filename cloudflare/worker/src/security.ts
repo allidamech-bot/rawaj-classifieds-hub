@@ -251,17 +251,21 @@ function rebuildImageUploadRequest(
   sanitizedBytes: Uint8Array,
 ): Request {
   const sanitizedForm = new FormData();
-  const replacement = new File([sanitizedBytes], sanitizedFileName(originalFile.type), {
+  const sanitizedBuffer = sanitizedBytes.buffer.slice(
+    sanitizedBytes.byteOffset,
+    sanitizedBytes.byteOffset + sanitizedBytes.byteLength,
+  ) as ArrayBuffer;
+  const replacement = new File([sanitizedBuffer], sanitizedFileName(originalFile.type), {
     type: originalFile.type,
   });
 
-  for (const [key, value] of form.entries()) {
+  form.forEach((value, key) => {
     if (key === "file" && value === originalFile) {
       sanitizedForm.append(key, replacement);
     } else {
       sanitizedForm.append(key, value);
     }
-  }
+  });
 
   const headers = new Headers(request.headers);
   headers.delete("Content-Type");
