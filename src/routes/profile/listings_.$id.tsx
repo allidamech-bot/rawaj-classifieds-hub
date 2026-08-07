@@ -119,7 +119,7 @@ function fileFingerprint(file: File) {
   return `${file.name}:${file.size}:${file.lastModified}`;
 }
 
-export const Route = createFileRoute("/profile/listings/$id")({
+export const Route = createFileRoute("/profile/listings_/$id")({
   head: () => ({
     meta: [{ title: "تعديل الإعلان | رَوَاج" }, { name: "robots", content: "noindex, nofollow" }],
   }),

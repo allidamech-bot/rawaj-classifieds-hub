@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { FilePenLine, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -108,13 +107,12 @@ export function DraftRecoveryBanner() {
 
             {draft && (
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link
-                  to="/profile/listings/$id"
-                  params={{ id: draft.listing.id }}
+                <a
+                  href={`/profile/listings/${encodeURIComponent(draft.listing.id)}`}
                   className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
                 >
                   {text("متابعة المسودة", "Resume draft")}
-                </Link>
+                </a>
                 <button
                   type="button"
                   disabled={deleting}

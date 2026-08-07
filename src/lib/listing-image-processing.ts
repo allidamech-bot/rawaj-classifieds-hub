@@ -48,6 +48,26 @@ export async function detectListingImageMimeType(file: Blob): Promise<ListingIma
   return null;
 }
 
+export function normalizeListingImageFileMetadata(
+  file: File,
+  detectedType: ListingImageMimeType,
+): File {
+  const extension = extensionForMimeType(detectedType);
+  const currentExtension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const extensionMatches =
+    detectedType === "image/jpeg"
+      ? currentExtension === "jpg" || currentExtension === "jpeg"
+      : currentExtension === extension;
+
+  if (file.type === detectedType && extensionMatches) return file;
+
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "listing-image";
+  return new File([file], `${baseName}.${extension}`, {
+    type: detectedType,
+    lastModified: file.lastModified,
+  });
+}
+
 export async function readListingImageDimensions(
   file: Blob,
   detectedType?: ListingImageMimeType,
@@ -81,17 +101,11 @@ export async function validateListingImageContent(
     };
   }
 
-  if (file.type !== detectedType) {
-    return {
-      ok: false,
-      detectedType,
-      error: "نوع الصورة الحقيقي لا يطابق نوع الملف المعلن.",
-    };
-  }
+  const normalizedFile = normalizeListingImageFileMetadata(file, detectedType);
 
   let dimensions: ListingImageDimensions | null;
   try {
-    dimensions = await readListingImageDimensions(file, detectedType);
+    dimensions = await readListingImageDimensions(normalizedFile, detectedType);
   } catch {
     dimensions = null;
   }
@@ -120,7 +134,7 @@ export async function validateListingImageContent(
   if (typeof createImageBitmap === "function") {
     let bitmap: ImageBitmap | null = null;
     try {
-      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      bitmap = await createImageBitmap(normalizedFile, { imageOrientation: "from-image" });
       if (bitmap.width <= 0 || bitmap.height <= 0) {
         return {
           ok: false,
@@ -139,44 +153,96 @@ export async function validateListingImageContent(
     } finally {
       bitmap?.close();
     }
+  } else if (canUseImageElementDecoder()) {
+    let objectUrl: string | null = null;
+    try {
+      const loaded = await loadListingImageElement(normalizedFile);
+      objectUrl = loaded.objectUrl;
+      if (loaded.image.naturalWidth <= 0 || loaded.image.naturalHeight <= 0) {
+        return {
+          ok: false,
+          detectedType,
+          dimensions,
+          error: "أبعاد الصورة غير صالحة.",
+        };
+      }
+    } catch {
+      return {
+        ok: false,
+        detectedType,
+        dimensions,
+        error: "ملف الصورة تالف أو يتعذر فك ترميزه.",
+      };
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }
   }
 
   return { ok: true, detectedType, dimensions };
 }
 
 export async function prepareListingImageForUpload(file: File): Promise<File> {
-  if (
-    typeof document === "undefined" ||
-    typeof createImageBitmap !== "function" ||
-    !file.type.startsWith("image/")
-  ) {
+  let detectedType: ListingImageMimeType | null = null;
+  try {
+    detectedType = await detectListingImageMimeType(file);
+  } catch {
     return file;
   }
+  if (!detectedType) return file;
+
+  const normalizedFile = normalizeListingImageFileMetadata(file, detectedType);
+  if (typeof document === "undefined") return normalizedFile;
 
   let bitmap: ImageBitmap | null = null;
+  let image: HTMLImageElement | null = null;
+  let objectUrl: string | null = null;
+
   try {
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    const dimensions = fitListingImageDimensions(bitmap.width, bitmap.height);
+    let source: CanvasImageSource;
+    let sourceWidth: number;
+    let sourceHeight: number;
+
+    if (typeof createImageBitmap === "function") {
+      bitmap = await createImageBitmap(normalizedFile, { imageOrientation: "from-image" });
+      source = bitmap;
+      sourceWidth = bitmap.width;
+      sourceHeight = bitmap.height;
+    } else if (canUseImageElementDecoder()) {
+      const loaded = await loadListingImageElement(normalizedFile);
+      image = loaded.image;
+      objectUrl = loaded.objectUrl;
+      source = image;
+      sourceWidth = image.naturalWidth;
+      sourceHeight = image.naturalHeight;
+    } else {
+      return normalizedFile;
+    }
+
+    const dimensions = fitListingImageDimensions(sourceWidth, sourceHeight);
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;
 
     const context = canvas.getContext("2d", { alpha: true });
-    if (!context) return file;
+    if (!context) return normalizedFile;
 
-    context.drawImage(bitmap, 0, 0, dimensions.width, dimensions.height);
+    context.drawImage(source, 0, 0, dimensions.width, dimensions.height);
     const blob = await canvasToBlob(canvas, "image/webp", LISTING_IMAGE_QUALITY);
-    if (!blob || blob.size === 0) return file;
+    if (!blob || blob.size === 0) return normalizedFile;
 
-    const baseName = file.name.replace(/\.[^.]+$/, "") || "listing-image";
-    return new File([blob], `${baseName}.webp`, {
-      type: "image/webp",
+    const outputType = await detectListingImageMimeType(blob);
+    if (!outputType) return normalizedFile;
+
+    const baseName = normalizedFile.name.replace(/\.[^.]+$/, "") || "listing-image";
+    return new File([blob], `${baseName}.${extensionForMimeType(outputType)}`, {
+      type: outputType,
       lastModified: Date.now(),
     });
   } catch {
-    return file;
+    return normalizedFile;
   } finally {
     bitmap?.close();
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
   }
 }
 
@@ -264,6 +330,37 @@ function validDimensions(width: number, height: number): ListingImageDimensions 
   return Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0
     ? { width, height }
     : null;
+}
+
+function extensionForMimeType(type: ListingImageMimeType): "jpg" | "png" | "webp" {
+  if (type === "image/jpeg") return "jpg";
+  if (type === "image/png") return "png";
+  return "webp";
+}
+
+function canUseImageElementDecoder(): boolean {
+  return (
+    typeof document !== "undefined" &&
+    typeof URL !== "undefined" &&
+    typeof URL.createObjectURL === "function"
+  );
+}
+
+function loadListingImageElement(
+  file: File,
+): Promise<{ image: HTMLImageElement; objectUrl: string }> {
+  const objectUrl = URL.createObjectURL(file);
+  const image = document.createElement("img");
+  image.decoding = "async";
+
+  return new Promise((resolve, reject) => {
+    image.onload = () => resolve({ image, objectUrl });
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("image_decode_failed"));
+    };
+    image.src = objectUrl;
+  });
 }
 
 function readUint24Le(bytes: Uint8Array, offset: number): number {
