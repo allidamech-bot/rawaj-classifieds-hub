@@ -103,7 +103,7 @@ test.describe("authenticated launch-critical journey", () => {
       timeout: 45_000,
     });
 
-    await page.getByRole("button", { name: /^(Manage listing|إدارة الإعلان)$/ }).click();
+    await page.getByRole("link", { name: /^(Manage listing|إدارة الإعلان)$/ }).click();
     await expect(page).toHaveURL(/\/profile\/listings\/e2e-owner-listing-\d+/, {
       timeout: 20_000,
     });

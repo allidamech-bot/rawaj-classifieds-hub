@@ -94,6 +94,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     );
     await expect(listingPerformance.locator('[data-owner-metric="unread"]')).toContainText("2");
 
+    await openListingManagement(approvedCard);
     const markReservedButton = approvedCard.getByRole("button", {
       name: /وضع محجوز|Mark reserved/i,
     });
@@ -107,6 +108,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
+    await openListingManagement(approvedCard);
     await expect(
       approvedCard.getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
     ).toBeVisible({ timeout: 30_000 });
@@ -125,7 +127,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     const priceInput = approvedCard.getByLabel(/السعر الجديد|New price/i);
     await priceInput.fill(REDUCED_PRICE);
     const dropPriceButton = approvedCard.getByRole("button", {
-      name: /خفض السعر|Drop price/i,
+      name: /خفض|Reduce/i,
     });
     await clickTwiceInSameTick(dropPriceButton);
     await expectActionCount(lifecycleActions, "reduce_price", 1);
@@ -134,7 +136,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await approvedCard.getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i).selectOption("90");
     const applyExpiryButton = approvedCard.getByRole("button", {
-      name: /تطبيق \/ تجديد المدة|Apply \/ renew duration/i,
+      name: /تطبيق|Apply/i,
     });
     await clickTwiceInSameTick(applyExpiryButton);
     await expectActionCount(lifecycleActions, "set_expiry", 1);
@@ -142,6 +144,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
+    await openListingManagement(approvedCard);
     await expect(approvedCard.getByLabel(/السعر الجديد|New price/i)).toHaveValue(REDUCED_PRICE, {
       timeout: 30_000,
     });
@@ -152,7 +155,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       approvedCard.getByRole("button", { name: /وضع محجوز|Mark reserved/i }),
     ).toBeVisible();
 
-    await clickTwiceInSameTick(approvedCard.getByRole("button", { name: /تم البيع|Mark sold/i }));
+    await clickTwiceInSameTick(
+      approvedCard.getByRole("button", { name: /تم البيع|Sold|Mark sold/i }),
+    );
     const soldDialog = page.getByRole("dialog", {
       name: /تأكيد إغلاق الإعلان كمباع|Mark this listing as sold/i,
     });
@@ -166,6 +171,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await openOwnerTab(page, "closed");
     let closedCard = ownerCard(page, APPROVED_TITLE);
     await expect(closedCard).toBeVisible({ timeout: 30_000 });
+    await openListingManagement(closedCard);
     await expect(
       closedCard.getByRole("button", {
         name: /إعادة التفعيل للمراجعة|Reactivate for review/i,
@@ -175,6 +181,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await reloadCurrentPage(page);
     closedCard = ownerCard(page, APPROVED_TITLE);
     await expect(closedCard).toBeVisible({ timeout: 30_000 });
+    await openListingManagement(closedCard);
     await clickTwiceInSameTick(
       closedCard.getByRole("button", {
         name: /إعادة التفعيل للمراجعة|Reactivate for review/i,
@@ -200,6 +207,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await openOwnerTab(page, "needs_edit");
     const draftCard = ownerCard(page, DRAFT_TITLE);
     await expect(draftCard).toBeVisible({ timeout: 30_000 });
+    await openListingManagement(draftCard);
     await clickTwiceInSameTick(
       draftCard.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
@@ -244,6 +252,17 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
 function ownerCard(page: Page, title: string): Locator {
   return page.locator("article.rawaj-owner-listing-card").filter({ hasText: title }).first();
+}
+
+async function openListingManagement(card: Locator): Promise<void> {
+  const manageButton = card.getByRole("button", {
+    name: /إدارة الإعلان|Manage listing/i,
+  });
+  await expect(manageButton).toBeVisible({ timeout: 30_000 });
+  if ((await manageButton.getAttribute("aria-expanded")) !== "true") {
+    await manageButton.click();
+  }
+  await expect(manageButton).toHaveAttribute("aria-expanded", "true");
 }
 
 async function openOwnerTab(

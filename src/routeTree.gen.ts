@@ -54,7 +54,7 @@ import { Route as AdminDataQualityRouteImport } from './routes/admin.data-qualit
 import { Route as AdminCampaignsRouteImport } from './routes/admin.campaigns'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAdPlacementsRouteImport } from './routes/admin.ad-placements'
-import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings.$id'
+import { Route as ProfileListingsIdRouteImport } from './routes/profile/listings_.$id'
 
 const VerificationRoute = VerificationRouteImport.update({
   id: '/verification',
@@ -282,9 +282,9 @@ const AdminAdPlacementsRoute = AdminAdPlacementsRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const ProfileListingsIdRoute = ProfileListingsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ProfileListingsRoute,
+  id: '/listings_/$id',
+  path: '/listings/$id',
+  getParentRoute: () => ProfileRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -328,7 +328,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
-  '/profile/listings': typeof ProfileListingsRouteWithChildren
+  '/profile/listings': typeof ProfileListingsRoute
   '/seller/$id': typeof SellerIdRoute
   '/syria/$slug': typeof SyriaSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -374,7 +374,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
-  '/profile/listings': typeof ProfileListingsRouteWithChildren
+  '/profile/listings': typeof ProfileListingsRoute
   '/seller/$id': typeof SellerIdRoute
   '/syria/$slug': typeof SyriaSlugRoute
   '/admin': typeof AdminIndexRoute
@@ -423,12 +423,12 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/category/$slug': typeof CategorySlugRoute
   '/listings/$id': typeof ListingsIdRoute
-  '/profile/listings': typeof ProfileListingsRouteWithChildren
+  '/profile/listings': typeof ProfileListingsRoute
   '/seller/$id': typeof SellerIdRoute
   '/syria/$slug': typeof SyriaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/listings/': typeof ListingsIndexRoute
-  '/profile/listings/$id': typeof ProfileListingsIdRoute
+  '/profile/listings_/$id': typeof ProfileListingsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -572,7 +572,7 @@ export interface FileRouteTypes {
     | '/syria/$slug'
     | '/admin/'
     | '/listings/'
-    | '/profile/listings/$id'
+    | '/profile/listings_/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -922,12 +922,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdPlacementsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/profile/listings/$id': {
-      id: '/profile/listings/$id'
-      path: '/$id'
+    '/profile/listings_/$id': {
+      id: '/profile/listings_/$id'
+      path: '/listings/$id'
       fullPath: '/profile/listings/$id'
       preLoaderRoute: typeof ProfileListingsIdRouteImport
-      parentRoute: typeof ProfileListingsRoute
+      parentRoute: typeof ProfileRoute
     }
   }
 }
@@ -984,24 +984,14 @@ const ListingsRouteWithChildren = ListingsRoute._addFileChildren(
   ListingsRouteChildren,
 )
 
-interface ProfileListingsRouteChildren {
+interface ProfileRouteChildren {
+  ProfileListingsRoute: typeof ProfileListingsRoute
   ProfileListingsIdRoute: typeof ProfileListingsIdRoute
 }
 
-const ProfileListingsRouteChildren: ProfileListingsRouteChildren = {
-  ProfileListingsIdRoute: ProfileListingsIdRoute,
-}
-
-const ProfileListingsRouteWithChildren = ProfileListingsRoute._addFileChildren(
-  ProfileListingsRouteChildren,
-)
-
-interface ProfileRouteChildren {
-  ProfileListingsRoute: typeof ProfileListingsRouteWithChildren
-}
-
 const ProfileRouteChildren: ProfileRouteChildren = {
-  ProfileListingsRoute: ProfileListingsRouteWithChildren,
+  ProfileListingsRoute: ProfileListingsRoute,
+  ProfileListingsIdRoute: ProfileListingsIdRoute,
 }
 
 const ProfileRouteWithChildren =

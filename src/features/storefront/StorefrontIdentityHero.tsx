@@ -10,7 +10,7 @@ import {
   Store,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
 import { OwnerStoreWorkspaceSummary } from "@/features/storefront/OwnerStoreWorkspaceSummary";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -271,7 +271,29 @@ export function StorefrontNotice({
         <h3>{title}</h3>
         <p>{description}</p>
       </div>
-      {action ? <div>{action}</div> : null}
+      {action ? (
+        <div onClickCapture={tone === "draft" ? handleDraftResumeNavigation : undefined}>
+          {action}
+        </div>
+      ) : null}
     </section>
   );
+}
+
+function handleDraftResumeNavigation(event: ReactMouseEvent<HTMLDivElement>) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+
+  const anchor = target.closest("a[href]");
+  if (!(anchor instanceof HTMLAnchorElement)) return;
+
+  const destination = new URL(anchor.href, window.location.href);
+  const isOwnerListingEditor =
+    destination.origin === window.location.origin &&
+    /^\/profile\/listings\/[^/]+\/?$/.test(destination.pathname);
+  if (!isOwnerListingEditor) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+  window.location.assign(destination.href);
 }
