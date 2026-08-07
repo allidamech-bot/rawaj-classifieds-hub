@@ -776,52 +776,53 @@ function OwnerPerformanceOverview({
         </span>
       </button>
 
-      {expanded ? (
-        <div className="border-t border-border/60 px-4 pb-4 pt-3">
-          <div className="grid grid-flow-col auto-cols-fr gap-2">
-            {visibleMetrics.map((metric) => (
-              <div
-                key={metric.key}
-                data-owner-summary-metric={metric.key}
-                className="rounded-xl bg-card/80 p-2 text-center hairline"
-              >
-                <div className="mx-auto flex w-fit items-center text-primary">{metric.icon}</div>
-                <p className="mt-1 text-base font-extrabold text-foreground">
-                  {formatOwnerMetric(metric.value)}
-                </p>
-                <p className="truncate text-[9px] font-semibold text-muted-foreground">
-                  {metric.label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
-          {summary.trackedListings === 0 ? (
-            <p className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">
-              {text(
-                "ستظهر بيانات الأداء بعد اعتماد أول إعلان وبدء التفاعل معه.",
-                "Performance data appears after your first approved listing receives activity.",
-              )}
-            </p>
-          ) : summary.expiringSoon > 0 ? (
-            <p className="mt-3 flex items-center gap-2 rounded-xl bg-warning/10 p-3 text-[11px] font-bold text-foreground">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
-              {text(
-                "لديك " + formatOwnerMetric(summary.expiringSoon) + " إعلان ينتهي خلال 7 أيام.",
-                formatOwnerMetric(summary.expiringSoon) + " listing(s) expire within 7 days.",
-              )}
-            </p>
-          ) : (
-            <p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-semibold text-foreground">
-              <CircleCheckBig className="h-4 w-4 shrink-0 text-emerald-trust" />
-              {text(
-                "لا توجد إعلانات تنتهي خلال الأيام السبعة القادمة.",
-                "No listings expire within the next seven days.",
-              )}
-            </p>
-          )}
+      <div
+        aria-hidden={!expanded}
+        className={expanded ? "border-t border-border/60 px-4 pb-4 pt-3" : "sr-only"}
+      >
+        <div className="grid grid-flow-col auto-cols-fr gap-2">
+          {visibleMetrics.map((metric) => (
+            <div
+              key={metric.key}
+              data-owner-summary-metric={metric.key}
+              className="rounded-xl bg-card/80 p-2 text-center hairline"
+            >
+              <div className="mx-auto flex w-fit items-center text-primary">{metric.icon}</div>
+              <p className="mt-1 text-base font-extrabold text-foreground">
+                {formatOwnerMetric(metric.value)}
+              </p>
+              <p className="truncate text-[9px] font-semibold text-muted-foreground">
+                {metric.label}
+              </p>
+            </div>
+          ))}
         </div>
-      ) : null}
+        <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
+        {summary.trackedListings === 0 ? (
+          <p className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">
+            {text(
+              "ستظهر بيانات الأداء بعد اعتماد أول إعلان وبدء التفاعل معه.",
+              "Performance data appears after your first approved listing receives activity.",
+            )}
+          </p>
+        ) : summary.expiringSoon > 0 ? (
+          <p className="mt-3 flex items-center gap-2 rounded-xl bg-warning/10 p-3 text-[11px] font-bold text-foreground">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+            {text(
+              "لديك " + formatOwnerMetric(summary.expiringSoon) + " إعلان ينتهي خلال 7 أيام.",
+              formatOwnerMetric(summary.expiringSoon) + " listing(s) expire within 7 days.",
+            )}
+          </p>
+        ) : (
+          <p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-semibold text-foreground">
+            <CircleCheckBig className="h-4 w-4 shrink-0 text-emerald-trust" />
+            {text(
+              "لا توجد إعلانات تنتهي خلال الأيام السبعة القادمة.",
+              "No listings expire within the next seven days.",
+            )}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

@@ -1686,7 +1686,13 @@ function AddListingPage() {
       <>
         <PageHeader title={text("تم إرسال الإعلان", "Listing submitted")} />
         <main className="container-wide mobile-page-bottom pb-10 pt-6 sm:pt-10">
-          <section className="mx-auto max-w-2xl rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-soft sm:p-10">
+          <section
+            role="status"
+            className="rawaj-studio-success mx-auto max-w-2xl rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-soft sm:p-10"
+          >
+            <span className="sr-only">
+              {text("تم إرسال الإعلان للمراجعة", "Listing sent for review")}
+            </span>
             <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-500/12 text-emerald-600">
               <CheckCircle2 className="h-11 w-11" aria-hidden="true" />
             </div>
