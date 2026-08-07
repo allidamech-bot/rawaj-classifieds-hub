@@ -21,6 +21,7 @@ import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
 import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-taxonomy-review";
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
 import { corsHeadersForOrigin } from "./cors";
+import { enforceRequestSecurity, type SecurityEnv } from "./security";
 
 type EntryEnv = PublicCoreEnv &
   PublicListingsEnv &
@@ -43,7 +44,8 @@ type EntryEnv = PublicCoreEnv &
   AdminCampaignsEnv &
   AdminSafetyEnv &
   AdminTaxonomyReviewEnv &
-  AdminDataQualityEnv & {
+  AdminDataQualityEnv &
+  SecurityEnv & {
     API_ALLOWED_ORIGINS?: string;
   };
 
@@ -54,12 +56,20 @@ export default {
     const requestId = crypto.randomUUID();
 
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: responseHeaders(cors, requestId) });
+      return new Response(null, {
+        status: 204,
+        headers: responseHeaders(cors, requestId, request),
+      });
     }
 
     try {
+      const securityResponse = await enforceRequestSecurity(request, env, requestId);
+      if (securityResponse) {
+        return withCors(securityResponse, responseHeaders(cors, requestId, request));
+      }
+
       const response = await routeRequest(request, env);
-      return withCors(response, responseHeaders(cors, requestId));
+      return withCors(response, responseHeaders(cors, requestId, request));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
       console.error(
@@ -73,7 +83,7 @@ export default {
         }),
       );
 
-      const headers = responseHeaders(cors, requestId);
+      const headers = responseHeaders(cors, requestId, request);
       headers.set("Content-Type", "application/json; charset=utf-8");
       headers.set("Cache-Control", "no-store");
 
@@ -265,11 +275,22 @@ function required(response: Response | null): Response {
   );
 }
 
-function responseHeaders(cors: Headers, requestId: string): Headers {
+function responseHeaders(cors: Headers, requestId: string, request: Request): Headers {
   const headers = new Headers(cors);
   headers.set("X-Request-Id", requestId);
   headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "DENY");
   headers.set("Referrer-Policy", "no-referrer");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  headers.set(
+    "Content-Security-Policy",
+    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  );
+  headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+  if (new URL(request.url).protocol === "https:") {
+    headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
   return headers;
 }
 
