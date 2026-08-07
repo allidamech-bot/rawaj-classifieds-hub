@@ -1,3 +1,5 @@
+import { logSecurityEvent } from "./security-observability";
+
 export interface TurnstileEnv {
   TURNSTILE_ENFORCEMENT?: string;
   TURNSTILE_SECRET_KEY?: string;
@@ -27,24 +29,35 @@ export async function requireTurnstile(
 ): Promise<Response | null> {
   if (!isTurnstileEnforced(env)) return null;
 
+  const pathname = new URL(request.url).pathname;
   const secret = env.TURNSTILE_SECRET_KEY?.trim();
   const allowedHostnames = configuredHostnames(env);
   if (!secret || allowedHostnames.size === 0) {
-    console.error(
-      JSON.stringify({
-        event: "turnstile_configuration_missing",
-        requestId,
-        pathname: new URL(request.url).pathname,
-        expectedAction,
-        secretConfigured: Boolean(secret),
-        hostnameCount: allowedHostnames.size,
-      }),
-    );
+    logSecurityEvent({
+      event: "turnstile_configuration_missing",
+      severity: "critical",
+      requestId,
+      method: request.method,
+      pathname,
+      status: 503,
+      reason: !secret ? "secret_missing" : "hostname_allowlist_missing",
+      action: expectedAction,
+    });
     return errorResponse("turnstile_unavailable", "تعذر تشغيل التحقق الأمني حالياً.", 503);
   }
 
   const token = await readToken(request);
   if (!token) {
+    logSecurityEvent({
+      event: "turnstile_token_required",
+      severity: "warning",
+      requestId,
+      method: request.method,
+      pathname,
+      status: 403,
+      reason: "token_missing_or_invalid",
+      action: expectedAction,
+    });
     return errorResponse("turnstile_required", "أكمل التحقق الأمني ثم حاول مرة أخرى.", 403);
   }
 
@@ -64,14 +77,16 @@ export async function requireTurnstile(
     });
 
     if (!response.ok) {
-      console.warn(
-        JSON.stringify({
-          event: "turnstile_siteverify_http_error",
-          requestId,
-          status: response.status,
-          expectedAction,
-        }),
-      );
+      logSecurityEvent({
+        event: "turnstile_siteverify_http_error",
+        severity: "critical",
+        requestId,
+        method: request.method,
+        pathname,
+        status: response.status,
+        reason: "siteverify_http_error",
+        action: expectedAction,
+      });
       return errorResponse("turnstile_unavailable", "تعذر إكمال التحقق الأمني. حاول مجدداً.", 503);
     }
 
@@ -81,31 +96,36 @@ export async function requireTurnstile(
     const actionAllowed = result?.action === expectedAction;
 
     if (!result?.success || !hostnameAllowed || !actionAllowed) {
-      console.warn(
-        JSON.stringify({
-          event: "turnstile_validation_failed",
-          requestId,
-          expectedAction,
-          hostname: hostname || null,
-          action: result?.action ?? null,
-          errorCodes: result?.["error-codes"] ?? [],
-          hostnameAllowed,
-          actionAllowed,
-        }),
-      );
+      const reason = !result?.success
+        ? "siteverify_rejected"
+        : !hostnameAllowed
+          ? "hostname_mismatch"
+          : "action_mismatch";
+      logSecurityEvent({
+        event: "turnstile_validation_failed",
+        severity: "warning",
+        requestId,
+        method: request.method,
+        pathname,
+        status: 403,
+        reason,
+        action: expectedAction,
+      });
       return errorResponse("turnstile_failed", "فشل التحقق الأمني. أعد المحاولة.", 403);
     }
 
     return null;
   } catch (error) {
-    console.warn(
-      JSON.stringify({
-        event: "turnstile_siteverify_unavailable",
-        requestId,
-        expectedAction,
-        errorName: error instanceof Error ? error.name : "UnknownError",
-      }),
-    );
+    logSecurityEvent({
+      event: "turnstile_siteverify_unavailable",
+      severity: "critical",
+      requestId,
+      method: request.method,
+      pathname,
+      status: 503,
+      reason: error instanceof Error ? error.name : "UnknownError",
+      action: expectedAction,
+    });
     return errorResponse("turnstile_unavailable", "تعذر إكمال التحقق الأمني. حاول مجدداً.", 503);
   } finally {
     clearTimeout(timeout);

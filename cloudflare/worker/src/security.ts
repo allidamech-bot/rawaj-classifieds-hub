@@ -1,4 +1,6 @@
 import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
+import { logSecurityEvent } from "./security-observability";
+import { handleSecuritySummary } from "./security-summary";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
 
 export interface RateLimitBinding {
@@ -36,6 +38,15 @@ export async function enforceRequestSecurity(
   if (isMarketplaceImageUpload(path, request.method)) {
     const contentLength = readContentLength(request);
     if (contentLength !== null && contentLength > MAX_MARKETPLACE_IMAGE_REQUEST_BYTES) {
+      logSecurityEvent({
+        event: "upload_request_rejected",
+        severity: "warning",
+        requestId,
+        method: request.method,
+        pathname: path,
+        status: 413,
+        reason: "payload_too_large",
+      });
       return securityJson(
         {
           error: {
@@ -54,15 +65,16 @@ export async function enforceRequestSecurity(
   const key = `${decision.className}:${decision.scope}:${actor}`;
   const { success } = await decision.binding.limit({ key });
   if (!success) {
-    console.warn(
-      JSON.stringify({
-        event: "worker_rate_limited",
-        requestId,
-        method: request.method,
-        pathname: path,
-        limitClass: decision.className,
-      }),
-    );
+    logSecurityEvent({
+      event: "worker_rate_limited",
+      severity: decision.className === "admin" ? "critical" : "warning",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 429,
+      reason: "rate_limit_exceeded",
+      limitClass: decision.className,
+    });
 
     const response = securityJson(
       {
@@ -80,6 +92,10 @@ export async function enforceRequestSecurity(
 
   const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
   if (adminPerimeter) return adminPerimeter;
+
+  if (request.method === "GET" && path === "/v1/admin/security-summary") {
+    return handleSecuritySummary(request, env, requestId);
+  }
 
   const turnstileAction = protectedTurnstileAction(path, request.method);
   if (turnstileAction) {
