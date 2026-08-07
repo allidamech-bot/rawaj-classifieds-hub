@@ -12,7 +12,10 @@ export type ImageInspectionResult =
 export const MAX_IMAGE_DIMENSION = 8_000;
 export const MAX_IMAGE_PIXELS = 40_000_000;
 
-export function inspectUploadedImage(bytes: Uint8Array, contentType: string): ImageInspectionResult {
+export function inspectUploadedImage(
+  bytes: Uint8Array,
+  contentType: string,
+): ImageInspectionResult {
   const parsed =
     contentType === "image/jpeg"
       ? inspectJpeg(bytes)
@@ -100,11 +103,7 @@ function inspectJpeg(bytes: Uint8Array): ParsedImage | null {
 }
 
 function inspectWebp(bytes: Uint8Array): ParsedImage | null {
-  if (
-    bytes.length < 20 ||
-    ascii(bytes, 0, 4) !== "RIFF" ||
-    ascii(bytes, 8, 4) !== "WEBP"
-  ) {
+  if (bytes.length < 20 || ascii(bytes, 0, 4) !== "RIFF" || ascii(bytes, 8, 4) !== "WEBP") {
     return null;
   }
   const declaredSize = readUint32Le(bytes, 4);
