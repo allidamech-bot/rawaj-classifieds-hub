@@ -25,7 +25,15 @@ export async function enforceAdminSecurityPerimeter(
 
   const auth = await authenticate(request, env);
   if (!auth) {
-    await recordAdminSecurityEvent(request, env, requestId, normalizedPath, null, [], "admin_auth_required");
+    await recordAdminSecurityEvent(
+      request,
+      env,
+      requestId,
+      normalizedPath,
+      null,
+      [],
+      "admin_auth_required",
+    );
     return denied("auth_required", "Authentication required.", 401, requestId);
   }
 
@@ -56,7 +64,12 @@ export async function enforceAdminSecurityPerimeter(
       staffRoles,
       "admin_mfa_required",
     );
-    return denied("admin_mfa_required", "Multi-factor authentication is required for administration.", 403, requestId);
+    return denied(
+      "admin_mfa_required",
+      "Multi-factor authentication is required for administration.",
+      403,
+      requestId,
+    );
   }
 
   const maxAgeSeconds = configuredMaxAuthAgeSeconds(env);
@@ -164,10 +177,14 @@ async function recordAdminSecurityEvent(
       )
       .run();
     if (!result.success) {
-      console.warn(JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }));
+      console.warn(
+        JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }),
+      );
     }
   } catch {
-    console.warn(JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }));
+    console.warn(
+      JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }),
+    );
   }
 }
 
