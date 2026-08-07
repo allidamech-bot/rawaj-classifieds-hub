@@ -5,12 +5,15 @@ import {
   BellRing,
   BookmarkCheck,
   CircleCheckBig,
+  CheckSquare,
   Clock3,
+  Copy,
   Eye,
   Heart,
   MessageCircle,
   Pencil,
   Plus,
+  Square,
   Star,
   Trash2,
   TrendingUp,
@@ -24,8 +27,19 @@ import {
   StorefrontNotice,
 } from "@/features/storefront/StorefrontIdentityHero";
 import {
+  filterAndSortOwnerListings,
+  filterOwnerPerformanceWindow,
+  OwnerBulkActionBar,
+  OwnerListingsToolbar,
+  OwnerWorkspaceInsights,
+  type OwnerListingSort,
+  type OwnerPerformanceWindow,
+} from "@/features/storefront/OwnerListingsWorkspaceTools";
+import {
   closeOwnerListing,
   confirmOwnerListingAvailability,
+  createOwnerDraftCopyRequestId,
+  createOwnerDraftListingCopy,
   deleteOwnerListing,
   fetchCurrentUserListings,
   fetchPublicSellerProfile,
@@ -60,6 +74,8 @@ export const Route = createFileRoute("/profile/listings")({
 
 type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";
 
+const OWNER_LISTINGS_PAGE_SIZE = 12;
+
 type LifecycleConfirmation =
   { action: "close"; targetStatus: OwnerCloseListingStatus } | { action: "reactivate" };
 
@@ -82,6 +98,17 @@ function MyListingsPage() {
   const [sellerHasLoaded, setSellerHasLoaded] = useState(false);
   const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);
   const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
+  const [listingSearch, setListingSearch] = useState("");
+  const [listingSort, setListingSort] = useState<OwnerListingSort>("updated_desc");
+  const [performanceWindow, setPerformanceWindow] = useState<OwnerPerformanceWindow>("all");
+  const [visibleCount, setVisibleCount] = useState(OWNER_LISTINGS_PAGE_SIZE);
+  const [selectedListingIds, setSelectedListingIds] = useState<Set<string>>(() => new Set());
+  const [bulkExpiryOption, setBulkExpiryOption] = useState<ListingExpiryOption>(30);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState("");
+  const [workspaceMessage, setWorkspaceMessage] = useState("");
+  const [duplicatingListingId, setDuplicatingListingId] = useState<string | null>(null);
+  const duplicateRequestIdsRef = useRef<Map<string, string>>(new Map());
   const listingsRequestIdRef = useRef(0);
   const sellerRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
@@ -91,6 +118,23 @@ function MyListingsPage() {
   useEffect(() => {
     if (search.tab) setActiveTab(search.tab);
   }, [search.tab]);
+
+  useEffect(() => {
+    setVisibleCount(OWNER_LISTINGS_PAGE_SIZE);
+    setSelectedListingIds(new Set());
+    setBulkFeedback("");
+  }, [activeTab, listingSearch, listingSort]);
+
+  useEffect(() => {
+    setSelectedListingIds((current) => {
+      const validIds = new Set(
+        listings
+          .filter((listing) => listing.status === "approved" && current.has(listing.id))
+          .map((listing) => listing.id),
+      );
+      return validIds.size === current.size ? current : validIds;
+    });
+  }, [listings]);
 
   const loadListings = useCallback(async () => {
     if (!profileId) return;
@@ -219,7 +263,140 @@ function MyListingsPage() {
         .sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))[0] ?? null,
     [listings],
   );
-  const performanceSummary = useMemo(() => summarizeOwnerListingPerformance(listings), [listings]);
+  const performanceListings = useMemo(
+    () => filterOwnerPerformanceWindow(listings, performanceWindow),
+    [listings, performanceWindow],
+  );
+  const performanceSummary = useMemo(
+    () => summarizeOwnerListingPerformance(performanceListings),
+    [performanceListings],
+  );
+  const tabListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
+  const filteredListings = useMemo(
+    () => filterAndSortOwnerListings(tabListings, listingSearch, listingSort),
+    [tabListings, listingSearch, listingSort],
+  );
+  const visibleListings = filteredListings.slice(0, visibleCount);
+  const hasMoreListings = visibleCount < filteredListings.length;
+  const visibleApprovedIds = visibleListings
+    .filter((listing) => listing.status === "approved")
+    .map((listing) => listing.id);
+  const allVisibleApprovedSelected =
+    visibleApprovedIds.length > 0 && visibleApprovedIds.every((id) => selectedListingIds.has(id));
+  const selectedApprovedListings = listings.filter(
+    (listing) => listing.status === "approved" && selectedListingIds.has(listing.id),
+  );
+
+  function handleSelectionChange(listingId: string, selected: boolean) {
+    setSelectedListingIds((current) => {
+      const next = new Set(current);
+      if (selected) next.add(listingId);
+      else next.delete(listingId);
+      return next;
+    });
+  }
+
+  function toggleVisibleApprovedSelection() {
+    setSelectedListingIds((current) => {
+      const next = new Set(current);
+      if (allVisibleApprovedSelected) visibleApprovedIds.forEach((id) => next.delete(id));
+      else visibleApprovedIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  async function handleDuplicateListing(listing: ClassifiedListing) {
+    if (!profileId || duplicatingListingId) return;
+    setDuplicatingListingId(listing.id);
+    setWorkspaceMessage("");
+    try {
+      const requestId =
+        duplicateRequestIdsRef.current.get(listing.id) ?? createOwnerDraftCopyRequestId();
+      duplicateRequestIdsRef.current.set(listing.id, requestId);
+      const result = await createOwnerDraftListingCopy(
+        profileId,
+        {
+          categoryId: listing.categoryId,
+          subcategoryId: listing.subcategoryId,
+          governorateId: listing.governorateId,
+          title: `${listing.title} ${text("نسخة", "copy")}`.slice(0, 120),
+          description: listing.description,
+          price: listing.price,
+          priceType: listing.priceType,
+          condition: listing.condition,
+          districtAr: listing.locationNodeId ? `@${listing.locationNodeId}` : listing.districtAr,
+          contactName: listing.contactName,
+          contactOptions: { ...listing.contactOptions },
+          details: { ...listing.details },
+        },
+        requestId,
+      );
+      if (!result.ok) {
+        setWorkspaceMessage(result.error.message);
+        return;
+      }
+      duplicateRequestIdsRef.current.delete(listing.id);
+      setListings((current) => [
+        result.data,
+        ...current.filter((item) => item.id !== result.data.id),
+      ]);
+      setActiveTab("needs_edit");
+      setListingSearch("");
+      setWorkspaceMessage(
+        text(
+          "تم إنشاء نسخة كمسودة بدون الصور. افتحها لإضافة الصور ومراجعة البيانات.",
+          "A draft copy was created without images. Open it to add images and review the details.",
+        ),
+      );
+    } catch (caught) {
+      setWorkspaceMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر نسخ الإعلان.", "Could not duplicate the listing."),
+      );
+    } finally {
+      setDuplicatingListingId(null);
+    }
+  }
+
+  async function runBulkAction(action: "renew" | "availability") {
+    if (!profileId || bulkBusy || selectedApprovedListings.length === 0) return;
+    setBulkBusy(true);
+    setBulkFeedback("");
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const listing of selectedApprovedListings) {
+      try {
+        const result =
+          action === "renew"
+            ? await setOwnerListingExpiry(profileId, listing.id, bulkExpiryOption)
+            : await confirmOwnerListingAvailability(profileId, listing.id);
+        if (result.ok) {
+          successCount += 1;
+          handleListingChanged(profileId, result.data);
+        } else failures.push(result.error.message);
+      } catch (caught) {
+        failures.push(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تنفيذ الإجراء.", "Could not complete the action."),
+        );
+      }
+    }
+    setSelectedListingIds(new Set());
+    setBulkFeedback(
+      failures.length === 0
+        ? text(
+            `تم تحديث ${successCount} إعلان بنجاح.`,
+            `${successCount} listing(s) updated successfully.`,
+          )
+        : text(
+            `تم تحديث ${successCount} إعلان، وتعذر تحديث ${failures.length}.`,
+            `${successCount} updated; ${failures.length} failed.`,
+          ),
+    );
+    setBulkBusy(false);
+  }
 
   if (auth.status !== "signedIn") {
     return (
@@ -238,7 +415,6 @@ function MyListingsPage() {
     );
   }
 
-  const visibleListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
   const displayName =
     auth.profile?.businessName ||
     auth.profile?.displayName ||
@@ -291,9 +467,11 @@ function MyListingsPage() {
           />
         ) : null}
 
+        <OwnerWorkspaceInsights listings={listings} onTabChange={(tab) => setActiveTab(tab)} />
+
         <OwnerPerformanceOverview summary={performanceSummary} />
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="rawaj-owner-workspace-sticky">
           <div
             className="rawaj-storefront-owner-tabs"
             role="group"
@@ -331,11 +509,44 @@ function MyListingsPage() {
               onClick={() => setActiveTab("reviews")}
             />
           </div>
-          <Link to="/add-listing" className="rawaj-button-primary min-h-11 rounded-[1rem] px-4">
-            <Plus className="h-4 w-4" />
-            {text("إضافة إعلان", "Post listing")}
-          </Link>
+          {activeTab !== "reviews" ? (
+            <OwnerListingsToolbar
+              query={listingSearch}
+              onQueryChange={setListingSearch}
+              sort={listingSort}
+              onSortChange={setListingSort}
+              performanceWindow={performanceWindow}
+              onPerformanceWindowChange={setPerformanceWindow}
+              totalCount={filteredListings.length}
+              shownCount={visibleListings.length}
+              canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
+              selectedCount={selectedApprovedListings.length}
+              allVisibleSelected={allVisibleApprovedSelected}
+              onToggleVisibleSelection={toggleVisibleApprovedSelection}
+            />
+          ) : null}
+          {activeTab === "approved" ? (
+            <OwnerBulkActionBar
+              selectedCount={selectedApprovedListings.length}
+              expiryOption={bulkExpiryOption}
+              busy={bulkBusy}
+              feedback={bulkFeedback}
+              onExpiryOptionChange={setBulkExpiryOption}
+              onRenew={() => void runBulkAction("renew")}
+              onConfirmAvailability={() => void runBulkAction("availability")}
+              onClear={() => {
+                setSelectedListingIds(new Set());
+                setBulkFeedback("");
+              }}
+            />
+          ) : null}
         </div>
+
+        {workspaceMessage ? (
+          <p role="status" className="rawaj-owner-workspace-feedback">
+            {workspaceMessage}
+          </p>
+        ) : null}
 
         {sellerError && activeTab !== "reviews" ? (
           <StorefrontNotice
@@ -396,7 +607,7 @@ function MyListingsPage() {
                 }
               />
             ) : null}
-            {visibleListings.length === 0 ? (
+            {filteredListings.length === 0 ? (
               <Panel
                 title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
                 body={text(
@@ -405,18 +616,35 @@ function MyListingsPage() {
                 )}
               />
             ) : (
-              <div className="rawaj-storefront-owner-grid">
-                {visibleListings.map((listing) => (
-                  <StoreListingCard
-                    key={`${profileId ?? "signed-out"}:${listing.id}`}
-                    listing={listing}
-                    language={language}
-                    userId={profileId}
-                    onDeleted={handleListingDeleted}
-                    onChanged={handleListingChanged}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="rawaj-storefront-owner-grid">
+                  {visibleListings.map((listing) => (
+                    <StoreListingCard
+                      key={`${profileId ?? "signed-out"}:${listing.id}`}
+                      listing={listing}
+                      language={language}
+                      userId={profileId}
+                      selected={selectedListingIds.has(listing.id)}
+                      selectable={activeTab === "approved" && listing.status === "approved"}
+                      duplicating={duplicatingListingId === listing.id}
+                      onSelectionChange={handleSelectionChange}
+                      onDuplicate={handleDuplicateListing}
+                      onDeleted={handleListingDeleted}
+                      onChanged={handleListingChanged}
+                    />
+                  ))}
+                </div>
+                {hasMoreListings ? (
+                  <button
+                    type="button"
+                    className="rawaj-owner-load-more"
+                    onClick={() => setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)}
+                  >
+                    {text("عرض المزيد", "Load more")} · {visibleListings.length}/
+                    {filteredListings.length}
+                  </button>
+                ) : null}
+              </>
             )}
           </>
         )}
@@ -775,12 +1003,22 @@ function StoreListingCard({
   listing,
   language,
   userId,
+  selected,
+  selectable,
+  duplicating,
+  onSelectionChange,
+  onDuplicate,
   onDeleted,
   onChanged,
 }: {
   listing: ClassifiedListing;
   language: Language;
   userId: string | null;
+  selected: boolean;
+  selectable: boolean;
+  duplicating: boolean;
+  onSelectionChange: (listingId: string, selected: boolean) => void;
+  onDuplicate: (listing: ClassifiedListing) => Promise<void>;
   onDeleted: (profileId: string | null, id: string) => void;
   onChanged: (profileId: string | null, listing: ClassifiedListing) => void;
 }) {
@@ -1038,6 +1276,27 @@ function StoreListingCard({
           <span className="rawaj-status-ribbon" data-status={listing.status}>
             {listingStatusLabel(listing.status, language)}
           </span>
+          {selectable ? (
+            <button
+              type="button"
+              aria-pressed={selected}
+              aria-label={
+                selected
+                  ? text("إلغاء تحديد الإعلان", "Unselect listing")
+                  : text("تحديد الإعلان", "Select listing")
+              }
+              title={
+                selected
+                  ? text("إلغاء التحديد", "Unselect")
+                  : text("تحديد للإجراءات الجماعية", "Select for bulk actions")
+              }
+              onClick={() => onSelectionChange(listing.id, !selected)}
+              className="rawaj-owner-listing-select"
+              data-selected={selected}
+            >
+              {selected ? <CheckSquare aria-hidden="true" /> : <Square aria-hidden="true" />}
+            </button>
+          ) : null}
           <ListingCardImage
             src={listing.primaryImageUrl}
             alt={listing.title}
@@ -1210,6 +1469,17 @@ function StoreListingCard({
                 {lockedMessage}
               </span>
             )}
+            <button
+              type="button"
+              disabled={duplicating}
+              onClick={() => void onDuplicate(listing)}
+              aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
+              title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
+              className="inline-flex items-center gap-1 rounded-lg bg-muted-surface px-2 py-1 text-[10px] font-bold transition hover:bg-secondary disabled:opacity-50"
+            >
+              <Copy className={`h-3 w-3 ${duplicating ? "animate-pulse" : ""}`} />
+              {text("نسخ", "Duplicate")}
+            </button>
             {canManageReservation ? (
               <button
                 type="button"

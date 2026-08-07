@@ -76,7 +76,10 @@ export function OwnerStoreWorkspaceSummary({
   ] as const;
 
   return (
-    <section className="rawaj-owner-workspace-summary rawaj-owner-workspace-summary--compact" aria-labelledby="rawaj-owner-workspace-title">
+    <section
+      className="rawaj-owner-workspace-summary rawaj-owner-workspace-summary--compact"
+      aria-labelledby="rawaj-owner-workspace-title"
+    >
       <div className="rawaj-owner-workspace-summary__identity">
         <div className="rawaj-owner-workspace-summary__avatar">
           {showAvatar ? (
@@ -107,7 +110,9 @@ export function OwnerStoreWorkspaceSummary({
               </span>
             ) : null}
           </div>
-          {secondaryName && secondaryName !== displayName ? <strong dir="auto">{secondaryName}</strong> : null}
+          {secondaryName && secondaryName !== displayName ? (
+            <strong dir="auto">{secondaryName}</strong>
+          ) : null}
           <span className="rawaj-owner-workspace-summary__location">
             <MapPin aria-hidden="true" />
             {location || text("سوريا", "Syria")}
@@ -115,7 +120,10 @@ export function OwnerStoreWorkspaceSummary({
         </div>
       </div>
 
-      <div className="rawaj-owner-workspace-summary__metrics" aria-label={text("ملخص حالات الإعلانات", "Listing status summary")}>
+      <div
+        className="rawaj-owner-workspace-summary__metrics"
+        aria-label={text("ملخص حالات الإعلانات", "Listing status summary")}
+      >
         {metrics.map(({ key, label, value, icon: Icon, tone }) => (
           <div key={key} data-tone={tone}>
             <Icon aria-hidden="true" />
@@ -126,15 +134,29 @@ export function OwnerStoreWorkspaceSummary({
       </div>
 
       <div className="rawaj-owner-workspace-summary__actions">
-        <Link to="/add-listing" data-tone="primary" aria-label={text("إضافة إعلان", "Post listing")} title={text("إضافة إعلان", "Post listing")}>
+        <Link
+          to="/add-listing"
+          data-tone="primary"
+          aria-label={text("إضافة إعلان", "Post listing")}
+          title={text("إضافة إعلان", "Post listing")}
+        >
           <Plus aria-hidden="true" />
           <span className="sr-only">{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/seller/$id" params={{ id: sellerId }} aria-label={text("عرض المتجر العام", "View public store")} title={text("عرض المتجر العام", "View public store")}>
+        <Link
+          to="/seller/$id"
+          params={{ id: sellerId }}
+          aria-label={text("عرض المتجر العام", "View public store")}
+          title={text("عرض المتجر العام", "View public store")}
+        >
           <Eye aria-hidden="true" />
           <span className="sr-only">{text("عرض المتجر العام", "View public store")}</span>
         </Link>
-        <Link to="/profile" aria-label={text("تعديل الهوية", "Edit identity")} title={text("تعديل الهوية", "Edit identity")}>
+        <Link
+          to="/profile"
+          aria-label={text("تعديل الهوية", "Edit identity")}
+          title={text("تعديل الهوية", "Edit identity")}
+        >
           <Pencil aria-hidden="true" />
           <span className="sr-only">{text("تعديل الهوية", "Edit identity")}</span>
         </Link>

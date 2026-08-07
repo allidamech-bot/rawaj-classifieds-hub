@@ -17,11 +17,7 @@ import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 export type OwnerListingSort =
-  | "updated_desc"
-  | "updated_asc"
-  | "price_desc"
-  | "price_asc"
-  | "views_desc";
+  "updated_desc" | "updated_asc" | "price_desc" | "price_asc" | "views_desc";
 
 export type OwnerPerformanceWindow = "all" | "30" | "90";
 
@@ -92,14 +88,10 @@ export function OwnerWorkspaceInsights({
   const needsAction = listings.filter(
     (listing) => listing.status === "draft" || listing.status === "rejected",
   ).length;
-  const unread = listings.reduce(
-    (total, listing) => total + (listing.unreadMessageCount ?? 0),
-    0,
-  );
+  const unread = listings.reduce((total, listing) => total + (listing.unreadMessageCount ?? 0), 0);
   const editableMissingImages = listings.filter(
     (listing) =>
-      (listing.status === "draft" || listing.status === "rejected") &&
-      !listing.primaryImageUrl,
+      (listing.status === "draft" || listing.status === "rejected") && !listing.primaryImageUrl,
   ).length;
   const approvedMissingImages = listings.filter(
     (listing) => listing.status === "approved" && !listing.primaryImageUrl,
@@ -135,10 +127,7 @@ export function OwnerWorkspaceInsights({
         <button type="button" data-tone="warning" onClick={() => onTabChange("needs_edit")}>
           <FileWarning aria-hidden="true" />
           <span>
-            {text(
-              `${needsAction} إعلان يحتاج تدخلك`,
-              `${needsAction} listing(s) need your action`,
-            )}
+            {text(`${needsAction} إعلان يحتاج تدخلك`, `${needsAction} listing(s) need your action`)}
           </span>
         </button>
       ) : null}
