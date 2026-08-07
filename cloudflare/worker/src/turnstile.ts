@@ -28,13 +28,16 @@ export async function requireTurnstile(
   if (!isTurnstileEnforced(env)) return null;
 
   const secret = env.TURNSTILE_SECRET_KEY?.trim();
-  if (!secret) {
+  const allowedHostnames = configuredHostnames(env);
+  if (!secret || allowedHostnames.size === 0) {
     console.error(
       JSON.stringify({
         event: "turnstile_configuration_missing",
         requestId,
         pathname: new URL(request.url).pathname,
         expectedAction,
+        secretConfigured: Boolean(secret),
+        hostnameCount: allowedHostnames.size,
       }),
     );
     return errorResponse("turnstile_unavailable", "تعذر تشغيل التحقق الأمني حالياً.", 503);
@@ -73,10 +76,9 @@ export async function requireTurnstile(
     }
 
     const result = (await response.json().catch(() => null)) as SiteverifyResponse | null;
-    const allowedHostnames = configuredHostnames(env);
-    const hostnameAllowed =
-      allowedHostnames.size === 0 || (!!result?.hostname && allowedHostnames.has(result.hostname));
-    const actionAllowed = !result?.action || result.action === expectedAction;
+    const hostname = result?.hostname?.trim().toLowerCase() ?? "";
+    const hostnameAllowed = Boolean(hostname) && allowedHostnames.has(hostname);
+    const actionAllowed = result?.action === expectedAction;
 
     if (!result?.success || !hostnameAllowed || !actionAllowed) {
       console.warn(
@@ -84,7 +86,7 @@ export async function requireTurnstile(
           event: "turnstile_validation_failed",
           requestId,
           expectedAction,
-          hostname: result?.hostname ?? null,
+          hostname: hostname || null,
           action: result?.action ?? null,
           errorCodes: result?.["error-codes"] ?? [],
           hostnameAllowed,
@@ -113,7 +115,10 @@ export async function requireTurnstile(
 async function readToken(request: Request): Promise<string | null> {
   const contentType = request.headers.get("Content-Type")?.toLowerCase() ?? "";
   if (!contentType.startsWith("application/json")) return null;
-  const body = (await request.clone().json().catch(() => null)) as Record<string, unknown> | null;
+  const body = (await request
+    .clone()
+    .json()
+    .catch(() => null)) as Record<string, unknown> | null;
   const token = typeof body?.turnstileToken === "string" ? body.turnstileToken.trim() : "";
   if (!token || token.length > MAX_TOKEN_LENGTH) return null;
   return token;
