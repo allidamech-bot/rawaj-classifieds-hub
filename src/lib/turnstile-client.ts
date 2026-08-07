@@ -22,7 +22,8 @@ declare global {
   }
 }
 
-const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+const TURNSTILE_SCRIPT_URL =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const TURNSTILE_TIMEOUT_MS = 20_000;
 let scriptPromise: Promise<TurnstileApi> | null = null;
 
@@ -84,7 +85,9 @@ function loadTurnstile(): Promise<TurnstileApi> {
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise<TurnstileApi>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${TURNSTILE_SCRIPT_URL}"]`);
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${TURNSTILE_SCRIPT_URL}"]`,
+    );
     const script = existing ?? document.createElement("script");
     const finish = () => {
       if (window.turnstile) resolve(window.turnstile);
@@ -92,7 +95,9 @@ function loadTurnstile(): Promise<TurnstileApi> {
     };
 
     script.addEventListener("load", finish, { once: true });
-    script.addEventListener("error", () => reject(new Error("turnstile_unavailable")), { once: true });
+    script.addEventListener("error", () => reject(new Error("turnstile_unavailable")), {
+      once: true,
+    });
     if (!existing) {
       script.src = TURNSTILE_SCRIPT_URL;
       script.async = true;
