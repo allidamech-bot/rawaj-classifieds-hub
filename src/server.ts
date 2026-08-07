@@ -59,11 +59,11 @@ function isVercelPreviewBuild() {
 
 function buildContentSecurityPolicy(isSecureRequest: boolean, allowVercelPreviewTools: boolean) {
   const scriptSourceDirective = allowVercelPreviewTools
-    ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://apis.google.com"
-    : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://apis.google.com";
+    ? "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://vercel.live https://apis.google.com https://challenges.cloudflare.com"
+    : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://apis.google.com https://challenges.cloudflare.com";
   const frameSourceDirective = allowVercelPreviewTools
-    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com"
-    : "frame-src 'self' https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com";
+    ? "frame-src 'self' https://vercel.live https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com https://challenges.cloudflare.com"
+    : "frame-src 'self' https://accounts.google.com https://project-af18fcaf-c46e-4ec5-93a.firebaseapp.com https://challenges.cloudflare.com";
   const manifestSourceDirective = allowVercelPreviewTools
     ? "manifest-src 'self' https://vercel.com"
     : "manifest-src 'self'";

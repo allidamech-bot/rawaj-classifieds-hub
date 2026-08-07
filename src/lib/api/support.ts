@@ -11,15 +11,18 @@ import {
   normalizeModerationSubject,
   normalizeModerationText,
 } from "@/lib/moderation-contract";
+import { getTurnstileToken } from "@/lib/turnstile-client";
 
 export async function createMySupportRequest(
   payload: CreateSupportRequestPayload,
 ): Promise<ClassifiedsResult<SupportRequest>> {
   const normalized = validateSupportPayload(payload);
   if (!normalized.ok) return normalized;
+  const turnstile = await challengeToken("support_request");
+  if (!turnstile.ok) return turnstile;
   const result = await cloudflareApiRequest<SupportRequest>("/v1/account/support-requests", {
     method: "POST",
-    body: normalized.data,
+    body: { ...normalized.data, turnstileToken: turnstile.data },
   });
   return fromApi(result);
 }
@@ -83,6 +86,20 @@ function validateSupportPayload(payload: CreateSupportRequestPayload): Classifie
       relatedReportId: payload.relatedReportId?.trim() || null,
     },
   };
+}
+
+async function challengeToken(action: string): Promise<ClassifiedsResult<string | null>> {
+  try {
+    return { ok: true, data: await getTurnstileToken(action) };
+  } catch {
+    return {
+      ok: false,
+      error: {
+        code: "turnstile_failed" as ClassifiedsErrorCode,
+        message: "تعذر إكمال التحقق الأمني. حاول مرة أخرى.",
+      },
+    };
+  }
 }
 
 function fromApi<T>(

@@ -1,8 +1,10 @@
+import { requireTurnstile, type TurnstileEnv } from "./turnstile";
+
 export interface RateLimitBinding {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
-export interface SecurityEnv {
+export interface SecurityEnv extends TurnstileEnv {
   RATE_LIMIT_PUBLIC: RateLimitBinding;
   RATE_LIMIT_WRITE: RateLimitBinding;
   RATE_LIMIT_ABUSE: RateLimitBinding;
@@ -50,30 +52,37 @@ export async function enforceRequestSecurity(
   const actor = await actorKey(request);
   const key = `${decision.className}:${decision.scope}:${actor}`;
   const { success } = await decision.binding.limit({ key });
-  if (success) return null;
-
-  console.warn(
-    JSON.stringify({
-      event: "worker_rate_limited",
-      requestId,
-      method: request.method,
-      pathname: path,
-      limitClass: decision.className,
-    }),
-  );
-
-  const response = securityJson(
-    {
-      error: {
-        code: "rate_limited",
-        message: "Too many requests. Please try again shortly.",
+  if (!success) {
+    console.warn(
+      JSON.stringify({
+        event: "worker_rate_limited",
         requestId,
+        method: request.method,
+        pathname: path,
+        limitClass: decision.className,
+      }),
+    );
+
+    const response = securityJson(
+      {
+        error: {
+          code: "rate_limited",
+          message: "Too many requests. Please try again shortly.",
+          requestId,
+        },
       },
-    },
-    429,
-  );
-  response.headers.set("Retry-After", "60");
-  return response;
+      429,
+    );
+    response.headers.set("Retry-After", "60");
+    return response;
+  }
+
+  const turnstileAction = protectedTurnstileAction(path, request.method);
+  if (turnstileAction) {
+    return requireTurnstile(request, env, requestId, turnstileAction);
+  }
+
+  return null;
 }
 
 function classifyRequest(path: string, method: string, env: SecurityEnv): LimitDecision {
@@ -96,6 +105,14 @@ function classifyRequest(path: string, method: string, env: SecurityEnv): LimitD
   }
 
   return { className: "public", binding: env.RATE_LIMIT_PUBLIC, scope: normalizedScope(path) };
+}
+
+function protectedTurnstileAction(path: string, method: string): string | null {
+  if (method.toUpperCase() !== "POST") return null;
+  if (path === "/v1/account/support-requests") return "support_request";
+  if (/^\/v1\/listings\/[^/]+\/reports$/.test(path)) return "listing_report";
+  if (/^\/v1\/reviews\/[^/]+\/reports$/.test(path)) return "review_report";
+  return null;
 }
 
 function isMarketplaceImageUpload(path: string, method: string): boolean {
