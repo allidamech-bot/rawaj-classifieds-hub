@@ -1,0 +1,51 @@
+name: Run Syria browser contract fix
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'feat/syria-match-saudi-owner-listings'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/syria-match-saudi-owner-listings
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: python3 scripts/apply-syria-browser-contract-fix.py
+      - run: npm ci
+      - run: npx prettier --write src/routes/add-listing.tsx src/routes/profile/listings.tsx
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:owner-listing-performance
+      - run: npm run test:cloudflare-cutover
+      - name: Verify browser contracts
+        run: |
+          grep -Fq 'className="rawaj-studio-success' src/routes/add-listing.tsx
+          grep -Fq 'role="status"' src/routes/add-listing.tsx
+          grep -Fq 'تم إرسال الإعلان للمراجعة' src/routes/add-listing.tsx
+          grep -Fq 'aria-hidden={!expanded}' src/routes/profile/listings.tsx
+          grep -Fq 'className={expanded ? "border-t border-border/60 px-4 pb-4 pt-3" : "sr-only"}' src/routes/profile/listings.tsx
+          grep -Fq 'data-owner-summary-metric={metric.key}' src/routes/profile/listings.tsx
+      - name: Reject Saudi runtime identity
+        run: |
+          if grep -nE 'sa\.rawa-j\.com|rawaj-saudi|SAUDI_|Saudi Arabia|السعودية|\bSAR\b' src/routes/add-listing.tsx src/routes/profile/listings.tsx; then
+            exit 1
+          fi
+      - name: Commit result and remove one-shot files
+        run: |
+          git rm .github/workflows/run-syria-browser-contract-fix.yml scripts/apply-syria-browser-contract-fix.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/add-listing.tsx src/routes/profile/listings.tsx
+          git commit -m "fix(syria): preserve browser contracts in new listing UX"
+          git push origin HEAD:feat/syria-match-saudi-owner-listings
