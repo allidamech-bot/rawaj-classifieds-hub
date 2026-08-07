@@ -26,12 +26,17 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           path = Path('src/routes/add-listing.tsx')
           source = path.read_text()
-          old = 'draftListing?.status === "pending"'
-          if old not in source:
-              raise SystemExit('missing Saudi pending status anchor')
-          path.write_text(source.replace(old, 'draftListing?.status === "pending_review"', 1))
+          replacement = '  const submissionSucceeded = draftListing?.status === "pending_review";\n'
+          source, count = re.subn(r'^\s*const submissionSucceeded = .*?;\s*$', replacement.rstrip(), source, count=1, flags=re.MULTILINE)
+          if count == 0:
+              anchor = '  const canSubmit = step === 3;\n'
+              if anchor not in source:
+                  raise SystemExit('missing Syria canSubmit anchor')
+              source = source.replace(anchor, anchor + replacement, 1)
+          path.write_text(source)
           PY
       - run: npm ci
       - run: npx prettier --write 'src/routes/profile/listings.$id.tsx' src/routes/add-listing.tsx src/lib/api/listings.ts cloudflare/worker/src/marketplace-private.ts
