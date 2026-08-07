@@ -13,6 +13,9 @@ const EXPECTED_PRODUCTION_D1_ID = "d0e6496c-9f63-48d3-beeb-d2e219500f6a";
 const EXPECTED_PRODUCTION_R2_NAME = "rawaj-listing-images-production";
 const EXPECTED_FIREBASE_PROJECT_ID = "project-af18fcaf-c46e-4ec5-93a";
 const EXPECTED_TURNSTILE_HOSTNAMES = "rawa-j.com,www.rawa-j.com";
+const DEFAULT_ADMIN_MAX_AUTH_AGE_SECONDS = 1800;
+const MIN_ADMIN_MAX_AUTH_AGE_SECONDS = 300;
+const MAX_ADMIN_MAX_AUTH_AGE_SECONDS = 43200;
 const LOCAL_D1_NAME = "rawaj-syria-local";
 const LOCAL_R2_NAME = "rawaj-syria-media-local";
 
@@ -29,9 +32,27 @@ const turnstileAllowedHostnames = String(base.vars?.TURNSTILE_ALLOWED_HOSTNAMES 
 const turnstileEnforcement = local
   ? "off"
   : process.env.RAWAJ_TURNSTILE_ENFORCEMENT?.trim().toLowerCase() || "off";
+const adminSecurityEnforcement = local
+  ? "off"
+  : process.env.RAWAJ_ADMIN_SECURITY_ENFORCEMENT?.trim().toLowerCase() || "off";
+const adminMaxAuthAgeSeconds = local
+  ? DEFAULT_ADMIN_MAX_AUTH_AGE_SECONDS
+  : Number(process.env.RAWAJ_ADMIN_MAX_AUTH_AGE_SECONDS ?? DEFAULT_ADMIN_MAX_AUTH_AGE_SECONDS);
 
 if (!new Set(["off", "enforce"]).has(turnstileEnforcement)) {
   console.error("Invalid RAWAJ_TURNSTILE_ENFORCEMENT; expected 'off' or 'enforce'.");
+  process.exit(1);
+}
+if (!new Set(["off", "enforce"]).has(adminSecurityEnforcement)) {
+  console.error("Invalid RAWAJ_ADMIN_SECURITY_ENFORCEMENT; expected 'off' or 'enforce'.");
+  process.exit(1);
+}
+if (
+  !Number.isInteger(adminMaxAuthAgeSeconds) ||
+  adminMaxAuthAgeSeconds < MIN_ADMIN_MAX_AUTH_AGE_SECONDS ||
+  adminMaxAuthAgeSeconds > MAX_ADMIN_MAX_AUTH_AGE_SECONDS
+) {
+  console.error("Invalid RAWAJ_ADMIN_MAX_AUTH_AGE_SECONDS; expected an integer from 300 to 43200.");
   process.exit(1);
 }
 
@@ -125,6 +146,8 @@ const generated = {
     FIREBASE_PROJECT_ID: firebaseProjectId,
     TURNSTILE_ENFORCEMENT: turnstileEnforcement,
     TURNSTILE_ALLOWED_HOSTNAMES: turnstileAllowedHostnames,
+    ADMIN_SECURITY_ENFORCEMENT: adminSecurityEnforcement,
+    ADMIN_MAX_AUTH_AGE_SECONDS: String(adminMaxAuthAgeSeconds),
   },
   d1_databases: [
     {
