@@ -48,21 +48,25 @@ test("production render only accepts explicit off or enforce and preserves Syria
   assert.doesNotMatch(workerRenderConfig, /TURNSTILE_SECRET_KEY/);
 });
 
-test("Worker verifies Turnstile server-side with action and hostname binding", () => {
+test("Worker verifies Turnstile server-side with strict action and hostname binding", () => {
   assert.match(workerTurnstile, /challenges\.cloudflare\.com\/turnstile\/v0\/siteverify/);
   assert.match(workerTurnstile, /TURNSTILE_SECRET_KEY/);
   assert.match(workerTurnstile, /remoteip/);
   assert.match(workerTurnstile, /idempotency_key/);
-  assert.match(workerTurnstile, /result\?\.action === expectedAction/);
-  assert.match(workerTurnstile, /allowedHostnames\.has\(result\.hostname\)/);
+  assert.match(workerTurnstile, /const actionAllowed = result\?\.action === expectedAction/);
+  assert.doesNotMatch(workerTurnstile, /!result\?\.action \|\|/);
+  assert.match(workerTurnstile, /allowedHostnames\.size === 0/);
+  assert.match(workerTurnstile, /allowedHostnames\.has\(hostname\)/);
   assert.match(workerTurnstile, /MAX_TOKEN_LENGTH = 2048/);
   assert.match(workerTurnstile, /VERIFY_TIMEOUT_MS = 8_000/);
-  assert.match(workerTurnstile, /request\.clone\(\)\.json/);
+  assert.match(workerTurnstile, /request[\s\S]*\.clone\(\)[\s\S]*\.json\(\)/);
 });
 
 test("rate limiting happens before Turnstile verification", () => {
   const limiterIndex = workerSecurity.indexOf("await decision.binding.limit({ key })");
-  const turnstileIndex = workerSecurity.indexOf("requireTurnstile(request, env, requestId, turnstileAction)");
+  const turnstileIndex = workerSecurity.indexOf(
+    "requireTurnstile(request, env, requestId, turnstileAction)",
+  );
   assert.ok(limiterIndex >= 0, "rate limiter call must exist");
   assert.ok(turnstileIndex > limiterIndex, "Turnstile must run after rate limiting");
 });
@@ -76,7 +80,7 @@ test("only low-frequency abuse mutations are Turnstile protected", () => {
 });
 
 test("all protected client mutations request matching action tokens", () => {
-  assert.match(supportApi, /getTurnstileToken\("support_request"\)/);
+  assert.match(supportApi, /challengeToken\("support_request"\)/);
   assert.match(supportApi, /turnstileToken/);
   assert.match(listingReportsApi, /challengeToken\("listing_report"\)/);
   assert.match(listingReportsApi, /turnstileToken/);
