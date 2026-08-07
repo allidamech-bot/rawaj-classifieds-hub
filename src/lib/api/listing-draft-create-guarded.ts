@@ -25,6 +25,21 @@ const ownerDraftCreationRequests = new Map<string, DraftCreationRequest>();
  * survives a page reload so the database can return the same draft after an
  * ambiguous response or repeated request.
  */
+export function createOwnerDraftCopyRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `copy-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+}
+
+export function createOwnerDraftListingCopy(
+  userId: string | null,
+  payload: CreateListingPayload,
+  creationRequestId: string,
+): Promise<ClassifiedsResult<ClassifiedListing>> {
+  return createOwnerDraftListingIdempotent(userId, payload, creationRequestId);
+}
+
 export function createOwnerDraftListing(
   userId: string | null,
   payload: CreateListingPayload,
