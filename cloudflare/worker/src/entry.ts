@@ -63,13 +63,14 @@ export default {
     }
 
     try {
-      const securityResponse = await enforceRequestSecurity(request, env, requestId);
-      if (securityResponse) {
-        return withCors(securityResponse, responseHeaders(cors, requestId, request));
+      const securityResult = await enforceRequestSecurity(request, env, requestId);
+      if (securityResult instanceof Response) {
+        return withCors(securityResult, responseHeaders(cors, requestId, request));
       }
 
-      const response = await routeRequest(request, env);
-      return withCors(response, responseHeaders(cors, requestId, request));
+      const securedRequest = securityResult instanceof Request ? securityResult : request;
+      const response = await routeRequest(securedRequest, env);
+      return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
       console.error(

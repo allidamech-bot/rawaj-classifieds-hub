@@ -37,7 +37,7 @@ test("rate limiting executes before route dispatch and emits safe 429 responses"
   assert.match(entry, /await enforceRequestSecurity\(request, env, requestId\)/);
   assert.ok(
     entry.indexOf("await enforceRequestSecurity(request, env, requestId)") <
-      entry.indexOf("await routeRequest(request, env)"),
+      entry.indexOf("await routeRequest(securedRequest, env)"),
   );
   assert.match(security, /code: "rate_limited"/);
   assert.match(security, /status,\s*headers/);

@@ -1,5 +1,5 @@
 import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
-import { inspectUploadedImage } from "./image-security";
+import { inspectUploadedImage, stripImagePrivacyMetadata } from "./image-security";
 import { logSecurityEvent } from "./security-observability";
 import { handleSecuritySummary } from "./security-summary";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
@@ -32,7 +32,7 @@ export async function enforceRequestSecurity(
   request: Request,
   env: SecurityEnv,
   requestId: string,
-): Promise<Response | null> {
+): Promise<Response | Request | null> {
   if (request.method === "OPTIONS") return null;
 
   const url = new URL(request.url);
@@ -94,8 +94,8 @@ export async function enforceRequestSecurity(
   }
 
   if (isMarketplaceImageUpload(path, request.method)) {
-    const imageResponse = await inspectMarketplaceImageRequest(request, requestId, path);
-    if (imageResponse) return imageResponse;
+    const imageResult = await inspectMarketplaceImageRequest(request, requestId, path);
+    if (imageResult) return imageResult;
   }
 
   const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
@@ -117,7 +117,7 @@ async function inspectMarketplaceImageRequest(
   request: Request,
   requestId: string,
   path: string,
-): Promise<Response | null> {
+): Promise<Response | Request | null> {
   const contentType = request.headers.get("Content-Type")?.toLowerCase() ?? "";
   if (!contentType.startsWith("multipart/form-data")) return null;
 
@@ -183,19 +183,106 @@ async function inspectMarketplaceImageRequest(
     );
   }
 
-  if (inspection.data.hasPrivacyMetadata) {
+  const sanitization = stripImagePrivacyMetadata(bytes, file.type);
+  if (!sanitization.ok) {
     logSecurityEvent({
-      event: "image_privacy_metadata_detected",
+      event: "image_upload_rejected",
+      severity: "warning",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 422,
+      reason: sanitization.reason,
+    });
+    return securityJson(
+      {
+        error: {
+          code: "invalid_image_structure",
+          message: "Image could not be sanitized safely.",
+          requestId,
+        },
+      },
+      422,
+    );
+  }
+
+  const sanitizedInspection = inspectUploadedImage(sanitization.bytes, file.type);
+  if (!sanitizedInspection.ok || sanitizedInspection.data.hasPrivacyMetadata) {
+    logSecurityEvent({
+      event: "image_upload_rejected",
+      severity: "critical",
+      requestId,
+      method: request.method,
+      pathname: path,
+      status: 422,
+      reason: "metadata_sanitization_failed",
+    });
+    return securityJson(
+      {
+        error: {
+          code: "image_sanitization_failed",
+          message: "Image privacy metadata could not be removed safely.",
+          requestId,
+        },
+      },
+      422,
+    );
+  }
+
+  if (sanitization.removedMetadata) {
+    logSecurityEvent({
+      event: "image_privacy_metadata_stripped",
       severity: "info",
       requestId,
       method: request.method,
       pathname: path,
       status: 200,
-      reason: "metadata_present",
+      reason: "metadata_removed",
     });
   }
 
-  return null;
+  return rebuildImageUploadRequest(request, form, file, sanitization.bytes);
+}
+
+function rebuildImageUploadRequest(
+  request: Request,
+  form: FormData,
+  originalFile: File,
+  sanitizedBytes: Uint8Array,
+): Request {
+  const sanitizedForm = new FormData();
+  const sanitizedBuffer = sanitizedBytes.buffer.slice(
+    sanitizedBytes.byteOffset,
+    sanitizedBytes.byteOffset + sanitizedBytes.byteLength,
+  ) as ArrayBuffer;
+  const replacement = new File([sanitizedBuffer], sanitizedFileName(originalFile.type), {
+    type: originalFile.type,
+  });
+
+  form.forEach((value, key) => {
+    if (key === "file" && value === originalFile) {
+      sanitizedForm.append(key, replacement);
+    } else {
+      sanitizedForm.append(key, value);
+    }
+  });
+
+  const headers = new Headers(request.headers);
+  headers.delete("Content-Type");
+  headers.delete("Content-Length");
+
+  return new Request(request.url, {
+    method: request.method,
+    headers,
+    body: sanitizedForm,
+    redirect: request.redirect,
+  });
+}
+
+function sanitizedFileName(contentType: string): string {
+  if (contentType === "image/jpeg") return "upload.jpg";
+  if (contentType === "image/png") return "upload.png";
+  return "upload.webp";
 }
 
 function classifyRequest(path: string, method: string, env: SecurityEnv): LimitDecision {
