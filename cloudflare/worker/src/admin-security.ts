@@ -182,9 +182,7 @@ async function recordAdminSecurityEvent(
       );
     }
   } catch {
-    console.warn(
-      JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }),
-    );
+    console.warn(JSON.stringify({ event: "admin_security_audit_write_failed", requestId, action }));
   }
 }
 
