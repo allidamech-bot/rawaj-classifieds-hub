@@ -1,0 +1,56 @@
+name: Run Syria compact owner parity
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'feat/syria-match-saudi-owner-listings'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/syria-match-saudi-owner-listings
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: python3 scripts/apply-syria-owner-compact-parity.py
+      - run: npm ci
+      - run: npx prettier --write src/routes/profile/listings.tsx
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:owner-listing-performance
+      - run: npm run test:listings-filters
+      - run: npm run test:mobile-ux-polish
+      - run: npm run test:audit-ui-v8
+      - run: npm run test:cloudflare-cutover
+      - name: Worker typecheck
+        working-directory: cloudflare/worker
+        run: npm run typecheck
+      - name: Verify compact reviewed-edit workspace
+        run: |
+          grep -Fq 'const [managementOpen, setManagementOpen] = useState(false);' src/routes/profile/listings.tsx
+          grep -Fq 'listing.status !== "pending_review" && !isClosedListingStatus(listing.status)' src/routes/profile/listings.tsx
+          grep -Fq 'aria-expanded={managementOpen}' src/routes/profile/listings.tsx
+          grep -Fq 'scopeNote={text(' src/routes/profile/listings.tsx
+          grep -Fq 'const visibleMetrics = metrics.filter((metric) => metric.value > 0);' src/routes/profile/listings.tsx
+      - name: Reject Saudi runtime identity
+        run: |
+          if grep -nE 'sa\.rawa-j\.com|rawaj-saudi|SAUDI_|Saudi Arabia|السعودية|\bSAR\b' src/routes/profile/listings.tsx; then
+            exit 1
+          fi
+      - name: Commit result and remove one-shot files
+        run: |
+          git rm .github/workflows/run-syria-owner-compact-parity.yml scripts/apply-syria-owner-compact-parity.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/profile/listings.tsx
+          git commit -m "fix(syria): complete compact reviewed owner workspace"
+          git push origin HEAD:feat/syria-match-saudi-owner-listings
