@@ -112,7 +112,6 @@ edit(editor, [
     ),
 ])
 
-# Add the approved-listing edit warning immediately before the existing draft warning.
 p = Path(editor)
 s = p.read_text()
 anchor = '        {listing.status === "draft" && (\n'
@@ -131,20 +130,17 @@ warning = '''        {listing.status === "approved" && (
 
 '''
 s = s.replace(anchor, warning + anchor, 1)
-# Disable save/resubmit while automatic uploads remain in flight.
 s = s.replace('disabled={saving}', 'disabled={saving || uploading || selectedImages.length > 0}', 1)
 s = s.replace('disabled={resubmitting}', 'disabled={resubmitting || uploading || selectedImages.length > 0}', 1)
-# Replace the manual upload button area with automatic-upload status when the original copy exists.
 s = s.replace('{text("ستظهر أولاً بعد الرفع", "Will appear first after upload")}', '{text("سيتم رفعها تلقائياً", "Uploading automatically")}', 1)
 p.write_text(s)
 
-# New listing success screen.
 add = Path('src/routes/add-listing.tsx')
 s = add.read_text()
 if 'CheckCircle2' not in s.split('\n', 8)[2]:
     s = s.replace('import { ArrowDown, ArrowUp, Camera, Info, X } from "lucide-react";', 'import { ArrowDown, ArrowUp, Camera, CheckCircle2, Info, X } from "lucide-react";', 1)
-if 'const submissionSucceeded = draftListing?.status === "pending";' not in s:
-    s = s.replace('  const canSubmit = step === 3;\n', '  const canSubmit = step === 3;\n  const submissionSucceeded = draftListing?.status === "pending";\n', 1)
+if 'const submissionSucceeded = draftListing?.status === "pending_review";' not in s:
+    s = s.replace('  const canSubmit = step === 3;\n', '  const canSubmit = step === 3;\n  const submissionSucceeded = draftListing?.status === "pending_review";\n', 1)
 marker = '  return (\n    <>\n      <PageHeader title={text("أضف إعلاناً", "Post a listing")} />'
 if marker not in s:
     raise SystemExit('missing add-listing return anchor')
@@ -174,13 +170,11 @@ success = '''  if (submissionSucceeded && createdListingId) {
 s = s.replace(marker, success + marker, 1)
 add.write_text(s)
 
-# Client image permissions: approved listings are now editable but transition back to draft server-side.
 edit('src/lib/api/listings.ts', [
     ('return permissionFailure("لا يمكن تعديل صور إعلان بعد اعتماده.");', 'return permissionFailure("لا يمكن تعديل صور الإعلان في حالته الحالية.");'),
     ('return status === "draft" || status === "rejected";', 'return status === "draft" || status === "rejected" || status === "approved";'),
 ])
 
-# Hardened Syria Worker: only add the business transition; preserve all security middleware and image sanitization.
 worker = Path('cloudflare/worker/src/marketplace-private.ts')
 s = worker.read_text()
 repls = [
@@ -192,11 +186,9 @@ for old,new in repls:
     if old not in s:
         raise SystemExit(f'missing worker anchor: {old}')
     s=s.replace(old,new,1)
-# The same image status guard appears on reorder; replace the second copy too.
 old='if (!["draft", "rejected"].includes(listing.status)) return forbidden(cors);'
 if old in s:
     s=s.replace(old,'if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);',1)
-# Transition approved listing to draft atomically when a new image is stored.
 anchor='  const sortOrder = count?.count ?? 0;\n  const altAr = clean(form.get("altAr"), 200);\n  const timestamp = now();\n  const results = await env.DB.batch([\n'
 if anchor not in s:
     raise SystemExit('missing worker upload transition anchor')
