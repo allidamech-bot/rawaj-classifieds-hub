@@ -1,9 +1,15 @@
 import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { normalizeModerationText } from "@/lib/moderation-contract";
+import { getTurnstileToken } from "@/lib/turnstile-client";
 
 export type SellerReviewReportReason =
-  "abuse" | "spam" | "misleading" | "personal_data" | "prohibited_content" | "other";
+  | "abuse"
+  | "spam"
+  | "misleading"
+  | "personal_data"
+  | "prohibited_content"
+  | "other";
 
 export type SellerReviewReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
@@ -42,9 +48,16 @@ export async function createSellerReviewReport(
   if (!reportReasons.has(reason)) {
     return { ok: false, error: { code: "validation_error", message: "اختر سبب بلاغ صالحا." } };
   }
+
+  const turnstile = await challengeToken("review_report");
+  if (!turnstile.ok) return turnstile;
+
   const result = await cloudflareApiRequest<SellerReviewReport>(
     `/v1/reviews/${encodeURIComponent(cleanReviewId)}/reports`,
-    { method: "POST", body: { reason, details: cleanDetails } },
+    {
+      method: "POST",
+      body: { reason, details: cleanDetails, turnstileToken: turnstile.data },
+    },
   );
   return fromApi(result);
 }
@@ -84,6 +97,20 @@ export async function adminModerateSellerReviewReport(payload: {
   return result.ok
     ? { ok: true, data: null }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
+}
+
+async function challengeToken(action: string): Promise<ClassifiedsResult<string | null>> {
+  try {
+    return { ok: true, data: await getTurnstileToken(action) };
+  } catch {
+    return {
+      ok: false,
+      error: {
+        code: "turnstile_failed" as ClassifiedsErrorCode,
+        message: "تعذر إكمال التحقق الأمني. حاول مرة أخرى.",
+      },
+    };
+  }
 }
 
 function fromApi<T>(
