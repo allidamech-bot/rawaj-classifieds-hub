@@ -28,7 +28,7 @@ const firebaseProjectId = String(base.vars?.FIREBASE_PROJECT_ID ?? "").trim();
 const turnstileAllowedHostnames = String(base.vars?.TURNSTILE_ALLOWED_HOSTNAMES ?? "").trim();
 const turnstileEnforcement = local
   ? "off"
-  : (process.env.RAWAJ_TURNSTILE_ENFORCEMENT?.trim().toLowerCase() || "off");
+  : process.env.RAWAJ_TURNSTILE_ENFORCEMENT?.trim().toLowerCase() || "off";
 
 if (!new Set(["off", "enforce"]).has(turnstileEnforcement)) {
   console.error("Invalid RAWAJ_TURNSTILE_ENFORCEMENT; expected 'off' or 'enforce'.");
