@@ -24,7 +24,9 @@ test("admin session security is non-breaking by default", () => {
 
 test("admin perimeter executes after rate limiting and before route dispatch", () => {
   const limiterIndex = security.indexOf("await decision.binding.limit({ key })");
-  const perimeterIndex = security.indexOf("await enforceAdminSecurityPerimeter(request, env, requestId, path)");
+  const perimeterIndex = security.indexOf(
+    "await enforceAdminSecurityPerimeter(request, env, requestId, path)",
+  );
   assert.ok(limiterIndex >= 0);
   assert.ok(perimeterIndex > limiterIndex);
   assert.match(adminSecurity, /\/\^\\\/v1\\\/admin/);
@@ -53,8 +55,12 @@ test("admin denials are auditable without storing raw network identifiers", () =
   assert.match(adminSecurity, /entity_type, entity_id, metadata, ip_hash, user_agent_hash/);
   assert.match(adminSecurity, /await sha256Hex\(ip\)/);
   assert.match(adminSecurity, /await sha256Hex\(userAgent\)/);
-  assert.doesNotMatch(adminSecurity, /metadata[\s\S]{0,300}userAgent/);
-  assert.doesNotMatch(adminSecurity, /metadata[\s\S]{0,300}CF-Connecting-IP/);
+
+  const metadataStart = adminSecurity.indexOf("const metadata = JSON.stringify({");
+  const metadataEnd = adminSecurity.indexOf("const result = await env.DB.prepare(", metadataStart);
+  assert.ok(metadataStart >= 0 && metadataEnd > metadataStart);
+  const metadataBlock = adminSecurity.slice(metadataStart, metadataEnd);
+  assert.doesNotMatch(metadataBlock, /userAgent|User-Agent|CF-Connecting-IP|\bip\b/);
 });
 
 test("production render only accepts bounded explicit admin posture configuration", () => {
