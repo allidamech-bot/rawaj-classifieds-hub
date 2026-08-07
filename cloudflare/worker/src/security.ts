@@ -100,16 +100,12 @@ function classifyRequest(path: string, method: string, env: SecurityEnv): LimitD
 
 function isMarketplaceImageUpload(path: string, method: string): boolean {
   if (method.toUpperCase() !== "POST") return false;
-  return (
-    path === "/v1/profile/media" ||
-    /^\/v1\/listings\/[^/]+\/images$/.test(path)
-  );
+  return path === "/v1/profile/media" || /^\/v1\/listings\/[^/]+\/images$/.test(path);
 }
 
 function isChatAttachmentUpload(path: string, method: string): boolean {
   return (
-    method.toUpperCase() === "POST" &&
-    /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)
+    method.toUpperCase() === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)
   );
 }
 
