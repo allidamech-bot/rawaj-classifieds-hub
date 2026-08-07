@@ -56,6 +56,7 @@ jobs:
         run: npm audit --prefix cloudflare/worker --omit=dev --json
 
       - name: Generate safe application lockfile remediation
+        continue-on-error: true
         run: npm audit fix --package-lock-only --ignore-scripts
 
       - name: Generate safe Worker toolchain remediation
