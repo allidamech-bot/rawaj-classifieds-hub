@@ -1,0 +1,123 @@
+name: Apply Syria Saudi UI parity bundle
+
+on:
+  push:
+    branches:
+      - feat/syria-match-saudi-owner-listings
+    paths:
+      - .github/workflows/apply-syria-saudi-ui-parity.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: contains(github.event.head_commit.message, '[sync-saudi-ui-to-syria]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/syria-match-saudi-owner-listings
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare/worker/package-lock.json
+
+      - name: Fetch Saudi source history
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add saudi https://github.com/allidamech-bot/rawaj-saudi-classifieds.git
+          git fetch --no-tags saudi main
+
+      - name: Apply user-facing parity patches only
+        shell: bash
+        run: |
+          set -euo pipefail
+          apply_patch() {
+            local base="$1" head="$2"; shift 2
+            git diff --binary "$base" "$head" -- "$@" > /tmp/parity.patch
+            if [ -s /tmp/parity.patch ]; then
+              git apply --3way /tmp/parity.patch
+            fi
+          }
+
+          # Safe iPhone/generated image normalization (frontend only).
+          apply_patch 7970c0b4969929cd9a75773531d6c6578005d08d 3ee80b4c48beb76fe38306b490fe76868ca2542e \
+            src/lib/listing-image-processing.ts \
+            scripts/listing-image-content-reliability.test.mjs
+
+          # Owner editor must be a non-nested route so /profile/listings/:id opens correctly.
+          apply_patch e68026932b0f764cf11427d3b99bd66838e80ed3 de44fd0b05889cd5c5835ab10bd299e751c3ac5 \
+            'src/routes/profile/listings.$id.tsx' \
+            'src/routes/profile/listings_.$id.tsx'
+
+          # Fresh-document navigation for saved drafts (no provider changes).
+          apply_patch 6cd0c4ca18a9080eefdce1b67bf419558d8b6275 ece11f324d9d7f022c3c7a3bcbf39e3eeabbce3c \
+            src/features/listing-studio/DraftRecoveryBanner.tsx \
+            src/features/storefront/StorefrontIdentityHero.tsx
+
+          # Auto-upload edit photos and final submission success UX.
+          apply_patch f036c59f2777e4b597856ae6df165a0549bb0df9 e025c4c910b5b988cba1e0632751dbc4eb1607a6 \
+            src/routes/add-listing.tsx \
+            'src/routes/profile/listings_.$id.tsx'
+
+          # Compact owner workspace + approved-listing reviewed edit lifecycle.
+          apply_patch c6a9d6b3ab273d80dd81c88586be42bda8c596d9 b498504df0ea7de361a2fb29b9ff765357218337 \
+            cloudflare/worker/src/marketplace-private.ts \
+            src/lib/api/listings.ts \
+            src/routes/add-listing.tsx \
+            src/routes/profile/listings.tsx \
+            'src/routes/profile/listings_.$id.tsx'
+
+          # Scalable My Listings workspace: search/sort/paging/alerts/bulk actions/copy.
+          apply_patch f89ceaf1d010bc2596c8cf6691c75c86d2c31c3b 4875e9020d3d3b8f0b59274c209a17f60f424111 \
+            src/features/storefront/OwnerListingsWorkspaceTools.tsx \
+            src/features/storefront/OwnerStoreWorkspaceSummary.tsx \
+            src/lib/api/listing-draft-create-guarded.ts \
+            src/lib/classifieds-api.ts \
+            src/owner-listings-workspace-v9.css \
+            src/routes/profile/listings.tsx
+
+      - name: Reject Saudi runtime identity in Syria patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only HEAD)"
+          printf '%s\n' "$changed"
+          if [ -n "$changed" ]; then
+            if git diff HEAD -- $changed | grep -E '^\+.*(rawaj-saudi|sa\.rawa-j\.com|rawaj-saudi-production|rawaj-saudi-media|\bSAR\b|country.?code.{0,20}["'"']SA["'"'])'; then
+              echo 'Saudi runtime/provider identity detected in Syria parity patch.' >&2
+              exit 1
+            fi
+          fi
+
+      - name: Install locked dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --prefix cloudflare/worker --ignore-scripts
+
+      - name: Validate Syria application and security boundaries
+        run: |
+          npm run test:runtime-boundary
+          npm run test:cloudflare-cutover
+          npm --prefix cloudflare/worker run typecheck
+          npm run build
+
+      - name: Remove one-shot workflow and commit parity bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/apply-syria-saudi-ui-parity.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "feat(syria): match Saudi owner listings and listing UX"
+          git push origin HEAD:feat/syria-match-saudi-owner-listings
