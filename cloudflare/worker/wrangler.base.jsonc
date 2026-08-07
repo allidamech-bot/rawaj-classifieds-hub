@@ -9,6 +9,33 @@
   "observability": {
     "enabled": true
   },
+  "ratelimits": [
+    {
+      "name": "RATE_LIMIT_PUBLIC",
+      "namespace_id": "1101",
+      "simple": { "limit": 180, "period": 60 }
+    },
+    {
+      "name": "RATE_LIMIT_WRITE",
+      "namespace_id": "1102",
+      "simple": { "limit": 60, "period": 60 }
+    },
+    {
+      "name": "RATE_LIMIT_ABUSE",
+      "namespace_id": "1103",
+      "simple": { "limit": 30, "period": 60 }
+    },
+    {
+      "name": "RATE_LIMIT_UPLOAD",
+      "namespace_id": "1104",
+      "simple": { "limit": 20, "period": 60 }
+    },
+    {
+      "name": "RATE_LIMIT_ADMIN",
+      "namespace_id": "1105",
+      "simple": { "limit": 30, "period": 60 }
+    }
+  ],
   "vars": {
     "API_ALLOWED_ORIGINS": "https://rawa-j.com,https://www.rawa-j.com",
     "API_CACHE_SECONDS": "60",
