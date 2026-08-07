@@ -43,9 +43,17 @@ jobs:
         continue-on-error: true
         run: npm audit --json
 
+      - name: Report application production-only advisories
+        continue-on-error: true
+        run: npm audit --omit=dev --json
+
       - name: Report Worker dependency advisories
         continue-on-error: true
         run: npm audit --prefix cloudflare/worker --json
+
+      - name: Report Worker production-only advisories
+        continue-on-error: true
+        run: npm audit --prefix cloudflare/worker --omit=dev --json
 
       - name: Lint changed source files
         shell: bash
