@@ -7,6 +7,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { isListingReportType, normalizeModerationText } from "@/lib/moderation-contract";
+import { getTurnstileToken } from "@/lib/turnstile-client";
 
 interface ModerateReportPayload {
   reportId: string;
@@ -48,9 +49,14 @@ export async function createListingReport(
       error: { code: "validation_error", message: "اختر سببًا صالحًا وأضف وصفًا واضحًا للبلاغ." },
     };
   }
+  const turnstile = await challengeToken("listing_report");
+  if (!turnstile.ok) return turnstile;
   const result = await cloudflareApiRequest<{ id: string; duplicate: boolean }>(
     `/v1/listings/${encodeURIComponent(cleanListingId)}/reports`,
-    { method: "POST", body: { reportType, reason: reportReason } },
+    {
+      method: "POST",
+      body: { reportType, reason: reportReason, turnstileToken: turnstile.data },
+    },
   );
   return result.ok
     ? { ok: true, data: null }
@@ -99,6 +105,20 @@ export async function adminModerateReport(
   return result.ok
     ? { ok: true, data: null }
     : { ok: false, error: { code: result.code as ClassifiedsErrorCode, message: result.error } };
+}
+
+async function challengeToken(action: string): Promise<ClassifiedsResult<string | null>> {
+  try {
+    return { ok: true, data: await getTurnstileToken(action) };
+  } catch {
+    return {
+      ok: false,
+      error: {
+        code: "turnstile_failed" as ClassifiedsErrorCode,
+        message: "تعذر إكمال التحقق الأمني. حاول مرة أخرى.",
+      },
+    };
+  }
 }
 
 function mapAdminListing(row: Record<string, unknown>): ClassifiedListing {
