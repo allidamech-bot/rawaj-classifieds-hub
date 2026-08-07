@@ -4,12 +4,7 @@ import { normalizeModerationText } from "@/lib/moderation-contract";
 import { getTurnstileToken } from "@/lib/turnstile-client";
 
 export type SellerReviewReportReason =
-  | "abuse"
-  | "spam"
-  | "misleading"
-  | "personal_data"
-  | "prohibited_content"
-  | "other";
+  "abuse" | "spam" | "misleading" | "personal_data" | "prohibited_content" | "other";
 
 export type SellerReviewReportStatus = "new" | "under_review" | "resolved" | "rejected";
 
