@@ -1,7 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "*": false,
+      "release/syria-ui-parity-deploy-20260809": true
+    }
   },
   "rewrites": [
     {
