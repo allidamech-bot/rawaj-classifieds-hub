@@ -3,7 +3,7 @@
   "git": {
     "deploymentEnabled": {
       "*": false,
-      "release/syria-ui-parity-deploy-20260809": true
+      "main": true
     }
   },
   "rewrites": [
