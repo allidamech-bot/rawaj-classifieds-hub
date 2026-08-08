@@ -21,6 +21,7 @@ import "../rawaj-categories-discovery-v8.css";
 import "../owner-listings-workspace-v9.css";
 import "../listing-studio-audit-v9.css";
 import "../personal-space-audit-v9.css";
+import "../profile-identity-layer-fix.css";
 import "../admin-workspaces-v9.css";
 import "../admin-command-center-v9.css";
 import "../personal-activity-system-v10.css";
@@ -43,9 +44,6 @@ import listingStudioV2Css from "../listing-studio-v2.css?url";
 import listingStudioV3Css from "../listing-studio-v3.css?url";
 import listingStudioV4Css from "../listing-studio-v4.css?url";
 import listingsResultsCss from "../listings-results.css?url";
-import myStoreBrandPolishCss from "../my-store-brand-polish.css?url";
-import myStoreHeaderRefinementCss from "../my-store-header-refinement.css?url";
-import myStoreRedesignCss from "../my-store-redesign.css?url";
 import offersSignatureCss from "../offers-signature.css?url";
 import personalSpacePolishCss from "../personal-space-polish.css?url";
 import searchFiltersV1Css from "../search-filters-v1.css?url";
@@ -60,6 +58,7 @@ import categoriesDiscoveryV8Css from "../rawaj-categories-discovery-v8.css?url";
 import ownerListingsWorkspaceV9Css from "../owner-listings-workspace-v9.css?url";
 import listingStudioAuditV9Css from "../listing-studio-audit-v9.css?url";
 import personalSpaceAuditV9Css from "../personal-space-audit-v9.css?url";
+import profileIdentityLayerFixCss from "../profile-identity-layer-fix.css?url";
 import adminWorkspacesV9Css from "../admin-workspaces-v9.css?url";
 import adminCommandCenterV9Css from "../admin-command-center-v9.css?url";
 import personalActivitySystemV10Css from "../personal-activity-system-v10.css?url";
@@ -91,9 +90,6 @@ export const routeStyleHrefs = {
   messagingV4: messagingV4Css,
   activityMoreFoundation: activityMoreFoundationCss,
   personalSpacePolish: personalSpacePolishCss,
-  myStoreRedesign: myStoreRedesignCss,
-  myStoreHeaderRefinement: myStoreHeaderRefinementCss,
-  myStoreBrandPolish: myStoreBrandPolishCss,
   trustSupportHubV2: trustSupportHubV2Css,
 } as const;
 
@@ -110,6 +106,7 @@ export const auditedOverrideStyleHrefs = [
   ownerListingsWorkspaceV9Css,
   listingStudioAuditV9Css,
   personalSpaceAuditV9Css,
+  profileIdentityLayerFixCss,
   adminWorkspacesV9Css,
   adminCommandCenterV9Css,
   personalActivitySystemV10Css,
@@ -131,7 +128,6 @@ export interface RouteStyleScope {
   messaging: boolean;
   communication: boolean;
   personalSpace: boolean;
-  ownerStore: boolean;
   trustSupport: boolean;
 }
 
@@ -167,7 +163,6 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/more",
       "/profile",
     ].includes(normalizedPathname),
-    ownerStore: normalizedPathname === "/profile/listings",
     trustSupport: [
       "/more",
       "/support",

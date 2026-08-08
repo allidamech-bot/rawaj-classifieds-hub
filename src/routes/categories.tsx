@@ -110,10 +110,10 @@ function CategoriesPage() {
         if (categoriesResult.ok) setCategories(categoriesResult.data);
         if (subcategoriesResult.ok) setSubcategories(subcategoriesResult.data);
 
-        if (taxonomyResult.ok) {
+        if (taxonomyResult.ok && taxonomyResult.data.length > 0) {
           setTaxonomyNodes(taxonomyResult.data);
           setTaxonomyAvailable(true);
-        } else if (taxonomyResult.error.code === "schema_missing") {
+        } else if (taxonomyResult.ok || taxonomyResult.error.code === "schema_missing") {
           setTaxonomyNodes([]);
           setTaxonomyAvailable(false);
           if (!categoriesResult.ok) setFetchError(categoriesResult.error);
@@ -282,7 +282,7 @@ function Breadcrumbs({
       </Link>
       {path.map((node) => (
         <span key={node.id} className="inline-flex shrink-0 items-center gap-1">
-          <ChevronLeft className="h-3 w-3 rtl:rotate-180" />
+          <ChevronLeft className="h-3 w-3" />
           <Link
             to="/categories"
             search={{ node: node.id }}
@@ -439,18 +439,18 @@ function TaxonomyRow({
             <span className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
               {taxonomyNodeName(node, language)}
             </span>
-            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground rtl:rotate-180" />
+            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
           </span>
           {pathLabel && (
-            <span className="mt-1 block truncate text-[10px] font-bold text-gold">{pathLabel}</span>
+            <span className="mt-1 block truncate text-[11px] font-bold text-gold">{pathLabel}</span>
           )}
-          <span className="mt-1 hidden line-clamp-2 text-[11px] leading-5 text-muted-foreground sm:block">
+          <span className="mt-1 hidden line-clamp-2 text-xs leading-5 text-muted-foreground sm:block sm:text-[13px]">
             {taxonomyNodeDescription(node, language) ??
               (isLeaf
                 ? text("انتقل إلى نتائج هذا التصنيف.", "Open results for this category.")
                 : text("افتح الفروع داخل هذا المستوى.", "Open child levels in this category."))}
           </span>
-          <span className="mt-1.5 inline-flex text-[10px] font-semibold text-brand-orange sm:mt-2 sm:text-[11px]">
+          <span className="mt-1.5 inline-flex text-[11px] font-semibold text-brand-orange sm:mt-2 sm:text-xs">
             {isLeaf
               ? text("عرض النتائج", "View results")
               : text("استعراض الفروع", "Browse children")}
@@ -524,12 +524,12 @@ function LegacyCategoryDirectory({
                 <h2 className="truncate text-sm font-extrabold text-foreground sm:text-base">
                   {categoryName(category.id, category.nameAr, language)}
                 </h2>
-                <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground rtl:rotate-180" />
+                <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
               </div>
-              <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground sm:text-xs">
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
                 {categoryHint(category.id, category.hintAr ?? "", language)}
               </p>
-              <span className="mt-2 inline-flex text-[10px] font-bold text-primary sm:text-[11px]">
+              <span className="mt-2 inline-flex text-[11px] font-bold text-primary sm:text-xs">
                 {text("عرض إعلانات القسم", "View category listings")}
               </span>
             </div>
@@ -541,7 +541,7 @@ function LegacyCategoryDirectory({
                 key={subcategory.id}
                 to="/listings"
                 search={{ category: category.id, subcategory: subcategory.id }}
-                className="shrink-0 rounded-full bg-muted-surface px-3 py-1.5 text-[10px] font-bold text-foreground transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:text-[11px]"
+                className="shrink-0 rounded-full bg-muted-surface px-3 py-1.5 text-[11px] font-bold text-foreground transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:text-xs"
               >
                 {subcategoryName(subcategory)}
               </Link>

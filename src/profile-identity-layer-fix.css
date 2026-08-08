@@ -1,0 +1,30 @@
+/* Profile identity layering correction.
+ * The shared account hero cover is absolute by default; the profile layout
+ * expects a fixed-height cover in normal flow so identity/actions remain clear.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity {
+  isolation: isolate;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 0;
+  width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__content,
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* Activity shortcuts (messages, favorites, notifications, etc.) belong to the
+ * dedicated activity/account hub. Keep the profile editor focused on identity,
+ * verification, security, and account settings instead of repeating that hub.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links {
+  display: none !important;
+}

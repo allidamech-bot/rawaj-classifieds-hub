@@ -111,6 +111,10 @@
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > strong {
   color: #fff4ec !important;
   font-family: "Cairo", sans-serif !important;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.75rem, 4vw, 2.65rem) !important;
+  line-height: 1.25 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div {
@@ -243,7 +247,93 @@
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__bio {
   max-width: 60ch !important;
   margin-top: 0.7rem !important;
-  line-height: 1.75 !important;
+  border-inline-start: 0 !important;
+  border-block-start: 1px solid rgba(245, 239, 231, 0.12) !important;
+  padding-block-start: 0.75rem !important;
+  padding-inline-start: 0 !important;
+  font-size: max(0.84rem, 13px) !important;
+  line-height: 1.85 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__meta span {
+  font-size: max(0.76rem, 12px) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2__product-grid {
+  align-items: stretch;
+}
+
+/* The seller grid was forcing two dense cards into 360-430px viewports. A
+   single editorial column keeps images useful and listing data trustworthy. */
+@media (max-width: 30rem) {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2__product-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.85rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"]
+    .rawaj-storefront-v2__product-grid
+    .rawaj-adaptive-card__media {
+    aspect-ratio: 16 / 10 !important;
+  }
+}
+
+/* Support copy was materially smaller than the rest of the Arabic product.
+   Keep the hierarchy compact while restoring a comfortable reading floor. */
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-hero__description {
+  max-width: 58ch !important;
+  border-inline-start: 0 !important;
+  border-block-start: 1px solid rgba(245, 239, 231, 0.12) !important;
+  padding-block-start: 0.8rem !important;
+  padding-inline-start: 0 !important;
+  color: var(--rawaj-text-secondary) !important;
+  font-size: max(0.84rem, 13px) !important;
+  line-height: 1.85 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-link-card {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-link-card:hover,
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--rawaj-border-active) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/categories"]
+    .rawaj-category-directory-card:hover
+    .category-tile {
+    transform: translateY(-1px) scale(1.035);
+  }
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card,
+.rawaj-app-shell[data-resolved-pathname="/categories"] .category-tile {
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* Guest listing creation is a focused state, not an otherwise empty page. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide {
+  min-height: calc(100svh - var(--rawaj-header-height, 4rem));
+  padding-top: clamp(3.5rem, 11vh, 7rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide > .rawaj-surface {
+  width: min(100%, 42rem);
+  margin-inline: auto;
+  border-color: rgba(225, 100, 180, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.07), transparent 42%),
+    linear-gradient(155deg, #303137, #292a30) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics {
@@ -487,8 +577,8 @@
   .rawaj-trust-hero__identity small
 ) {
   color: rgba(245, 239, 231, 0.72) !important;
-  font-size: 0.76rem !important;
-  line-height: 1.7 !important;
+  font-size: max(0.8rem, 13px) !important;
+  line-height: 1.8 !important;
 }
 
 .rawaj-app-shell:is(
@@ -502,7 +592,7 @@
 ) .rawaj-trust-hero__badges :is(span, b) {
   min-height: 2rem !important;
   color: rgba(245, 239, 231, 0.82) !important;
-  font-size: 0.68rem !important;
+  font-size: max(0.74rem, 12px) !important;
 }
 
 .rawaj-app-shell:is(
@@ -529,7 +619,7 @@
 ) .rawaj-trust-hero__actions :is(a, button) {
   min-height: 2.65rem !important;
   border-radius: 0.82rem !important;
-  font-size: 0.72rem !important;
+  font-size: max(0.76rem, 12px) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/support"] :is(
@@ -582,8 +672,8 @@
   .rawaj-safety-guide li
 ) {
   color: var(--rawaj-text-secondary, #c9c4bd) !important;
-  font-size: 0.76rem !important;
-  line-height: 1.65 !important;
+  font-size: max(0.8rem, 13px) !important;
+  line-height: 1.75 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel :is(input, textarea, select) {
@@ -601,7 +691,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel label > span {
   color: var(--rawaj-text-secondary, #c9c4bd) !important;
-  font-size: 0.76rem !important;
+  font-size: max(0.78rem, 12.5px) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-timeline article {
@@ -640,12 +730,58 @@
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-link-card strong {
   color: var(--rawaj-text-primary, #f5efe7) !important;
-  font-size: 0.82rem !important;
+  font-size: max(0.86rem, 13.5px) !important;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Responsive                                                                 */
 /* -------------------------------------------------------------------------- */
+
+/* Legal content previously retained a bright paper-like intro strip and 12px
+   Arabic copy inside the dark public shell. Preserve its editorial cue without
+   breaking the route palette or readability. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"]
+) .rawaj-legal-v3 > p:first-child {
+  border-color: rgba(227, 160, 75, 0.2) !important;
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 42%),
+    linear-gradient(150deg, #303137, #2a2b30) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"]
+) .rawaj-legal-v3 :is(p, li) {
+  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  font-size: max(0.84rem, 13px) !important;
+  line-height: 1.85 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"]
+) .rawaj-legal-v3 h2 {
+  color: var(--rawaj-text-primary, #f5efe7) !important;
+  font-size: clamp(0.98rem, 2.8vw, 1.12rem) !important;
+  line-height: 1.6 !important;
+}
+
+/* Replace the repeated heavy vertical stripe with a quieter editorial marker. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"]
+) .rawaj-legal-v3 > div > section::before {
+  inset-block: 0 auto !important;
+  inset-inline-start: 1rem !important;
+  width: 2.75rem !important;
+  height: 2px !important;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rawaj-accent-coral), var(--rawaj-accent-gold)) !important;
+}
 
 @media (max-width: 767px) {
   .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {

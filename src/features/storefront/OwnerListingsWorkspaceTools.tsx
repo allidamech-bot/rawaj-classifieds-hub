@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowDownAZ,
   BellRing,
+  ChevronDown,
   CheckSquare,
   Clock3,
   FileWarning,
@@ -12,6 +13,7 @@ import {
   Square,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -191,6 +193,7 @@ export function OwnerListingsToolbar({
   onToggleVisibleSelection: () => void;
 }) {
   const { text } = useUiPreferences();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
     <section
@@ -219,41 +222,57 @@ export function OwnerListingsToolbar({
         ) : null}
       </label>
 
-      <label className="rawaj-owner-listings-toolbar__select">
-        <ArrowDownAZ aria-hidden="true" />
-        <select
-          value={sort}
-          onChange={(event) => onSortChange(event.target.value as OwnerListingSort)}
-          aria-label={text("ترتيب الإعلانات", "Sort listings")}
-        >
-          <option value="updated_desc">{text("الأحدث تعديلاً", "Recently updated")}</option>
-          <option value="updated_asc">{text("الأقدم تعديلاً", "Oldest updated")}</option>
-          <option value="price_desc">{text("السعر: الأعلى", "Price: high to low")}</option>
-          <option value="price_asc">{text("السعر: الأقل", "Price: low to high")}</option>
-          <option value="views_desc">{text("الأكثر مشاهدة", "Most viewed")}</option>
-        </select>
-      </label>
-
-      <label
-        className="rawaj-owner-listings-toolbar__select"
-        title={text(
-          "الأرقام تراكمية للإعلانات الواقعة ضمن الفترة حسب تاريخ نشرها.",
-          "Metrics are lifetime totals for listings published within the selected window.",
-        )}
+      <button
+        type="button"
+        className="rawaj-owner-listings-toolbar__filter-toggle"
+        aria-expanded={filtersOpen}
+        aria-controls="rawaj-owner-listing-filters"
+        onClick={() => setFiltersOpen((current) => !current)}
       >
         <SlidersHorizontal aria-hidden="true" />
-        <select
-          value={performanceWindow}
-          onChange={(event) =>
-            onPerformanceWindowChange(event.target.value as OwnerPerformanceWindow)
-          }
-          aria-label={text("نطاق تقرير الأداء", "Performance report scope")}
-        >
-          <option value="all">{text("أداء كل الفترات", "All-time listing scope")}</option>
-          <option value="30">{text("إعلانات آخر 30 يوم", "Listings from last 30 days")}</option>
-          <option value="90">{text("إعلانات آخر 90 يوم", "Listings from last 90 days")}</option>
-        </select>
-      </label>
+        <span>{text("تصفية وترتيب", "Filter and sort")}</span>
+        <ChevronDown aria-hidden="true" data-open={filtersOpen} />
+      </button>
+
+      {filtersOpen ? (
+        <div id="rawaj-owner-listing-filters" className="rawaj-owner-listings-toolbar__advanced">
+          <label className="rawaj-owner-listings-toolbar__select">
+            <ArrowDownAZ aria-hidden="true" />
+            <select
+              value={sort}
+              onChange={(event) => onSortChange(event.target.value as OwnerListingSort)}
+              aria-label={text("ترتيب الإعلانات", "Sort listings")}
+            >
+              <option value="updated_desc">{text("الأحدث تعديلاً", "Recently updated")}</option>
+              <option value="updated_asc">{text("الأقدم تعديلاً", "Oldest updated")}</option>
+              <option value="price_desc">{text("السعر: الأعلى", "Price: high to low")}</option>
+              <option value="price_asc">{text("السعر: الأقل", "Price: low to high")}</option>
+              <option value="views_desc">{text("الأكثر مشاهدة", "Most viewed")}</option>
+            </select>
+          </label>
+
+          <label
+            className="rawaj-owner-listings-toolbar__select"
+            title={text(
+              "الأرقام تراكمية للإعلانات الواقعة ضمن الفترة حسب تاريخ نشرها.",
+              "Metrics are lifetime totals for listings published within the selected window.",
+            )}
+          >
+            <SlidersHorizontal aria-hidden="true" />
+            <select
+              value={performanceWindow}
+              onChange={(event) =>
+                onPerformanceWindowChange(event.target.value as OwnerPerformanceWindow)
+              }
+              aria-label={text("نطاق تقرير الأداء", "Performance report scope")}
+            >
+              <option value="all">{text("أداء كل الفترات", "All-time listing scope")}</option>
+              <option value="30">{text("إعلانات آخر 30 يوم", "Listings from last 30 days")}</option>
+              <option value="90">{text("إعلانات آخر 90 يوم", "Listings from last 90 days")}</option>
+            </select>
+          </label>
+        </div>
+      ) : null}
 
       {canSelect ? (
         <button
