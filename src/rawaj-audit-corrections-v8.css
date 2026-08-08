@@ -185,6 +185,45 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   color: #8fc2ff !important;
 }
 
+/* Keep the editorial accents, but avoid masonry gaps when a category level has
+   an uneven number of children. */
+@media (min-width: 40rem) {
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid {
+    align-items: stretch;
+    grid-auto-rows: minmax(6.6rem, auto);
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card {
+    grid-row: auto !important;
+    min-height: 6.6rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .rawaj-app-shell[data-resolved-pathname="/categories"]
+    .rawaj-category-directory-card:last-child:nth-child(3n + 1) {
+    grid-column: 2;
+  }
+}
+
+/* Search controls and results are one workflow. The global content-stack gap
+   was creating a full extra rhythm unit between every adjacent control. */
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1.rawaj-content-stack {
+  gap: 0.9rem 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/listings"]
+  .rawaj-search-results-v1
+  > :is(.mt-3, .mt-4) {
+  margin-top: 0 !important;
+}
+
+@media (min-width: 64rem) {
+  .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1__sidebar {
+    grid-row: 1 / span 6 !important;
+  }
+}
+
 /* --------------------------------------------------------------------------
    Personal space and account: restore semantic groups and readable Arabic.
    -------------------------------------------------------------------------- */

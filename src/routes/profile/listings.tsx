@@ -133,7 +133,8 @@ function MyListingsPage() {
           .filter((listing) => listing.status === "approved" && current.has(listing.id))
           .map((listing) => listing.id),
       );
-      return validIds.size === current.size ? current : validIds;
+      if (validIds.size === current.size) return current;
+      return validIds;
     });
   }, [listings]);
 
@@ -306,14 +307,21 @@ function MyListingsPage() {
     });
   }
 
+  function openInventoryStatus(status: "approved" | "pending" | "needs_edit" | "closed") {
+    setActiveTab(status);
+    window.requestAnimationFrame(() => {
+      document.getElementById("rawaj-owner-inventory-title")?.scrollIntoView({ block: "start" });
+    });
+  }
+
   async function handleDuplicateListing(listing: ClassifiedListing) {
     if (!profileId || duplicatingListingId) return;
     setDuplicatingListingId(listing.id);
     setWorkspaceMessage("");
     try {
-      const requestId =
+      const copyRequestId =
         duplicateRequestIdsRef.current.get(listing.id) ?? createOwnerDraftCopyRequestId();
-      duplicateRequestIdsRef.current.set(listing.id, requestId);
+      duplicateRequestIdsRef.current.set(listing.id, copyRequestId);
       const result = await createOwnerDraftListingCopy(
         profileId,
         {
@@ -330,7 +338,7 @@ function MyListingsPage() {
           contactOptions: { ...listing.contactOptions },
           details: { ...listing.details },
         },
-        requestId,
+        copyRequestId,
       );
       if (!result.ok) {
         setWorkspaceMessage(result.error.message);
@@ -402,7 +410,7 @@ function MyListingsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
+        <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
         <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             title={text("تسجيل الدخول مطلوب", "Login required")}
@@ -423,11 +431,22 @@ function MyListingsPage() {
     text("متجري", "My store");
   const ratingCount = sellerProfile?.ratingSummary?.count ?? 0;
   const ratingAverage = sellerProfile?.ratingSummary?.average ?? null;
+  const storeCompleteness = Math.round(
+    ([
+      displayName,
+      auth.profile?.avatarUrl,
+      auth.profile?.coverUrl,
+      auth.profile?.bio,
+      auth.profile?.cityArea || auth.profile?.governorate,
+    ].filter((value) => typeof value === "string" && value.trim().length > 0).length /
+      5) *
+      100,
+  );
 
   return (
     <>
-      <PageHeader title={text("إعلاناتي", "My listings")} to="/profile" backMode="history" />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 container-wide mobile-page-bottom space-y-5 pb-8 pt-3 sm:pt-5">
+      <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <StorefrontIdentityHero
           mode="owner"
           sellerId={profileId ?? ""}
@@ -445,6 +464,8 @@ function MyListingsPage() {
           pendingCount={grouped.pending.length}
           needsEditCount={grouped.needs_edit.length}
           closedCount={grouped.closed.length}
+          completeness={storeCompleteness}
+          onOwnerStatusChange={openInventoryStatus}
         />
 
         {latestDraft ? (
@@ -474,191 +495,211 @@ function MyListingsPage() {
           summary={performanceSummary}
           scopeNote={text(
             performanceWindow === "all"
-              ? "الأرقام تراكمية لكل الإعلانات المتتبعة. المشاهدات المسجلة لا تشمل الزوار غير المسجلين."
-              : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل. المشاهدات المسجلة لا تشمل الزوار غير المسجلين.`,
+              ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
+              : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
             performanceWindow === "all"
-              ? "Metrics are lifetime totals for all tracked listings. Recorded views do not include signed-out visitors."
-              : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history. Recorded views do not include signed-out visitors.`,
+              ? "Metrics are lifetime totals for all tracked listings."
+              : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
           )}
         />
 
-        <div className="rawaj-owner-workspace-sticky">
-          <div
-            className="rawaj-storefront-owner-tabs"
-            role="group"
-            aria-label={text("حالات الإعلانات", "Listing statuses")}
-            data-rawaj-segmented-control="true"
-          >
-            <TabButton
-              active={activeTab === "approved"}
-              label={text("نشطة", "Live")}
-              count={grouped.approved.length}
-              onClick={() => setActiveTab("approved")}
-            />
-            <TabButton
-              active={activeTab === "pending"}
-              label={text("مراجعة", "Review")}
-              count={grouped.pending.length}
-              onClick={() => setActiveTab("pending")}
-            />
-            <TabButton
-              active={activeTab === "needs_edit"}
-              label={text("تعديل", "Edit")}
-              count={grouped.needs_edit.length}
-              onClick={() => setActiveTab("needs_edit")}
-            />
-            <TabButton
-              active={activeTab === "closed"}
-              label={text("مغلقة", "Closed")}
-              count={grouped.closed.length}
-              onClick={() => setActiveTab("closed")}
-            />
-            <TabButton
-              active={activeTab === "reviews"}
-              label={text("تقييمات", "Reviews")}
-              count={ratingCount}
-              onClick={() => setActiveTab("reviews")}
-            />
-          </div>
-          {activeTab !== "reviews" ? (
-            <OwnerListingsToolbar
-              query={listingSearch}
-              onQueryChange={setListingSearch}
-              sort={listingSort}
-              onSortChange={setListingSort}
-              performanceWindow={performanceWindow}
-              onPerformanceWindowChange={setPerformanceWindow}
-              totalCount={filteredListings.length}
-              shownCount={visibleListings.length}
-              canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
-              selectedCount={selectedApprovedListings.length}
-              allVisibleSelected={allVisibleApprovedSelected}
-              onToggleVisibleSelection={toggleVisibleApprovedSelection}
-            />
-          ) : null}
-          {activeTab === "approved" ? (
-            <OwnerBulkActionBar
-              selectedCount={selectedApprovedListings.length}
-              expiryOption={bulkExpiryOption}
-              busy={bulkBusy}
-              feedback={bulkFeedback}
-              onExpiryOptionChange={setBulkExpiryOption}
-              onRenew={() => void runBulkAction("renew")}
-              onConfirmAvailability={() => void runBulkAction("availability")}
-              onClear={() => {
-                setSelectedListingIds(new Set());
-                setBulkFeedback("");
-              }}
-            />
-          ) : null}
-        </div>
+        <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
+          <header className="rawaj-owner-inventory__header">
+            <div>
+              <p>{text("المخزون", "Inventory")}</p>
+              <h2 id="rawaj-owner-inventory-title">{text("إدارة الإعلانات", "Manage listings")}</h2>
+              <span>
+                {text(
+                  "اختر الحالة، ثم ابحث أو افتح الأدوات عند الحاجة.",
+                  "Choose a status, then search or open tools when needed.",
+                )}
+              </span>
+            </div>
+            <strong>{listings.length}</strong>
+          </header>
 
-        {workspaceMessage ? (
-          <p role="status" className="rawaj-owner-workspace-feedback">
-            {workspaceMessage}
-          </p>
-        ) : null}
+          <div className="rawaj-owner-workspace-sticky">
+            <div
+              className="rawaj-storefront-owner-tabs"
+              role="group"
+              aria-label={text("حالات الإعلانات", "Listing statuses")}
+              data-rawaj-segmented-control="true"
+            >
+              <TabButton
+                active={activeTab === "approved"}
+                label={text("نشطة", "Live")}
+                count={grouped.approved.length}
+                onClick={() => setActiveTab("approved")}
+              />
+              <TabButton
+                active={activeTab === "pending"}
+                label={text("مراجعة", "Review")}
+                count={grouped.pending.length}
+                onClick={() => setActiveTab("pending")}
+              />
+              <TabButton
+                active={activeTab === "needs_edit"}
+                label={text("تعديل", "Edit")}
+                count={grouped.needs_edit.length}
+                onClick={() => setActiveTab("needs_edit")}
+              />
+              <TabButton
+                active={activeTab === "closed"}
+                label={text("مغلقة", "Closed")}
+                count={grouped.closed.length}
+                onClick={() => setActiveTab("closed")}
+              />
+              <TabButton
+                active={activeTab === "reviews"}
+                label={text("تقييمات", "Reviews")}
+                count={ratingCount}
+                onClick={() => setActiveTab("reviews")}
+              />
+            </div>
 
-        {sellerError && activeTab !== "reviews" ? (
-          <StorefrontNotice
-            tone="neutral"
-            title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
-            description={sellerError.message}
-            action={
-              <button
-                type="button"
-                disabled={sellerLoading}
-                onClick={() => void loadSellerProfile()}
-              >
-                {text("إعادة المحاولة", "Try again")}
-              </button>
-            }
-          />
-        ) : null}
-
-        {listingsLoading && !listingsHasLoaded ? (
-          <Panel title={text("جاري تحميل واجهة المتجر", "Loading store")} />
-        ) : listingsError && !listingsHasLoaded ? (
-          <Panel
-            title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
-            body={listingsError.message}
-            actionLabel={text("إعادة المحاولة", "Try again")}
-            onAction={() => void loadListings()}
-            actionDisabled={listingsLoading}
-          />
-        ) : activeTab === "reviews" ? (
-          sellerLoading && !sellerHasLoaded ? (
-            <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
-          ) : sellerError && !sellerHasLoaded ? (
-            <Panel
-              title={text("تعذر تحميل التقييمات", "Could not load reviews")}
-              body={sellerError.message}
-              actionLabel={text("إعادة المحاولة", "Try again")}
-              onAction={() => void loadSellerProfile()}
-              actionDisabled={sellerLoading}
-            />
-          ) : (
-            <ReviewsSection sellerProfile={sellerProfile} />
-          )
-        ) : (
-          <>
-            {listingsError ? (
-              <StorefrontNotice
-                tone="neutral"
-                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                description={listingsError.message}
-                action={
-                  <button
-                    type="button"
-                    disabled={listingsLoading}
-                    onClick={() => void loadListings()}
-                  >
-                    {text("إعادة المحاولة", "Try again")}
-                  </button>
-                }
+            {activeTab !== "reviews" ? (
+              <OwnerListingsToolbar
+                query={listingSearch}
+                onQueryChange={setListingSearch}
+                sort={listingSort}
+                onSortChange={setListingSort}
+                performanceWindow={performanceWindow}
+                onPerformanceWindowChange={setPerformanceWindow}
+                totalCount={filteredListings.length}
+                shownCount={visibleListings.length}
+                canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
+                selectedCount={selectedApprovedListings.length}
+                allVisibleSelected={allVisibleApprovedSelected}
+                onToggleVisibleSelection={toggleVisibleApprovedSelection}
               />
             ) : null}
-            {filteredListings.length === 0 ? (
+
+            {activeTab === "approved" ? (
+              <OwnerBulkActionBar
+                selectedCount={selectedApprovedListings.length}
+                expiryOption={bulkExpiryOption}
+                busy={bulkBusy}
+                feedback={bulkFeedback}
+                onExpiryOptionChange={setBulkExpiryOption}
+                onRenew={() => void runBulkAction("renew")}
+                onConfirmAvailability={() => void runBulkAction("availability")}
+                onClear={() => {
+                  setSelectedListingIds(new Set());
+                  setBulkFeedback("");
+                }}
+              />
+            ) : null}
+          </div>
+
+          {workspaceMessage ? (
+            <p role="status" className="rawaj-owner-workspace-feedback">
+              {workspaceMessage}
+            </p>
+          ) : null}
+
+          {sellerError && activeTab !== "reviews" ? (
+            <StorefrontNotice
+              tone="neutral"
+              title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
+              description={sellerError.message}
+              action={
+                <button
+                  type="button"
+                  disabled={sellerLoading}
+                  onClick={() => void loadSellerProfile()}
+                >
+                  {text("إعادة المحاولة", "Try again")}
+                </button>
+              }
+            />
+          ) : null}
+
+          {listingsLoading && !listingsHasLoaded ? (
+            <Panel title={text("جاري تحميل واجهة المتجر", "Loading store")} />
+          ) : listingsError && !listingsHasLoaded ? (
+            <Panel
+              title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+              body={listingsError.message}
+              actionLabel={text("إعادة المحاولة", "Try again")}
+              onAction={() => void loadListings()}
+              actionDisabled={listingsLoading}
+            />
+          ) : activeTab === "reviews" ? (
+            sellerLoading && !sellerHasLoaded ? (
+              <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
+            ) : sellerError && !sellerHasLoaded ? (
               <Panel
-                title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
-                body={text(
-                  "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
-                  "Listings appear here according to their current lifecycle status.",
-                )}
+                title={text("تعذر تحميل التقييمات", "Could not load reviews")}
+                body={sellerError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadSellerProfile()}
+                actionDisabled={sellerLoading}
               />
             ) : (
-              <>
-                <div className="rawaj-storefront-owner-grid">
-                  {visibleListings.map((listing) => (
-                    <StoreListingCard
-                      key={`${profileId ?? "signed-out"}:${listing.id}`}
-                      listing={listing}
-                      language={language}
-                      userId={profileId}
-                      selected={selectedListingIds.has(listing.id)}
-                      selectable={activeTab === "approved" && listing.status === "approved"}
-                      duplicating={duplicatingListingId === listing.id}
-                      onSelectionChange={handleSelectionChange}
-                      onDuplicate={handleDuplicateListing}
-                      onDeleted={handleListingDeleted}
-                      onChanged={handleListingChanged}
-                    />
-                  ))}
-                </div>
-                {hasMoreListings ? (
-                  <button
-                    type="button"
-                    className="rawaj-owner-load-more"
-                    onClick={() => setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)}
-                  >
-                    {text("عرض المزيد", "Load more")} · {visibleListings.length}/
-                    {filteredListings.length}
-                  </button>
-                ) : null}
-              </>
-            )}
-          </>
-        )}
+              <ReviewsSection sellerProfile={sellerProfile} />
+            )
+          ) : (
+            <>
+              {listingsError ? (
+                <StorefrontNotice
+                  tone="neutral"
+                  title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
+                  description={listingsError.message}
+                  action={
+                    <button
+                      type="button"
+                      disabled={listingsLoading}
+                      onClick={() => void loadListings()}
+                    >
+                      {text("إعادة المحاولة", "Try again")}
+                    </button>
+                  }
+                />
+              ) : null}
+              {filteredListings.length === 0 ? (
+                <Panel
+                  title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
+                  body={text(
+                    "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
+                    "Listings appear here according to their current lifecycle status.",
+                  )}
+                />
+              ) : (
+                <>
+                  <div className="rawaj-storefront-owner-grid">
+                    {visibleListings.map((listing) => (
+                      <StoreListingCard
+                        key={`${profileId ?? "signed-out"}:${listing.id}`}
+                        listing={listing}
+                        language={language}
+                        userId={profileId}
+                        selected={selectedListingIds.has(listing.id)}
+                        selectable={activeTab === "approved" && listing.status === "approved"}
+                        duplicating={duplicatingListingId === listing.id}
+                        onSelectionChange={handleSelectionChange}
+                        onDuplicate={handleDuplicateListing}
+                        onDeleted={handleListingDeleted}
+                        onChanged={handleListingChanged}
+                      />
+                    ))}
+                  </div>
+                  {hasMoreListings ? (
+                    <button
+                      type="button"
+                      className="rawaj-owner-load-more"
+                      onClick={() =>
+                        setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)
+                      }
+                    >
+                      {text("عرض المزيد", "Load more")} · {visibleListings.length}/
+                      {filteredListings.length}
+                    </button>
+                  ) : null}
+                </>
+              )}
+            </>
+          )}
+        </section>
       </main>
     </>
   );
@@ -776,53 +817,58 @@ function OwnerPerformanceOverview({
         </span>
       </button>
 
-      <div
-        aria-hidden={!expanded}
-        className={expanded ? "border-t border-border/60 px-4 pb-4 pt-3" : "sr-only"}
-      >
-        <div className="grid grid-flow-col auto-cols-fr gap-2">
-          {visibleMetrics.map((metric) => (
-            <div
-              key={metric.key}
-              data-owner-summary-metric={metric.key}
-              className="rounded-xl bg-card/80 p-2 text-center hairline"
-            >
-              <div className="mx-auto flex w-fit items-center text-primary">{metric.icon}</div>
-              <p className="mt-1 text-base font-extrabold text-foreground">
-                {formatOwnerMetric(metric.value)}
-              </p>
-              <p className="truncate text-[9px] font-semibold text-muted-foreground">
-                {metric.label}
-              </p>
-            </div>
-          ))}
+      {expanded ? (
+        <div className="border-t border-border/60 px-4 pb-4 pt-3">
+          <div className="grid grid-flow-col auto-cols-fr gap-2">
+            {visibleMetrics.map((metric) => (
+              <div
+                key={metric.key}
+                data-owner-summary-metric={metric.key}
+                className="rounded-xl bg-card/80 p-2 text-center hairline"
+              >
+                <div className="mx-auto flex w-fit items-center text-primary">{metric.icon}</div>
+                <p className="mt-1 text-base font-extrabold text-foreground">
+                  {formatOwnerMetric(metric.value)}
+                </p>
+                <p className="truncate text-[9px] font-semibold text-muted-foreground">
+                  {metric.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
+          <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
+            {text(
+              "المشاهدات المسجلة لا تشمل الزوار غير المسجلين.",
+              "Recorded views do not include signed-out visitors.",
+            )}
+          </p>
+          {summary.trackedListings === 0 ? (
+            <p className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">
+              {text(
+                "ستظهر بيانات الأداء بعد اعتماد أول إعلان وبدء التفاعل معه.",
+                "Performance data appears after your first approved listing receives activity.",
+              )}
+            </p>
+          ) : summary.expiringSoon > 0 ? (
+            <p className="mt-3 flex items-center gap-2 rounded-xl bg-warning/10 p-3 text-[11px] font-bold text-foreground">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+              {text(
+                "لديك " + formatOwnerMetric(summary.expiringSoon) + " إعلان ينتهي خلال 7 أيام.",
+                formatOwnerMetric(summary.expiringSoon) + " listing(s) expire within 7 days.",
+              )}
+            </p>
+          ) : (
+            <p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-semibold text-foreground">
+              <CircleCheckBig className="h-4 w-4 shrink-0 text-emerald-trust" />
+              {text(
+                "لا توجد إعلانات تنتهي خلال الأيام السبعة القادمة.",
+                "No listings expire within the next seven days.",
+              )}
+            </p>
+          )}
         </div>
-        <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
-        {summary.trackedListings === 0 ? (
-          <p className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">
-            {text(
-              "ستظهر بيانات الأداء بعد اعتماد أول إعلان وبدء التفاعل معه.",
-              "Performance data appears after your first approved listing receives activity.",
-            )}
-          </p>
-        ) : summary.expiringSoon > 0 ? (
-          <p className="mt-3 flex items-center gap-2 rounded-xl bg-warning/10 p-3 text-[11px] font-bold text-foreground">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
-            {text(
-              "لديك " + formatOwnerMetric(summary.expiringSoon) + " إعلان ينتهي خلال 7 أيام.",
-              formatOwnerMetric(summary.expiringSoon) + " listing(s) expire within 7 days.",
-            )}
-          </p>
-        ) : (
-          <p className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-trust/10 p-3 text-[11px] font-semibold text-foreground">
-            <CircleCheckBig className="h-4 w-4 shrink-0 text-emerald-trust" />
-            {text(
-              "لا توجد إعلانات تنتهي خلال الأيام السبعة القادمة.",
-              "No listings expire within the next seven days.",
-            )}
-          </p>
-        )}
-      </div>
+      ) : null}
     </section>
   );
 }
@@ -1455,6 +1501,7 @@ function StoreListingCard({
             <button
               type="button"
               aria-expanded={managementOpen}
+              aria-controls={`${listing.id}-management-panel`}
               onClick={() => setManagementOpen((current) => !current)}
               className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-muted-surface px-3 text-[10px] font-bold text-foreground hairline"
             >
@@ -1466,7 +1513,12 @@ function StoreListingCard({
           </div>
 
           {managementOpen ? (
-            <div className="space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline">
+            <div
+              id={`${listing.id}-management-panel`}
+              role="region"
+              aria-label={text("إجراءات الإعلان", "Listing actions")}
+              className="rawaj-owner-listing-management space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline"
+            >
               {canReducePrice ? (
                 <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
                   <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">

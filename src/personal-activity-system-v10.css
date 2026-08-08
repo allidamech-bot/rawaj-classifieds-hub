@@ -43,6 +43,55 @@
   margin: 0 !important;
 }
 
+/* Account-unavailable states share a utility panel that was still inheriting a
+   warm light-surface fallback. Keep it focused and native to the dark shell. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-account-collection-v3 > div.text-center {
+  width: min(100%, 52rem);
+  margin-inline: auto !important;
+  padding: clamp(1.4rem, 4vw, 2.2rem) !important;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: 1.25rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.08), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(104, 173, 255, 0.065), transparent 38%),
+    linear-gradient(155deg, #303137, #292a30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 16px 36px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-account-collection-v3 > div.text-center > span {
+  border: 1px solid rgba(104, 173, 255, 0.14);
+  color: #9bc8ff !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-account-collection-v3 > div.text-center > p:first-of-type {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.92rem !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-account-collection-v3 > div.text-center > p + p {
+  max-width: 42rem;
+  margin-inline: auto;
+  color: var(--rawaj-text-secondary) !important;
+  font-size: max(0.82rem, 13px) !important;
+  line-height: 1.75 !important;
+}
+
 /* Communication identity: compact status header, not a landing-page billboard. */
 .rawaj-app-shell:is(
   [data-resolved-pathname="/activity"],

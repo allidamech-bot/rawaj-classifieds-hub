@@ -169,9 +169,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         ...(routeStyleScope.storefront
           ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }]
           : []),
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreRedesign }]
-          : []),
         ...(routeStyleScope.offers
           ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }]
           : []),
@@ -195,12 +192,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           : []),
         { rel: "stylesheet", href: comparisonFoundationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreHeaderRefinement }]
-          : []),
-        ...(routeStyleScope.ownerStore
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.myStoreBrandPolish }]
-          : []),
         ...(routeStyleScope.personalSpace
           ? [{ rel: "stylesheet", href: routeStyleHrefs.personalSpacePolish }]
           : []),

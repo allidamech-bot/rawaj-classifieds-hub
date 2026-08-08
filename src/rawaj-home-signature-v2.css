@@ -476,6 +476,10 @@
   margin-top: 1.75rem;
 }
 
+.rawaj-signature-trust-row + .rawaj-signature-section {
+  margin-top: 0.9rem;
+}
+
 .rawaj-signature-section-header {
   display: flex;
   align-items: flex-end;
@@ -676,6 +680,7 @@
   line-height: 1.7;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 
 .rawaj-signature-card-meta {
@@ -1103,6 +1108,41 @@
 
   .rawaj-signature-featured__supporting {
     grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Two-item datasets should still read as a composed pair, not a lead card
+     beside a half-empty supporting column. */
+  .rawaj-signature-featured__layout:has(.rawaj-signature-featured__supporting > :only-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .rawaj-signature-featured__supporting:has(> :only-child) {
+    grid-template-rows: auto;
+  }
+
+  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "media media"
+      "body arrow";
+    align-items: center;
+    padding: 0.46rem;
+  }
+
+  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__media {
+    grid-area: media;
+    aspect-ratio: 16 / 10;
+  }
+
+  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__body {
+    grid-area: body;
+    padding: 0.42rem 0.48rem 0.3rem;
+  }
+
+  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__arrow {
+    grid-area: arrow;
+    margin-inline-end: 0.4rem;
   }
 
   .rawaj-signature-support-card {
