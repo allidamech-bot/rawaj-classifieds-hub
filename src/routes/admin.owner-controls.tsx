@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FeedbackAdminPanel } from "@/features/admin/FeedbackAdminPanel";
 import {
   ownerFetchSystemControls,
   ownerSetSystemControl,
@@ -285,6 +286,8 @@ function OwnerControlsPage() {
           ))
         )}
       </section>
+
+      <FeedbackAdminPanel canManage={canManage} />
 
       <section className="grid gap-3 sm:grid-cols-3">
         <QuickLink

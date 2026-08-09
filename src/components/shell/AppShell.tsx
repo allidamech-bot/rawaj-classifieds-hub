@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import { BackToTop } from "@/components/BackToTop";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
@@ -241,6 +242,10 @@ export function AppShell({
           aria-hidden="true"
         />
 
+        <FeedbackWidget
+          pathname={pathname}
+          triggerHidden={keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")}
+        />
         {showBackToTop ? <BackToTop /> : null}
         <BottomDock pathname={pathname} />
 

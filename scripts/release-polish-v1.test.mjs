@@ -6,7 +6,7 @@ const [css, accountCss, messagingCss, ownerStoreCss, pkg] = await Promise.all([
   readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../src/messaging-v4.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/my-store-brand-polish.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -33,8 +33,8 @@ test("correction pass keeps premium hierarchy structural rather than decorative"
   assert.match(accountCss, /box-shadow:\s*0 3px 12px/);
   assert.match(messagingCss, /background:\s*var\(--message-surface\)/);
   assert.match(messagingCss, /font-size:\s*max\(0\.84rem, 13\.5px\)/);
-  assert.match(ownerStoreCss, /Rating remains immediately beside identity/);
-  assert.doesNotMatch(ownerStoreCss, /backdrop-filter:\s*blur\(22px\)/);
+  assert.match(ownerStoreCss, /\.rawaj-owner-workspace-summary__completeness/);
+  assert.match(ownerStoreCss, /prefers-reduced-motion: reduce/);
 });
 
 test("final polish remains mobile and reduced-motion safe", () => {
