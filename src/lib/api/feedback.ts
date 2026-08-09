@@ -43,8 +43,35 @@ export interface FeedbackItem {
   updatedAt: string;
 }
 
-export async function fetchFeedbackConfig(): Promise<ClassifiedsResult<FeedbackConfig>> {
-  return fromApi(await cloudflareApiRequest<FeedbackConfig>("/v1/feedback/config"));
+const PUBLIC_CONFIG_TTL_MS = 15_000;
+let publicConfigCache: { value: FeedbackConfig; expiresAt: number } | null = null;
+let publicConfigRequest: Promise<ClassifiedsResult<FeedbackConfig>> | null = null;
+
+export async function fetchFeedbackConfig(force = false): Promise<ClassifiedsResult<FeedbackConfig>> {
+  if (!force && publicConfigCache && publicConfigCache.expiresAt > Date.now()) {
+    return { ok: true, data: publicConfigCache.value };
+  }
+  if (!force && publicConfigRequest) return publicConfigRequest;
+
+  const request = (async (): Promise<ClassifiedsResult<FeedbackConfig>> => {
+    const result = fromApi(await cloudflareApiRequest<FeedbackConfig>("/v1/feedback/config"));
+    if (result.ok) {
+      publicConfigCache = { value: result.data, expiresAt: Date.now() + PUBLIC_CONFIG_TTL_MS };
+    }
+    return result;
+  })();
+  if (!force) publicConfigRequest = request;
+
+  try {
+    return await request;
+  } finally {
+    if (publicConfigRequest === request) publicConfigRequest = null;
+  }
+}
+
+export function invalidateFeedbackConfigCache() {
+  publicConfigCache = null;
+  publicConfigRequest = null;
 }
 
 export async function submitFeedback(payload: {
@@ -96,12 +123,14 @@ export async function ownerSetFeedbackConfig(
       error: { code: "validation_error", message: "اكتب سبباً واضحاً قبل تغيير حالة الميزة." },
     };
   }
-  return fromApi(
+  const result = fromApi(
     await cloudflareApiRequest<FeedbackConfig>("/v1/admin/feedback/config", {
       method: "POST",
       body: { ...payload, reason },
     }),
   );
+  if (result.ok) invalidateFeedbackConfigCache();
+  return result;
 }
 
 export async function adminFetchFeedback(
