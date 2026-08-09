@@ -11,6 +11,7 @@ import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
+import { handleFeedback, isFeedbackPath, type FeedbackEnv } from "./feedback";
 import { handleVerification, type VerificationEnv } from "./verification";
 import { handleTrustSupport, type TrustSupportEnv } from "./trust-support";
 import { handleListingOperations, type ListingOperationsEnv } from "./listing-operations";
@@ -36,6 +37,7 @@ type EntryEnv = PublicCoreEnv &
   TaxonomyEnv &
   ListingAttributesEnv &
   SystemControlsEnv &
+  FeedbackEnv &
   VerificationEnv &
   TrustSupportEnv &
   ListingOperationsEnv &
@@ -109,6 +111,9 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
 
   if (path === "/v1/admin/system-controls" || path === "/v1/system-status") {
     return required(await handleSystemControls(request, env));
+  }
+  if (isFeedbackPath(path)) {
+    return required(await handleFeedback(request, env));
   }
   if (/^\/v1\/listings\/[^/]+\/attributes(?:\/completeness)?$/.test(path)) {
     return required(await handleListingAttributes(request, env));
