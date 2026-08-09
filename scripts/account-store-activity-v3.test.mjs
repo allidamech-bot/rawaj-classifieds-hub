@@ -26,7 +26,7 @@ const [
   readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/my-store-brand-polish.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -45,7 +45,8 @@ test("owner and public storefronts receive distinct premium identity scopes", ()
   assert.match(storefrontCss, /\.rawaj-storefront-identity__metrics/);
   assert.match(storefrontCss, /data-tone="rating"/);
   assert.match(storefrontCss, /--store-v3-coral/);
-  assert.match(ownerStoreCss, /Rating remains immediately beside identity/);
+  assert.match(ownerStoreCss, /\.rawaj-owner-workspace-summary__completeness/);
+  assert.match(ownerStoreCss, /\.rawaj-owner-listings-toolbar__advanced/);
 });
 
 test("account collections use structural borders, clear actions, focus states, and restrained motion", () => {
