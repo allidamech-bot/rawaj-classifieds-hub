@@ -309,6 +309,7 @@ function classifyRequest(path: string, method: string, env: SecurityEnv): LimitD
 
 function protectedTurnstileAction(path: string, method: string): string | null {
   if (method.toUpperCase() !== "POST") return null;
+  if (path === "/v1/feedback") return "feedback_request";
   if (path === "/v1/account/support-requests") return "support_request";
   if (/^\/v1\/listings\/[^/]+\/reports$/.test(path)) return "listing_report";
   if (/^\/v1\/reviews\/[^/]+\/reports$/.test(path)) return "review_report";
@@ -327,6 +328,7 @@ function isChatAttachmentUpload(path: string, method: string): boolean {
 function isAbuseProneMutation(path: string, method: string): boolean {
   if (["GET", "HEAD"].includes(method.toUpperCase())) return false;
   return (
+    path === "/v1/feedback" ||
     /^\/v1\/conversations(?:\/|$)/.test(path) ||
     /^\/v1\/messages\/[^/]+\/report$/.test(path) ||
     /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||
