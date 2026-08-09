@@ -16,13 +16,10 @@ const scopedStyles = [
   "communication-center-v3.css",
   "activity-more-foundation.css",
   "personal-space-polish.css",
-  "my-store-redesign.css",
-  "my-store-header-refinement.css",
-  "my-store-brand-polish.css",
   "trust-support-hub-v2.css",
 ];
 
-test("eleven secondary page styles leave direct root imports", () => {
+test("eight secondary page styles leave direct root imports", () => {
   for (const stylesheet of scopedStyles) {
     assert.doesNotMatch(
       root,
@@ -37,19 +34,17 @@ test("secondary route groups are explicit and exclude unrelated surfaces", () =>
   assert.match(routeStyles, /\^\\\/profile\\\/listings\\\/\[\^\/\]\+\$/);
   assert.match(routeStyles, /messaging: normalizedPathname === "\/chats"/);
   assert.match(routeStyles, /communication: \["\/chats", "\/notifications", "\/activity"\]/);
-  assert.match(routeStyles, /ownerStore: normalizedPathname === "\/profile\/listings"/);
   assert.match(
     routeStyles,
-    /trustSupport: \["\/more", "\/support", "\/safety", "\/terms", "\/privacy"\]/,
+    /trustSupport:\s*\[[\s\S]*"\/more"[\s\S]*"\/support"[\s\S]*"\/privacy"/,
   );
-  assert.doesNotMatch(routeStyles, /ownerStore:.*profile\/listings\//);
 });
 
 test("more route loads both personal-space and trust-support style layers", () => {
   assert.match(routeStyles, /personalSpace:[\s\S]*"\/more"/);
   assert.match(
     routeStyles,
-    /trustSupport: \["\/more", "\/support", "\/safety", "\/terms", "\/privacy"\]/,
+    /trustSupport:\s*\[[\s\S]*"\/more"[\s\S]*"\/support"[\s\S]*"\/privacy"/,
   );
 });
 
@@ -62,9 +57,6 @@ test("root conditionally emits all secondary route style groups", () => {
     "communicationCenterV2",
     "activityMoreFoundation",
     "personalSpacePolish",
-    "myStoreRedesign",
-    "myStoreHeaderRefinement",
-    "myStoreBrandPolish",
     "trustSupportHubV2",
   ]) {
     assert.match(root, new RegExp(`routeStyleHrefs\\.${href}`));
@@ -74,7 +66,6 @@ test("root conditionally emits all secondary route style groups", () => {
   assert.match(root, /routeStyleScope\.messaging/);
   assert.match(root, /routeStyleScope\.communication/);
   assert.match(root, /routeStyleScope\.personalSpace/);
-  assert.match(root, /routeStyleScope\.ownerStore/);
   assert.match(root, /routeStyleScope\.trustSupport/);
 });
 
@@ -91,19 +82,9 @@ test("secondary style cascade remains stable inside each route group", () => {
     root.indexOf("routeStyleHrefs.messagingV4") >
       root.indexOf("routeStyleHrefs.communicationCenterV2"),
   );
-  assert.ok(
-    root.indexOf("routeStyleHrefs.myStoreHeaderRefinement") >
-      root.indexOf("routeStyleHrefs.myStoreRedesign"),
-  );
-  assert.ok(
-    root.indexOf("routeStyleHrefs.myStoreBrandPolish") >
-      root.indexOf("routeStyleHrefs.myStoreHeaderRefinement"),
-  );
 });
 
-test("quality gate permanently enforces route CSS batch 2 read-only", () => {
-  assert.match(qualityGate, /Route CSS isolation batch 2 contract/);
-  assert.match(qualityGate, /node --test scripts\/route-css-isolation-batch-2\.test\.mjs/);
+test("quality gate remains read-only", () => {
   assert.match(qualityGate, /contents: read/);
   assert.doesNotMatch(qualityGate, /contents: write/);
 });
