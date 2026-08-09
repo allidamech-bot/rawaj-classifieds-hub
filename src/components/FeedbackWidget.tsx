@@ -27,7 +27,7 @@ export function FeedbackWidget({
 }) {
   const auth = useAuth();
   const { language, theme, isArabic, text } = useUiPreferences();
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [submitting, setSubmitting] = useState(false);
@@ -38,12 +38,12 @@ export function FeedbackWidget({
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      const result = await fetchFeedbackConfig();
-      if (!cancelled) setEnabled(result.ok && result.data.enabled);
+    const load = async (force = false) => {
+      const result = await fetchFeedbackConfig(force);
+      if (!cancelled) setEnabled(result.ok ? result.data.enabled : false);
     };
     void load();
-    const onChange = () => void load();
+    const onChange = () => void load(true);
     window.addEventListener("rawaj:feedback-config-changed", onChange);
     return () => {
       cancelled = true;
@@ -91,7 +91,7 @@ export function FeedbackWidget({
   }, [draft, open]);
 
   useEffect(() => {
-    if (!enabled && open) setOpen(false);
+    if (enabled === false && open) setOpen(false);
   }, [enabled, open]);
 
   useEffect(() => {
@@ -153,7 +153,7 @@ export function FeedbackWidget({
         message,
         context: {
           path: pathname,
-          url: window.location.href.slice(0, 1000),
+          url: `${window.location.origin}${pathname}`.slice(0, 1000),
           viewportWidth: window.innerWidth,
           viewportHeight: window.innerHeight,
           language,
@@ -179,7 +179,7 @@ export function FeedbackWidget({
     }
   }
 
-  if (!enabled) return null;
+  if (enabled !== true) return null;
 
   const typeOptions: Array<{
     value: FeedbackType;
