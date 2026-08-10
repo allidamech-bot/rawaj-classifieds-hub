@@ -14,6 +14,7 @@ export const CLOUDFLARE_ADMIN_MODULES = {
   "/admin/campaigns": true,
   "/admin/audit": true,
   "/admin/owner-controls": true,
+  "/admin/notifications": true,
 } as const;
 
 export type AdminModulePath = keyof typeof CLOUDFLARE_ADMIN_MODULES;

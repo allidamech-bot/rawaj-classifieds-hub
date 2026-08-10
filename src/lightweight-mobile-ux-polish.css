@@ -274,3 +274,32 @@
     transition: none !important;
   }
 }
+
+/* Feedback widget positioning and animation */
+.rawaj-feedback-trigger {
+  bottom: var(--rawaj-floating-bottom) !important;
+}
+
+.rawaj-feedback-teaser {
+  position: static !important;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+@keyframes rawaj-teaser-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.2rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rawaj-feedback-trigger[data-teaser-visible="true"] .rawaj-feedback-teaser {
+    animation: rawaj-teaser-in 300ms ease-out both;
+  }
+}

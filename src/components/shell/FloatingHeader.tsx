@@ -1,9 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Languages, LogIn, MapPin, Menu, Plus, Search, User, UserCog } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { BrandLockup } from "@/components/shell/BrandLockup";
 import { ShellHeaderFrame } from "@/components/shell/ShellHeaderFrame";
+import { adminFetchNotificationSummary } from "@/lib/api/admin-notifications";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -16,6 +18,7 @@ export interface FloatingHeaderProps {
 export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) {
   const auth = useAuth();
   const { language, text, toggleLanguage } = useUiPreferences();
+  const [adminUnread, setAdminUnread] = useState(0);
   const pathname = useRouterState({
     select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
   });
@@ -53,10 +56,13 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             to="/listings"
             search={{ open_filters: true }}
             className="rawaj-header-location hidden min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold xl:inline-flex"
-            aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
+            aria-label={text(
+              "تصفح الإعلانات في كل السعودية",
+              "Browse listings across Saudi Arabia",
+            )}
           >
             <MapPin className="h-4 w-4 text-brand-orange" strokeWidth={2.1} />
-            <span>{text("كل سوريا", "All Syria")}</span>
+            <span>{text("كل السعودية", "All Saudi Arabia")}</span>
           </Link>
         ) : null}
 
@@ -132,6 +138,11 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               className="rawaj-header-admin rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
               <UserCog className="h-4 w-4" />
+              {adminUnread > 0 ? (
+                <span className="absolute -top-0.5 -left-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-extrabold leading-5 text-white">
+                  {adminUnread > 99 ? "99+" : adminUnread}
+                </span>
+              ) : null}
             </Link>
           ) : null}
 

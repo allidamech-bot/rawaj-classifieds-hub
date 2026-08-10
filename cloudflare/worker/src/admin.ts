@@ -61,6 +61,18 @@ export async function handleAdmin(request: Request, env: AdminEnv): Promise<Resp
   if (path === "/v1/admin/listings" && request.method === "GET") {
     return adminModerationListings(request, env, cors);
   }
+  if (path === "/v1/admin/notifications/summary" && request.method === "GET") {
+    return adminNotificationsSummary(request, env, cors);
+  }
+  if (path === "/v1/admin/notifications" && request.method === "GET") {
+    return adminListNotifications(request, env, cors);
+  }
+  if (path === "/v1/admin/notifications" && request.method === "POST") {
+    return adminCreateNotification(request, env, cors);
+  }
+  if (path === "/v1/admin/notifications/read-by-entity" && request.method === "POST") {
+    return adminMarkNotificationsReadByEntity(request, env, cors);
+  }
 
   return null;
 }
@@ -429,6 +441,9 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       return validation(cors, "Unsupported action.");
   }
 
+  const moderationActionId = crypto.randomUUID();
+  const auditLogId = crypto.randomUUID();
+
   const results = await env.DB.batch([
     env.DB.prepare(updateSql).bind(...updateParams),
     env.DB.prepare(
@@ -437,7 +452,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
          SELECT ?, ?, ?, ?, ?, '{}', ?
          FROM listings WHERE id = ? AND updated_at = ?`,
     ).bind(
-      crypto.randomUUID(),
+      moderationActionId,
       listingId,
       auth.userId,
       moderationAction,
@@ -451,7 +466,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
        SELECT ?, ?, ?, ?, ?, ?, ?
        FROM listings WHERE id = ? AND updated_at = ?`,
     ).bind(
-      crypto.randomUUID(),
+      auditLogId,
       auth.userId,
       auditAction,
       "listings",
@@ -463,27 +478,54 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     ),
   ]);
 
-  if (results.some((result) => !result.success)) return databaseError(cors);
+  if (results.some((result) => !result.success)) {
+    console.error(
+      "rawaj_listing_moderation_batch_failed",
+      results.map((result) => result.error ?? "unknown_error"),
+    );
+    return databaseError(cors);
+  }
 
-  const updateMeta = results[0].meta as { changes?: number } | undefined;
-  const modActionMeta = results[1].meta as { changes?: number } | undefined;
-  const auditMeta = results[2].meta as { changes?: number } | undefined;
+  const persisted = await env.DB.prepare(
+    `SELECT l.status, l.updated_at,
+            EXISTS(
+              SELECT 1 FROM listing_moderation_actions
+               WHERE id = ? AND listing_id = ? AND actor_id = ? AND action = ?
+            ) AS moderation_ok,
+            EXISTS(
+              SELECT 1 FROM audit_logs
+               WHERE id = ? AND actor_id = ? AND action = ?
+                 AND entity_type = 'listings' AND entity_id = ?
+            ) AS audit_ok
+       FROM listings l
+      WHERE l.id = ?`,
+  )
+    .bind(
+      moderationActionId,
+      listingId,
+      auth.userId,
+      moderationAction,
+      auditLogId,
+      auth.userId,
+      auditAction,
+      listingId,
+      listingId,
+    )
+    .first<{
+      status: string;
+      updated_at: string;
+      moderation_ok: number;
+      audit_ok: number;
+    }>();
 
-  if (!updateMeta?.changes || updateMeta.changes !== 1) {
+  if (!persisted || persisted.status !== nextStatus || persisted.updated_at !== timestamp) {
     return json(
       { error: { code: "stale_review", message: "Listing changed since loaded." } },
       409,
       cors,
     );
   }
-  if (
-    !modActionMeta?.changes ||
-    modActionMeta.changes !== 1 ||
-    !auditMeta?.changes ||
-    auditMeta.changes !== 1
-  ) {
-    return databaseError(cors);
-  }
+  if (!persisted.moderation_ok || !persisted.audit_ok) return databaseError(cors);
 
   return json(
     {
@@ -512,6 +554,229 @@ function normalizeModerationAction(value: string | null): string | null {
   ].includes(value ?? "")
     ? value
     : null;
+}
+
+const NOTIFICATION_EVENT_TYPES = new Set([
+  "user_created",
+  "listing_submitted",
+  "feedback_created",
+  "support_created",
+  "report_created",
+]);
+const NOTIFICATION_ENTITY_TYPES = new Set([
+  "users",
+  "listings",
+  "feedback",
+  "support",
+  "reports",
+]);
+
+export async function ensureAdminNotification(
+  env: AdminEnv,
+  input: {
+    eventType: string;
+    entityType: string;
+    entityId: string;
+    title: string;
+    body: string;
+    eventKey: string;
+  },
+): Promise<void> {
+  if (
+    !NOTIFICATION_EVENT_TYPES.has(input.eventType) ||
+    !NOTIFICATION_ENTITY_TYPES.has(input.entityType) ||
+    !input.entityId ||
+    !input.eventKey
+  ) {
+    return;
+  }
+  try {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO admin_notifications
+        (id, event_type, entity_type, entity_id, title, body, event_key, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        crypto.randomUUID(),
+        input.eventType,
+        input.entityType,
+        input.entityId.slice(0, 160),
+        input.title.slice(0, 300),
+        input.body.slice(0, 1000),
+        input.eventKey.slice(0, 200),
+        now(),
+      )
+      .run();
+  } catch {
+    // Notification creation failure must not corrupt the user's primary operation.
+  }
+}
+
+async function adminNotificationsSummary(request: Request, env: AdminEnv, cors: Headers) {
+  const auth = await authenticate(request, asAuthEnv(env));
+  if (!auth) return unauthorized(cors);
+  if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
+
+  const rows = await env.DB.prepare(
+    `SELECT an.entity_type,
+            COUNT(*) AS total,
+            SUM(CASE WHEN anr.read_at IS NULL THEN 1 ELSE 0 END) AS unread
+       FROM admin_notifications an
+       LEFT JOIN admin_notification_reads anr
+         ON anr.notification_id = an.id AND anr.admin_user_id = ?
+       GROUP BY an.entity_type`,
+  )
+    .bind(auth.userId)
+    .all<{ entity_type: string; total: number; unread: number }>();
+
+  if (!rows.success) return databaseError(cors);
+
+  const byType: Record<string, number> = {};
+  let unreadTotal = 0;
+  for (const row of rows.results ?? []) {
+    const key = stringValue(row.entity_type);
+    const unread = numberValue(row.unread);
+    if (unread > 0) {
+      byType[key] = unread;
+      unreadTotal += unread;
+    }
+  }
+
+  return json({ data: { unreadTotal, byType } }, 200, cors);
+}
+
+async function adminListNotifications(request: Request, env: AdminEnv, cors: Headers) {
+  const auth = await authenticate(request, asAuthEnv(env));
+  if (!auth) return unauthorized(cors);
+  if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
+
+  const url = new URL(request.url);
+  const entityType = clean(url.searchParams.get("entityType"), 50);
+  const limit = integerParam(request, 50, 1, 200);
+
+  const whereClause =
+    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType)
+      ? "WHERE an.entity_type = ?"
+      : null;
+  const statement = env.DB.prepare(
+    `SELECT an.id, an.event_type, an.entity_type, an.entity_id, an.title, an.body,
+            an.event_key, an.created_at,
+            anr.read_at
+       FROM admin_notifications an
+       LEFT JOIN admin_notification_reads anr
+         ON anr.notification_id = an.id AND anr.admin_user_id = ?
+     ${whereClause ?? ""}
+     ORDER BY an.created_at DESC
+     LIMIT ?`,
+  );
+
+  const result = whereClause
+    ? await statement.bind(auth.userId, entityType, limit).all<Row>()
+    : await statement.bind(auth.userId, limit).all<Row>();
+
+  if (!result.success) return databaseError(cors);
+
+  const items = (result.results ?? []).map((row) => ({
+    id: stringValue(row.id),
+    eventType: stringValue(row.event_type),
+    entityType: stringValue(row.entity_type),
+    entityId: stringValue(row.entity_id),
+    title: stringValue(row.title),
+    body: stringValue(row.body),
+    eventKey: stringValue(row.event_key),
+    createdAt: stringValue(row.created_at),
+    readAt: nullableString(row.read_at),
+  }));
+
+  return json({ data: items }, 200, cors);
+}
+
+async function adminCreateNotification(request: Request, env: AdminEnv, cors: Headers) {
+  const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
+  if (auth instanceof Response) return auth;
+  if (!requireAdminRole(auth, "admin")) return forbidden(cors);
+
+  const body = await readJson(request);
+  if (!body.ok) return json({ error: body.error }, body.status, cors);
+
+  const eventType = clean(body.data.eventType, 50);
+  const entityType = clean(body.data.entityType, 50);
+  const entityId = clean(body.data.entityId, 160);
+  const title = clean(body.data.title, 300);
+  const bodyText = clean(body.data.body, 1000);
+  const eventKey = clean(body.data.eventKey, 200);
+
+  if (
+    !eventType ||
+    !NOTIFICATION_EVENT_TYPES.has(eventType) ||
+    !entityType ||
+    !NOTIFICATION_ENTITY_TYPES.has(entityType) ||
+    !entityId ||
+    !title ||
+    !bodyText ||
+    !eventKey
+  ) {
+    return validation(cors, "Invalid admin notification payload.");
+  }
+
+  await ensureAdminNotification(env, {
+    eventType,
+    entityType,
+    entityId,
+    title,
+    body: bodyText,
+    eventKey,
+  });
+
+  return json({ data: { eventKey } }, 201, cors);
+}
+
+async function adminMarkNotificationsReadByEntity(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
+  const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
+  if (auth instanceof Response) return auth;
+  if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
+
+  const body = await readJson(request);
+  if (!body.ok) return json({ error: body.error }, body.status, cors);
+
+  const entityType = clean(body.data.entityType, 50);
+  const entityId = clean(body.data.entityId, 160);
+  if (!entityType || !NOTIFICATION_ENTITY_TYPES.has(entityType) || !entityId) {
+    return validation(cors, "Entity type and entity id are required.");
+  }
+
+  const timestamp = now();
+  const notifications = await env.DB.prepare(
+    `SELECT an.id FROM admin_notifications an
+      WHERE an.entity_type = ? AND an.entity_id = ?`,
+  )
+    .bind(entityType, entityId)
+    .all<{ id: string }>();
+
+  if (!notifications.success) return databaseError(cors);
+
+  const ids = (notifications.results ?? []).map((row) => stringValue(row.id));
+  if (ids.length === 0) {
+    return json({ data: { markedRead: 0 } }, 200, cors);
+  }
+
+  const timestamp2 = timestamp;
+  let marked = 0;
+  for (const id of ids) {
+    const result = await env.DB.prepare(
+      `INSERT OR IGNORE INTO admin_notification_reads (notification_id, admin_user_id, read_at)
+       VALUES (?, ?, ?)`,
+    )
+      .bind(id, auth.userId, timestamp2)
+      .run();
+    if (result.success) marked += 1;
+  }
+
+  return json({ data: { markedRead: marked } }, 200, cors);
 }
 
 function stringValue(value: unknown, fallback = ""): string {

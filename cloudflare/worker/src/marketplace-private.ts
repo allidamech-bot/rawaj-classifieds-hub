@@ -496,7 +496,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       location_node_id, title, description, price, currency, price_type,
       listing_condition, status, district_ar, contact_name, contact_options, details,
       is_featured, search_text_normalized, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SYP', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAR', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
   ).bind(
     id,
     auth.userId,
@@ -580,11 +580,8 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
     const submissionError = await validateListingSubmission(env, cors, id, input);
     if (submissionError) return submissionError;
   }
-  const status = input.submit
-    ? "pending_review"
-    : existing.status === "approved"
-      ? "draft"
-      : existing.status;
+  const status =
+    input.submit ? "pending_review" : existing.status === "approved" ? "draft" : existing.status;
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE listings SET category_id = ?, subcategory_id = ?, governorate_id = ?,
@@ -614,7 +611,31 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
     )
     .run();
   return result.success
-    ? json({ data: { id, status, updatedAt: timestamp } }, 200, cors)
+    ? (async () => {
+        if (input.submit && status === "pending_review") {
+          try {
+            await env.DB.prepare(
+              `INSERT OR IGNORE INTO admin_notifications
+                (id, event_type, entity_type, entity_id, title, body, event_key, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            )
+              .bind(
+                crypto.randomUUID(),
+                "listing_submitted",
+                "listings",
+                id,
+                "إعلان جديد بانتظار المراجعة",
+                `الإعلان "${input.title}" بانتظار المراجعة`,
+                `listing_submitted:${id}:${status}`,
+                timestamp,
+              )
+              .run();
+          } catch {
+            // Notification creation failure must not corrupt the primary operation.
+          }
+        }
+        return json({ data: { id, status, updatedAt: timestamp } }, 200, cors);
+      })()
     : databaseError(cors);
 }
 
@@ -739,7 +760,7 @@ async function uploadImage(
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
-      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
+      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },
     });
   } catch {
     return databaseError(cors);
@@ -875,13 +896,19 @@ async function reorderImages(
     ),
   );
   if (temporary.some((result) => !result.success)) return databaseError(cors);
-  const final = await env.DB.batch(
-    imageIds.map((id, index) =>
-      env.DB.prepare(
-        "UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?",
-      ).bind(index, id, listingId),
-    ),
+  const finalStatements = imageIds.map((id, index) =>
+    env.DB.prepare(
+      "UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?",
+    ).bind(index, id, listingId),
   );
+  if (listing.status === "approved") {
+    finalStatements.push(
+      env.DB.prepare(
+        "UPDATE listings SET status = 'draft', updated_at = ? WHERE id = ? AND owner_id = ? AND status = 'approved'",
+      ).bind(now(), listingId, auth.userId),
+    );
+  }
+  const final = await env.DB.batch(finalStatements);
   return final.every((result) => result.success)
     ? listImages(request, env, cors, listingId)
     : databaseError(cors);
@@ -891,7 +918,8 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const row = await env.DB.prepare(
-    `SELECT li.listing_id, m.id AS asset_id, m.object_key, m.owner_id, l.owner_id AS listing_owner
+    `SELECT li.listing_id, m.id AS asset_id, m.object_key, m.owner_id,
+      l.owner_id AS listing_owner, l.status AS listing_status
       FROM listing_images li JOIN media_assets m ON m.id = li.media_asset_id
       JOIN listings l ON l.id = li.listing_id WHERE li.id = ?`,
   )
@@ -899,8 +927,20 @@ async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers,
     .first<Row>();
   if (!row || row.owner_id !== auth.userId || row.listing_owner !== auth.userId)
     return forbidden(cors);
+  const listingStatus = stringValue(row.listing_status);
+  if (!["draft", "rejected", "approved"].includes(listingStatus)) return forbidden(cors);
+  const timestamp = now();
+  const listingTransition =
+    listingStatus === "approved"
+      ? [
+          env.DB.prepare(
+            "UPDATE listings SET status = 'draft', updated_at = ? WHERE id = ? AND owner_id = ? AND status = 'approved'",
+          ).bind(timestamp, String(row.listing_id), auth.userId),
+        ]
+      : [];
 
   const results = await env.DB.batch([
+    ...listingTransition,
     env.DB.prepare("DELETE FROM listing_images WHERE id = ?").bind(imageId),
     env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
       String(row.asset_id),
@@ -1169,7 +1209,7 @@ function mapListingRow(row: Row) {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
     status,

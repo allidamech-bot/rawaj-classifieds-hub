@@ -6,6 +6,7 @@ import {
   requireMutationAuth,
   type AuthEnv,
 } from "./auth";
+import { ensureAdminNotification, type AdminEnv } from "./admin";
 
 type Value = string | number | null;
 type Row = Record<string, unknown>;
@@ -179,6 +180,25 @@ async function createFeedback(request: Request, env: FeedbackEnv, cors: Headers)
     .run();
   if (!result.success) return databaseError(cors);
   const row = await readFeedback(env, id);
+
+  const feedbackTypeLabel =
+    type === "complaint"
+      ? "شكوى جديدة وصلت"
+      : type === "suggestion"
+        ? "اقتراح جديد وصل"
+        : type === "technical_issue"
+          ? "مشكلة تقنية جديدة وصلت"
+          : "ملاحظة جديدة وصلت";
+
+  await ensureAdminNotification(env as unknown as AdminEnv, {
+    eventType: "feedback_created",
+    entityType: "feedback",
+    entityId: id,
+    title: feedbackTypeLabel,
+    body: subject.slice(0, 1000),
+    eventKey: `feedback_created:${id}`,
+  });
+
   return row ? json({ data: mapFeedback(row) }, 201, cors) : databaseError(cors);
 }
 
