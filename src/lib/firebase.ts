@@ -2,7 +2,8 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U",
+  // Firebase Web API keys are public client configuration; this is not an Admin SDK/server secret.
+  apiKey: "AIzaSyCEx7XMl1vsLU3cvoDjrPav5WF54MFkn1U", // nosemgrep: generic.secrets.security.detected-generic-api-key.detected-generic-api-key
   authDomain: "project-af18fcaf-c46e-4ec5-93a.firebaseapp.com",
   projectId: "project-af18fcaf-c46e-4ec5-93a",
   messagingSenderId: "165848071823",
