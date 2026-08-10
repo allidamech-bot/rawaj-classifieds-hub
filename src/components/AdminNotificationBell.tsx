@@ -81,7 +81,7 @@ export function AdminNotificationBell({
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</p>
             <span className="text-[10px] text-muted-foreground">
-              {text(`${visibleUnreadTotal} غير مقروء`, `${visibleUnreadTotal} unread`)}
+              {text(`${visibleUnreadTotal} إشعار`, `${visibleUnreadTotal} notifications`)}
             </span>
           </div>
           <div className="max-h-80 overflow-y-auto">
