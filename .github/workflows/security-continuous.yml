@@ -1,0 +1,66 @@
+name: Continuous Security Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "cloudflare/worker/package.json"
+      - "cloudflare/worker/package-lock.json"
+      - ".github/workflows/security-continuous.yml"
+      - ".github/dependabot.yml"
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "cloudflare/worker/package.json"
+      - "cloudflare/worker/package-lock.json"
+      - ".github/workflows/security-continuous.yml"
+      - ".github/dependabot.yml"
+  schedule:
+    - cron: "23 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    name: npm audit (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        directory:
+          - "."
+          - "cloudflare/worker"
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.directory == '.' && 'package-lock.json' || format('{0}/package-lock.json', matrix.directory) }}
+
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Fail on high or critical dependency vulnerabilities
+        run: npm audit --audit-level=high
