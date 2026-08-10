@@ -85,7 +85,7 @@ export function AdminNotificationBell() {
           <div className="max-h-80 overflow-y-auto">
             {loading ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
-                {text("جارٍ التحميل...", "Loading notifications...")}
+                {text("جارٍ التحميل...", "Loading...")}
               </p>
             ) : !summary || unreadTotal === 0 ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
