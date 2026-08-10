@@ -16,21 +16,29 @@ export function AdminNotificationBell({
   const { text } = useUiPreferences();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [openedSummary, setOpenedSummary] = useState<AdminNotificationSummary | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const canAccess = auth.canAccessAdmin;
 
   const unreadTotal = summary?.unreadTotal ?? 0;
-  const loading = summary === null;
+  const visibleSummary = openedSummary ?? summary;
+  const visibleUnreadTotal = visibleSummary?.unreadTotal ?? 0;
+  const loading = visibleSummary === null;
+
+  function closePopover() {
+    setOpen(false);
+    setOpenedSummary(null);
+  }
 
   useEffect(() => {
     if (!open) return;
     function handleClickOutside(event: MouseEvent) {
       if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        closePopover();
       }
     }
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closePopover();
     }
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
@@ -47,9 +55,13 @@ export function AdminNotificationBell({
       <button
         type="button"
         onClick={() => {
-          const nextOpen = !open;
-          setOpen(nextOpen);
-          if (nextOpen && unreadTotal > 0) onOpenNotifications();
+          if (open) {
+            closePopover();
+            return;
+          }
+          setOpenedSummary(summary);
+          setOpen(true);
+          if (unreadTotal > 0) onOpenNotifications();
         }}
         className="rawaj-icon-button rawaj-touch-target relative grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={text("الإشعارات", "Notifications")}
@@ -69,7 +81,7 @@ export function AdminNotificationBell({
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</p>
             <span className="text-[10px] text-muted-foreground">
-              {text(`${unreadTotal} غير مقروء`, `${unreadTotal} unread`)}
+              {text(`${visibleUnreadTotal} غير مقروء`, `${visibleUnreadTotal} unread`)}
             </span>
           </div>
           <div className="max-h-80 overflow-y-auto">
@@ -77,19 +89,19 @@ export function AdminNotificationBell({
               <p className="py-4 text-center text-xs text-muted-foreground">
                 {text("جارٍ التحميل...", "Loading...")}
               </p>
-            ) : !summary || unreadTotal === 0 ? (
+            ) : !visibleSummary || visibleUnreadTotal === 0 ? (
               <p className="py-4 text-center text-xs text-muted-foreground">
                 {text("لا توجد إشعارات جديدة.", "No new notifications.")}
               </p>
             ) : (
               <div className="space-y-1">
-                {Object.entries(summary.byType).map(([type, count]) => (
+                {Object.entries(visibleSummary.byType).map(([type, count]) => (
                   <button
                     key={type}
                     type="button"
                     onClick={() => {
                       navigate({ to: "/admin/notifications", search: { entityType: type } });
-                      setOpen(false);
+                      closePopover();
                     }}
                     className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs hover:bg-muted-surface"
                   >
@@ -107,7 +119,7 @@ export function AdminNotificationBell({
               type="button"
               onClick={() => {
                 navigate({ to: "/admin/notifications" });
-                setOpen(false);
+                closePopover();
               }}
               className="block w-full rounded-xl px-3 py-2 text-center text-xs font-bold text-primary hover:bg-muted-surface"
             >
