@@ -49,7 +49,14 @@ type VerifiedIdentity = {
   subject: string;
   sessionId: string;
   email: string;
+  emailVerified: boolean;
   displayName: string | null;
+};
+
+type StoredIdentity = {
+  id: string;
+  auth_provider: string | null;
+  auth_user_id: string | null;
 };
 
 const MAX_BODY_BYTES = 16_384;
@@ -58,6 +65,12 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 const DEFAULT_FIREBASE_JWKS_URL =
   "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 const remoteKeySets = new Map<string, JWTVerifyGetKey>();
+const PREVIOUS_CLOUD_IDENTITY_PROVIDER = ["supa", "base"].join("");
+const RETIRED_IDENTITY_PROVIDERS = new Set<string | null>([
+  null,
+  "legacy_import",
+  PREVIOUS_CLOUD_IDENTITY_PROVIDER,
+]);
 
 export async function authenticate(request: Request, env: AuthEnv): Promise<Authenticated | null> {
   const token = bearerToken(request);
@@ -80,7 +93,7 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
   const rolesResult = await env.DB.prepare("SELECT role FROM user_roles WHERE user_id = ?")
     .bind(userId)
     .all<{ role: string }>();
-  if (!rolesResult.success) throw new Error("role_lookup_failed");
+  if (!rolesResult.success) identityFailure("role_lookup_failed", rolesResult.error);
 
   return {
     userId,
@@ -245,6 +258,7 @@ export async function verifyFirebaseIdToken(
       subject: payload.sub,
       sessionId: `${payload.sub}:${tokenId}`,
       email,
+      emailVerified: payload.email_verified === true,
       displayName: safeFirebaseDisplayName(payload),
     };
   } catch (error) {
@@ -265,68 +279,158 @@ async function ensureApplicationIdentity(
     .bind(identity.subject)
     .first<{ id: string }>();
   if (linked) {
-    if (identity.displayName) {
-      const defaultDisplayName = identity.email.split("@")[0].slice(0, 100);
-      const synchronized = await env.DB.prepare(
-        `UPDATE public_profiles
-            SET display_name = ?, updated_at = ?
-          WHERE id = ?
-            AND (display_name IS NULL OR trim(display_name) = '' OR display_name = ?)`,
-      )
-        .bind(identity.displayName, new Date().toISOString(), linked.id, defaultDisplayName)
-        .run();
-      if (!synchronized.success) throw new Error("identity_profile_sync_failed");
-    }
+    await synchronizeProfileName(env, linked.id, identity);
     return linked.id;
+  }
+
+  const now = new Date().toISOString();
+  const existingEmailIdentity = await findIdentityByCanonicalEmail(env, identity.email);
+  if (existingEmailIdentity) {
+    return linkVerifiedEmailIdentity(env, existingEmailIdentity, identity, now);
   }
 
   const existingSameId = UUID_PATTERN.test(identity.subject)
     ? await env.DB.prepare("SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?")
         .bind(identity.subject)
-        .first<{ id: string; auth_provider: string | null; auth_user_id: string | null }>()
+        .first<StoredIdentity>()
     : null;
-  const now = new Date().toISOString();
 
+  if (existingSameId) {
+    if (!identity.emailVerified) identityFailure("identity_email_unverified");
+    if (
+      !RETIRED_IDENTITY_PROVIDERS.has(existingSameId.auth_provider) &&
+      existingSameId.auth_provider !== "firebase"
+    ) {
+      identityFailure("identity_collision");
+    }
+    return linkVerifiedEmailIdentity(env, existingSameId, identity, now);
+  }
+
+  return createApplicationIdentity(env, identity, now);
+}
+
+async function findIdentityByCanonicalEmail(
+  env: AuthEnv,
+  canonicalEmail: string,
+): Promise<StoredIdentity | null> {
+  const result = await env.DB.prepare(
+    `SELECT DISTINCT u.id, u.auth_provider, u.auth_user_id
+       FROM auth_users u
+       LEFT JOIN public_profiles p ON p.id = u.id
+      WHERE trim(u.email_normalized) COLLATE NOCASE = ?
+         OR trim(u.email) COLLATE NOCASE = ?
+         OR trim(COALESCE(p.email, '')) COLLATE NOCASE = ?
+      LIMIT 3`,
+  )
+    .bind(canonicalEmail, canonicalEmail, canonicalEmail)
+    .all<StoredIdentity>();
+  if (!result.success) identityFailure("identity_email_lookup_failed", result.error);
+
+  const unique = new Map<string, StoredIdentity>();
+  for (const row of result.results ?? []) unique.set(row.id, row);
+  if (unique.size > 1) identityFailure("identity_email_collision");
+  return unique.values().next().value ?? null;
+}
+
+async function linkVerifiedEmailIdentity(
+  env: AuthEnv,
+  stored: StoredIdentity,
+  identity: VerifiedIdentity,
+  now: string,
+): Promise<string> {
+  if (!identity.emailVerified) identityFailure("identity_email_unverified");
   if (
-    existingSameId &&
-    (!existingSameId.auth_user_id ||
-      (existingSameId.auth_provider === "legacy_import" &&
-        existingSameId.auth_user_id === identity.subject))
+    stored.auth_provider !== "firebase" &&
+    !RETIRED_IDENTITY_PROVIDERS.has(stored.auth_provider)
   ) {
-    const result = await env.DB.prepare(
+    identityFailure("identity_email_collision");
+  }
+
+  const defaultDisplayName = identity.email.split("@")[0].slice(0, 100);
+  const results = await env.DB.batch([
+    env.DB.prepare(
       `UPDATE auth_users
           SET auth_provider = 'firebase', auth_user_id = ?, email = ?,
-              email_normalized = ?, updated_at = ?
+              email_normalized = ?, email_confirmed_at = COALESCE(email_confirmed_at, ?),
+              updated_at = ?
+        WHERE id = ?
+          AND (auth_provider IS NULL
+            OR auth_provider = 'legacy_import'
+            OR auth_provider = ?
+            OR auth_provider = 'firebase')`,
+    ).bind(
+      identity.subject,
+      identity.email,
+      identity.email,
+      now,
+      now,
+      stored.id,
+      PREVIOUS_CLOUD_IDENTITY_PROVIDER,
+    ),
+    env.DB.prepare(
+      `UPDATE public_profiles
+          SET display_name = CASE
+                WHEN display_name IS NULL OR trim(display_name) = '' OR display_name = ?
+                  THEN ?
+                ELSE display_name
+              END,
+              updated_at = ?
         WHERE id = ?`,
-    )
-      .bind(identity.subject, identity.email, identity.email, now, identity.subject)
-      .run();
-    if (!result.success) throw new Error("identity_link_failed");
-    return identity.subject;
-  }
-  if (existingSameId) throw new Error("identity_collision");
+    ).bind(defaultDisplayName, identity.displayName ?? defaultDisplayName, now, stored.id),
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO user_roles (user_id, role, created_at)
+       VALUES (?, 'user', ?)`,
+    ).bind(stored.id, now),
+  ]);
+  const failed = results.find((result) => !result.success);
+  if (failed) identityFailure("identity_link_by_email_failed", failed.error);
 
+  const verified = await env.DB.prepare(
+    `SELECT id FROM auth_users
+      WHERE id = ? AND auth_provider = 'firebase' AND auth_user_id = ?`,
+  )
+    .bind(stored.id, identity.subject)
+    .first<{ id: string }>();
+  if (!verified) identityFailure("identity_link_by_email_failed");
+
+  console.log(
+    JSON.stringify({
+      event: "identity_linked_by_verified_email",
+      providerTransition: stored.auth_provider ?? "null",
+      subjectChanged: stored.auth_user_id !== identity.subject,
+    }),
+  );
+  return stored.id;
+}
+
+async function createApplicationIdentity(
+  env: AuthEnv,
+  identity: VerifiedIdentity,
+  now: string,
+): Promise<string> {
   const applicationUserId = UUID_PATTERN.test(identity.subject)
     ? identity.subject
     : crypto.randomUUID();
   const displayName = identity.displayName ?? identity.email.split("@")[0].slice(0, 100);
   const results = await env.DB.batch([
     env.DB.prepare(
-      `INSERT OR IGNORE INTO public_profiles
+      `INSERT INTO public_profiles
         (id, display_name, verification_status, account_status, created_at, updated_at, email)
        VALUES (?, ?, 'unverified', 'active', ?, ?, ?)`,
     ).bind(applicationUserId, displayName, now, now, identity.email),
     env.DB.prepare(
-      `INSERT OR IGNORE INTO auth_users
+      `INSERT INTO auth_users
         (id, email, email_normalized, email_confirmed_at, created_at, updated_at,
          auth_provider, auth_user_id)
        VALUES (?, ?, ?, ?, ?, ?, 'firebase', ?)`,
     ).bind(applicationUserId, identity.email, identity.email, now, now, now, identity.subject),
-    env.DB.prepare(
-      `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)`,
-    ).bind(applicationUserId, now),
+    env.DB.prepare(`INSERT INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)`).bind(
+      applicationUserId,
+      now,
+    ),
   ]);
-  if (results.some((result) => !result.success)) throw new Error("identity_create_failed");
+  const failed = results.find((result) => !result.success);
+  if (failed) identityFailure("identity_create_failed", failed.error);
 
   const created = await env.DB.prepare(
     `SELECT id FROM auth_users
@@ -334,8 +438,67 @@ async function ensureApplicationIdentity(
   )
     .bind(identity.subject)
     .first<{ id: string }>();
-  if (!created) throw new Error("identity_create_failed");
+  if (!created) identityFailure("identity_create_failed");
+
+  try {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO admin_notifications
+        (id, event_type, entity_type, entity_id, title, body, event_key, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        crypto.randomUUID(),
+        "user_created",
+        "users",
+        created.id,
+        "مستخدم جديد سجّل في رواج",
+        `المستخدم ${identity.email} سجّل حديثاً`,
+        `user_created:${created.id}`,
+        now,
+      )
+      .run();
+  } catch {
+    // Notification creation failure must not corrupt the primary operation.
+  }
+
   return created.id;
+}
+
+async function synchronizeProfileName(
+  env: AuthEnv,
+  userId: string,
+  identity: VerifiedIdentity,
+): Promise<void> {
+  if (!identity.displayName) return;
+  const defaultDisplayName = identity.email.split("@")[0].slice(0, 100);
+  const synchronized = await env.DB.prepare(
+    `UPDATE public_profiles
+        SET display_name = ?, updated_at = ?
+      WHERE id = ?
+        AND (display_name IS NULL OR trim(display_name) = '' OR display_name = ?)`,
+  )
+    .bind(identity.displayName, new Date().toISOString(), userId, defaultDisplayName)
+    .run();
+  if (!synchronized.success) {
+    console.warn(
+      JSON.stringify({
+        event: "identity_profile_sync_skipped",
+        stage: "display_name",
+        databaseError: synchronized.error ?? "unknown_error",
+      }),
+    );
+  }
+}
+
+function identityFailure(stage: string, databaseError?: string): never {
+  console.error(
+    JSON.stringify({
+      event: "identity_bootstrap_failed",
+      stage,
+      ...(databaseError ? { databaseError } : {}),
+    }),
+  );
+  throw new Error(stage);
 }
 
 function verificationKeySet(

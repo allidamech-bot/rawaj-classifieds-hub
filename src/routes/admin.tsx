@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   BadgeCheck,
+  Bell,
   ChevronLeft,
   ChevronRight,
   DatabaseZap,
@@ -19,9 +20,14 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 import { DeploymentTruthPanel } from "@/components/DeploymentTruthPanel";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  adminFetchNotificationSummary,
+  type AdminNotificationSummary,
+} from "@/lib/api/admin-notifications";
 import type { RolePermission } from "@/lib/auth-types";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -62,6 +68,13 @@ const tabs: Array<{
     labelEn: "Listing decisions",
     icon: ListChecks,
     permission: "canModerateListings",
+  },
+  {
+    to: "/admin/notifications",
+    labelAr: "الإشعارات",
+    labelEn: "Notifications",
+    icon: Bell,
+    permission: "canViewAdminDashboard",
   },
   {
     to: "/admin/data-quality",
@@ -158,6 +171,22 @@ function AdminLayout() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const adminNavRef = useRef<HTMLElement | null>(null);
+  const [notificationSummary, setNotificationSummary] = useState<AdminNotificationSummary | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!auth.canAccessAdmin) return;
+    let cancelled = false;
+    adminFetchNotificationSummary(true)
+      .then((result) => {
+        if (!cancelled && result.ok) setNotificationSummary(result.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.canAccessAdmin]);
 
   if (auth.status === "loading") {
     return (
@@ -253,6 +282,9 @@ function AdminLayout() {
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
+      <div className="container-wide px-4 pb-2 pt-2 sm:px-6">
+        <AdminNotificationBell />
+      </div>
       <main className="rawaj-admin-v3 container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
         <div className="rawaj-admin-access-notice mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] p-3">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
@@ -294,6 +326,7 @@ function AdminLayout() {
             >
               {visibleTabs.map((tab) => {
                 const active = tabMatchesPath(tab, pathname);
+                const badge = tabBadge(tab, notificationSummary);
                 return (
                   <Link
                     key={tab.to}
@@ -303,6 +336,11 @@ function AdminLayout() {
                   >
                     <tab.icon className="h-4 w-4" />
                     {text(tab.labelAr, tab.labelEn)}
+                    {badge > 0 ? (
+                      <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-extrabold leading-5 text-white">
+                        {badge > 99 ? "99+" : badge}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}
@@ -329,6 +367,27 @@ function AdminLayout() {
       </main>
     </>
   );
+}
+
+function tabBadge(
+  tab: { to: string; labelAr: string; labelEn: string },
+  summary: AdminNotificationSummary | null,
+): number {
+  if (!summary) return 0;
+  const map: Record<string, string> = {
+    "/admin/users": "users",
+    "/admin/listings": "listings",
+    "/admin/pending": "listings",
+    "/admin/reports": "reports",
+    "/admin/message-reports": "reports",
+    "/admin/safety": "reports",
+    "/admin/verifications": "users",
+    "/admin/promotions": "listings",
+    "/admin/notifications": "feedback",
+  };
+  const key = map[tab.to];
+  if (!key) return 0;
+  return summary.byType[key] ?? 0;
 }
 
 function AdminShellState({

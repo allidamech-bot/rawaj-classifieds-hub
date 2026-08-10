@@ -48,6 +48,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminPendingRouteImport } from './routes/admin.pending'
 import { Route as AdminOwnerControlsRouteImport } from './routes/admin.owner-controls'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessageReportsRouteImport } from './routes/admin.message-reports'
 import { Route as AdminListingsRouteImport } from './routes/admin.listings'
 import { Route as AdminDataQualityRouteImport } from './routes/admin.data-quality'
@@ -251,6 +252,11 @@ const AdminOwnerControlsRoute = AdminOwnerControlsRouteImport.update({
   path: '/owner-controls',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMessageReportsRoute = AdminMessageReportsRouteImport.update({
   id: '/message-reports',
   path: '/message-reports',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -363,6 +370,7 @@ export interface FileRoutesByTo {
   '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/admin/data-quality': typeof AdminDataQualityRoute
   '/admin/listings': typeof AdminListingsRoute
   '/admin/message-reports': typeof AdminMessageReportsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/owner-controls': typeof AdminOwnerControlsRoute
   '/admin/pending': typeof AdminPendingRoute
   '/admin/promotions': typeof AdminPromotionsRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/notifications'
     | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
     | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/notifications'
     | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
@@ -556,6 +567,7 @@ export interface FileRouteTypes {
     | '/admin/data-quality'
     | '/admin/listings'
     | '/admin/message-reports'
+    | '/admin/notifications'
     | '/admin/owner-controls'
     | '/admin/pending'
     | '/admin/promotions'
@@ -880,6 +892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOwnerControlsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/message-reports': {
       id: '/admin/message-reports'
       path: '/message-reports'
@@ -939,6 +958,7 @@ interface AdminRouteChildren {
   AdminDataQualityRoute: typeof AdminDataQualityRoute
   AdminListingsRoute: typeof AdminListingsRoute
   AdminMessageReportsRoute: typeof AdminMessageReportsRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOwnerControlsRoute: typeof AdminOwnerControlsRoute
   AdminPendingRoute: typeof AdminPendingRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
@@ -957,6 +977,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDataQualityRoute: AdminDataQualityRoute,
   AdminListingsRoute: AdminListingsRoute,
   AdminMessageReportsRoute: AdminMessageReportsRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOwnerControlsRoute: AdminOwnerControlsRoute,
   AdminPendingRoute: AdminPendingRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,

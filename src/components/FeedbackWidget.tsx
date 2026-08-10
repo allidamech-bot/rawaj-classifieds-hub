@@ -1,14 +1,12 @@
-import { Bug, CircleAlert, Lightbulb, MessageSquare, Send, X } from "lucide-react";
+import { Bug, CircleAlert, Lightbulb, MessageSquare, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import {
-  fetchFeedbackConfig,
-  submitFeedback,
-  type FeedbackType,
-} from "@/lib/api/feedback";
+import { fetchFeedbackConfig, submitFeedback, type FeedbackType } from "@/lib/api/feedback";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 const DRAFT_KEY = "rawaj-feedback-draft-v1";
+const TEASER_SESSION_KEY = "rawaj-feedback-teaser-shown";
+const TEASER_DURATION_MS = 5000;
 
 type Draft = {
   type: FeedbackType;
@@ -34,6 +32,7 @@ export function FeedbackWidget({
   const [notice, setNotice] = useState("");
   const [success, setSuccess] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [showTeaser, setShowTeaser] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,6 +49,23 @@ export function FeedbackWidget({
       window.removeEventListener("rawaj:feedback-config-changed", onChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (enabled !== true || triggerHidden) return;
+    try {
+      const shownThisSession = window.sessionStorage.getItem(TEASER_SESSION_KEY);
+      if (!shownThisSession) {
+        setShowTeaser(true);
+        window.sessionStorage.setItem(TEASER_SESSION_KEY, "1");
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const delay = reduceMotion ? Math.min(TEASER_DURATION_MS, 2000) : TEASER_DURATION_MS;
+        const timer = window.setTimeout(() => setShowTeaser(false), delay);
+        return () => window.clearTimeout(timer);
+      }
+    } catch {
+      // sessionStorage may be unavailable; skip teaser silently.
+    }
+  }, [enabled, triggerHidden]);
 
   useEffect(() => {
     try {
@@ -95,6 +111,10 @@ export function FeedbackWidget({
   }, [enabled, open]);
 
   useEffect(() => {
+    if (showTeaser) setShowTeaser(false);
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !submitting) setOpen(false);
@@ -124,11 +144,18 @@ export function FeedbackWidget({
     const subject = draft.subject.trim();
     const message = draft.message.trim();
     if (subject.length < 4) {
-      setNotice(text("اكتب عنواناً واضحاً من 4 أحرف على الأقل.", "Enter a subject of at least 4 characters."));
+      setNotice(
+        text(
+          "اكتب عنواناً واضحاً من 4 أحرف على الأقل.",
+          "Enter a subject of at least 4 characters.",
+        ),
+      );
       return;
     }
     if (message.length < 10) {
-      setNotice(text("اكتب تفاصيل أوضح من 10 أحرف على الأقل.", "Enter at least 10 characters of detail."));
+      setNotice(
+        text("اكتب تفاصيل أوضح من 10 أحرف على الأقل.", "Enter at least 10 characters of detail."),
+      );
       return;
     }
 
@@ -139,7 +166,12 @@ export function FeedbackWidget({
         // Continue to sign-in even if storage is unavailable.
       }
       setNeedsSignIn(true);
-      setNotice(text("سجّل الدخول لإرسال الملاحظة. حفظنا ما كتبته على هذا الجهاز.", "Sign in to send this feedback. Your draft is saved on this device."));
+      setNotice(
+        text(
+          "سجّل الدخول لإرسال الملاحظة. حفظنا ما كتبته على هذا الجهاز.",
+          "Sign in to send this feedback. Your draft is saved on this device.",
+        ),
+      );
       return;
     }
 
@@ -168,7 +200,12 @@ export function FeedbackWidget({
       }
       setDraft(EMPTY_DRAFT);
       setSuccess(true);
-      setNotice(text("وصلتنا ملاحظتك، شكراً لمساعدتنا في تحسين رواج.", "We received your feedback. Thank you for helping us improve RAWAJ."));
+      setNotice(
+        text(
+          "وصلتنا ملاحظتك، شكراً لمساعدتنا في تحسين رواج.",
+          "We received your feedback. Thank you for helping us improve RAWAJ.",
+        ),
+      );
       try {
         window.localStorage.removeItem(DRAFT_KEY);
       } catch {
@@ -192,33 +229,62 @@ export function FeedbackWidget({
     { value: "other", label: text("أخرى", "Other"), icon: MessageSquare },
   ];
 
+  const triggerLabel = text("اقتراح أو شكوى", "Suggestion or complaint");
+  const teaserLine1 = text("عندك اقتراح أو شكوى؟", "Have a suggestion or complaint?");
+  const teaserLine2 = text("أرسلها لنا", "Send it to us");
+
   return (
     <>
       {!triggerHidden ? (
         <div
-          className={`group fixed top-[58%] z-[58] -translate-y-1/2 ${isArabic ? "left-2 sm:left-3" : "right-2 sm:right-3"}`}
+          className={`group rawaj-feedback-trigger fixed z-[58] ${isArabic ? "left-2 sm:left-3" : "right-2 sm:right-3"}`}
+          style={{ bottom: "calc(var(--rawaj-mobile-obstruction, 0px) + 5.5rem)" }}
           data-feedback-trigger="true"
+          data-teaser-visible={showTeaser ? "true" : "false"}
         >
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(true);
-              setSuccess(false);
-              setNotice("");
-              setNeedsSignIn(false);
-            }}
-            className="grid h-11 w-11 place-items-center rounded-full border border-border/70 bg-card text-primary shadow-lg transition hover:scale-105 hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:h-12 sm:w-12"
-            aria-label={text("إرسال اقتراح أو شكوى", "Send suggestion or complaint")}
-            title={text("اقتراح أو شكوى", "Suggestion or complaint")}
-          >
-            <MessageSquare className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <span
-            className={`pointer-events-none absolute top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] font-bold text-background opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100 sm:block ${isArabic ? "left-full ml-2" : "right-full mr-2"}`}
-            aria-hidden="true"
-          >
-            {text("اقتراح أو شكوى", "Suggestion or complaint")}
-          </span>
+          {showTeaser ? (
+            <button
+              type="button"
+              onClick={() => {
+                setShowTeaser(false);
+                setOpen(true);
+                setSuccess(false);
+                setNotice("");
+                setNeedsSignIn(false);
+              }}
+              className="rawaj-feedback-teaser flex items-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 px-3 py-2.5 text-white shadow-xl ring-2 ring-white/30 transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50"
+              aria-label={`${teaserLine1} ${teaserLine2}`}
+            >
+              <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="flex flex-col items-start text-right leading-tight">
+                <span className="text-[11px] font-bold">{teaserLine1}</span>
+                <span className="text-[10px] font-semibold opacity-90">{teaserLine2}</span>
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(true);
+                setSuccess(false);
+                setNotice("");
+                setNeedsSignIn(false);
+              }}
+              className="rawaj-feedback-button grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 text-white shadow-xl ring-2 ring-white/25 transition hover:scale-105 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-400/60"
+              aria-label={triggerLabel}
+              title={triggerLabel}
+            >
+              <MessageSquare className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
+          {!showTeaser ? (
+            <span
+              className={`pointer-events-none absolute top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] font-bold text-background opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100 sm:block ${isArabic ? "left-full ml-2" : "right-full mr-2"}`}
+              aria-hidden="true"
+            >
+              {triggerLabel}
+            </span>
+          ) : null}
         </div>
       ) : null}
 
@@ -239,7 +305,9 @@ export function FeedbackWidget({
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold text-primary">{text("ساعدنا نحسّن رواج", "Help us improve RAWAJ")}</p>
+                <p className="text-xs font-bold text-primary">
+                  {text("ساعدنا نحسّن رواج", "Help us improve RAWAJ")}
+                </p>
                 <h2 id="rawaj-feedback-title" className="mt-1 text-lg font-extrabold">
                   {text("إرسال اقتراح أو شكوى", "Send suggestion or complaint")}
                 </h2>
@@ -260,9 +328,15 @@ export function FeedbackWidget({
               </button>
             </div>
 
-            <form className="mt-5 space-y-4" onSubmit={(event) => void submit(event)} aria-busy={submitting}>
+            <form
+              className="mt-5 space-y-4"
+              onSubmit={(event) => void submit(event)}
+              aria-busy={submitting}
+            >
               <fieldset>
-                <legend className="mb-2 text-xs font-extrabold">{text("نوع الملاحظة", "Feedback type")}</legend>
+                <legend className="mb-2 text-xs font-extrabold">
+                  {text("نوع الملاحظة", "Feedback type")}
+                </legend>
                 <div className="grid grid-cols-2 gap-2">
                   {typeOptions.map((option) => {
                     const Icon = option.icon;
@@ -284,27 +358,39 @@ export function FeedbackWidget({
               </fieldset>
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-extrabold">{text("العنوان", "Subject")}</span>
+                <span className="mb-1.5 block text-xs font-extrabold">
+                  {text("العنوان", "Subject")}
+                </span>
                 <input
                   value={draft.subject}
                   onChange={(event) => updateDraft("subject", event.target.value.slice(0, 160))}
                   maxLength={160}
                   className="input"
-                  placeholder={text("مثال: زر إضافة الصورة لا يعمل", "Example: image upload button does not work")}
+                  placeholder={text(
+                    "مثال: زر إضافة الصورة لا يعمل",
+                    "Example: image upload button does not work",
+                  )}
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-xs font-extrabold">{text("التفاصيل", "Details")}</span>
+                <span className="mb-1.5 block text-xs font-extrabold">
+                  {text("التفاصيل", "Details")}
+                </span>
                 <textarea
                   value={draft.message}
                   onChange={(event) => updateDraft("message", event.target.value.slice(0, 3000))}
                   maxLength={3000}
                   rows={5}
                   className="input min-h-32 resize-y"
-                  placeholder={text("شو صار معك؟ وشو كنت متوقع يصير؟", "What happened, and what did you expect to happen?")}
+                  placeholder={text(
+                    "شو صار معك؟ وشو كنت متوقع يصير؟",
+                    "What happened, and what did you expect to happen?",
+                  )}
                 />
-                <span className="mt-1 block text-[10px] text-muted-foreground">{draft.message.length}/3000</span>
+                <span className="mt-1 block text-[10px] text-muted-foreground">
+                  {draft.message.length}/3000
+                </span>
               </label>
 
               <div className="rounded-xl bg-muted-surface px-3 py-2 text-[11px] leading-5 text-muted-foreground">
