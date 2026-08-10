@@ -145,7 +145,10 @@ export async function adminMarkListedNotificationsRead(
   entityType?: string,
 ): Promise<ClassifiedsResult<{ markedRead: number }>> {
   const listed = await adminFetchNotifications(canUseAdminAccess, entityType, 200);
-  if (!listed.ok) return listed;
+  if (!listed.ok) {
+    notifyAdminNotificationsUpdated();
+    return listed;
+  }
 
   const unreadEntities = new Map<string, { entityType: string; entityId: string }>();
   for (const item of listed.data) {
@@ -163,10 +166,13 @@ export async function adminMarkListedNotificationsRead(
       entity.entityType,
       entity.entityId,
     );
-    if (!result.ok) return result;
+    if (!result.ok) {
+      notifyAdminNotificationsUpdated();
+      return result;
+    }
     markedRead += result.data.markedRead;
   }
 
-  if (unreadEntities.size > 0) notifyAdminNotificationsUpdated();
+  notifyAdminNotificationsUpdated();
   return { ok: true, data: { markedRead } };
 }
