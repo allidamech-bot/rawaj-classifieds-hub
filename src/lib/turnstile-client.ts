@@ -25,6 +25,7 @@ declare global {
 const TURNSTILE_SCRIPT_URL =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const TURNSTILE_TIMEOUT_MS = 20_000;
+const RAWAJ_SYRIA_TURNSTILE_SITE_KEY = "0x4AAAAAAEMj7-5ojy5DWxlr";
 let scriptPromise: Promise<TurnstileApi> | null = null;
 
 export function isTurnstileClientConfigured(): boolean {
@@ -77,7 +78,7 @@ export async function getTurnstileToken(action: string): Promise<string | null> 
 }
 
 function siteKey(): string {
-  return String(import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
+  return String(import.meta.env.VITE_TURNSTILE_SITE_KEY ?? RAWAJ_SYRIA_TURNSTILE_SITE_KEY).trim();
 }
 
 function loadTurnstile(): Promise<TurnstileApi> {
