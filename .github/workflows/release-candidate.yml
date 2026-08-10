@@ -116,6 +116,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           JOB_STATUS: ${{ job.status }}
+          PRODUCTION_ACCEPTANCE_STATUS: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && 'executed' || 'external run still required' }}
         shell: bash
         run: |
           title="RAWAJ Release Candidate Status"
@@ -127,7 +128,7 @@ jobs:
             echo "- Updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             echo "- Workflow run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "- Web, browser, Android, and manifest artifacts are attached to the workflow run when the result is successful."
-            echo "- Authenticated Production Acceptance: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_acceptance && 'executed' || 'external run still required' }}"
+            echo "- Authenticated Production Acceptance: ${PRODUCTION_ACCEPTANCE_STATUS}"
             echo "- Physical Android device, release signing, Play Console, real App Links certificate fingerprint, and Firebase and Cloudflare production-console evidence remain external gates."
             echo
             echo "This issue is intentionally reused for every candidate. Historical evidence remains in GitHub Actions runs and artifacts."
