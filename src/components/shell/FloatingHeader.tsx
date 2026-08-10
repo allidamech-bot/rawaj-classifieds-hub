@@ -24,6 +24,28 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
   });
   const activeSection = resolvePrimaryNavigationSection(pathname);
 
+  useEffect(() => {
+    if (!auth.canAccessAdmin) {
+      setAdminUnread(0);
+      return;
+    }
+    let cancelled = false;
+    let timer: number | undefined;
+    const load = async () => {
+      const result = await adminFetchNotificationSummary(true);
+      if (!cancelled && result.ok) setAdminUnread(result.data.unreadTotal);
+    };
+    void load();
+    const onFocus = () => void load();
+    window.addEventListener("focus", onFocus);
+    timer = window.setInterval(load, 60000);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      if (timer) window.clearInterval(timer);
+    };
+  }, [auth.canAccessAdmin]);
+
   const navItems = [
     { to: "/" as const, section: "home" as const, label: text("الرئيسية", "Home") },
     {
