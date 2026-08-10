@@ -1,41 +1,26 @@
 import { Bell } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  adminFetchNotificationSummary,
-  type AdminNotificationSummary,
-} from "@/lib/api/admin-notifications";
+import type { AdminNotificationSummary } from "@/lib/api/admin-notifications";
 import { useAuth } from "@/lib/use-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
-export function AdminNotificationBell() {
+export function AdminNotificationBell({
+  summary,
+  onOpenNotifications,
+}: {
+  summary: AdminNotificationSummary | null;
+  onOpenNotifications: () => void;
+}) {
   const auth = useAuth();
   const { text } = useUiPreferences();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [summary, setSummary] = useState<AdminNotificationSummary | null>(null);
-  const [loading, setLoading] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const canAccess = auth.canAccessAdmin;
 
   const unreadTotal = summary?.unreadTotal ?? 0;
-
-  useEffect(() => {
-    if (!canAccess) return;
-    let cancelled = false;
-    setLoading(true);
-    adminFetchNotificationSummary(canAccess)
-      .then((result) => {
-        if (!cancelled && result.ok) setSummary(result.data);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [canAccess]);
+  const loading = summary === null;
 
   useEffect(() => {
     if (!open) return;
@@ -61,10 +46,15 @@ export function AdminNotificationBell() {
     <div className="relative inline-flex shrink-0" ref={popoverRef}>
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          const nextOpen = !open;
+          setOpen(nextOpen);
+          if (nextOpen && unreadTotal > 0) onOpenNotifications();
+        }}
         className="rawaj-icon-button rawaj-touch-target relative grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={text("الإشعارات", "Notifications")}
         title={text("الإشعارات", "Notifications")}
+        aria-expanded={open}
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadTotal > 0 ? (
@@ -75,7 +65,7 @@ export function AdminNotificationBell() {
       </button>
 
       {open ? (
-        <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-2xl border border-border bg-card p-3 shadow-2xl">
+        <div className="fixed left-1/2 top-1/2 z-50 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-3 shadow-2xl sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-80 sm:translate-x-0 sm:translate-y-0">
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</p>
             <span className="text-[10px] text-muted-foreground">
