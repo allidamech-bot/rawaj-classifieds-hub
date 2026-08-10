@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 import { NotificationTrigger } from "@/components/NotificationTrigger";
 import { BrandLockup } from "@/components/shell/BrandLockup";
 import { ShellHeaderFrame } from "@/components/shell/ShellHeaderFrame";
-import { adminFetchNotificationSummary } from "@/lib/api/admin-notifications";
+import {
+  ADMIN_NOTIFICATIONS_UPDATED_EVENT,
+  adminFetchNotificationSummary,
+} from "@/lib/api/admin-notifications";
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -38,10 +41,12 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
     void load();
     const onFocus = () => void load();
     window.addEventListener("focus", onFocus);
+    window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
     timer = window.setInterval(load, 60000);
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
       if (timer) window.clearInterval(timer);
     };
   }, [auth.canAccessAdmin]);

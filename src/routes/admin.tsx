@@ -25,7 +25,9 @@ import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 import { DeploymentTruthPanel } from "@/components/DeploymentTruthPanel";
 import { PageHeader } from "@/components/PageHeader";
 import {
+  ADMIN_NOTIFICATIONS_UPDATED_EVENT,
   adminFetchNotificationSummary,
+  adminMarkListedNotificationsRead,
   type AdminNotificationSummary,
 } from "@/lib/api/admin-notifications";
 import type { RolePermission } from "@/lib/auth-types";
@@ -176,15 +178,21 @@ function AdminLayout() {
   );
 
   useEffect(() => {
-    if (!auth.canAccessAdmin) return;
+    if (!auth.canAccessAdmin) {
+      setNotificationSummary(null);
+      return;
+    }
     let cancelled = false;
-    adminFetchNotificationSummary(true)
-      .then((result) => {
-        if (!cancelled && result.ok) setNotificationSummary(result.data);
-      })
-      .catch(() => {});
+    const load = async () => {
+      const result = await adminFetchNotificationSummary(true);
+      if (!cancelled && result.ok) setNotificationSummary(result.data);
+    };
+    void load();
+    const handleUpdated = () => void load();
+    window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, handleUpdated);
     return () => {
       cancelled = true;
+      window.removeEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, handleUpdated);
     };
   }, [auth.canAccessAdmin]);
 
@@ -279,11 +287,47 @@ function AdminLayout() {
     rail.scrollBy({ left: logicalDirection * rtlMultiplier * distance, behavior: "smooth" });
   }
 
+  function markNotificationsOpened(entityTypes?: string[]) {
+    if (!auth.canAccessAdmin) return;
+
+    setNotificationSummary((current) => {
+      if (!current) return current;
+      if (!entityTypes || entityTypes.length === 0) {
+        return { unreadTotal: 0, byType: {} };
+      }
+
+      const byType = { ...current.byType };
+      let removed = 0;
+      for (const entityType of entityTypes) {
+        removed += byType[entityType] ?? 0;
+        delete byType[entityType];
+      }
+      return {
+        unreadTotal: Math.max(0, current.unreadTotal - removed),
+        byType,
+      };
+    });
+
+    if (!entityTypes || entityTypes.length === 0) {
+      void adminMarkListedNotificationsRead(true);
+      return;
+    }
+
+    void (async () => {
+      for (const entityType of entityTypes) {
+        await adminMarkListedNotificationsRead(true, entityType);
+      }
+    })();
+  }
+
   return (
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
       <div className="container-wide px-4 pb-2 pt-2 sm:px-6">
-        <AdminNotificationBell />
+        <AdminNotificationBell
+          summary={notificationSummary}
+          onOpenNotifications={() => markNotificationsOpened()}
+        />
       </div>
       <main className="rawaj-admin-v3 container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
         <div className="rawaj-admin-access-notice mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] p-3">
@@ -327,11 +371,16 @@ function AdminLayout() {
               {visibleTabs.map((tab) => {
                 const active = tabMatchesPath(tab, pathname);
                 const badge = tabBadge(tab, notificationSummary);
+                const openedTypes = notificationTypesForTab(tab.to);
                 return (
                   <Link
                     key={tab.to}
                     to={tab.to as "/admin"}
                     aria-current={active ? "page" : undefined}
+                    onClick={() => {
+                      if (openedTypes === "all") markNotificationsOpened();
+                      else if (openedTypes.length > 0) markNotificationsOpened(openedTypes);
+                    }}
                     className="inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors duration-150"
                   >
                     <tab.icon className="h-4 w-4" />
@@ -369,25 +418,34 @@ function AdminLayout() {
   );
 }
 
+function notificationTypesForTab(to: string): string[] | "all" {
+  if (to === "/admin/notifications") return "all";
+  const map: Record<string, string[]> = {
+    "/admin/users": ["users"],
+    "/admin/pending": ["listings"],
+    "/admin/reports": ["reports"],
+    "/admin/owner-controls": ["feedback", "support"],
+  };
+  return map[to] ?? [];
+}
+
 function tabBadge(
   tab: { to: string; labelAr: string; labelEn: string },
   summary: AdminNotificationSummary | null,
 ): number {
   if (!summary) return 0;
+  if (tab.to === "/admin/notifications") return summary.unreadTotal;
+  if (tab.to === "/admin/owner-controls") {
+    return (summary.byType.feedback ?? 0) + (summary.byType.support ?? 0);
+  }
+
   const map: Record<string, string> = {
     "/admin/users": "users",
-    "/admin/listings": "listings",
     "/admin/pending": "listings",
     "/admin/reports": "reports",
-    "/admin/message-reports": "reports",
-    "/admin/safety": "reports",
-    "/admin/verifications": "users",
-    "/admin/promotions": "listings",
-    "/admin/notifications": "feedback",
   };
   const key = map[tab.to];
-  if (!key) return 0;
-  return summary.byType[key] ?? 0;
+  return key ? (summary.byType[key] ?? 0) : 0;
 }
 
 function AdminShellState({
