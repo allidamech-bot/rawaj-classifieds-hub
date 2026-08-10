@@ -8,10 +8,9 @@ import {
   ListChecks,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   adminFetchNotifications,
-  adminMarkNotificationsReadByEntity,
   type AdminNotificationItem,
 } from "@/lib/api/admin-notifications";
 import { useAuth } from "@/lib/use-auth";
@@ -35,9 +34,18 @@ const FILTERS = [
   { key: "reports", labelAr: "البلاغات", labelEn: "Reports", icon: ListChecks },
 ];
 
+const ENTITY_ROUTES: Record<string, string> = {
+  users: "/admin/users",
+  listings: "/admin/pending",
+  feedback: "/admin/owner-controls",
+  support: "/admin/owner-controls",
+  reports: "/admin/reports",
+};
+
 function AdminNotificationsPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [items, setItems] = useState<AdminNotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,17 +80,10 @@ function AdminNotificationsPage() {
     };
   }, [canAccess, filter]);
 
-  const handleItemClick = async (item: AdminNotificationItem) => {
-    if (item.readAt) return;
-    await adminMarkNotificationsReadByEntity(canAccess, item.entityType, item.entityId);
-    setItems((current) =>
-      current.map((entry) =>
-        entry.id === item.id ||
-        (entry.entityType === item.entityType && entry.entityId === item.entityId)
-          ? { ...entry, readAt: new Date().toISOString() }
-          : entry,
-      ),
-    );
+  const handleItemClick = (item: AdminNotificationItem) => {
+    const destination = ENTITY_ROUTES[item.entityType];
+    if (!destination) return;
+    navigate({ to: destination });
   };
 
   const unreadCount = useMemo(() => items.filter((item) => !item.readAt).length, [items]);
