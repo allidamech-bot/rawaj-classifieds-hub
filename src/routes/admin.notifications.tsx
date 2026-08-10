@@ -1,16 +1,10 @@
-import {
-  Bell,
-  MessageSquare,
-  FileText,
-  Users,
-  Megaphone,
-  ShieldAlert,
-  ListChecks,
-} from "lucide-react";
+import { Bell, MessageSquare, FileText, Users, ShieldAlert, ListChecks } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   adminFetchNotifications,
+  adminMarkNotificationsReadByEntity,
+  notifyAdminNotificationsUpdated,
   type AdminNotificationItem,
 } from "@/lib/api/admin-notifications";
 import { useAuth } from "@/lib/use-auth";
@@ -46,7 +40,6 @@ function AdminNotificationsPage() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [items, setItems] = useState<AdminNotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,9 +73,29 @@ function AdminNotificationsPage() {
     };
   }, [canAccess, filter]);
 
-  const handleItemClick = (item: AdminNotificationItem) => {
+  const handleItemClick = async (item: AdminNotificationItem) => {
     const destination = ENTITY_ROUTES[item.entityType];
     if (!destination) return;
+
+    if (!item.readAt) {
+      const result = await adminMarkNotificationsReadByEntity(
+        canAccess,
+        item.entityType,
+        item.entityId,
+      );
+      if (result.ok) {
+        const readAt = new Date().toISOString();
+        setItems((current) =>
+          current.map((candidate) =>
+            candidate.entityType === item.entityType && candidate.entityId === item.entityId
+              ? { ...candidate, readAt: candidate.readAt ?? readAt }
+              : candidate,
+          ),
+        );
+        notifyAdminNotificationsUpdated();
+      }
+    }
+
     navigate({ to: destination });
   };
 
@@ -133,7 +146,7 @@ function AdminNotificationsPage() {
               <NotificationRow
                 key={item.id}
                 item={item}
-                onClick={() => handleItemClick(item)}
+                onClick={() => void handleItemClick(item)}
                 text={text}
                 language={language}
               />
