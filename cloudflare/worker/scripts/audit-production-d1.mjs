@@ -1,13 +1,22 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const options = parseArgs(process.argv.slice(2));
 const workerRoot = resolve(import.meta.dirname, "..");
 const configPath = resolve(workerRoot, "wrangler.generated.jsonc");
+const SYRIA_PRODUCTION_IDENTITY = Object.freeze({
+  worker: "rawaj-classifieds-hub",
+  database: "rawaj-staging",
+  databaseId: "d0e6496c-9f63-48d3-beeb-d2e219500f6a",
+  bucket: "rawaj-listing-images-production",
+  firebaseProject: "project-af18fcaf-c46e-4ec5-93a",
+});
+
+await assertSyriaProductionTarget();
 
 const objectsQuery = `
   SELECT type, name, tbl_name, sql
@@ -23,6 +32,7 @@ const backup = await backupOrdinaryTables(actual);
 const report = {
   generatedAt: new Date().toISOString(),
   database: options.database,
+  productionIdentity: SYRIA_PRODUCTION_IDENTITY,
   expectedState: "post-0003",
   compatible: comparison.materialMismatches.length === 0,
   expectedSummary: summarize(expected),
@@ -187,6 +197,10 @@ async function backupOrdinaryTables(schema) {
     {
       generatedAt: new Date().toISOString(),
       database: options.database,
+      databaseId: SYRIA_PRODUCTION_IDENTITY.databaseId,
+      worker: SYRIA_PRODUCTION_IDENTITY.worker,
+      bucket: SYRIA_PRODUCTION_IDENTITY.bucket,
+      firebaseProject: SYRIA_PRODUCTION_IDENTITY.firebaseProject,
       tables: manifest,
       excludedVirtualTables: virtualTables,
     },
@@ -372,6 +386,31 @@ function sanitizeError(value) {
   return String(value ?? "")
     .replace(/(token|authorization|password|secret)\s*[:=]\s*\S+/gi, "$1=[redacted]")
     .slice(0, 1200);
+}
+
+async function assertSyriaProductionTarget() {
+  if (options.database !== SYRIA_PRODUCTION_IDENTITY.database) {
+    throw new Error(
+      `Refusing backup for ${options.database}: only the pinned Syria D1 database is allowed.`,
+    );
+  }
+
+  const config = JSON.parse(await readFile(configPath, "utf8"));
+  const d1 = config.d1_databases?.find((binding) => binding.binding === "DB");
+  const r2 = config.r2_buckets?.find((binding) => binding.binding === "MEDIA");
+  const checks = [
+    ["Worker", config.name, SYRIA_PRODUCTION_IDENTITY.worker],
+    ["D1 name", d1?.database_name, SYRIA_PRODUCTION_IDENTITY.database],
+    ["D1 ID", d1?.database_id, SYRIA_PRODUCTION_IDENTITY.databaseId],
+    ["R2 bucket", r2?.bucket_name, SYRIA_PRODUCTION_IDENTITY.bucket],
+    ["Firebase project", config.vars?.FIREBASE_PROJECT_ID, SYRIA_PRODUCTION_IDENTITY.firebaseProject],
+  ];
+
+  for (const [label, actual, expected] of checks) {
+    if (actual !== expected) {
+      throw new Error(`${label} identity mismatch; refusing Syria production backup.`);
+    }
+  }
 }
 
 function parseArgs(args) {
