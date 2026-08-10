@@ -157,7 +157,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               to="/admin"
               aria-label={text("لوحة الإدارة", "Admin dashboard")}
               title={text("لوحة الإدارة", "Admin dashboard")}
-              className="rawaj-header-admin rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
+              className="rawaj-header-admin rawaj-touch-target relative grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
               <UserCog className="h-4 w-4" />
               {adminUnread > 0 ? (

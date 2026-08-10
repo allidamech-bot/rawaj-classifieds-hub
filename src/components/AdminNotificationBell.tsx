@@ -58,11 +58,11 @@ export function AdminNotificationBell() {
   if (!canAccess) return null;
 
   return (
-    <div className="relative" ref={popoverRef}>
+    <div className="relative inline-flex shrink-0" ref={popoverRef}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="rawaj-icon-button rawaj-touch-target grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="rawaj-icon-button rawaj-touch-target relative grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={text("الإشعارات", "Notifications")}
         title={text("الإشعارات", "Notifications")}
       >
