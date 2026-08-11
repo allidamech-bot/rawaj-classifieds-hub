@@ -1,20 +1,29 @@
 import { cloudflareAuthorizedFetch } from "@/lib/cloudflare-auth";
 
+const MAX_RESOLVED_MEDIA_URLS = 120;
 const resolvedMediaUrls = new Map<string, string>();
 const pendingMediaUrls = new Map<string, Promise<string>>();
 
 function mediaPath(value: string): string | null {
   try {
     const url = new URL(value, "https://rawaj.invalid");
-    if (
-      /^\/v1\/(?:account|admin)\/media\/assets\/[^/]+$/.test(url.pathname)
-    ) {
+    if (/^\/v1\/(?:account|admin)\/media\/assets\/[^/]+$/.test(url.pathname)) {
       return `${url.pathname}${url.search}`;
     }
   } catch {
     return null;
   }
   return null;
+}
+
+function rememberResolvedMediaUrl(source: string, objectUrl: string): void {
+  resolvedMediaUrls.set(source, objectUrl);
+  while (resolvedMediaUrls.size > MAX_RESOLVED_MEDIA_URLS) {
+    const oldest = resolvedMediaUrls.entries().next().value as [string, string] | undefined;
+    if (!oldest) break;
+    resolvedMediaUrls.delete(oldest[0]);
+    URL.revokeObjectURL(oldest[1]);
+  }
 }
 
 /**
@@ -41,7 +50,7 @@ export async function resolveAuthenticatedMediaUrl(
     const blob = await response.blob();
     if (!blob.type.startsWith("image/")) return value;
     const objectUrl = URL.createObjectURL(blob);
-    resolvedMediaUrls.set(value, objectUrl);
+    rememberResolvedMediaUrl(value, objectUrl);
     return objectUrl;
   })().finally(() => pendingMediaUrls.delete(value));
 
