@@ -173,5 +173,9 @@ function notFound(cors: Headers) {
   return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
 }
 function databaseError(cors: Headers) {
-  return json({ error: { code: "database_error", message: "Database operation failed." } }, 500, cors);
+  return json(
+    { error: { code: "database_error", message: "Database operation failed." } },
+    500,
+    cors,
+  );
 }
