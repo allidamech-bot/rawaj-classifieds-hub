@@ -73,6 +73,10 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     const performanceOverview = page.locator('[data-owner-performance-overview="true"]');
     await expect(performanceOverview).toBeVisible();
+    const performanceToggle = performanceOverview.getByRole("button");
+    await expect(performanceToggle).toHaveAttribute("aria-expanded", "false");
+    await performanceToggle.click();
+    await expect(performanceToggle).toHaveAttribute("aria-expanded", "true");
     await expect(performanceOverview.locator('[data-owner-summary-metric="views"]')).toContainText(
       "24",
     );
