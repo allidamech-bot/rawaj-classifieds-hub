@@ -256,7 +256,7 @@ function isAccountSocialPath(path: string): boolean {
     path === "/v1/account/saved-searches" ||
     /^\/v1\/account\/saved-searches\//.test(path) ||
     /^\/v1\/account\/recent-views\//.test(path) ||
-    path === "/v1\/account/conversations" ||
+    path === "/v1/account/conversations" ||
     path === "/v1/account/messages/unread-count" ||
     /^\/v1\/account\/chat-media\//.test(path) ||
     path === "/v1/conversations" ||
