@@ -34,7 +34,11 @@ export function ListingCardImage({
     let active = true;
     setFailedSrc(null);
     setResolvedSrc(src ?? null);
-    if (!src) return () => { active = false; };
+    if (!src) {
+      return () => {
+        active = false;
+      };
+    }
 
     void resolveAuthenticatedMediaUrl(src).then((resolved) => {
       if (active) setResolvedSrc(resolved ?? src);
