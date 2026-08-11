@@ -244,7 +244,9 @@ function isTrustSupportPath(path: string): boolean {
     /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||
     /^\/v1\/sellers\/[^/]+\/(?:review-eligibility|reviews)$/.test(path) ||
     /^\/v1\/reviews\/[^/]+\/(?:response|reports)$/.test(path) ||
-    /^\/v1\/admin\/(?:support-requests|listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(path)
+    /^\/v1\/admin\/(?:support-requests|listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(
+      path,
+    )
   );
 }
 
