@@ -24,7 +24,11 @@ export function ResilientImage({
     const source = typeof src === "string" ? src : null;
     setResolvedSource(source);
     setFailedSource(null);
-    if (!source) return () => { active = false; };
+    if (!source) {
+      return () => {
+        active = false;
+      };
+    }
 
     void resolveAuthenticatedMediaUrl(source).then((resolved) => {
       if (active) setResolvedSource(resolved ?? source);
