@@ -2,13 +2,26 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [pageHeader, routeResolver, slot, api, cloudflareClient, auditCss] = await Promise.all([
+const [
+  pageHeader,
+  routeResolver,
+  slot,
+  api,
+  cloudflareClient,
+  auditCss,
+  managedMedia,
+  authenticatedMedia,
+  listingImageGuard,
+] = await Promise.all([
   readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/components/PublicAdPlacementSlot.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/public-ad-placements.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/public-data/cloudflare-client.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
+  readFile(new URL("../cloudflare/worker/src/managed-media.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/authenticated-media-url.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/listing-images-read-guarded.ts", import.meta.url), "utf8"),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
@@ -85,4 +98,14 @@ test("public ad API deduplicates and caches Cloudflare Worker reads for five min
   assert.match(cloudflareClient, /page: placementPage/);
   assert.match(cloudflareClient, /device/);
   assert.match(cloudflareClient, /imageUrl: absoluteMediaUrl\(placement\.imageUrl\)/);
+});
+
+test("new ad uploads and protected listing images have renderable media paths", () => {
+  assert.match(managedMedia, /object_key LIKE 'ad-placements\/%'/);
+  assert.match(managedMedia, /\/v1\\\/admin\\\/listings\\\/\(\[\^\/\]\+\)\\\/images/);
+  assert.match(managedMedia, /\/v1\\\/admin\\\/media\\\/assets/);
+  assert.match(authenticatedMedia, /cloudflareAuthorizedFetch\(path\)/);
+  assert.match(authenticatedMedia, /URL\.createObjectURL\(blob\)/);
+  assert.match(listingImageGuard, /resolveAuthenticatedMediaUrl/);
+  assert.match(listingImageGuard, /\/v1\/admin\/listings\//);
 });
