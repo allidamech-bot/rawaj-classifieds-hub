@@ -8,6 +8,7 @@ export * from "@/lib/api/shared";
 export * from "@/lib/api/references";
 export * from "@/lib/api/locations";
 export * from "@/lib/api/listings";
+export { fetchCurrentUserListings } from "@/lib/api/listing-current-user-read-guarded";
 export { fetchListingDetailGuarded as fetchListingDetail } from "@/lib/api/listing-detail-read-guarded";
 export { fetchListingImages } from "@/lib/api/listing-images-read-guarded";
 export { fetchOwnerListingDetail } from "@/lib/api/listing-owner-read-guarded";
