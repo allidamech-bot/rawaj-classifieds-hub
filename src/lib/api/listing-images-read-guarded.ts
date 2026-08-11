@@ -1,7 +1,4 @@
-import {
-  fetchListingImages as fetchListingImagesBase,
-  mapImage,
-} from "@/lib/api/listings";
+import { fetchListingImages as fetchListingImagesBase, mapImage } from "@/lib/api/listings";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { resolveAuthenticatedMediaUrl } from "@/lib/authenticated-media-url";
 import type { ClassifiedsResult, ListingImage } from "@/lib/classifieds-types";
