@@ -8,6 +8,7 @@ import { handleNotifications, type NotificationsEnv } from "./notifications";
 import { handlePushDeviceSession, type PushDeviceSessionEnv } from "./push-device-session";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
+import { handleManagedMedia, type ManagedMediaEnv } from "./managed-media";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
@@ -34,6 +35,7 @@ type EntryEnv = PublicCoreEnv &
   PushDeviceSessionEnv &
   AdminEnv &
   AdPlacementsEnv &
+  ManagedMediaEnv &
   TaxonomyEnv &
   ListingAttributesEnv &
   SystemControlsEnv &
@@ -124,6 +126,14 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
     /^\/v1\/listings\/[^/]+\/taxonomy$/.test(path)
   ) {
     return required(await handleTaxonomy(request, env));
+  }
+  if (
+    /^\/v1\/media\/assets\/[^/]+$/.test(path) ||
+    /^\/v1\/admin\/listings\/[^/]+\/images$/.test(path) ||
+    /^\/v1\/admin\/media\/assets\/[^/]+$/.test(path)
+  ) {
+    const mediaResponse = await handleManagedMedia(request, env);
+    if (mediaResponse) return mediaResponse;
   }
   if (/^\/v1\/admin\/ad-placements(?:\/|$)/.test(path)) {
     return required(await handleAdPlacements(request, env));
@@ -234,7 +244,9 @@ function isTrustSupportPath(path: string): boolean {
     /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||
     /^\/v1\/sellers\/[^/]+\/(?:review-eligibility|reviews)$/.test(path) ||
     /^\/v1\/reviews\/[^/]+\/(?:response|reports)$/.test(path) ||
-    /^\/v1\/admin\/(?:support-requests|listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(path)
+    /^\/v1\/admin\/(?:support-requests|listing-reports|seller-reviews|seller-review-reports)(?:\/|$)/.test(
+      path,
+    )
   );
 }
 

@@ -1,4 +1,5 @@
 import { uploadListingImage as uploadListingImageCloudflare } from "@/lib/api/listings";
+import { resolveAuthenticatedMediaUrl } from "@/lib/authenticated-media-url";
 import type {
   ClassifiedsResult,
   ListingImage,
@@ -10,8 +11,16 @@ import type {
  * image row. Keeping one upload implementation avoids dual-storage retries and
  * the orphan-object race that existed in the retired browser storage flow.
  */
-export function uploadListingImage(
+export async function uploadListingImage(
   payload: ListingImageUploadPayload,
 ): Promise<ClassifiedsResult<ListingImage>> {
-  return uploadListingImageCloudflare(payload);
+  const result = await uploadListingImageCloudflare(payload);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: {
+      ...result.data,
+      publicUrl: await resolveAuthenticatedMediaUrl(result.data.publicUrl),
+    },
+  };
 }

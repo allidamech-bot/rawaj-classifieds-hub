@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
+import { resolveAuthenticatedMediaUrl } from "@/lib/authenticated-media-url";
 import type { PlaceholderType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +27,28 @@ export function ListingCardImage({
   height = 480,
   className,
 }: ListingCardImageProps) {
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(src ?? null);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const showPlaceholder = !src || failedSrc === src;
+
+  useEffect(() => {
+    let active = true;
+    setFailedSrc(null);
+    setResolvedSrc(src ?? null);
+    if (!src) {
+      return () => {
+        active = false;
+      };
+    }
+
+    void resolveAuthenticatedMediaUrl(src).then((resolved) => {
+      if (active) setResolvedSrc(resolved ?? src);
+    });
+    return () => {
+      active = false;
+    };
+  }, [src]);
+
+  const showPlaceholder = !resolvedSrc || failedSrc === resolvedSrc;
 
   if (showPlaceholder) {
     return (
@@ -41,7 +62,7 @@ export function ListingCardImage({
 
   return (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       loading={loading}
       fetchPriority={fetchPriority}
@@ -49,7 +70,7 @@ export function ListingCardImage({
       width={width}
       height={height}
       draggable={false}
-      onError={() => setFailedSrc(src)}
+      onError={() => setFailedSrc(resolvedSrc)}
       className={cn("rawaj-listing-media rawaj-listing-media--image", className)}
     />
   );
