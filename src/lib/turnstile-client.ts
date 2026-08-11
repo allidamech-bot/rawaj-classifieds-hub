@@ -82,9 +82,7 @@ function siteKey(): string {
   const configured = String(import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
   if (configured) return configured;
   if (typeof window === "undefined") return "";
-  return SYRIA_PRODUCTION_HOSTNAMES.has(window.location.hostname)
-    ? SYRIA_PRODUCTION_SITE_KEY
-    : "";
+  return SYRIA_PRODUCTION_HOSTNAMES.has(window.location.hostname) ? SYRIA_PRODUCTION_SITE_KEY : "";
 }
 
 function loadTurnstile(): Promise<TurnstileApi> {
