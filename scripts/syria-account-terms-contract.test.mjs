@@ -43,12 +43,24 @@ test("registration requires explicit Terms and Privacy consent before password s
   assert.match(login, /privacyAccepted:\s*acceptedPolicies/);
 });
 
-test("Google registration is consent-aware while normal Google login remains available", () => {
-  assert.match(login, /registrationMode=\{mode === "register"\}/);
-  assert.match(login, /blockedByConsent = registrationMode && !acceptedPolicies/);
-  assert.match(login, /registrationMode[\s\S]*termsAccepted: acceptedPolicies/);
-  assert.match(login, /registrationMode[\s\S]*privacyAccepted: acceptedPolicies/);
-  assert.match(authContext, /registrationConsent\?: RegistrationConsent/);
+test("Google auth cannot start before explicit Terms and Privacy consent", () => {
+  assert.match(login, /id="google-policy-consent"/);
+  assert.match(login, /blockedByConsent = !acceptedPolicies/);
+  assert.match(login, /signInWithGoogle\(returnTo, \{/);
+  assert.match(login, /termsAccepted:\s*acceptedPolicies/);
+  assert.match(login, /privacyAccepted:\s*acceptedPolicies/);
+  assert.match(authContext, /registrationConsent: RegistrationConsent/);
+  assert.doesNotMatch(authContext, /registrationConsent\?: RegistrationConsent/);
+
+  const googleFunctionIndex = auth.indexOf("const signInWithGoogle = async");
+  const consentGuardIndex = auth.indexOf(
+    "if (!hasRegistrationConsent(registrationConsent))",
+    googleFunctionIndex,
+  );
+  const providerIndex = auth.indexOf("new GoogleAuthProvider()", googleFunctionIndex);
+  assert.ok(googleFunctionIndex >= 0);
+  assert.ok(consentGuardIndex > googleFunctionIndex);
+  assert.ok(providerIndex > consentGuardIndex);
 });
 
 test("auth runtime rejects password account creation without consent", () => {
