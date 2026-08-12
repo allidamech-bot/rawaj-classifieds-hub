@@ -295,11 +295,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const signInWithGoogle = async (
-      returnTo?: string,
-      registrationConsent?: RegistrationConsent,
+      returnTo: string | undefined,
+      registrationConsent: RegistrationConsent,
     ) => {
-      if (registrationConsent && !hasRegistrationConsent(registrationConsent)) {
-        return { error: "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب." };
+      if (!hasRegistrationConsent(registrationConsent)) {
+        return { error: "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل المتابعة باستخدام Google." };
       }
       const pending = googleSignInRequestRef.current;
       if (pending) return pending;
