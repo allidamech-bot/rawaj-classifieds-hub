@@ -1,8 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "*": false,
+      "fix/syria-image-upload-preview-home": true
+    }
   },
+  "buildCommand": "npm run typecheck && npx tsc -p cloudflare/worker/tsconfig.json --noEmit && node --test scripts/public-ad-placement-rendering.test.mjs scripts/listing-studio-v4.test.mjs && npm run build",
   "rewrites": [
     {
       "source": "/v1/:path*",
