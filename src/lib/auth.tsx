@@ -24,6 +24,7 @@ import {
   type AuthContextValue,
   type AuthSession,
   type AuthUser,
+  type RegistrationConsent,
 } from "./auth-context";
 import type { AuthStatus } from "./auth-status";
 import { sanitizeAuthReturnTo } from "./auth-return";
@@ -47,6 +48,10 @@ function firebaseErrorMessage(error: unknown): string {
 
 function normalizeAuthEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function hasRegistrationConsent(consent: RegistrationConsent | undefined): boolean {
+  return consent?.termsAccepted === true && consent.privacyAccepted === true;
 }
 
 function toAuthUser(user: FirebaseUser): AuthUser {
@@ -249,7 +254,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const signUpWithPassword = async (email: string, password: string, displayName: string) => {
+    const signUpWithPassword = async (
+      email: string,
+      password: string,
+      displayName: string,
+      registrationConsent: RegistrationConsent,
+    ) => {
+      if (!hasRegistrationConsent(registrationConsent)) {
+        return { error: "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب." };
+      }
       try {
         const credential = await createUserWithEmailAndPassword(
           firebaseAuth,
@@ -281,7 +294,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const signInWithGoogle = async (returnTo?: string) => {
+    const signInWithGoogle = async (
+      returnTo?: string,
+      registrationConsent?: RegistrationConsent,
+    ) => {
+      if (registrationConsent && !hasRegistrationConsent(registrationConsent)) {
+        return { error: "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب." };
+      }
       const pending = googleSignInRequestRef.current;
       if (pending) return pending;
 
