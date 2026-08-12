@@ -83,13 +83,10 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             to="/listings"
             search={{ open_filters: true }}
             className="rawaj-header-location hidden min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold xl:inline-flex"
-            aria-label={text(
-              "تصفح الإعلانات في كل السعودية",
-              "Browse listings across Saudi Arabia",
-            )}
+            aria-label={text("تصفح الإعلانات في كل سوريا", "Browse listings across Syria")}
           >
             <MapPin className="h-4 w-4 text-brand-orange" strokeWidth={2.1} />
-            <span>{text("كل السعودية", "All Saudi Arabia")}</span>
+            <span>{text("كل سوريا", "All Syria")}</span>
           </Link>
         ) : null}
 
@@ -155,7 +152,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           ) : null}
 
-          <NotificationTrigger tone="light" />
+          {auth.status === "signedIn" ? <NotificationTrigger tone="light" /> : null}
 
           {auth.canAccessAdmin ? (
             <Link
@@ -173,26 +170,26 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           ) : null}
 
-          <Link
-            to={auth.status === "signedIn" ? "/more" : "/login"}
-            aria-label={
-              auth.status === "signedIn"
-                ? text("حسابي", "My account")
-                : text("تسجيل الدخول", "Log in")
-            }
-            title={
-              auth.status === "signedIn"
-                ? text("حسابي", "My account")
-                : text("تسجيل الدخول", "Log in")
-            }
-            className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
-          >
-            {auth.status === "signedIn" ? (
+          {auth.status === "signedIn" ? (
+            <Link
+              to="/more"
+              aria-label={text("حسابي", "My account")}
+              title={text("حسابي", "My account")}
+              className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
+            >
               <User className="h-4 w-4" strokeWidth={1.9} />
-            ) : (
-              <LogIn className="h-4 w-4" strokeWidth={1.9} />
-            )}
-          </Link>
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              aria-label={text("تسجيل الدخول", "Log in")}
+              title={text("تسجيل الدخول", "Log in")}
+              className="rawaj-header-cta rawaj-touch-target inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--rawaj-radius-button)] px-2.5 text-[11px] font-bold sm:px-3 sm:text-xs"
+            >
+              <LogIn className="h-4 w-4 shrink-0" strokeWidth={2.1} />
+              <span className="font-bold">{text("تسجيل الدخول", "Log in")}</span>
+            </Link>
+          )}
         </div>
       </ShellHeaderFrame>
     </>
