@@ -38,8 +38,8 @@ export interface AuthContextValue {
   signOut: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<{ error: string | null }>;
   signInWithGoogle: (
-    returnTo?: string,
-    registrationConsent?: RegistrationConsent,
+    returnTo: string | undefined,
+    registrationConsent: RegistrationConsent,
   ) => Promise<{ error: string | null }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signUpWithPassword: (
