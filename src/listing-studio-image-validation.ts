@@ -1,6 +1,6 @@
 const LISTING_STUDIO_SELECTOR = ".rawaj-listing-studio-v4";
 const IMAGE_INPUT_SELECTOR = `${LISTING_STUDIO_SELECTOR} input[type="file"][accept*="image/jpeg"]`;
-export const MAX_LISTING_IMAGE_BYTES = 5 * 1024 * 1024;
+export const MAX_LISTING_IMAGE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export interface ListingImageSelectionValidation {
@@ -45,7 +45,7 @@ function validationMessage(input: HTMLInputElement, rejected: File[]) {
     );
   }
   if (oversized.length > 0) {
-    reasons.push(language === "ar" ? "حجم الصورة يتجاوز 5MB" : "image size exceeds 5MB");
+    reasons.push(language === "ar" ? "حجم الصورة يتجاوز 8MB" : "image size exceeds 8MB");
   }
 
   message.textContent =

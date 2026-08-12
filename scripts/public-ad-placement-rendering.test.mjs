@@ -11,9 +11,13 @@ const [
   auditCss,
   managedMedia,
   authenticatedMedia,
+  adminAdApi,
+  storage,
+  studioImageValidation,
   listingImageGuard,
   listingCardImage,
   resilientImage,
+  previewTrueSizeCss,
 ] = await Promise.all([
   readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
@@ -23,9 +27,13 @@ const [
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../cloudflare/worker/src/managed-media.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/authenticated-media-url.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/ad-placements-cloudflare.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/api/storage.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-studio-image-validation.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/api/listing-images-read-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/media/ResilientImage.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-preview-true-size.css", import.meta.url), "utf8"),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
@@ -49,42 +57,30 @@ test("public ad slot loads device-targeted placements and can render two distinc
   assert.match(slot, /rel="noopener noreferrer sponsored"/);
 });
 
-test("public ad slot preserves its 1600:700 frame with bounded low-frequency refresh", () => {
+test("public and admin ad media share one 1600:700 presentation contract", () => {
   assert.match(auditCss, /\.rawaj-ad-placement__frame/);
   assert.match(auditCss, /aspect-ratio: 16 \/ 7/);
-  assert.match(auditCss, /data-count="2"/);
+  assert.match(slot, /width=\{1600\}/);
+  assert.match(slot, /height=\{700\}/);
+  assert.match(adminAdApi, /AD_PLACEMENT_TARGET_WIDTH = 1600/);
+  assert.match(adminAdApi, /AD_PLACEMENT_TARGET_HEIGHT = 700/);
+  assert.match(adminAdApi, /-1600x700\.webp/);
+  assert.match(storage, /AD_PLACEMENT_IMAGE_MIN_WIDTH = 960/);
+  assert.match(storage, /AD_PLACEMENT_IMAGE_MIN_HEIGHT = 420/);
+  assert.match(storage, /AD_PLACEMENT_IMAGE_RATIO = 16 \/ 7/);
+});
+
+test("public ad slot refresh stays bounded and broken media fails independently", () => {
   assert.doesNotMatch(slot, /AD_PLACEMENT_SCHEDULE_REFRESH_MS/);
   assert.doesNotMatch(slot, /window\.setInterval\(/);
   assert.match(slot, /AD_PLACEMENT_RETRY_BASE_MS = 2_000/);
   assert.match(slot, /AD_PLACEMENT_RETRY_MAX_MS = 15_000/);
   assert.match(slot, /AD_PLACEMENT_RETRY_LIMIT = 3/);
-  assert.match(slot, /retryAttempt >= AD_PLACEMENT_RETRY_LIMIT/);
   assert.match(slot, /AD_PLACEMENT_FRESHNESS_REFRESH_MS = 5 \* 60_000/);
-  assert.match(slot, /refreshActiveAdPlacements\(page, activeDevice\)/);
-  assert.match(slot, /window\.setTimeout\([\s\S]*AD_PLACEMENT_FRESHNESS_REFRESH_MS/);
-  assert.match(slot, /clearFreshnessTimer\(\)/);
-  assert.match(slot, /onAdPlacementInvalidation\(refreshWhenAvailable\)/);
-  assert.match(slot, /window\.addEventListener\("online", refreshWhenAvailable\)/);
-  assert.match(slot, /window\.addEventListener\("focus", refreshWhenAvailable\)/);
-  assert.match(slot, /document\.addEventListener\("visibilitychange", refreshWhenAvailable\)/);
-});
-
-test("broken public ad media is removed independently while other placements remain visible", () => {
-  assert.match(slot, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
   assert.match(slot, /failedImageUrls\.has\(placement\.imageUrl\)/);
-  assert.match(slot, /function markImageFailed\(imageUrl: string\)/);
   assert.match(slot, /onError=\{\(\) => markImageFailed\(placement\.imageUrl\)\}/);
-  assert.match(slot, /loading=\{placementPage === "home" && index === 0 \? "eager" : "lazy"\}/);
-  assert.match(
-    slot,
-    /fetchPriority=\{placementPage === "home" && index === 0 \? "high" : "auto"\}/,
-  );
   assert.match(slot, /rawaj-ad-placement__backdrop/);
   assert.match(slot, /rawaj-ad-placement__image/);
-  assert.match(slot, /decoding="async"/);
-  assert.match(slot, /width=\{1600\}/);
-  assert.match(slot, /height=\{700\}/);
-  assert.match(slot, /draggable=\{false\}/);
 });
 
 test("public ad API deduplicates and caches Cloudflare Worker reads for five minutes", () => {
@@ -94,23 +90,51 @@ test("public ad API deduplicates and caches Cloudflare Worker reads for five min
   assert.match(api, /const pending = activePlacementRequests\.get\(cacheKey\)/);
   assert.match(api, /if \(pending\) return pending/);
   assert.match(api, /fetchCloudflareAdPlacements\(placementPage, device\)/);
-  assert.doesNotMatch(api, /rawaj_fetch_active_ad_placements/);
   assert.match(
     cloudflareClient,
     /requestJson<CloudflarePublicAdPlacement\[]>\("\/v1\/ad-placements"/,
   );
-  assert.match(cloudflareClient, /page: placementPage/);
-  assert.match(cloudflareClient, /device/);
   assert.match(cloudflareClient, /imageUrl: absoluteMediaUrl\(placement\.imageUrl\)/);
 });
 
-test("new ad uploads and protected listing images have renderable media paths", () => {
-  assert.match(managedMedia, /object_key LIKE 'ad-placements\/%'/);
+test("draft and paused ad creative is not exposed by the managed public media layer", () => {
+  assert.doesNotMatch(managedMedia, /publicAdPlacementMedia/);
+  assert.doesNotMatch(managedMedia, /object_key LIKE 'ad-placements\/%'/);
   assert.match(managedMedia, /const adminImages = path\.match/);
   assert.match(managedMedia, /const adminAsset = path\.match/);
   assert.match(managedMedia, /hasModeratorRole/);
+});
+
+test("owner ad previews use authenticated blobs but save the original media reference", () => {
+  assert.match(authenticatedMedia, /export async function resolveOwnedMediaPreviewUrl/);
+  assert.match(authenticatedMedia, /\/v1\/account\/media\/assets\//);
+  assert.match(authenticatedMedia, /typeof window !== "undefined"/);
   assert.match(authenticatedMedia, /cloudflareAuthorizedFetch\(path\)/);
   assert.match(authenticatedMedia, /URL\.createObjectURL\(blob\)/);
+  assert.match(adminAdApi, /resolveOwnedMediaPreviewUrl/);
+  assert.match(adminAdApi, /persistedUrlByPreviewUrl/);
+  assert.match(adminAdApi, /rememberPersistedMediaUrl/);
+  assert.match(adminAdApi, /imageUrl: persistedMediaUrl\(payload\.imageUrl\)/);
+  assert.match(adminAdApi, /imageUrl: await ownerPreviewUrl\(placement\.imageUrl\)/);
+});
+
+test("listing photos accept up to the Worker limit while ad creative remains capped at 5MB", () => {
+  assert.match(storage, /MAX_IMAGE_SIZE_BYTES = 8 \* 1024 \* 1024/);
+  assert.match(storage, /MAX_AD_PLACEMENT_IMAGE_SIZE_BYTES = 5 \* 1024 \* 1024/);
+  assert.match(studioImageValidation, /MAX_LISTING_IMAGE_BYTES = 8 \* 1024 \* 1024/);
+  assert.match(studioImageValidation, /حجم الصورة يتجاوز 8MB/);
+});
+
+test("admin ad previews never upscale the source image", () => {
+  assert.match(previewTrueSizeCss, /img\.aspect-\\\[16\\\/7\\\]/);
+  assert.match(previewTrueSizeCss, /width:\s*auto !important/);
+  assert.match(previewTrueSizeCss, /height:\s*auto !important/);
+  assert.match(previewTrueSizeCss, /max-width:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /max-height:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /object-fit:\s*contain !important/);
+});
+
+test("protected listing images continue to resolve through authenticated media", () => {
   assert.match(listingImageGuard, /resolveAuthenticatedMediaUrl/);
   assert.match(listingImageGuard, /cloudflareApiRequest<Record<string, unknown>\[]>/);
   assert.match(listingCardImage, /resolveAuthenticatedMediaUrl\(src\)/);

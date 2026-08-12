@@ -16,13 +16,33 @@ function mediaPath(value: string): string | null {
   return null;
 }
 
+function ownerMediaPath(value: string): string | null {
+  try {
+    const url = new URL(value, "https://rawaj.invalid");
+    const match = url.pathname.match(/^\/v1\/media\/assets\/([^/]+)$/);
+    if (!match) return null;
+    return `/v1/account/media/assets/${encodeURIComponent(decodeURIComponent(match[1]))}${url.search}`;
+  } catch {
+    return null;
+  }
+}
+
+function canCreateObjectUrl(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof URL !== "undefined" &&
+    typeof URL.createObjectURL === "function" &&
+    typeof URL.revokeObjectURL === "function"
+  );
+}
+
 function rememberResolvedMediaUrl(source: string, objectUrl: string): void {
   resolvedMediaUrls.set(source, objectUrl);
   while (resolvedMediaUrls.size > MAX_RESOLVED_MEDIA_URLS) {
     const oldest = resolvedMediaUrls.entries().next().value as [string, string] | undefined;
     if (!oldest) break;
     resolvedMediaUrls.delete(oldest[0]);
-    URL.revokeObjectURL(oldest[1]);
+    if (canCreateObjectUrl()) URL.revokeObjectURL(oldest[1]);
   }
 }
 
@@ -37,7 +57,7 @@ export async function resolveAuthenticatedMediaUrl(
 ): Promise<string | null> {
   if (!value) return null;
   const path = mediaPath(value);
-  if (!path) return value;
+  if (!path || !canCreateObjectUrl()) return value;
 
   const cached = resolvedMediaUrls.get(value);
   if (cached) return cached;
@@ -56,4 +76,20 @@ export async function resolveAuthenticatedMediaUrl(
 
   pendingMediaUrls.set(value, request);
   return request;
+}
+
+/**
+ * Ad-placement records persist the normal public media reference, but draft and
+ * paused creative must not be publicly readable. Owners preview that same asset
+ * through the authenticated account media endpoint and receive a browser-local
+ * blob URL instead. SSR keeps the persisted URL untouched and never creates a
+ * blob URL.
+ */
+export async function resolveOwnedMediaPreviewUrl(
+  value: string | null | undefined,
+): Promise<string | null> {
+  if (!value) return null;
+  const protectedPath = ownerMediaPath(value);
+  if (!protectedPath) return resolveAuthenticatedMediaUrl(value);
+  return resolveAuthenticatedMediaUrl(protectedPath);
 }

@@ -137,9 +137,10 @@ test("transient upload retry helper is behaviorally bounded with exponential del
   assert.match(retry, /Math\.min\(options\.maxAttempts \?\? DEFAULT_MAX_ATTEMPTS, 5\)/);
 });
 
-test("the browser upload path is Cloudflare-only and has no Supabase storage fallback", () => {
+test("the browser upload path is Cloudflare-only and hydrates protected uploaded media", () => {
   assert.match(listingsClient, /`\/v1\/listings\/\$\{encodeURIComponent\(listing\.id\)\}\/images`/);
-  assert.match(guardedUpload, /return uploadListingImageCloudflare\(payload\)/);
+  assert.match(guardedUpload, /uploadListingImageCloudflare\(payload\)/);
+  assert.match(guardedUpload, /resolveAuthenticatedMediaUrl\(result\.data\.publicUrl\)/);
   assert.doesNotMatch(
     `${guardedUpload}\n${listingsClient}\n${journal}`,
     /@supabase|createClient|\.from\(["']|\.storage\.|getPublicUrl|createSignedUrl/i,

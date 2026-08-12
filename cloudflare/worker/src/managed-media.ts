@@ -41,10 +41,10 @@ export async function handleManagedMedia(
   const path = new URL(request.url).pathname.replace(/^\/api\b/, "/v1");
   const cors = corsHeaders(request, asAuthEnv(env));
 
-  const publicAsset = path.match(/^\/v1\/media\/assets\/([^/]+)$/);
-  if (publicAsset) {
-    return publicAdPlacementMedia(env, cors, decodeURIComponent(publicAsset[1]));
-  }
+  // Public /v1/media/assets/:id requests intentionally fall through to the
+  // public-core media policy. That policy only exposes approved listing media,
+  // active/in-schedule ad placements, and public profile media. Draft, paused,
+  // unattached, or future ad creative therefore remains private.
 
   const adminImages = path.match(/^\/v1\/admin\/listings\/([^/]+)\/images$/);
   if (adminImages) {
@@ -89,23 +89,6 @@ export async function handleManagedMedia(
   }
 
   return null;
-}
-
-async function publicAdPlacementMedia(
-  env: ManagedMediaEnv,
-  cors: Headers,
-  assetId: string,
-): Promise<Response | null> {
-  const asset = await env.DB.prepare(
-    `SELECT object_key, content_type, etag
-       FROM media_assets
-      WHERE id = ? AND status = 'ready' AND object_key LIKE 'ad-placements/%'
-      LIMIT 1`,
-  )
-    .bind(assetId)
-    .first<Row>();
-  if (!asset) return null;
-  return readObject(env, cors, asset, "public, max-age=31536000, immutable");
 }
 
 async function adminListingMedia(

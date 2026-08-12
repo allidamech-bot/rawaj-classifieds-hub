@@ -1,0 +1,38 @@
+/* Listing and ad-placement preview sizing correction.
+ * Preview surfaces must not visually upscale a small source image. Frames keep
+ * the marketplace display ratio while images only scale down when necessary.
+ */
+
+.rawaj-listing-studio-v4 .rawaj-studio-preview {
+  width: min(100%, 18rem) !important;
+  justify-self: center;
+  margin-inline: auto;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-preview__media {
+  aspect-ratio: 4 / 3 !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-preview__media img {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+}
+
+/* aspect-[16/7] is used by the two live image previews in the ad-placement
+ * admin route. Saved-placement thumbnails use fixed h-20/w-28 classes and are
+ * intentionally not affected. */
+img.aspect-\[16\/7\] {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin-inline: auto !important;
+  object-fit: contain !important;
+}
