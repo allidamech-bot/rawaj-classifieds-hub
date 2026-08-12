@@ -19,12 +19,16 @@ test("bottom dock exposes stable navigation and accessibility contracts", () => 
   assert.match(dock, /focus-visible:ring-2/);
 });
 
-test("bottom dock retains exactly five primary destinations", () => {
-  const itemsSource = dock.match(/const items: NavItem\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+test("bottom dock retains four core destinations plus one auth-aware account destination", () => {
+  const coreItemsSource = dock.match(/const coreItems: NavItem\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? "";
   const destinationMatches =
-    itemsSource.match(/\bto:\s*"\/(?:categories|add-listing|chats|more)?"/g) ?? [];
-  assert.equal(destinationMatches.length, 5);
-  assert.match(itemsSource, /section:\s*"addListing"[\s\S]*primary:\s*true/);
+    coreItemsSource.match(/\bto:\s*"\/(?:categories|add-listing|chats)?"/g) ?? [];
+  assert.equal(destinationMatches.length, 4);
+  assert.match(coreItemsSource, /section:\s*"addListing"[\s\S]*primary:\s*true/);
+  assert.match(dock, /to:\s*signedIn \? "\/more" : "\/login"/);
+  assert.match(dock, /labelAr:\s*"حسابي"/);
+  assert.match(dock, /labelEn:\s*"Account"/);
+  assert.match(dock, /item\.section === "account" && signedIn/);
 });
 
 test("bottom dock keeps the primary action restrained", () => {
