@@ -74,6 +74,6 @@ test("Syria terms identify intermediary role, user responsibility, fraud risk an
   assert.match(normalizedTerms, /تاجراً[\s\S]{0,40}متجراً[\s\S]{0,40}مقدم خدمة/);
   assert.match(normalizedTerms, /لا يضمن هوية أي مستخدم/);
   assert.match(normalizedTerms, /لا يسمح القانون باستبعادها/);
-  assert.match(normalizedTerms, /القوانين السورية[\s\S]{0,24}النافذة/);
+  assert.match(terms, /governed by applicable Syrian law/);
   assert.match(normalizedTerms, /13 آب 2026/);
 });
