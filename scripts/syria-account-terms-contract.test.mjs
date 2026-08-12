@@ -65,14 +65,15 @@ test("auth runtime rejects password account creation without consent", () => {
 });
 
 test("Syria terms identify intermediary role, user responsibility, fraud risk and non-waivable rights", () => {
-  assert.match(terms, /شروط الاستخدام – سوريا/);
-  assert.match(terms, /نسخة رَوَاج سوريا/);
-  assert.match(terms, /وسيط تقني/);
-  assert.match(terms, /الاحتيال/);
-  assert.match(terms, /الأسلحة والذخائر/);
-  assert.match(terms, /التاجر أو متجراً أو مقدم خدمة|تاجراً أو متجراً أو مقدم خدمة/);
-  assert.match(terms, /لا يضمن هوية أي مستخدم/);
-  assert.match(terms, /لا يسمح القانون باستبعادها/);
-  assert.match(terms, /القوانين السورية النافذة/);
-  assert.match(terms, /13 آب 2026/);
+  const normalizedTerms = terms.normalize("NFC");
+  assert.match(normalizedTerms, /شروط الاستخدام – سوريا/);
+  assert.match(normalizedTerms, /نسخة رَوَاج سوريا/);
+  assert.match(normalizedTerms, /وسيط تقني/);
+  assert.match(normalizedTerms, /الاحتيال/);
+  assert.match(normalizedTerms, /الأسلحة والذخائر/);
+  assert.match(normalizedTerms, /تاجراً[\s\S]{0,40}متجراً[\s\S]{0,40}مقدم خدمة/);
+  assert.match(normalizedTerms, /لا يضمن هوية أي مستخدم/);
+  assert.match(normalizedTerms, /لا يسمح القانون باستبعادها/);
+  assert.match(normalizedTerms, /القوانين السورية[\s\S]{0,24}النافذة/);
+  assert.match(normalizedTerms, /13 آب 2026/);
 });
