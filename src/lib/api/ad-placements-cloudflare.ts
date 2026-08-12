@@ -1,9 +1,14 @@
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { validateAdPlacementImageFile } from "@/lib/api/storage";
+import { resolveOwnedMediaPreviewUrl } from "@/lib/authenticated-media-url";
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 
 export type AdPlacementPage =
-  "home" | "search_results" | "listing_detail" | "categories" | "offers";
+  | "home"
+  | "search_results"
+  | "listing_detail"
+  | "categories"
+  | "offers";
 
 export type AdPlacementStatus = "draft" | "active" | "paused";
 
@@ -51,6 +56,11 @@ export interface DeleteAdPlacementResult {
   storagePath: string | null;
 }
 
+const AD_PLACEMENT_TARGET_WIDTH = 1600;
+const AD_PLACEMENT_TARGET_HEIGHT = 700;
+const MAX_PREVIEW_PERSISTENCE_MAPPINGS = 120;
+const persistedUrlByPreviewUrl = new Map<string, string>();
+
 function denied<T>(): ClassifiedsResult<T> {
   return {
     ok: false,
@@ -66,11 +76,41 @@ function fromApi<T>(
     : { ok: false, error: { code: result.code as never, message: result.error } };
 }
 
+function rememberPersistedMediaUrl(previewUrl: string, persistedUrl: string): void {
+  if (!previewUrl || previewUrl === persistedUrl) return;
+  persistedUrlByPreviewUrl.set(previewUrl, persistedUrl);
+  while (persistedUrlByPreviewUrl.size > MAX_PREVIEW_PERSISTENCE_MAPPINGS) {
+    const oldest = persistedUrlByPreviewUrl.keys().next().value as string | undefined;
+    if (!oldest) break;
+    persistedUrlByPreviewUrl.delete(oldest);
+  }
+}
+
+async function ownerPreviewUrl(persistedUrl: string): Promise<string> {
+  const previewUrl = (await resolveOwnedMediaPreviewUrl(persistedUrl)) ?? persistedUrl;
+  rememberPersistedMediaUrl(previewUrl, persistedUrl);
+  return previewUrl;
+}
+
+function persistedMediaUrl(value: string): string {
+  return persistedUrlByPreviewUrl.get(value) ?? value;
+}
+
 export async function ownerFetchAdPlacements(
   canManageAdPlacements: boolean,
 ): Promise<ClassifiedsResult<AdPlacementSummary[]>> {
   if (!canManageAdPlacements) return denied();
-  return fromApi(await cloudflareApiRequest<AdPlacementSummary[]>("/v1/admin/ad-placements"));
+  const result = await cloudflareApiRequest<AdPlacementSummary[]>("/v1/admin/ad-placements");
+  if (!result.ok) {
+    return { ok: false, error: { code: result.code as never, message: result.error } };
+  }
+  const placements = await Promise.all(
+    result.data.map(async (placement) => ({
+      ...placement,
+      imageUrl: await ownerPreviewUrl(placement.imageUrl),
+    })),
+  );
+  return { ok: true, data: placements };
 }
 
 export async function ownerUploadAdPlacementImage(
@@ -97,15 +137,29 @@ export async function ownerUploadAdPlacementImage(
     };
   }
 
+  const preparedValidation = validateAdPlacementImageFile(prepared);
+  if (!preparedValidation.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: preparedValidation.error ?? "تعذر تجهيز صورة الإعلان ضمن الحجم المطلوب.",
+      },
+    };
+  }
+
   const form = new FormData();
   form.append("file", prepared, prepared.name);
   const result = await cloudflareApiRequest<{ id: string; imageUrl: string }>(
     "/v1/admin/ad-placements/media",
     { method: "POST", body: form },
   );
-  return result.ok
-    ? { ok: true, data: result.data.imageUrl }
-    : { ok: false, error: { code: result.code as never, message: result.error } };
+  if (!result.ok) {
+    return { ok: false, error: { code: result.code as never, message: result.error } };
+  }
+
+  const persistedUrl = result.data.imageUrl;
+  return { ok: true, data: await ownerPreviewUrl(persistedUrl) };
 }
 
 export async function ownerSaveAdPlacement(
@@ -116,10 +170,14 @@ export async function ownerSaveAdPlacement(
   const path = payload.id
     ? `/v1/admin/ad-placements/${encodeURIComponent(payload.id)}`
     : "/v1/admin/ad-placements";
+  const persistedPayload = {
+    ...payload,
+    imageUrl: persistedMediaUrl(payload.imageUrl),
+  };
   return fromApi(
     await cloudflareApiRequest<{ id: string; version: number; updatedAt: string }>(path, {
       method: payload.id ? "PATCH" : "POST",
-      body: payload as unknown as Record<string, unknown>,
+      body: persistedPayload as unknown as Record<string, unknown>,
     }),
   );
 }
@@ -155,10 +213,10 @@ export async function removeOrphanedAdPlacementImage(): Promise<void> {
 }
 
 async function cropAdPlacementImage(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
-    const targetWidth = 1400;
-    const targetHeight = 300;
+    const targetWidth = AD_PLACEMENT_TARGET_WIDTH;
+    const targetHeight = AD_PLACEMENT_TARGET_HEIGHT;
     const targetRatio = targetWidth / targetHeight;
     const sourceRatio = bitmap.width / bitmap.height;
 
@@ -198,11 +256,11 @@ async function cropAdPlacementImage(file: File): Promise<File> {
       canvas.toBlob(
         (value) => (value ? resolve(value) : reject(new Error("encode_failed"))),
         "image/webp",
-        0.9,
+        0.88,
       );
     });
     const baseName = file.name.replace(/\.[^.]+$/, "").slice(0, 100) || "ad-placement";
-    return new File([blob], `${baseName}-1400x300.webp`, { type: "image/webp" });
+    return new File([blob], `${baseName}-1600x700.webp`, { type: "image/webp" });
   } finally {
     bitmap.close();
   }
