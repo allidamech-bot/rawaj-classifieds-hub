@@ -68,6 +68,7 @@ import footerContrastSystemV13Css from "../footer-contrast-system-v13.css?url";
 import lightweightMobileUxPolishCss from "../lightweight-mobile-ux-polish.css?url";
 import homeNotificationOverlayFixCss from "../home-notification-overlay-fix.css?url";
 import listingStudioMobileOverflowFixCss from "../listing-studio-mobile-overflow-fix.css?url";
+import listingPreviewTrueSizeCss from "../listing-preview-true-size.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -116,6 +117,7 @@ export const auditedOverrideStyleHrefs = [
   lightweightMobileUxPolishCss,
   homeNotificationOverlayFixCss,
   listingStudioMobileOverflowFixCss,
+  listingPreviewTrueSizeCss,
 ] as const;
 
 export interface RouteStyleScope {
