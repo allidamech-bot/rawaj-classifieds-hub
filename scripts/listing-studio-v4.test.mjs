@@ -64,8 +64,8 @@ test("taxonomy selector supports complete-tree browsing and final-category searc
   assert.match(taxonomySelector, /if \(node\.isLeaf\) setSearchTerm\(""\)/);
 });
 
-test("listing photos reject unsupported formats and oversized files before upload", () => {
-  assert.match(imageValidation, /MAX_LISTING_IMAGE_BYTES = 5 \* 1024 \* 1024/);
+test("listing photos reject unsupported formats and files beyond the Worker upload limit", () => {
+  assert.match(imageValidation, /MAX_LISTING_IMAGE_BYTES = 8 \* 1024 \* 1024/);
   assert.match(imageValidation, /image\/jpeg/);
   assert.match(imageValidation, /image\/png/);
   assert.match(imageValidation, /image\/webp/);
