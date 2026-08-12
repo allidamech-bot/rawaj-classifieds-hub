@@ -20,6 +20,11 @@ export interface AuthSession {
   user: AuthUser;
 }
 
+export interface RegistrationConsent {
+  termsAccepted: boolean;
+  privacyAccepted: boolean;
+}
+
 export interface AuthContextValue {
   status: AuthStatus;
   user: AuthUser | null;
@@ -32,12 +37,16 @@ export interface AuthContextValue {
   canAccessOwnerControls: boolean;
   signOut: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<{ error: string | null }>;
-  signInWithGoogle: (returnTo?: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: (
+    returnTo?: string,
+    registrationConsent?: RegistrationConsent,
+  ) => Promise<{ error: string | null }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: string | null }>;
   signUpWithPassword: (
     email: string,
     password: string,
     displayName: string,
+    registrationConsent: RegistrationConsent,
   ) => Promise<{ error: string | null }>;
   requestPasswordReset: (
     email: string,
