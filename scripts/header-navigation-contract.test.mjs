@@ -17,8 +17,10 @@ test("mobile header keeps secondary controls off small screens", () => {
   assert.doesNotMatch(header, /toggleLanguage[\s\S]*sm:inline-flex/);
 });
 
-test("header typography respects functional minimums", () => {
-  assert.doesNotMatch(header, /text-\[8px\]|text-\[9px\]|text-\[10px\]/);
+test("header typography respects functional minimums while allowing compact numeric badges", () => {
+  assert.doesNotMatch(header, /text-\[8px\]|text-\[9px\]/);
+  assert.match(header, /to="\/login"[\s\S]*text-\[11px\][\s\S]*sm:text-xs/);
+  assert.match(header, /adminUnread[\s\S]*text-\[10px\]/);
   assert.match(brand, /text-\[11px\]/);
 });
 

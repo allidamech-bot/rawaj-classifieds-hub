@@ -17,20 +17,30 @@ export const Route = createFileRoute("/login")({
 
 type AuthMode = "login" | "register" | "forgot";
 
-function GoogleButton({ returnTo }: { returnTo: string }) {
+function GoogleButton({
+  returnTo,
+  acceptedPolicies,
+}: {
+  returnTo: string;
+  acceptedPolicies: boolean;
+}) {
   const auth = useAuth();
   const { text } = useUiPreferences();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const signInInFlightRef = useRef(false);
+  const blockedByConsent = !acceptedPolicies;
 
   async function handleGoogleSignIn() {
-    if (signInInFlightRef.current) return;
+    if (signInInFlightRef.current || blockedByConsent) return;
     signInInFlightRef.current = true;
     setError("");
     setLoading(true);
     try {
-      const result = await auth.signInWithGoogle(returnTo);
+      const result = await auth.signInWithGoogle(returnTo, {
+        termsAccepted: acceptedPolicies,
+        privacyAccepted: acceptedPolicies,
+      });
       if (result.error) {
         setError(authErrorMessage({ message: result.error }, "callback", text));
       }
@@ -46,7 +56,7 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
     <div>
       <button
         type="button"
-        disabled={loading || auth.status === "authUnavailable"}
+        disabled={loading || auth.status === "authUnavailable" || blockedByConsent}
         onClick={handleGoogleSignIn}
         className="rawaj-auth-google disabled:opacity-60"
       >
@@ -88,6 +98,14 @@ function GoogleButton({ returnTo }: { returnTo: string }) {
         )}
         {text("المتابعة باستخدام Google", "Continue with Google")}
       </button>
+      {blockedByConsent ? (
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">
+          {text(
+            "وافق على شروط الاستخدام وسياسة الخصوصية أولاً للمتابعة باستخدام Google.",
+            "Accept the Terms of Use and Privacy Policy first to continue with Google.",
+          )}
+        </p>
+      ) : null}
       {error && (
         <p className="rawaj-auth-state mt-2 p-2" data-tone="error" role="alert">
           {error}
@@ -111,10 +129,12 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [termsError, setTermsError] = useState("");
   const submitInFlightRef = useRef(false);
 
   function switchMode(nextMode: AuthMode) {
@@ -122,6 +142,7 @@ function LoginPage() {
     setMessage("");
     setError("");
     setEmailError("");
+    setTermsError("");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -130,6 +151,7 @@ function LoginPage() {
     setMessage("");
     setError("");
     setEmailError("");
+    setTermsError("");
 
     const cleanEmail = email.trim();
     const cleanName = displayName.trim();
@@ -184,6 +206,15 @@ function LoginPage() {
       setError(text("أدخل اسما واضحا للحساب.", "Enter a clear account name."));
       return;
     }
+    if (mode === "register" && !acceptedPolicies) {
+      setTermsError(
+        text(
+          "يجب الموافقة على شروط الاستخدام وسياسة الخصوصية قبل إنشاء الحساب.",
+          "You must accept the Terms of Use and Privacy Policy before creating an account.",
+        ),
+      );
+      return;
+    }
 
     submitInFlightRef.current = true;
     setSubmitting(true);
@@ -191,7 +222,10 @@ function LoginPage() {
       const result =
         mode === "login"
           ? await auth.signInWithPassword(cleanEmail, password)
-          : await auth.signUpWithPassword(cleanEmail, password, cleanName);
+          : await auth.signUpWithPassword(cleanEmail, password, cleanName, {
+              termsAccepted: acceptedPolicies,
+              privacyAccepted: acceptedPolicies,
+            });
 
       if (result.error) {
         setError(
@@ -347,6 +381,52 @@ function LoginPage() {
                   </FieldLabel>
                 )}
 
+                {mode === "register" ? (
+                  <div
+                    className="rounded-xl border border-border/80 bg-card/60 p-3"
+                    aria-describedby={termsError ? "registration-terms-error" : undefined}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        id="registration-policy-consent"
+                        type="checkbox"
+                        checked={acceptedPolicies}
+                        onChange={(event) => {
+                          setAcceptedPolicies(event.target.checked);
+                          if (termsError) setTermsError("");
+                        }}
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                        required
+                      />
+                      <div className="text-xs leading-6 text-foreground/90">
+                        <label htmlFor="registration-policy-consent" className="font-semibold">
+                          {text("أوافق على", "I agree to the")}{" "}
+                        </label>
+                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("شروط الاستخدام", "Terms of Use")}
+                        </Link>{" "}
+                        {text("و", "and")}{" "}
+                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("سياسة الخصوصية", "Privacy Policy")}
+                        </Link>
+                        {text(
+                          " الخاصة بمنصة رواج سوريا.",
+                          " for the RAWAJ Syria platform.",
+                        )}
+                      </div>
+                    </div>
+                    {termsError ? (
+                      <p
+                        id="registration-terms-error"
+                        role="alert"
+                        className="mt-2 text-xs font-semibold text-destructive"
+                      >
+                        {termsError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {mode === "login" && (
                   <button
                     type="button"
@@ -436,7 +516,35 @@ function LoginPage() {
                     <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
-                <GoogleButton returnTo={returnTo} />
+
+                {mode === "login" ? (
+                  <div className="mb-3 rounded-xl border border-border/80 bg-card/60 p-3">
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        id="google-policy-consent"
+                        type="checkbox"
+                        checked={acceptedPolicies}
+                        onChange={(event) => setAcceptedPolicies(event.target.checked)}
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                      />
+                      <div className="text-xs leading-6 text-foreground/90">
+                        <label htmlFor="google-policy-consent" className="font-semibold">
+                          {text("للمتابعة باستخدام Google أوافق على", "To continue with Google, I agree to the")}{" "}
+                        </label>
+                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("شروط الاستخدام", "Terms of Use")}
+                        </Link>{" "}
+                        {text("و", "and")}{" "}
+                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("سياسة الخصوصية", "Privacy Policy")}
+                        </Link>
+                        .
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <GoogleButton returnTo={returnTo} acceptedPolicies={acceptedPolicies} />
               </>
             )}
 

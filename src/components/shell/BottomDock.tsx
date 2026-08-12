@@ -9,13 +9,14 @@ import {
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { scrollPageToTop } from "@/lib/scroll-utils";
+import { useAuth } from "@/lib/use-auth";
 
 interface BottomDockProps {
   pathname: string;
 }
 
 type NavItem = {
-  to: "/" | "/categories" | "/add-listing" | "/chats" | "/more";
+  to: "/" | "/categories" | "/add-listing" | "/chats" | "/more" | "/login";
   section: Exclude<PrimaryNavigationSection, "offers" | "none">;
   labelAr: string;
   labelEn: string;
@@ -23,7 +24,7 @@ type NavItem = {
   primary?: boolean;
 };
 
-const items: NavItem[] = [
+const coreItems: NavItem[] = [
   { to: "/", section: "home", labelAr: "الرئيسية", labelEn: "Home", icon: Home },
   {
     to: "/categories",
@@ -47,13 +48,24 @@ const items: NavItem[] = [
     labelEn: "Chats",
     icon: MessageCircle,
   },
-  { to: "/more", section: "account", labelAr: "حسابي", labelEn: "Account", icon: User },
 ];
 
 export function BottomDock({ pathname }: BottomDockProps) {
+  const auth = useAuth();
   const { text } = useUiPreferences();
   const { counts } = useUnreadActivityCounts();
   const activeSection = resolvePrimaryNavigationSection(pathname);
+  const signedIn = auth.status === "signedIn";
+  const items: NavItem[] = [
+    ...coreItems,
+    {
+      to: signedIn ? "/more" : "/login",
+      section: "account",
+      labelAr: "حسابي",
+      labelEn: "Account",
+      icon: User,
+    },
+  ];
 
   if (!shouldShowBottomNav(pathname)) return null;
 
@@ -74,7 +86,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
           const badgeCount =
             item.section === "chats"
               ? counts.messages
-              : item.section === "account"
+              : item.section === "account" && signedIn
                 ? counts.notifications
                 : 0;
           const accessibleLabel =
@@ -87,7 +99,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
 
           return (
             <Link
-              key={item.to}
+              key={item.section}
               to={item.to}
               search={item.to === "/chats" ? {} : undefined}
               preload="intent"
