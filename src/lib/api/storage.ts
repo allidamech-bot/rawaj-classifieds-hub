@@ -3,8 +3,9 @@ export const profileMediaBucket = "profile-media";
 export const adPlacementMediaBucket = "ad-placement-media";
 export const promotionReceiptsBucket = "promotion-receipts";
 
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_PROFILE_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_AD_PLACEMENT_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_RECEIPT_SIZE_BYTES = 8 * 1024 * 1024;
 
 export const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -47,7 +48,7 @@ export function validateImageFile(file: File): { ok: boolean; error?: string } {
     };
   }
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return { ok: false, error: "حجم الصورة يجب ألا يتجاوز 5MB." };
+    return { ok: false, error: "حجم الصورة يجب ألا يتجاوز 8MB." };
   }
   return { ok: true };
 }
@@ -133,9 +134,9 @@ export function isPathOwnedByUser(path: string, userId: string, kind: string): b
   return path.startsWith(`${userId}/${kind}/`);
 }
 
-export const AD_PLACEMENT_IMAGE_MIN_WIDTH = 600;
-export const AD_PLACEMENT_IMAGE_MIN_HEIGHT = 150;
-export const AD_PLACEMENT_IMAGE_RATIO = 1400 / 300;
+export const AD_PLACEMENT_IMAGE_MIN_WIDTH = 960;
+export const AD_PLACEMENT_IMAGE_MIN_HEIGHT = 420;
+export const AD_PLACEMENT_IMAGE_RATIO = 16 / 7;
 
 export interface AdPlacementImageValidation {
   ok: boolean;
@@ -152,7 +153,7 @@ export function validateAdPlacementImageFile(file: File): { ok: boolean; error?:
   if (!validateImageExtension(file.name)) {
     return { ok: false, error: "امتداد الملف غير صالح. استخدم jpg أو png أو webp." };
   }
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+  if (file.size > MAX_AD_PLACEMENT_IMAGE_SIZE_BYTES) {
     return { ok: false, error: "حجم صورة المساحة يجب ألا يتجاوز 5MB." };
   }
   return { ok: true };
@@ -168,7 +169,7 @@ export function validateAdPlacementImageDimensions(
   if (width < AD_PLACEMENT_IMAGE_MIN_WIDTH || height < AD_PLACEMENT_IMAGE_MIN_HEIGHT) {
     return {
       ok: false,
-      error: "الصورة صغيرة جداً لإنتاج إعلان واضح. استخدم صورة لا تقل عن 600×150 بكسل.",
+      error: "الصورة صغيرة جداً لإنتاج إعلان واضح. استخدم صورة لا تقل عن 960×420 بكسل.",
       width,
       height,
     };
