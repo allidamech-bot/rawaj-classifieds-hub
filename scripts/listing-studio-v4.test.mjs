@@ -13,6 +13,7 @@ const [
   recoveryCss,
   navigationFix,
   mobileOverflowFix,
+  previewTrueSizeCss,
   packageJson,
 ] = await Promise.all([
   readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8"),
@@ -28,6 +29,7 @@ const [
   readFile(new URL("../src/listing-studio-mobile-recovery.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-navigation-fix.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-mobile-overflow-fix.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-preview-true-size.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -110,6 +112,32 @@ test("mobile horizontal strips remain internal scroll containers", () => {
   assert.match(mobileOverflowFix, /overflow-x:\s*auto !important/);
   assert.match(mobileOverflowFix, /contain:\s*inline-size/);
   assert.match(mobileOverflowFix, /overscroll-behavior-inline:\s*contain/);
+});
+
+test("live listing preview never upscales the source image", () => {
+  assert.match(
+    routeStyles,
+    /listingPreviewTrueSizeCss from "\.\.\/listing-preview-true-size\.css\?url"/,
+  );
+  assert.ok(
+    routeStyles.lastIndexOf("listingPreviewTrueSizeCss") >
+      routeStyles.lastIndexOf("listingStudioMobileOverflowFixCss"),
+  );
+  assert.match(
+    previewTrueSizeCss,
+    /\.rawaj-studio-preview\s*\{[\s\S]*width:\s*min\(100%, 18rem\) !important/,
+  );
+  assert.match(
+    previewTrueSizeCss,
+    /\.rawaj-studio-preview__media\s*\{[\s\S]*aspect-ratio:\s*4 \/ 3 !important/,
+  );
+  assert.match(
+    previewTrueSizeCss,
+    /\.rawaj-studio-preview__media img\s*\{[\s\S]*width:\s*auto !important/,
+  );
+  assert.match(previewTrueSizeCss, /max-width:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /max-height:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /object-fit:\s*contain !important/);
 });
 
 test("listing studio back navigation is explicit and cannot submit the form", () => {
