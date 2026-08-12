@@ -19,11 +19,9 @@ type AuthMode = "login" | "register" | "forgot";
 
 function GoogleButton({
   returnTo,
-  registrationMode,
   acceptedPolicies,
 }: {
   returnTo: string;
-  registrationMode: boolean;
   acceptedPolicies: boolean;
 }) {
   const auth = useAuth();
@@ -31,7 +29,7 @@ function GoogleButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const signInInFlightRef = useRef(false);
-  const blockedByConsent = registrationMode && !acceptedPolicies;
+  const blockedByConsent = !acceptedPolicies;
 
   async function handleGoogleSignIn() {
     if (signInInFlightRef.current || blockedByConsent) return;
@@ -39,12 +37,10 @@ function GoogleButton({
     setError("");
     setLoading(true);
     try {
-      const result = await auth.signInWithGoogle(
-        returnTo,
-        registrationMode
-          ? { termsAccepted: acceptedPolicies, privacyAccepted: acceptedPolicies }
-          : undefined,
-      );
+      const result = await auth.signInWithGoogle(returnTo, {
+        termsAccepted: acceptedPolicies,
+        privacyAccepted: acceptedPolicies,
+      });
       if (result.error) {
         setError(authErrorMessage({ message: result.error }, "callback", text));
       }
@@ -105,8 +101,8 @@ function GoogleButton({
       {blockedByConsent ? (
         <p className="mt-2 text-xs leading-6 text-muted-foreground">
           {text(
-            "وافق على شروط الاستخدام وسياسة الخصوصية أولاً لإنشاء حساب باستخدام Google.",
-            "Accept the Terms of Use and Privacy Policy first to register with Google.",
+            "وافق على شروط الاستخدام وسياسة الخصوصية أولاً للمتابعة باستخدام Google.",
+            "Accept the Terms of Use and Privacy Policy first to continue with Google.",
           )}
         </p>
       ) : null}
@@ -520,11 +516,35 @@ function LoginPage() {
                     <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
-                <GoogleButton
-                  returnTo={returnTo}
-                  registrationMode={mode === "register"}
-                  acceptedPolicies={acceptedPolicies}
-                />
+
+                {mode === "login" ? (
+                  <div className="mb-3 rounded-xl border border-border/80 bg-card/60 p-3">
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        id="google-policy-consent"
+                        type="checkbox"
+                        checked={acceptedPolicies}
+                        onChange={(event) => setAcceptedPolicies(event.target.checked)}
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                      />
+                      <div className="text-xs leading-6 text-foreground/90">
+                        <label htmlFor="google-policy-consent" className="font-semibold">
+                          {text("للمتابعة باستخدام Google أوافق على", "To continue with Google, I agree to the")}{" "}
+                        </label>
+                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("شروط الاستخدام", "Terms of Use")}
+                        </Link>{" "}
+                        {text("و", "and")}{" "}
+                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
+                          {text("سياسة الخصوصية", "Privacy Policy")}
+                        </Link>
+                        .
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                <GoogleButton returnTo={returnTo} acceptedPolicies={acceptedPolicies} />
               </>
             )}
 
