@@ -17,6 +17,7 @@ const [
   listingImageGuard,
   listingCardImage,
   resilientImage,
+  previewTrueSizeCss,
 ] = await Promise.all([
   readFile(new URL("../src/components/PageHeader.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/lib/ad-placement-route.ts", import.meta.url), "utf8"),
@@ -32,6 +33,7 @@ const [
   readFile(new URL("../src/lib/api/listing-images-read-guarded.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/features/listings/cards/ListingCardImage.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/components/media/ResilientImage.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-preview-true-size.css", import.meta.url), "utf8"),
 ]);
 
 test("supported marketplace pages resolve to their ad placement inventory", () => {
@@ -121,6 +123,15 @@ test("listing photos accept up to the Worker limit while ad creative remains cap
   assert.match(storage, /MAX_AD_PLACEMENT_IMAGE_SIZE_BYTES = 5 \* 1024 \* 1024/);
   assert.match(studioImageValidation, /MAX_LISTING_IMAGE_BYTES = 8 \* 1024 \* 1024/);
   assert.match(studioImageValidation, /حجم الصورة يتجاوز 8MB/);
+});
+
+test("admin ad previews never upscale the source image", () => {
+  assert.match(previewTrueSizeCss, /img\.aspect-\\\[16\\\/7\\\]/);
+  assert.match(previewTrueSizeCss, /width:\s*auto !important/);
+  assert.match(previewTrueSizeCss, /height:\s*auto !important/);
+  assert.match(previewTrueSizeCss, /max-width:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /max-height:\s*100% !important/);
+  assert.match(previewTrueSizeCss, /object-fit:\s*contain !important/);
 });
 
 test("protected listing images continue to resolve through authenticated media", () => {
