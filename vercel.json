@@ -1,12 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": {
-      "*": false,
-      "fix/syria-account-terms-foundation": true
-    }
+    "deploymentEnabled": false
   },
-  "buildCommand": "npm run typecheck && node --test scripts/header-navigation-contract.test.mjs scripts/bottom-dock-navigation-contract.test.mjs scripts/syria-account-terms-contract.test.mjs && npm run build",
   "rewrites": [
     {
       "source": "/v1/:path*",
