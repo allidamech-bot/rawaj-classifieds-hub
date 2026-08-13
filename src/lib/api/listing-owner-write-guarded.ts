@@ -12,6 +12,8 @@ import type {
   ClassifiedsResult,
   UpdateListingPayload,
 } from "@/lib/classifieds-types";
+import { queueListingSharePrompt, readGrowthAttribution } from "@/lib/listing-share-growth";
+import { claimListingShareReferral } from "@/lib/referral-growth-client";
 
 export async function updateOwnerListing(
   userId: string | null,
@@ -43,6 +45,15 @@ export async function submitOwnerListingForReview(
   if (result.ok) {
     rememberOwnerListingVersion(userId, result.data);
     completeOwnerDraftCreationFlow(userId, result.data.id);
+    queueListingSharePrompt(result.data.id);
+    claimReferralAttribution(result.data.id);
   }
   return result;
+}
+
+function claimReferralAttribution(referredListingId: string): void {
+  const sourceListingId = readGrowthAttribution()?.firstTouch.listingId?.trim() ?? "";
+  if (!sourceListingId || sourceListingId === referredListingId) return;
+
+  void claimListingShareReferral(sourceListingId, referredListingId).catch(() => undefined);
 }
