@@ -60,3 +60,4 @@ test("handles JSON primitive string values", () => {
   assert.deepEqual(parseAuditMetadata("null"), {});
   assert.deepEqual(parseAuditMetadata("123"), {});
 });
+

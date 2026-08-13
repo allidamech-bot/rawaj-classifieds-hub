@@ -7,7 +7,7 @@
     "prepare:config": "node scripts/render-config.mjs --local",
     "dev": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc",
     "dev:local": "npm run prepare:config && wrangler dev --config wrangler.generated.jsonc --local --persist-to .wrangler/state",
-    "test:setup": "npm run prepare:config && wrangler d1 migrations apply rawaj-syria-local --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
+    "test:setup": "node scripts/render-config.mjs --local --test && wrangler d1 migrations apply rawaj-syria-local --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc",
     "test:seed": "wrangler d1 execute rawaj-syria-local --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file ../snapshots/essential/essential-data.sql",
     "test:fixtures": "wrangler d1 execute rawaj-syria-local --local --persist-to .wrangler/test-state-auth --config wrangler.generated.jsonc --file test/marketplace-fixtures.sql",
     "pretest": "npm run test:setup && npm run test:fixtures",

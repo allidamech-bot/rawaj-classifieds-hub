@@ -7,6 +7,7 @@ const root = resolve(import.meta.dirname, "..");
 const sourcePath = resolve(root, "wrangler.base.jsonc");
 const outputPath = resolve(root, "wrangler.generated.jsonc");
 const local = process.argv.includes("--local");
+const testMode = local && process.argv.includes("--test");
 
 const EXPECTED_PRODUCTION_D1_NAME = "rawaj-staging";
 const EXPECTED_PRODUCTION_D1_ID = "d0e6496c-9f63-48d3-beeb-d2e219500f6a";
@@ -138,6 +139,15 @@ if (!local && previewR2Name === EXPECTED_PRODUCTION_R2_NAME) {
 
 const generated = {
   ...base,
+  ratelimits: testMode
+    ? (base.ratelimits ?? []).map((item) => ({
+        ...item,
+        simple: {
+          ...item.simple,
+          limit: 10000,
+        },
+      }))
+    : base.ratelimits,
   vars: {
     ...base.vars,
     API_ALLOWED_ORIGINS: local ? localOrigins : officialOrigins,

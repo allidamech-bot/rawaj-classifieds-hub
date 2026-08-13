@@ -149,7 +149,7 @@ function localIdentityCount(userId) {
       wrangler,
       "d1",
       "execute",
-      "rawaj-staging",
+      "rawaj-syria-local",
       "--local",
       "--persist-to",
       ".wrangler/test-state-auth",
@@ -183,3 +183,4 @@ async function request(path, token, options = {}) {
   });
   return { response, payload: await response.json() };
 }
+

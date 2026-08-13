@@ -312,7 +312,7 @@ async function signup(label) {
 
 function validSearch() {
   return {
-    nameAr: "سيارات دمشق",
+    nameAr: "ط³ظٹط§ط±ط§طھ ط¯ظ…ط´ظ‚",
     filters: {
       categoryId: "test-category",
       governorateId: "test-governorate",
@@ -345,7 +345,7 @@ function executeLocalSql(sql) {
       wrangler,
       "d1",
       "execute",
-      "rawaj-staging",
+      "rawaj-syria-local",
       "--local",
       "--persist-to",
       ".wrangler/test-state-auth",
@@ -387,3 +387,4 @@ async function api(path, options = {}) {
   const payload = await response.json();
   return { response, payload };
 }
+
