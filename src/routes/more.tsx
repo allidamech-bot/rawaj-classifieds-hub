@@ -9,6 +9,7 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  Rocket,
   ScrollText,
   ShieldAlert,
   Store,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
+import { ReferralGrowthPanel } from "@/features/growth/ReferralGrowthPanel";
 import { AccountRecentlyViewed } from "@/features/retention/AccountRecentlyViewed";
 import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -38,6 +40,7 @@ type AccountRoute =
   | "/privacy"
   | "/profile"
   | "/profile/listings"
+  | "/promotion"
   | "/saved-searches"
   | "/safety"
   | "/support"
@@ -78,6 +81,15 @@ const primaryShortcuts: (AccountRow & { world: string })[] = [
 ];
 
 const secondaryShortcuts: (AccountRow & { world: string })[] = [
+  {
+    titleAr: "Boost",
+    titleEn: "Boost",
+    hintAr: "احصل على عملاء أكثر",
+    hintEn: "Get more buyers",
+    to: "/promotion",
+    icon: Rocket,
+    world: "rawaj-world-orange",
+  },
   {
     titleAr: "المفضلة",
     titleEn: "Favorites",
@@ -225,6 +237,7 @@ function MorePage() {
         </section>
 
         {user ? <AccountRecentlyViewed userId={profile?.id ?? user.id} /> : null}
+        {user ? <ReferralGrowthPanel /> : null}
 
         <div className="rawaj-more-v2__sections">
           {logoutError && (
