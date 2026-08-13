@@ -36,3 +36,91 @@ img.aspect-\[16\/7\] {
   margin-inline: auto !important;
   object-fit: contain !important;
 }
+
+/* Keep a full touch target while making the signed-out login pill visually
+ * compact enough to sit naturally beside the RAWAJ brand on mobile. */
+.rawaj-header-login-cta {
+  position: relative !important;
+  isolation: isolate;
+  width: auto !important;
+  height: var(--rawaj-touch-target) !important;
+  min-width: max-content !important;
+  min-height: var(--rawaj-touch-target) !important;
+  gap: 0.25rem !important;
+  border: 0 !important;
+  padding-inline: 0.5rem !important;
+  color: #fff !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+.rawaj-header-login-cta::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-block: 5px;
+  inset-inline: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.78rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 10px rgba(168, 85, 247, 0.18);
+}
+
+.rawaj-header-login-cta:hover::before {
+  filter: brightness(1.05);
+}
+
+.rawaj-header-login-cta svg {
+  width: 0.85rem !important;
+  height: 0.85rem !important;
+}
+
+.rawaj-header-login-cta__label {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+}
+
+/* Real listing photos must be flush with their media frame. The legacy visual
+ * system added inset spacing/shadows that make actual photos look like a 3D
+ * tile. Keep those decorative treatments for placeholders only. */
+.rawaj-adaptive-card[data-has-image="true"] .rawaj-adaptive-card__media {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.rawaj-adaptive-card[data-has-image="true"] .rawaj-adaptive-card__media::before,
+.rawaj-adaptive-card[data-has-image="true"] .rawaj-adaptive-card__media::after {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-adaptive-card[data-has-image="true"] .rawaj-listing-media--image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+.rawaj-adaptive-card[data-has-image="true"]:hover .rawaj-listing-media--image {
+  transform: none !important;
+}
