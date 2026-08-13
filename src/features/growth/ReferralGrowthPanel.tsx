@@ -28,7 +28,6 @@ export function ReferralGrowthPanel() {
   const eligibleListings = listings.filter(
     (listing) =>
       listing.status === "approved" &&
-      !listing.isDemo &&
       !listing.archivedAt &&
       (!listing.expiresAt || Date.parse(listing.expiresAt) > Date.now()) &&
       !isActiveFeature(listing),
