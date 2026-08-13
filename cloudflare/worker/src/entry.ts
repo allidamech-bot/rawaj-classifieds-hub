@@ -22,6 +22,8 @@ import { handleAdminCampaigns, type AdminCampaignsEnv } from "./admin-campaigns"
 import { handleAdminSafety, type AdminSafetyEnv } from "./admin-safety";
 import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-taxonomy-review";
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
+import { handleReferrals, isReferralPath, type ReferralsEnv } from "./referrals";
+import { expireTimedPromotions } from "./promotion-expiry";
 import { corsHeadersForOrigin } from "./cors";
 import { enforceRequestSecurity, type SecurityEnv } from "./security";
 
@@ -49,6 +51,7 @@ type EntryEnv = PublicCoreEnv &
   AdminSafetyEnv &
   AdminTaxonomyReviewEnv &
   AdminDataQualityEnv &
+  ReferralsEnv &
   SecurityEnv & {
     API_ALLOWED_ORIGINS?: string;
   };
@@ -105,6 +108,10 @@ export default {
       );
     }
   },
+
+  async scheduled(controller: { scheduledTime: number }, env: EntryEnv): Promise<void> {
+    await expireTimedPromotions(env, new Date(controller.scheduledTime).toISOString());
+  },
 };
 
 async function routeRequest(request: Request, env: EntryEnv): Promise<Response> {
@@ -152,6 +159,9 @@ async function routeRequest(request: Request, env: EntryEnv): Promise<Response> 
   }
   if (isDiscoveryPath(path)) {
     return required(await handleDiscovery(request, env));
+  }
+  if (isReferralPath(path)) {
+    return required(await handleReferrals(request, env));
   }
   if (/^\/v1\/admin\/campaigns(?:\/|$)/.test(path)) {
     return required(await handleAdminCampaigns(request, env));
