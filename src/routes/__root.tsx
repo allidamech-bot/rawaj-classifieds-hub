@@ -67,10 +67,10 @@ const LazySavedSearchAlertBackgroundScanner = lazy(() =>
   })),
 );
 const LazyListingComparisonDock = lazy(() => import("@/features/comparison/ListingComparisonDock"));
+const LazyRawajGrowthLayer = lazy(() => import("@/features/growth/RawajGrowthLayer"));
 
 function NotFoundComponent() {
   const { text } = useUiPreferences();
-
   return (
     <>
       <title>{text("الصفحة غير موجودة | رواج", "Page not found | RAWAJ")}</title>
@@ -79,15 +79,8 @@ function NotFoundComponent() {
         <FeedbackState
           code="404"
           title={text("الصفحة غير موجودة", "Page not found")}
-          description={text(
-            "الصفحة التي تبحث عنها غير متاحة أو تم نقلها.",
-            "The page you are looking for is unavailable or has moved.",
-          )}
-          action={
-            <Button asChild>
-              <Link to="/">{text("العودة للرئيسية", "Back to home")}</Link>
-            </Button>
-          }
+          description={text("الصفحة التي تبحث عنها غير متاحة أو تم نقلها.", "The page you are looking for is unavailable or has moved.")}
+          action={<Button asChild><Link to="/">{text("العودة للرئيسية", "Back to home")}</Link></Button>}
         />
       </div>
     </>
@@ -97,30 +90,14 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   const { text } = useUiPreferences();
-
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-
+  useEffect(() => { reportLovableError(error, { boundary: "tanstack_root_error_component" }); }, [error]);
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <FeedbackState
         tone="error"
         title={text("حدث خطأ غير متوقع", "Something went wrong")}
-        description={text(
-          "تعذر إكمال الطلب الآن. حاول مرة أخرى.",
-          "The request could not be completed. Try again.",
-        )}
-        action={
-          <Button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-          >
-            {text("إعادة المحاولة", "Try again")}
-          </Button>
-        }
+        description={text("تعذر إكمال الطلب الآن. حاول مرة أخرى.", "The request could not be completed. Try again.")}
+        action={<Button onClick={() => { router.invalidate(); reset(); }}>{text("إعادة المحاولة", "Try again")}</Button>}
       />
     </main>
   );
@@ -145,77 +122,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "stylesheet", href: appCss },
         { rel: "stylesheet", href: visualFoundationCss },
         { rel: "stylesheet", href: signatureCss },
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeSignature }]
-          : []),
+        ...(routeStyleScope.home ? [{ rel: "stylesheet", href: routeStyleHrefs.homeSignature }] : []),
         { rel: "stylesheet", href: marketplaceDiscoveryCss },
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingsResults }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailFoundation }]
-          : []),
+        ...(routeStyleScope.listingResults ? [{ rel: "stylesheet", href: routeStyleHrefs.listingsResults }] : []),
+        ...(routeStyleScope.listingDetail ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailFoundation }] : []),
         { rel: "stylesheet", href: authAccountFoundationCss },
         { rel: "stylesheet", href: authAccountV2Css },
-        ...(routeStyleScope.personalSpace
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.activityMoreFoundation }]
-          : []),
-        ...(routeStyleScope.trustSupport
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.trustSupportHubV2 }]
-          : []),
-        ...(routeStyleScope.storefront
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontFoundation }]
-          : []),
-        ...(routeStyleScope.storefront
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }]
-          : []),
-        ...(routeStyleScope.offers
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioSignature }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV2 }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV3 }]
-          : []),
-        ...(routeStyleScope.listingStudio
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV4 }]
-          : []),
-        ...(routeStyleScope.communication
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }]
-          : []),
-        ...(routeStyleScope.messaging
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingV4 }]
-          : []),
+        ...(routeStyleScope.personalSpace ? [{ rel: "stylesheet", href: routeStyleHrefs.activityMoreFoundation }] : []),
+        ...(routeStyleScope.trustSupport ? [{ rel: "stylesheet", href: routeStyleHrefs.trustSupportHubV2 }] : []),
+        ...(routeStyleScope.storefront ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontFoundation }] : []),
+        ...(routeStyleScope.storefront ? [{ rel: "stylesheet", href: routeStyleHrefs.sellerStorefrontV2 }] : []),
+        ...(routeStyleScope.offers ? [{ rel: "stylesheet", href: routeStyleHrefs.offersSignature }] : []),
+        ...(routeStyleScope.listingStudio ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioSignature }] : []),
+        ...(routeStyleScope.listingStudio ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV2 }] : []),
+        ...(routeStyleScope.listingStudio ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV3 }] : []),
+        ...(routeStyleScope.listingStudio ? [{ rel: "stylesheet", href: routeStyleHrefs.listingStudioV4 }] : []),
+        ...(routeStyleScope.communication ? [{ rel: "stylesheet", href: routeStyleHrefs.communicationCenterV2 }] : []),
+        ...(routeStyleScope.messaging ? [{ rel: "stylesheet", href: routeStyleHrefs.messagingV4 }] : []),
         { rel: "stylesheet", href: comparisonFoundationCss },
         { rel: "stylesheet", href: marketplaceSystemCss },
-        ...(routeStyleScope.personalSpace
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.personalSpacePolish }]
-          : []),
+        ...(routeStyleScope.personalSpace ? [{ rel: "stylesheet", href: routeStyleHrefs.personalSpacePolish }] : []),
         { rel: "stylesheet", href: designSystemV2Css },
         { rel: "stylesheet", href: spatialAppShellCss },
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeMarketplaceV2 }]
-          : []),
-        ...(routeStyleScope.home
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.homeDiscoveryV3 }]
-          : []),
+        ...(routeStyleScope.home ? [{ rel: "stylesheet", href: routeStyleHrefs.homeMarketplaceV2 }] : []),
+        ...(routeStyleScope.home ? [{ rel: "stylesheet", href: routeStyleHrefs.homeDiscoveryV3 }] : []),
         { rel: "stylesheet", href: adaptiveListingCardsCss },
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV1 }]
-          : []),
-        ...(routeStyleScope.listingResults
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV2 }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV2 }]
-          : []),
-        ...(routeStyleScope.listingDetail
-          ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV3 }]
-          : []),
+        ...(routeStyleScope.listingResults ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV1 }] : []),
+        ...(routeStyleScope.listingResults ? [{ rel: "stylesheet", href: routeStyleHrefs.searchFiltersV2 }] : []),
+        ...(routeStyleScope.listingDetail ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV2 }] : []),
+        ...(routeStyleScope.listingDetail ? [{ rel: "stylesheet", href: routeStyleHrefs.listingDetailV3 }] : []),
         { rel: "stylesheet", href: desktopExperienceV1Css },
         { rel: "stylesheet", href: launchReadinessVisualPolishCss },
         { rel: "stylesheet", href: designFoundationCss },
@@ -225,10 +160,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "apple-touch-icon", href: "/brand/rawaj-mark-transparent-192.png" },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap",
-        },
+        { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" },
       ],
     };
   },
@@ -240,72 +172,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <script {...jsonLdScript(buildSiteStructuredData())} />
-        <Analytics />
-        <Scripts />
-      </body>
-    </html>
+    <html lang="ar" dir="rtl"><head><HeadContent /></head><body>{children}<script {...jsonLdScript(buildSiteStructuredData())} /><Analytics /><Scripts /></body></html>
   );
 }
 
 function HtmlAttributes() {
   const { language } = useUiPreferences();
-
   useEffect(() => {
     const root = document.documentElement;
     root.lang = language === "en" ? "en" : "ar";
     root.dir = language === "en" ? "ltr" : "rtl";
   }, [language]);
-
   return null;
 }
 
 function DeferredAccountBackgroundServices() {
   const auth = useAuth();
   const profileId = auth.profile?.id ?? null;
-
   if (auth.status !== "signedIn" || !profileId) return null;
-
-  return (
-    <Suspense fallback={null}>
-      <LazySavedSearchAlertBackgroundScanner key={profileId} />
-    </Suspense>
-  );
+  return <Suspense fallback={null}><LazySavedSearchAlertBackgroundScanner key={profileId} /></Suspense>;
 }
 
-function DeferredRouteAnnouncements({
-  showDraftRecovery,
-  listingDetailId,
-}: {
-  showDraftRecovery: boolean;
-  listingDetailId: string | null;
-}) {
+function DeferredRouteAnnouncements({ showDraftRecovery, listingDetailId }: { showDraftRecovery: boolean; listingDetailId: string | null }) {
   if (!showDraftRecovery && !listingDetailId) return null;
-
-  return (
-    <Suspense fallback={null}>
-      {showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}
-      {listingDetailId ? <LazyViewedBeforeBanner listingId={listingDetailId} /> : null}
-      {listingDetailId ? <LazyExistingConversationBanner listingId={listingDetailId} /> : null}
-    </Suspense>
-  );
+  return <Suspense fallback={null}>{showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}{listingDetailId ? <LazyViewedBeforeBanner listingId={listingDetailId} /> : null}{listingDetailId ? <LazyExistingConversationBanner listingId={listingDetailId} /> : null}</Suspense>;
 }
 
 function ListingComparisonDockBoundary() {
   const { entries } = useListingComparison();
   if (entries.length === 0) return null;
-
-  return (
-    <Suspense fallback={null}>
-      <LazyListingComparisonDock />
-    </Suspense>
-  );
+  return <Suspense fallback={null}><LazyListingComparisonDock /></Suspense>;
 }
 
 function personalSpaceRouteClass(pathname: string) {
@@ -321,26 +217,15 @@ function personalSpaceRouteClass(pathname: string) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const routeNavigation = useRouterState({
-    select: (state) => {
-      const resolvedPathname = state.resolvedLocation?.pathname ?? state.location.pathname;
-      return {
-        resolvedPathname,
-        pendingPathname: state.location.pathname,
-        isRouteNavigating:
-          Boolean(state.resolvedLocation) &&
-          state.isLoading &&
-          state.location.pathname !== resolvedPathname,
-      };
-    },
-  });
+  const routeNavigation = useRouterState({ select: (state) => {
+    const resolvedPathname = state.resolvedLocation?.pathname ?? state.location.pathname;
+    return { resolvedPathname, pendingPathname: state.location.pathname, isRouteNavigating: Boolean(state.resolvedLocation) && state.isLoading && state.location.pathname !== resolvedPathname };
+  }});
   const { resolvedPathname, pendingPathname, isRouteNavigating } = routeNavigation;
   const showDraftRecovery = resolvedPathname === "/add-listing";
   const routeScopeClass = personalSpaceRouteClass(resolvedPathname);
   const listingDetailMatch = resolvedPathname.match(/^\/listings\/([^/]+)$/);
-  const listingDetailId = listingDetailMatch?.[1]
-    ? decodeURIComponent(listingDetailMatch[1])
-    : null;
+  const listingDetailId = listingDetailMatch?.[1] ? decodeURIComponent(listingDetailMatch[1]) : null;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -350,18 +235,8 @@ function RootComponent() {
             <ListingComparisonProvider>
               <DeferredAccountBackgroundServices />
               <HtmlAttributes />
-              <AppShell
-                pathname={resolvedPathname}
-                pendingPathname={pendingPathname}
-                isRouteNavigating={isRouteNavigating}
-                routeClassName={routeScopeClass}
-                announcements={
-                  <DeferredRouteAnnouncements
-                    showDraftRecovery={showDraftRecovery}
-                    listingDetailId={listingDetailId}
-                  />
-                }
-              >
+              <Suspense fallback={null}><LazyRawajGrowthLayer /></Suspense>
+              <AppShell pathname={resolvedPathname} pendingPathname={pendingPathname} isRouteNavigating={isRouteNavigating} routeClassName={routeScopeClass} announcements={<DeferredRouteAnnouncements showDraftRecovery={showDraftRecovery} listingDetailId={listingDetailId} />}>
                 <Outlet />
               </AppShell>
               <ListingComparisonDockBoundary />
