@@ -36,7 +36,10 @@ export type ReferralSummary = {
   rewards: ReferralReward[];
 };
 
-export async function claimListingShareReferral(sourceListingId: string, referredListingId: string) {
+export async function claimListingShareReferral(
+  sourceListingId: string,
+  referredListingId: string,
+) {
   return cloudflareApiRequest<ReferralClaim>("/v1/account/referrals/claim", {
     method: "POST",
     body: { sourceListingId, referredListingId },

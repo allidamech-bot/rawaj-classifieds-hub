@@ -7,12 +7,7 @@ const PENDING_SHARE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export type ListingShareChannel = "native" | "whatsapp" | "copy" | "download";
 export type ListingShareTemplateId =
-  | "classic"
-  | "quick-sale"
-  | "minimal"
-  | "emerald"
-  | "premium"
-  | "story";
+  "classic" | "quick-sale" | "minimal" | "emerald" | "premium" | "story";
 
 export interface ListingShareTemplate {
   id: ListingShareTemplateId;

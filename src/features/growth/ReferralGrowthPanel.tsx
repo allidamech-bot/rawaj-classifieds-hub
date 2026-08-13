@@ -21,7 +21,9 @@ export function ReferralGrowthPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [redeemingRewardId, setRedeemingRewardId] = useState<string | null>(null);
-  const [selectedListingByReward, setSelectedListingByReward] = useState<Record<string, string>>({});
+  const [selectedListingByReward, setSelectedListingByReward] = useState<Record<string, string>>(
+    {},
+  );
 
   const eligibleListings = listings.filter(
     (listing) =>
@@ -44,7 +46,9 @@ export function ReferralGrowthPanel() {
 
       if (!summaryResult.ok) {
         setSummary(null);
-        setError(text("تعذر تحميل مكافآت المشاركة الآن.", "Could not load share rewards right now."));
+        setError(
+          text("تعذر تحميل مكافآت المشاركة الآن.", "Could not load share rewards right now."),
+        );
         return;
       }
 
@@ -138,7 +142,11 @@ export function ReferralGrowthPanel() {
 
       <div className="p-4 sm:p-5">
         <div className="grid grid-cols-3 gap-2">
-          <GrowthStat icon={Share2} value={awaitingApproval} label={text("بانتظار الاعتماد", "Awaiting approval")} />
+          <GrowthStat
+            icon={Share2}
+            value={awaitingApproval}
+            label={text("بانتظار الاعتماد", "Awaiting approval")}
+          />
           <GrowthStat icon={Gift} value={readyBoosts} label={text("Boost جاهز", "Boosts ready")} />
           <GrowthStat icon={Users} value={appliedBoosts} label={text("تم تفعيله", "Activated")} />
         </div>
@@ -163,9 +171,17 @@ export function ReferralGrowthPanel() {
         ) : null}
 
         {error ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/20 bg-destructive/7 px-4 py-3 text-xs font-semibold text-destructive" role="alert">
+          <div
+            className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/20 bg-destructive/7 px-4 py-3 text-xs font-semibold text-destructive"
+            role="alert"
+          >
             <span>{error}</span>
-            <button type="button" onClick={() => void load()} disabled={loading} className="rounded-lg border border-destructive/20 px-2.5 py-1.5 text-[10px] font-black disabled:opacity-50">
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={loading}
+              className="rounded-lg border border-destructive/20 px-2.5 py-1.5 text-[10px] font-black disabled:opacity-50"
+            >
               {loading ? text("جارٍ التحديث...", "Refreshing...") : text("إعادة المحاولة", "Retry")}
             </button>
           </div>
@@ -175,10 +191,19 @@ export function ReferralGrowthPanel() {
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-black text-foreground">{text("مكافآت جاهزة للاستخدام", "Rewards ready to use")}</h3>
-                <p className="mt-1 text-[11px] text-muted-foreground">{text("اختر إعلاناً مؤهلاً لكل Boost محفوظ.", "Choose an eligible listing for each saved boost.")}</p>
+                <h3 className="text-sm font-black text-foreground">
+                  {text("مكافآت جاهزة للاستخدام", "Rewards ready to use")}
+                </h3>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {text(
+                    "اختر إعلاناً مؤهلاً لكل Boost محفوظ.",
+                    "Choose an eligible listing for each saved boost.",
+                  )}
+                </p>
               </div>
-              <span className="rounded-full bg-brand-orange/10 px-3 py-1 text-[10px] font-black text-brand-orange">{availableRewards.length}</span>
+              <span className="rounded-full bg-brand-orange/10 px-3 py-1 text-[10px] font-black text-brand-orange">
+                {availableRewards.length}
+              </span>
             </div>
 
             {availableRewards.map((reward) => {
@@ -188,13 +213,21 @@ export function ReferralGrowthPanel() {
                 "";
               const selectedListingId = selectedListingByReward[reward.id] ?? defaultListingId;
               return (
-                <div key={reward.id} className="rounded-2xl border border-border/70 bg-background p-4">
+                <div
+                  key={reward.id}
+                  className="rounded-2xl border border-border/70 bg-background p-4"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-black text-foreground">{text("Boost مجاني — 24 ساعة", "Free boost — 24 hours")}</p>
+                      <p className="text-sm font-black text-foreground">
+                        {text("Boost مجاني — 24 ساعة", "Free boost — 24 hours")}
+                      </p>
                       <p className="mt-1 text-[11px] text-muted-foreground">
                         {reward.suggestedListingTitle
-                          ? text(`نتج عن مشاركة: ${reward.suggestedListingTitle}`, `Earned from sharing: ${reward.suggestedListingTitle}`)
+                          ? text(
+                              `نتج عن مشاركة: ${reward.suggestedListingTitle}`,
+                              `Earned from sharing: ${reward.suggestedListingTitle}`,
+                            )
                           : text("مكافأة إحالة محفوظة", "Saved referral reward")}
                       </p>
                     </div>
@@ -203,18 +236,40 @@ export function ReferralGrowthPanel() {
 
                   {eligibleListings.length > 0 ? (
                     <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                      <select value={selectedListingId} onChange={(event) => setSelectedListingByReward((current) => ({ ...current, [reward.id]: event.target.value }))} className="min-h-11 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none focus:border-brand-orange" aria-label={text("اختر الإعلان للـBoost", "Choose listing for boost")}>
+                      <select
+                        value={selectedListingId}
+                        onChange={(event) =>
+                          setSelectedListingByReward((current) => ({
+                            ...current,
+                            [reward.id]: event.target.value,
+                          }))
+                        }
+                        className="min-h-11 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none focus:border-brand-orange"
+                        aria-label={text("اختر الإعلان للـBoost", "Choose listing for boost")}
+                      >
                         {eligibleListings.map((listing) => (
-                          <option key={listing.id} value={listing.id}>{listing.title}</option>
+                          <option key={listing.id} value={listing.id}>
+                            {listing.title}
+                          </option>
                         ))}
                       </select>
-                      <button type="button" onClick={() => void redeem(reward)} disabled={Boolean(redeemingRewardId)} className="rawaj-button-primary min-h-11 rounded-xl px-4 text-xs font-black disabled:opacity-50">
-                        {redeemingRewardId === reward.id ? text("جارٍ التفعيل...", "Activating...") : text("فعّل Boost", "Activate boost")}
+                      <button
+                        type="button"
+                        onClick={() => void redeem(reward)}
+                        disabled={Boolean(redeemingRewardId)}
+                        className="rawaj-button-primary min-h-11 rounded-xl px-4 text-xs font-black disabled:opacity-50"
+                      >
+                        {redeemingRewardId === reward.id
+                          ? text("جارٍ التفعيل...", "Activating...")
+                          : text("فعّل Boost", "Activate boost")}
                       </button>
                     </div>
                   ) : (
                     <p className="mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
-                      {text("لا يوجد حالياً إعلان معتمد ومتاح يمكن تطبيق المكافأة عليه. ستبقى المكافأة محفوظة.", "There is no eligible approved listing right now. Your reward will remain saved.")}
+                      {text(
+                        "لا يوجد حالياً إعلان معتمد ومتاح يمكن تطبيق المكافأة عليه. ستبقى المكافأة محفوظة.",
+                        "There is no eligible approved listing right now. Your reward will remain saved.",
+                      )}
                     </p>
                   )}
                 </div>
@@ -223,7 +278,10 @@ export function ReferralGrowthPanel() {
           </div>
         ) : summary && appliedBoosts > 0 ? (
           <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3 text-xs font-semibold text-emerald-700">
-            {text("مكافآتك الحالية تم تطبيقها. استمر بمشاركة إعلاناتك لجلب بائعين جدد.", "Your current rewards have been applied. Keep sharing listings to bring new sellers.")}
+            {text(
+              "مكافآتك الحالية تم تطبيقها. استمر بمشاركة إعلاناتك لجلب بائعين جدد.",
+              "Your current rewards have been applied. Keep sharing listings to bring new sellers.",
+            )}
           </div>
         ) : null}
       </div>
@@ -231,12 +289,22 @@ export function ReferralGrowthPanel() {
   );
 }
 
-function GrowthStat({ icon: Icon, value, label }: { icon: typeof Share2; value: number; label: string }) {
+function GrowthStat({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: typeof Share2;
+  value: number;
+  label: string;
+}) {
   return (
     <div className="rounded-2xl border border-border/65 bg-background p-3 text-center">
       <Icon className="mx-auto h-4 w-4 text-brand-orange" aria-hidden="true" />
       <strong className="mt-2 block text-lg font-black text-foreground">{value}</strong>
-      <span className="mt-0.5 block text-[9px] font-semibold leading-4 text-muted-foreground">{label}</span>
+      <span className="mt-0.5 block text-[9px] font-semibold leading-4 text-muted-foreground">
+        {label}
+      </span>
     </div>
   );
 }

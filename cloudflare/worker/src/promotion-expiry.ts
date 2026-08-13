@@ -68,6 +68,13 @@ export async function expireTimedPromotions(
   const expiredPromotions = Number(results[0]?.meta?.changes ?? 0);
   const reconciledListings = Number(results[1]?.meta?.changes ?? 0);
   if (expiredPromotions > 0 || reconciledListings > 0) {
-    console.log(JSON.stringify({ event: "timed_promotions_expired", timestamp, expiredPromotions, reconciledListings }));
+    console.log(
+      JSON.stringify({
+        event: "timed_promotions_expired",
+        timestamp,
+        expiredPromotions,
+        reconciledListings,
+      }),
+    );
   }
 }
