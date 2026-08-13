@@ -144,7 +144,7 @@ async function claimReferral(request: Request, env: ReferralsEnv, cors: Headers)
   }
 
   const source = await env.DB.prepare(
-    `SELECT l.id, l.owner_id, l.status, l.is_demo, p.account_status, u.disabled_at
+    `SELECT l.id, l.owner_id, l.status, p.account_status, u.disabled_at
        FROM listings l JOIN public_profiles p ON p.id=l.owner_id JOIN auth_users u ON u.id=l.owner_id
       WHERE l.id = ? LIMIT 1`,
   )
@@ -154,7 +154,6 @@ async function claimReferral(request: Request, env: ReferralsEnv, cors: Headers)
     !source ||
     !nullable(source.owner_id) ||
     nullable(source.owner_id) === auth.userId ||
-    bool(source.is_demo) ||
     text(source.status) === "draft" ||
     text(source.account_status) !== "active" ||
     source.disabled_at
@@ -163,20 +162,16 @@ async function claimReferral(request: Request, env: ReferralsEnv, cors: Headers)
   }
 
   const referred = await env.DB.prepare(
-    `SELECT id, owner_id, status, is_demo FROM listings WHERE id = ? AND owner_id = ? LIMIT 1`,
+    `SELECT id, owner_id, status FROM listings WHERE id = ? AND owner_id = ? LIMIT 1`,
   )
     .bind(referredListingId, auth.userId)
     .first<Row>();
-  if (
-    !referred ||
-    bool(referred.is_demo) ||
-    !["pending_review", "approved"].includes(text(referred.status))
-  ) {
+  if (!referred || !["pending_review", "approved"].includes(text(referred.status))) {
     return conflict(cors, "The referred listing must be a real listing submitted for review.");
   }
 
   const previous = await env.DB.prepare(
-    `SELECT id FROM listings WHERE owner_id=? AND id<>? AND COALESCE(is_demo,0)=0 AND status<>'draft' LIMIT 1`,
+    `SELECT id FROM listings WHERE owner_id=? AND id<>? AND status<>'draft' LIMIT 1`,
   )
     .bind(auth.userId, referredListingId)
     .first<{ id: string }>();
