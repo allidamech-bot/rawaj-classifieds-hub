@@ -144,3 +144,18 @@ img.aspect-\[16\/7\] {
   object-fit: cover !important;
   object-position: center !important;
 }
+
+/* All listing media — real photos and category placeholders — must use the
+ * full media column. Older marketplace layers add 0.42rem/0.35rem insets; the
+ * important declarations here deliberately neutralize those late rules. */
+.rawaj-adaptive-card__media {
+  padding: 0 !important;
+}
+
+.rawaj-adaptive-card__media > .rawaj-listing-media {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
