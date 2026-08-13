@@ -67,10 +67,10 @@ const LazySavedSearchAlertBackgroundScanner = lazy(() =>
   })),
 );
 const LazyListingComparisonDock = lazy(() => import("@/features/comparison/ListingComparisonDock"));
+const LazyRawajGrowthLayer = lazy(() => import("@/features/growth/RawajGrowthLayer"));
 
 function NotFoundComponent() {
   const { text } = useUiPreferences();
-
   return (
     <>
       <title>{text("الصفحة غير موجودة | رواج", "Page not found | RAWAJ")}</title>
@@ -97,11 +97,9 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   const { text } = useUiPreferences();
-
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
-
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <FeedbackState
@@ -256,22 +254,18 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function HtmlAttributes() {
   const { language } = useUiPreferences();
-
   useEffect(() => {
     const root = document.documentElement;
     root.lang = language === "en" ? "en" : "ar";
     root.dir = language === "en" ? "ltr" : "rtl";
   }, [language]);
-
   return null;
 }
 
 function DeferredAccountBackgroundServices() {
   const auth = useAuth();
   const profileId = auth.profile?.id ?? null;
-
   if (auth.status !== "signedIn" || !profileId) return null;
-
   return (
     <Suspense fallback={null}>
       <LazySavedSearchAlertBackgroundScanner key={profileId} />
@@ -287,7 +281,6 @@ function DeferredRouteAnnouncements({
   listingDetailId: string | null;
 }) {
   if (!showDraftRecovery && !listingDetailId) return null;
-
   return (
     <Suspense fallback={null}>
       {showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}
@@ -300,7 +293,6 @@ function DeferredRouteAnnouncements({
 function ListingComparisonDockBoundary() {
   const { entries } = useListingComparison();
   if (entries.length === 0) return null;
-
   return (
     <Suspense fallback={null}>
       <LazyListingComparisonDock />
@@ -350,6 +342,9 @@ function RootComponent() {
             <ListingComparisonProvider>
               <DeferredAccountBackgroundServices />
               <HtmlAttributes />
+              <Suspense fallback={null}>
+                <LazyRawajGrowthLayer />
+              </Suspense>
               <AppShell
                 pathname={resolvedPathname}
                 pendingPathname={pendingPathname}
