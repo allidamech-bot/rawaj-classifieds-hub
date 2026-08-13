@@ -1,4 +1,4 @@
-﻿PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = ON;
 
 -- Trigger to simulate zero-row UPDATE for testing stale_review
 -- Only affects listings where details JSON contains "triggerFail": true

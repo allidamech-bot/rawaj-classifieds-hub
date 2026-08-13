@@ -1,4 +1,4 @@
-﻿import { test } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 
 // Inline test of the parseAuditMetadata logic since we can't import admin.ts directly

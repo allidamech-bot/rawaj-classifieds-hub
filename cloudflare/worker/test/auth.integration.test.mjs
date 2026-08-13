@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";

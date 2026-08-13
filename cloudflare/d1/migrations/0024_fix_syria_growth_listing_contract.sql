@@ -1,4 +1,4 @@
-﻿PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = ON;
 
 -- Repair Syria referral/search-boost triggers created by 0022/0023.
 -- The canonical Syria listings schema does not contain an is_demo column.
