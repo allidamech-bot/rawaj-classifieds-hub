@@ -1,7 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "*": false,
+      "fix/syria-signature-placeholder-no-inset": true
+    }
   },
   "rewrites": [
     {
