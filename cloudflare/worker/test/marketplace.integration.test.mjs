@@ -57,6 +57,7 @@ before(async () => {
   await assignRole(owner.userId, "owner");
   await assignRole(admin.userId, "admin");
   await assignRole(moderator.userId, "moderator");
+  seedPublicRankingFixtures();
   await new Promise((resolve) => setTimeout(resolve, 500));
 });
 
@@ -210,6 +211,216 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
     ).response.status,
     403,
   );
+});
+
+test("active Search Boost ranks first without bypassing category or text relevance", async () => {
+  const ranked = await api("/v1/listings?q=rankactive&pageSize=10");
+  assert.equal(ranked.response.status, 200);
+  assert.deepEqual(
+    ranked.payload.data.items.map((item) => item.id),
+    ["rank-active-boosted", "rank-active-organic"],
+  );
+
+  const categoryFiltered = await api(
+    "/v1/listings?q=rankcategory&categoryId=boost-test-category&pageSize=10",
+  );
+  assert.deepEqual(
+    categoryFiltered.payload.data.items.map((item) => item.id),
+    ["rank-category-organic"],
+  );
+
+  const textFiltered = await api("/v1/listings?q=ranktextmatch&pageSize=10");
+  assert.deepEqual(
+    textFiltered.payload.data.items.map((item) => item.id),
+    ["rank-text-organic"],
+  );
+});
+
+test("expired, pending, and rejected Search Boost states have zero default ranking priority", async () => {
+  for (const [query, expected] of [
+    ["rankexpired", ["rank-expired-organic", "rank-expired-stale"]],
+    ["rankpending", ["rank-pending-organic", "rank-pending-request"]],
+    ["rankrejected", ["rank-rejected-organic", "rank-rejected-request"]],
+  ]) {
+    const result = await api(`/v1/listings?q=${query}&pageSize=10`);
+    assert.equal(result.response.status, 200);
+    assert.deepEqual(
+      result.payload.data.items.map((item) => item.id),
+      expected,
+    );
+  }
+});
+
+test("default boosted cursor pagination is deterministic and produces no duplicates", async () => {
+  const ids = [];
+  let cursor = null;
+  do {
+    const query = new URLSearchParams({ q: "rankcursor", pageSize: "2" });
+    if (cursor) query.set("cursor", cursor);
+    const page = await api(`/v1/listings?${query}`);
+    assert.equal(page.response.status, 200);
+    ids.push(...page.payload.data.items.map((item) => item.id));
+    cursor = page.payload.data.nextCursor;
+  } while (cursor);
+
+  assert.deepEqual(ids, [
+    "rank-cursor-boosted",
+    "rank-cursor-organic-4",
+    "rank-cursor-organic-3",
+    "rank-cursor-organic-2",
+    "rank-cursor-organic-1",
+  ]);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("cheapest and expensive sorts remain price ordered when a listing is boosted", async () => {
+  const cheapest = await api("/v1/listings?q=rankprice&sort=cheapest&pageSize=10");
+  assert.deepEqual(
+    cheapest.payload.data.items.map((item) => item.id),
+    ["rank-price-low", "rank-price-boosted", "rank-price-high"],
+  );
+
+  const expensive = await api("/v1/listings?q=rankprice&sort=expensive&pageSize=10");
+  assert.deepEqual(
+    expensive.payload.data.items.map((item) => item.id),
+    ["rank-price-high", "rank-price-boosted", "rank-price-low"],
+  );
+});
+
+test("Search Boost receipt stays private and approval activates the exact purchased duration", async () => {
+  const pendingListing = await createListing(owner, {
+    title: "Search Boost exact duration listing",
+  });
+  const approvedListing = await api("/v1/admin/listings/moderate", {
+    ...moderator,
+    method: "POST",
+    body: {
+      listingId: pendingListing.payload.data.id,
+      action: "approve",
+      reason: "Approved for Search Boost test",
+      expectedUpdatedAt: pendingListing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approvedListing.response.status, 200);
+
+  const created = await api("/v1/account/promotions", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: pendingListing.payload.data.id,
+      clientRequestId: `search-boost:boost_6h:${crypto.randomUUID()}`,
+      promotionType: "highlighted",
+      requestedDays: 1,
+      paymentMethod: "Local test transfer",
+      paymentReference: "TEST-BOOST-6H",
+    },
+  });
+  assert.equal(created.response.status, 201);
+
+  const receipt = new FormData();
+  receipt.set(
+    "file",
+    new File(
+      [new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0])],
+      "boost-receipt.png",
+      { type: "image/png" },
+    ),
+  );
+  const uploadedResponse = await fetch(
+    `${baseUrl}/v1/account/promotions/${created.payload.data.id}/receipt`,
+    { method: "POST", headers: headers(owner), body: receipt },
+  );
+  assert.equal(uploadedResponse.status, 200);
+
+  const ownAfterUpload = await api("/v1/account/promotions", owner);
+  const pendingRequest = ownAfterUpload.payload.data.find(
+    (item) => item.id === created.payload.data.id,
+  );
+  assert.equal(pendingRequest.proofContentType, "image/png");
+  assert.ok(pendingRequest.proofPath);
+  assert.equal(
+    (
+      await api(`/v1/admin/promotion-receipts/${pendingRequest.proofPath}`, other)
+    ).response.status,
+    403,
+  );
+  const adminReceipt = await fetch(
+    `${baseUrl}/v1/admin/promotion-receipts/${pendingRequest.proofPath}`,
+    { headers: headers(admin) },
+  );
+  assert.equal(adminReceipt.status, 200);
+  assert.match(adminReceipt.headers.get("cache-control") ?? "", /private, no-store/);
+
+  const approved = await api(`/v1/admin/promotions/${created.payload.data.id}`, {
+    ...admin,
+    method: "PATCH",
+    body: {
+      status: "approved",
+      adminNote: "Payment verified",
+      expectedUpdatedAt: pendingRequest.updatedAt,
+    },
+  });
+  assert.equal(approved.response.status, 200);
+
+  const ownAfterApproval = await api("/v1/account/promotions", owner);
+  const activeRequest = ownAfterApproval.payload.data.find(
+    (item) => item.id === created.payload.data.id,
+  );
+  assert.equal(activeRequest.searchBoostPackageCode, "boost_6h");
+  assert.equal(activeRequest.searchBoostDurationMinutes, 360);
+  assert.equal(activeRequest.searchBoostPriceSyp, 200);
+  assert.equal(activeRequest.searchBoostStatus, "active");
+  assert.equal(Date.parse(activeRequest.endsAt) - Date.parse(activeRequest.startsAt), 21_600_000);
+});
+
+test("Search Boost rejection requires a reason and never activates the listing", async () => {
+  const pendingListing = await createListing(owner, { title: "Rejected Search Boost listing" });
+  const approvedListing = await api("/v1/admin/listings/moderate", {
+    ...moderator,
+    method: "POST",
+    body: {
+      listingId: pendingListing.payload.data.id,
+      action: "approve",
+      reason: "Approved before Boost rejection test",
+      expectedUpdatedAt: pendingListing.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approvedListing.response.status, 200);
+  const created = await api("/v1/account/promotions", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: pendingListing.payload.data.id,
+      clientRequestId: `search-boost:boost_24h:${crypto.randomUUID()}`,
+      promotionType: "highlighted",
+      requestedDays: 1,
+      paymentMethod: "Local test transfer",
+      paymentReference: "TEST-BOOST-REJECT",
+    },
+  });
+  assert.equal(created.response.status, 201);
+  const withoutReason = await api(`/v1/admin/promotions/${created.payload.data.id}`, {
+    ...admin,
+    method: "PATCH",
+    body: {
+      status: "rejected",
+      adminNote: null,
+      expectedUpdatedAt: created.payload.data.updatedAt,
+    },
+  });
+  assert.equal(withoutReason.response.status, 400);
+  const rejected = await api(`/v1/admin/promotions/${created.payload.data.id}`, {
+    ...admin,
+    method: "PATCH",
+    body: {
+      status: "rejected",
+      adminNote: "Payment could not be verified",
+      expectedUpdatedAt: created.payload.data.updatedAt,
+    },
+  });
+  assert.equal(rejected.response.status, 200);
+  const listing = await api(`/v1/listings/${pendingListing.payload.data.id}`);
+  assert.equal(listing.payload.data.listing.isFeatured, false);
 });
 
 test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
@@ -367,6 +578,77 @@ async function assignRole(userId, role) {
     },
   );
   assert.equal(result.status, 0, result.stderr || result.stdout);
+}
+
+function executeSql(command) {
+  const wrangler = fileURLToPath(
+    new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url),
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      wrangler,
+      "d1",
+      "execute",
+      "rawaj-syria-local",
+      "--local",
+      "--persist-to",
+      ".wrangler/test-state-auth",
+      "--config",
+      "wrangler.generated.jsonc",
+      "--command",
+      command,
+    ],
+    {
+      cwd: fileURLToPath(new URL("..", import.meta.url)),
+      encoding: "utf8",
+      windowsHide: true,
+    },
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+}
+
+function seedPublicRankingFixtures() {
+  executeSql(`
+    DELETE FROM listing_promotion_requests WHERE id LIKE 'rank-%';
+    DELETE FROM listings WHERE id LIKE 'rank-%';
+    INSERT OR IGNORE INTO categories (id,slug,name_ar,name_en,sort_order,is_active) VALUES
+      ('boost-test-category','boost-test-category','اختبار Boost','Boost test',91,1),
+      ('boost-other-category','boost-other-category','قسم آخر','Other test',92,1);
+    INSERT INTO listings
+      (id,owner_id,category_id,governorate_id,title,description,price,currency,price_type,
+       listing_condition,status,contact_options,details,is_featured,featured_until,
+       search_text_normalized,created_at,updated_at)
+    VALUES
+      ('rank-active-boosted','test-public-seller','boost-test-category','test-governorate','rankactive boosted','rankactive',200,'SYP','fixed','used','approved','{}','{}',1,'2099-01-01T00:00:00.000Z','rankactive','2026-08-01T10:00:00.000Z','2026-08-01T10:00:00.000Z'),
+      ('rank-active-organic','test-public-seller','boost-test-category','test-governorate','rankactive organic','rankactive',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankactive','2026-08-02T10:00:00.000Z','2026-08-02T10:00:00.000Z'),
+      ('rank-category-organic','test-public-seller','boost-test-category','test-governorate','rankcategory organic','rankcategory',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankcategory','2026-08-03T10:00:00.000Z','2026-08-03T10:00:00.000Z'),
+      ('rank-category-boosted-unrelated','test-public-seller','boost-other-category','test-governorate','rankcategory unrelated boosted','rankcategory',100,'SYP','fixed','used','approved','{}','{}',1,'2099-01-01T00:00:00.000Z','rankcategory','2026-08-04T10:00:00.000Z','2026-08-04T10:00:00.000Z'),
+      ('rank-text-organic','test-public-seller','boost-test-category','test-governorate','ranktextmatch organic','ranktextmatch',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'ranktextmatch','2026-08-03T10:00:00.000Z','2026-08-03T10:00:00.000Z'),
+      ('rank-text-boosted-unrelated','test-public-seller','boost-test-category','test-governorate','different boosted listing','different words',100,'SYP','fixed','used','approved','{}','{}',1,'2099-01-01T00:00:00.000Z','different','2026-08-04T10:00:00.000Z','2026-08-04T10:00:00.000Z'),
+      ('rank-expired-stale','test-public-seller','boost-test-category','test-governorate','rankexpired stale','rankexpired',100,'SYP','fixed','used','approved','{}','{}',1,'2000-01-01T00:00:00.000Z','rankexpired','2026-08-05T10:00:00.000Z','2026-08-05T10:00:00.000Z'),
+      ('rank-expired-organic','test-public-seller','boost-test-category','test-governorate','rankexpired organic','rankexpired',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankexpired','2026-08-06T10:00:00.000Z','2026-08-06T10:00:00.000Z'),
+      ('rank-pending-request','test-public-seller','boost-test-category','test-governorate','rankpending request','rankpending',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankpending','2026-08-05T10:00:00.000Z','2026-08-05T10:00:00.000Z'),
+      ('rank-pending-organic','test-public-seller','boost-test-category','test-governorate','rankpending organic','rankpending',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankpending','2026-08-06T10:00:00.000Z','2026-08-06T10:00:00.000Z'),
+      ('rank-rejected-request','test-public-seller','boost-test-category','test-governorate','rankrejected request','rankrejected',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankrejected','2026-08-05T10:00:00.000Z','2026-08-05T10:00:00.000Z'),
+      ('rank-rejected-organic','test-public-seller','boost-test-category','test-governorate','rankrejected organic','rankrejected',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankrejected','2026-08-06T10:00:00.000Z','2026-08-06T10:00:00.000Z'),
+      ('rank-cursor-boosted','test-public-seller','boost-test-category','test-governorate','rankcursor boosted','rankcursor',100,'SYP','fixed','used','approved','{}','{}',1,'2099-01-01T00:00:00.000Z','rankcursor','2026-08-01T10:00:00.000Z','2026-08-01T10:00:00.000Z'),
+      ('rank-cursor-organic-1','test-public-seller','boost-test-category','test-governorate','rankcursor organic 1','rankcursor',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankcursor','2026-08-02T10:00:00.000Z','2026-08-02T10:00:00.000Z'),
+      ('rank-cursor-organic-2','test-public-seller','boost-test-category','test-governorate','rankcursor organic 2','rankcursor',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankcursor','2026-08-03T10:00:00.000Z','2026-08-03T10:00:00.000Z'),
+      ('rank-cursor-organic-3','test-public-seller','boost-test-category','test-governorate','rankcursor organic 3','rankcursor',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankcursor','2026-08-04T10:00:00.000Z','2026-08-04T10:00:00.000Z'),
+      ('rank-cursor-organic-4','test-public-seller','boost-test-category','test-governorate','rankcursor organic 4','rankcursor',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankcursor','2026-08-05T10:00:00.000Z','2026-08-05T10:00:00.000Z'),
+      ('rank-price-low','test-public-seller','boost-test-category','test-governorate','rankprice low','rankprice',100,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankprice','2026-08-01T10:00:00.000Z','2026-08-01T10:00:00.000Z'),
+      ('rank-price-boosted','test-public-seller','boost-test-category','test-governorate','rankprice boosted','rankprice',200,'SYP','fixed','used','approved','{}','{}',1,'2099-01-01T00:00:00.000Z','rankprice','2026-08-01T10:00:00.000Z','2026-08-01T10:00:00.000Z'),
+      ('rank-price-high','test-public-seller','boost-test-category','test-governorate','rankprice high','rankprice',300,'SYP','fixed','used','approved','{}','{}',0,NULL,'rankprice','2026-08-01T10:00:00.000Z','2026-08-01T10:00:00.000Z');
+    INSERT OR IGNORE INTO listing_promotion_requests
+      (id,listing_id,requester_user_id,client_request_id,promotion_type,status,requested_days,created_at,updated_at)
+    VALUES
+      ('rank-pending-promotion','rank-pending-request','test-public-seller','search-boost:boost_6h:rankpending','highlighted','pending_review',1,'2026-08-07T10:00:00.000Z','2026-08-07T10:00:00.000Z'),
+      ('rank-rejected-promotion','rank-rejected-request','test-public-seller','search-boost:boost_6h:rankrejected','highlighted','pending_review',1,'2026-08-07T10:00:00.000Z','2026-08-07T10:00:00.000Z');
+    UPDATE listing_promotion_requests
+       SET status='rejected',admin_note='Payment rejected',reviewed_at='2026-08-08T10:00:00.000Z',updated_at='2026-08-08T10:00:00.000Z'
+     WHERE id='rank-rejected-promotion' AND status='pending_review';
+  `);
 }
 
 test("owner can read admin metrics", async () => {
@@ -1113,7 +1395,4 @@ async function createListing(session, overrides = {}) {
     },
   });
 }
-
-
-
 

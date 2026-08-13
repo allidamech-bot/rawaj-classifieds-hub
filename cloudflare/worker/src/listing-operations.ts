@@ -565,8 +565,14 @@ async function listOwnPromotions(
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const result = await env.DB.prepare(
-    `SELECT p.*, l.title AS listing_title FROM listing_promotion_requests p
+    `SELECT p.*, l.title AS listing_title,
+       b.package_code AS boost_package_code, b.duration_minutes AS boost_duration_minutes,
+       b.price_syp AS boost_price_syp, b.currency AS boost_currency,
+       b.status AS boost_status, a.content_type AS proof_content_type
+      FROM listing_promotion_requests p
       JOIN listings l ON l.id = p.listing_id
+      LEFT JOIN listing_search_boost_orders b ON b.promotion_request_id = p.id
+      LEFT JOIN media_assets a ON a.id = p.proof_asset_id
       WHERE p.requester_user_id = ? ORDER BY p.created_at DESC LIMIT 100`,
   )
     .bind(auth.userId)
@@ -585,8 +591,15 @@ async function listAdminPromotions(
   if (!auth) return unauthorized(cors);
   if (!canModerate(auth.roles)) return forbidden(cors);
   const result = await env.DB.prepare(
-    `SELECT p.*, l.title AS listing_title FROM listing_promotion_requests p
+    `SELECT p.*, l.title AS listing_title, profile.display_name AS requester_display_name,
+       b.package_code AS boost_package_code, b.duration_minutes AS boost_duration_minutes,
+       b.price_syp AS boost_price_syp, b.currency AS boost_currency,
+       b.status AS boost_status, a.content_type AS proof_content_type
+      FROM listing_promotion_requests p
       JOIN listings l ON l.id = p.listing_id
+      LEFT JOIN public_profiles profile ON profile.id = p.requester_user_id
+      LEFT JOIN listing_search_boost_orders b ON b.promotion_request_id = p.id
+      LEFT JOIN media_assets a ON a.id = p.proof_asset_id
       ORDER BY CASE p.status WHEN 'pending_review' THEN 0 ELSE 1 END, p.created_at DESC LIMIT 200`,
   ).all<Row>();
   return result.success
@@ -755,8 +768,15 @@ async function moderatePromotion(
   const adminNote = cleanOptional(body.data.adminNote, 1000);
   if (!status || !PROMOTION_STATUSES.has(status) || !expectedUpdatedAt)
     return validation(cors, "Invalid moderation request.");
+  if (status === "rejected" && !adminNote)
+    return validation(cors, "A rejection reason is required.");
   const current = await env.DB.prepare(
-    "SELECT requested_days, status, updated_at FROM listing_promotion_requests WHERE id = ?",
+    `SELECT p.requested_days, p.status, p.updated_at,
+       b.package_code AS boost_package_code, b.duration_minutes AS boost_duration_minutes,
+       b.price_syp AS boost_price_syp, b.currency AS boost_currency
+      FROM listing_promotion_requests p
+      LEFT JOIN listing_search_boost_orders b ON b.promotion_request_id = p.id
+     WHERE p.id = ?`,
   )
     .bind(promotionId)
     .first<Row>();
@@ -773,9 +793,15 @@ async function moderatePromotion(
   }
   const timestamp = now();
   const startsAt = status === "approved" ? timestamp : null;
+  const boostDurationMinutes = integer(current.boost_duration_minutes, 0);
   const endsAt =
     status === "approved"
-      ? new Date(Date.now() + integer(current.requested_days, 1) * DAY_MS).toISOString()
+      ? new Date(
+          Date.now() +
+            (boostDurationMinutes > 0
+              ? boostDurationMinutes * 60_000
+              : integer(current.requested_days, 1) * DAY_MS),
+        ).toISOString()
       : null;
   const updated = await env.DB.prepare(
     `UPDATE listing_promotion_requests
@@ -816,6 +842,10 @@ async function moderatePromotion(
     adminNote,
     startsAt,
     endsAt,
+    searchBoostPackageCode: nullableString(current.boost_package_code),
+    searchBoostDurationMinutes: boostDurationMinutes || null,
+    searchBoostPriceSyp: nullableNumber(current.boost_price_syp),
+    searchBoostCurrency: nullableString(current.boost_currency),
   }).run();
   return json({ data: { success: true } }, 200, cors);
 }
@@ -871,6 +901,13 @@ function mapPromotion(row: Row): Row {
     createdAt: stringValue(row.created_at),
     updatedAt: stringValue(row.updated_at),
     listingTitle: nullableString(row.listing_title),
+    requesterDisplayName: nullableString(row.requester_display_name),
+    searchBoostPackageCode: nullableString(row.boost_package_code),
+    searchBoostDurationMinutes: nullableNumber(row.boost_duration_minutes),
+    searchBoostPriceSyp: nullableNumber(row.boost_price_syp),
+    searchBoostCurrency: nullableString(row.boost_currency),
+    searchBoostStatus: nullableString(row.boost_status),
+    proofContentType: nullableString(row.proof_content_type),
   };
 }
 

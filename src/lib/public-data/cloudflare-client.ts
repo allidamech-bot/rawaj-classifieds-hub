@@ -405,7 +405,9 @@ function encodeWorkerCursor(
     ...(cursor.type === "latest" || cursor.type === "featured"
       ? { createdAt: cursor.created_at }
       : {}),
-    ...(cursor.type === "featured" ? { isFeatured: cursor.is_featured } : {}),
+    ...(cursor.type === "latest" || cursor.type === "featured"
+      ? { isFeatured: cursor.is_featured }
+      : {}),
     ...(cursor.type === "cheapest" || cursor.type === "expensive" ? { price: cursor.price } : {}),
   };
   return base64UrlEncode(JSON.stringify(payload));
@@ -419,8 +421,17 @@ function decodeWorkerCursor(value: string | null): ListingCursor | null {
     const sort = cursor.sort;
     if (!id) return null;
 
-    if (sort === "latest" && typeof cursor.createdAt === "string") {
-      return { type: "latest", id, created_at: cursor.createdAt };
+    if (
+      sort === "latest" &&
+      typeof cursor.createdAt === "string" &&
+      typeof cursor.isFeatured === "boolean"
+    ) {
+      return {
+        type: "latest",
+        id,
+        created_at: cursor.createdAt,
+        is_featured: cursor.isFeatured,
+      };
     }
     if (sort === "featured" && typeof cursor.createdAt === "string") {
       return {

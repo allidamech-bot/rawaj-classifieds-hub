@@ -1,6 +1,7 @@
 import { fetchMyPromotionRequests } from "@/lib/api/promotions";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import type {
+  ClassifiedListing,
   ClassifiedsError,
   ClassifiedsResult,
   ListingPromotionRequest,
@@ -94,7 +95,8 @@ export function searchBoostPackage(code: string): SearchBoostPackage | null {
 export function searchBoostPackageFromPromotion(
   promotion: ListingPromotionRequest,
 ): SearchBoostPackage | null {
-  const code = promotion.adminNote?.match(SEARCH_BOOST_NOTE)?.[1];
+  const code =
+    promotion.searchBoostPackageCode ?? promotion.adminNote?.match(SEARCH_BOOST_NOTE)?.[1];
   return code ? searchBoostPackage(code) : null;
 }
 
@@ -130,6 +132,47 @@ export function remainingBoostTime(endsAt: string | null, nowMs = Date.now()): n
   if (!endsAt) return 0;
   const end = Date.parse(endsAt);
   return Number.isFinite(end) ? Math.max(0, end - nowMs) : 0;
+}
+
+export function isListingActivelyBoosted(
+  listing: Pick<ClassifiedListing, "isFeatured" | "featuredUntil">,
+  nowMs = Date.now(),
+): boolean {
+  if (!listing.isFeatured) return false;
+  if (!listing.featuredUntil) return true;
+  const end = Date.parse(listing.featuredUntil);
+  return Number.isFinite(end) && end > nowMs;
+}
+
+export function isSearchBoostRequestOpen(
+  promotion: ListingPromotionRequest,
+  nowMs = Date.now(),
+): boolean {
+  if (promotion.status === "pending_review") return true;
+  if (promotion.status !== "approved") return false;
+  if (!promotion.endsAt) return true;
+  const end = Date.parse(promotion.endsAt);
+  return Number.isFinite(end) && end > nowMs;
+}
+
+export function isListingEligibleForSearchBoost(
+  listing: Pick<
+    ClassifiedListing,
+    "id" | "status" | "archivedAt" | "expiresAt" | "isFeatured" | "featuredUntil"
+  >,
+  promotions: readonly ListingPromotionRequest[] = [],
+  nowMs = Date.now(),
+): boolean {
+  if (listing.status !== "approved" || listing.archivedAt) return false;
+  if (listing.expiresAt) {
+    const expiry = Date.parse(listing.expiresAt);
+    if (!Number.isFinite(expiry) || expiry <= nowMs) return false;
+  }
+  if (isListingActivelyBoosted(listing, nowMs)) return false;
+  return !promotions.some(
+    (promotion) =>
+      promotion.listingId === listing.id && isSearchBoostRequestOpen(promotion, nowMs),
+  );
 }
 
 export function formatBoostCountdown(milliseconds: number): string {

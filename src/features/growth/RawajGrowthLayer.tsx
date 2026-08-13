@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchOwnerListingDetail } from "@/lib/classifieds-api";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import {
+  listingShareLocationLabel,
+  listingSharePriceLabel,
+  renderListingShareCard,
+} from "@/lib/listing-share-card-renderer";
+import {
   LISTING_SHARE_TEMPLATES,
   RAWAJ_LISTING_SUBMITTED_EVENT,
   buildListingShareUrl,
@@ -105,8 +110,8 @@ export default function RawajGrowthLayer() {
 
   if (!listingId) return null;
 
-  const priceLabel = listing ? listingPriceLabel(listing, language) : "";
-  const locationLabel = listing ? listingLocationLabel(listing, language) : "";
+  const priceLabel = listing ? listingSharePriceLabel(listing, language) : "";
+  const locationLabel = listing ? listingShareLocationLabel(listing, language) : "";
   const shareUrlFor = (channel: ListingShareChannel) =>
     buildListingShareUrl(listingId, channel, selectedTemplate.id);
   const shareMessageFor = (channel: ListingShareChannel) => {
@@ -124,7 +129,7 @@ export default function RawajGrowthLayer() {
   };
   const buildCardBlob = async (channel: ListingShareChannel) => {
     if (!listing) throw new Error("listing_unavailable");
-    return renderListingShareCard(listing, selectedTemplate, shareUrlFor(channel), language);
+    return renderListingShareCard(listing, selectedTemplate, language);
   };
 
   const handleShareCard = async () => {
@@ -385,94 +390,31 @@ function ShareTemplatePreview({
       onClick={onSelect}
       className={`overflow-hidden rounded-2xl border p-2 text-start ${selected ? "border-brand-orange ring-2 ring-brand-orange/20" : "border-border"}`}
     >
-      <div className="aspect-[4/5] rounded-xl bg-primary/8 p-2 text-[10px] font-bold">
-        <div className="line-clamp-3">{listing.title}</div>
+      <div
+        className={`relative overflow-hidden rounded-xl p-2 text-[10px] font-bold ${template.format === "story" ? "aspect-[9/16]" : "aspect-square"}`}
+        style={{ background: template.background, color: template.foreground }}
+      >
+        <div
+          className="h-[56%] rounded-lg bg-cover bg-center"
+          style={{
+            backgroundColor: template.accent,
+            ...(listing.primaryImageUrl
+              ? { backgroundImage: `url(${JSON.stringify(listing.primaryImageUrl).slice(1, -1)})` }
+              : {}),
+          }}
+        />
+        <div
+          className="absolute inset-x-2 bottom-2 rounded-lg p-2"
+          style={{ background: template.surface, color: template.foreground }}
+        >
+          <div className="line-clamp-2 leading-4">{listing.title}</div>
+          <div className="mt-1 h-1 w-8 rounded-full" style={{ background: template.accent }} />
+        </div>
       </div>
       <span className="mt-2 block text-[10px] font-black">
         {language === "en" ? template.labelEn : template.labelAr}
       </span>
     </button>
-  );
-}
-
-async function renderListingShareCard(
-  listing: ClassifiedListing,
-  template: ListingShareTemplate,
-  shareUrl: string,
-  language: string,
-): Promise<Blob> {
-  const canvas = document.createElement("canvas");
-  const isStory = template.format === "story";
-  canvas.width = isStory ? 1080 : 1200;
-  canvas.height = isStory ? 1920 : 1200;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas_unavailable");
-  ctx.fillStyle = "#111827";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#f59e0b";
-  ctx.font = `700 ${Math.round(canvas.width * 0.055)}px Arial`;
-  ctx.fillText("RAWAJ", 70, 110);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `700 ${Math.round(canvas.width * 0.05)}px Arial`;
-  wrapText(ctx, listing.title, 70, 220, canvas.width - 140, 70);
-  ctx.font = `500 ${Math.round(canvas.width * 0.024)}px Arial`;
-  ctx.fillStyle = "#d1d5db";
-  wrapText(ctx, shareUrl, 70, canvas.height - 140, canvas.width - 140, 42);
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("blob_failed"))),
-      "image/png",
-      0.92,
-    ),
-  );
-}
-
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-) {
-  const words = text.split(/\s+/);
-  let line = "";
-  let cursorY = y;
-  for (const word of words) {
-    const test = `${line}${word} `;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line, x, cursorY);
-      line = `${word} `;
-      cursorY += lineHeight;
-    } else line = test;
-  }
-  if (line) ctx.fillText(line, x, cursorY);
-}
-
-function listingPriceLabel(listing: ClassifiedListing, language: string) {
-  if (listing.priceType === "free") return language === "en" ? "Free" : "مجاني";
-  if (listing.priceType === "contact")
-    return language === "en" ? "Contact for price" : "تواصل للسعر";
-  if (listing.priceType === "exchange" && listing.price == null)
-    return language === "en" ? "Exchange" : "مقايضة";
-  if (typeof listing.price !== "number") return "";
-
-  const formatted = new Intl.NumberFormat(language === "en" ? "en-US" : "ar-SY").format(
-    listing.price,
-  );
-
-  return `${formatted} ${language === "en" ? "SYP" : "ل.س"}`;
-}
-
-function listingLocationLabel(listing: ClassifiedListing, language: string) {
-  const anyListing = listing as ClassifiedListing & {
-    governorate?: string | null;
-    cityArea?: string | null;
-    locationLabel?: string | null;
-  };
-  return (
-    anyListing.locationLabel ||
-    [anyListing.cityArea, anyListing.governorate].filter(Boolean).join(" آ· ")
   );
 }
 

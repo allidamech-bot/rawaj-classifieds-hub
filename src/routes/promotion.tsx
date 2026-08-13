@@ -1,19 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Sparkles } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  FileCheck2,
+  LifeBuoy,
+  Rocket,
+  ShieldCheck,
+  Upload,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { fetchCurrentUserListings, uploadPromotionReceipt } from "@/lib/classifieds-api";
+import type { ClassifiedListing, ClassifiedsError } from "@/lib/classifieds-types";
 import {
-  createListingPromotionRequest,
-  fetchCurrentUserListings,
-  fetchMyPromotionRequests,
-  uploadPromotionReceipt,
-} from "@/lib/classifieds-api";
-import type {
-  ClassifiedListing,
-  ClassifiedsError,
-  ListingPromotionRequest,
-  PromotionType,
-} from "@/lib/classifieds-types";
+  SEARCH_BOOST_PACKAGES,
+  consumeSearchBoostIntent,
+  createSearchBoostRequest,
+  fetchMySearchBoostOrders,
+  formatBoostCountdown,
+  formatSearchBoostPrice,
+  isListingEligibleForSearchBoost,
+  remainingBoostTime,
+  searchBoostDurationLabel,
+  searchBoostName,
+  type SearchBoostOrder,
+  type SearchBoostPackageCode,
+} from "@/lib/search-boost-growth";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -21,9 +33,8 @@ import { useAuth } from "@/lib/use-auth";
 export const Route = createFileRoute("/promotion")({
   head: () =>
     createSeo({
-      title: "طلب ترويج إعلان | RAWAJ / رواج",
-      description:
-        "اطلب ترويج إعلان معتمد تملكه على رواج. تتم مراجعة طلبات الترويج يدوياً قبل التفعيل.",
+      title: "Search Boost | RAWAJ / رواج",
+      description: "ارفع ترتيب إعلانك في نتائج البحث ذات الصلة على رواج سوريا.",
       path: "/promotion",
       noindex: true,
     }),
@@ -32,72 +43,66 @@ export const Route = createFileRoute("/promotion")({
 
 function PromotionPage() {
   const auth = useAuth();
-  const { text } = useUiPreferences();
+  const { language, text } = useUiPreferences();
   const profileId = auth.profile?.id ?? null;
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
-  const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
+  const [orders, setOrders] = useState<SearchBoostOrder[]>([]);
   const [listingsLoading, setListingsLoading] = useState(false);
-  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [listingsError, setListingsError] = useState<ClassifiedsError | null>(null);
-  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
+  const [ordersError, setOrdersError] = useState<ClassifiedsError | null>(null);
   const [hasLoadedListings, setHasLoadedListings] = useState(false);
-  const [hasLoadedRequests, setHasLoadedRequests] = useState(false);
+  const [hasLoadedOrders, setHasLoadedOrders] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState("");
-  const [promotionType, setPromotionType] = useState<PromotionType>("featured_home");
-  const [requestedDays, setRequestedDays] = useState(7);
+  const [selectedPackageCode, setSelectedPackageCode] =
+    useState<SearchBoostPackageCode>("boost_24h");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const listingsRequestIdRef = useRef(0);
-  const requestsRequestIdRef = useRef(0);
+  const ordersRequestIdRef = useRef(0);
   const submitInFlightRef = useRef(false);
   const profileIdRef = useRef<string | null>(profileId);
+  const intentListingIdRef = useRef<string | null>(null);
   profileIdRef.current = profileId;
 
-  const approvedListings = useMemo(
-    () => listings.filter((listing) => listing.status === "approved"),
-    [listings],
+  const promotions = useMemo(() => orders.map((order) => order.promotion), [orders]);
+  const eligibleListings = useMemo(
+    () =>
+      listings.filter((listing) =>
+        isListingEligibleForSearchBoost(listing, promotions, nowMs),
+      ),
+    [listings, nowMs, promotions],
   );
-  const promotionOptions: Array<{ value: PromotionType; label: string; description: string }> = [
-    {
-      value: "featured_home",
-      label: text("الصفحة الرئيسية", "Home page"),
-      description: text(
-        "مراجعة يدوية للظهور ضمن المساحات المميزة في الرئيسية.",
-        "Manual review for featured home placement.",
-      ),
-    },
-    {
-      value: "top_category",
-      label: text("أعلى القسم", "Top category"),
-      description: text(
-        "مراجعة يدوية للظهور أعلى نتائج القسم عند توفر المساحة.",
-        "Manual review for top category visibility when space is available.",
-      ),
-    },
-    {
-      value: "highlighted",
-      label: text("إبراز داخل النتائج", "Highlighted in results"),
-      description: text(
-        "تمييز بصري للإعلان بعد موافقة الإدارة.",
-        "Visual highlighting after admin approval.",
-      ),
-    },
-    {
-      value: "urgent",
-      label: text("موضع مميز", "Priority placement"),
-      description: text(
-        "طلب أولوية يراجع يدوياً قبل التفعيل.",
-        "Priority request reviewed manually before activation.",
-      ),
-    },
-  ];
-  const durationOptions = [3, 7, 14, 30];
-  const hasPendingForSelectedListing = requests.some(
-    (request) => request.listingId === selectedListingId && request.status === "pending_review",
-  );
+  const selectedPackage =
+    SEARCH_BOOST_PACKAGES.find((item) => item.code === selectedPackageCode) ??
+    SEARCH_BOOST_PACKAGES[1];
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (auth.status === "signedIn" && !intentListingIdRef.current) {
+      intentListingIdRef.current = consumeSearchBoostIntent();
+    }
+  }, [auth.status]);
+
+  useEffect(() => {
+    setSelectedListingId((current) => {
+      if (eligibleListings.some((listing) => listing.id === current)) return current;
+      const intended = intentListingIdRef.current;
+      if (intended && eligibleListings.some((listing) => listing.id === intended)) {
+        intentListingIdRef.current = null;
+        return intended;
+      }
+      return eligibleListings[0]?.id ?? "";
+    });
+  }, [eligibleListings]);
 
   const loadListings = useCallback(async () => {
     if (!profileId) return;
@@ -112,123 +117,79 @@ function PromotionPage() {
       if (result.ok) {
         setListings(result.data);
         setHasLoadedListings(true);
-        setSelectedListingId((current) => {
-          const currentStillEligible = result.data.some(
-            (item) => item.id === current && item.status === "approved",
-          );
-          if (currentStillEligible) return current;
-          return result.data.find((item) => item.status === "approved")?.id ?? "";
-        });
-      } else {
-        setListingsError(result.error);
-      }
-    } catch (caught) {
+      } else setListingsError(result.error);
+    } catch (error) {
       if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
-      setListingsError({
-        code: "unknown",
-        message:
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
-        operation: "promotion_listings_load",
-      });
+      setListingsError(unknownError(error, text("تعذر تحميل إعلاناتك.", "Could not load your listings.")));
     } finally {
-      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) {
-        setListingsLoading(false);
-      }
+      if (requestId === listingsRequestIdRef.current) setListingsLoading(false);
     }
   }, [profileId, text]);
 
-  const loadRequests = useCallback(async () => {
+  const loadOrders = useCallback(async () => {
     if (!profileId) return;
     const currentProfileId = profileId;
-    const requestId = ++requestsRequestIdRef.current;
-    setRequestsLoading(true);
-    setRequestsError(null);
+    const requestId = ++ordersRequestIdRef.current;
+    setOrdersLoading(true);
+    setOrdersError(null);
     try {
-      const result = await fetchMyPromotionRequests(currentProfileId);
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      const result = await fetchMySearchBoostOrders(currentProfileId);
+      if (requestId !== ordersRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
       if (result.ok) {
-        setRequests(result.data);
-        setHasLoadedRequests(true);
-      } else {
-        setRequestsError(result.error);
-      }
-    } catch (caught) {
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+        setOrders(result.data);
+        setHasLoadedOrders(true);
+      } else setOrdersError(result.error);
+    } catch (error) {
+      if (requestId !== ordersRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
-      setRequestsError({
-        code: "unknown",
-        message:
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل طلبات الترويج.", "Could not load promotion requests."),
-        operation: "promotion_requests_load",
-      });
+      setOrdersError(unknownError(error, text("تعذر تحميل طلبات Boost.", "Could not load Boost requests.")));
     } finally {
-      if (requestId === requestsRequestIdRef.current && currentProfileId === profileIdRef.current) {
-        setRequestsLoading(false);
-      }
+      if (requestId === ordersRequestIdRef.current) setOrdersLoading(false);
     }
   }, [profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       listingsRequestIdRef.current += 1;
-      requestsRequestIdRef.current += 1;
+      ordersRequestIdRef.current += 1;
       setListings([]);
-      setRequests([]);
-      setListingsLoading(false);
-      setRequestsLoading(false);
-      setListingsError(null);
-      setRequestsError(null);
+      setOrders([]);
       setHasLoadedListings(false);
-      setHasLoadedRequests(false);
+      setHasLoadedOrders(false);
       setSelectedListingId("");
       return;
     }
-
-    setListings([]);
-    setRequests([]);
-    setListingsError(null);
-    setRequestsError(null);
-    setHasLoadedListings(false);
-    setHasLoadedRequests(false);
-    setSelectedListingId("");
     void loadListings();
-    void loadRequests();
-
+    void loadOrders();
     return () => {
       listingsRequestIdRef.current += 1;
-      requestsRequestIdRef.current += 1;
+      ordersRequestIdRef.current += 1;
     };
-  }, [auth.status, loadListings, loadRequests, profileId]);
+  }, [auth.status, loadListings, loadOrders, profileId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const currentProfileId = profileId;
-    if (!currentProfileId || submitInFlightRef.current) return;
+    if (!profileId || submitInFlightRef.current) return;
     setNotice("");
-    if (!hasLoadedListings || !hasLoadedRequests || listingsLoading || requestsLoading) {
-      setNotice(
-        text(
-          "انتظر اكتمال تحميل بياناتك قبل الإرسال.",
-          "Wait until your data finishes loading before submitting.",
-        ),
-      );
+    if (!hasLoadedListings || !hasLoadedOrders || listingsLoading || ordersLoading) {
+      setNotice(text("انتظر اكتمال تحميل بياناتك.", "Wait until your data finishes loading."));
       return;
     }
-    if (!selectedListingId) {
-      setNotice(text("اختر إعلاناً معتمداً.", "Choose an approved listing."));
+    if (!eligibleListings.some((listing) => listing.id === selectedListingId)) {
+      setNotice(text("اختر إعلاناً مؤهلاً لـ Boost.", "Choose a listing eligible for Boost."));
       return;
     }
-    if (hasPendingForSelectedListing) {
+    if (!paymentMethod.trim()) {
+      setNotice(text("أدخل طريقة الدفع المستخدمة.", "Enter the payment method used."));
+      return;
+    }
+    if (!paymentReference.trim() && !receiptFile) {
       setNotice(
         text(
-          "يوجد طلب ترويج قيد المراجعة لهذا الإعلان.",
-          "A promotion request for this listing is already under review.",
+          "أدخل مرجع الدفع أو ارفع إيصال الدفع.",
+          "Enter a payment reference or upload a payment receipt.",
         ),
       );
       return;
@@ -237,87 +198,68 @@ function PromotionPage() {
     submitInFlightRef.current = true;
     setSaving(true);
     try {
-      const result = await createListingPromotionRequest({
+      const result = await createSearchBoostRequest({
         listingId: selectedListingId,
-        requesterUserId: currentProfileId,
-        promotionType,
-        requestedDays,
-        paymentMethod: paymentMethod.trim() || null,
-        paymentReference: paymentReference.trim() || null,
+        packageCode: selectedPackageCode,
+        paymentMethod,
+        paymentReference,
       });
-      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);
         return;
       }
-
-      setRequests((current) => [
-        result.data,
-        ...current.filter((item) => item.id !== result.data.id),
-      ]);
-      setHasLoadedRequests(true);
       if (receiptFile) {
-        const receiptResult = await uploadPromotionReceipt({
-          userId: currentProfileId,
+        const receipt = await uploadPromotionReceipt({
+          userId: profileId,
           requestId: result.data.id,
           file: receiptFile,
         });
-        if (currentProfileId !== profileIdRef.current) return;
-        if (!receiptResult.ok) {
+        if (!receipt.ok) {
           setNotice(
             text(
-              "تم إنشاء طلب الترويج، لكن تعذر رفع الإيصال. لا تعِد إرسال الطلب؛ تواصل مع الدعم لإرفاقه.",
-              "The promotion request was created, but the receipt could not upload. Do not resubmit; contact support to attach it.",
+              "تم إنشاء الطلب، لكن تعذر رفع الإيصال. لا ترسل طلباً جديداً؛ تواصل مع الدعم لإرفاقه.",
+              "The request was created, but the receipt could not upload. Do not resubmit; contact support to attach it.",
             ),
           );
-          await loadRequests();
+          await loadOrders();
           return;
         }
       }
       setNotice(
-        text("تم إرسال طلب الترويج للمراجعة اليدوية.", "Promotion request sent for manual review."),
+        text(
+          "تم إرسال طلب Search Boost. يبدأ الوقت فقط بعد مراجعة الدفع وموافقة الإدارة.",
+          "Search Boost submitted. Time starts only after payment review and admin approval.",
+        ),
       );
       setPaymentMethod("");
       setPaymentReference("");
       setReceiptFile(null);
-      await loadRequests();
-    } catch (caught) {
-      if (currentProfileId === profileIdRef.current) {
-        setNotice(
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."),
-        );
-      }
+      await Promise.all([loadOrders(), loadListings()]);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : text("تعذر إرسال الطلب.", "Could not submit the request."));
     } finally {
       submitInFlightRef.current = false;
-      if (currentProfileId === profileIdRef.current) setSaving(false);
+      setSaving(false);
     }
   }
 
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
+        <PageHeader title="Boost" to="/more" backMode="history" />
         <main className="container-wide mobile-page-bottom pt-4">
-          <section className="rounded-2xl bg-card p-8 text-center hairline">
-            <Sparkles className="mx-auto h-7 w-7 text-gold" />
-            <h2 className="mt-3 text-base font-extrabold">
-              {text("تسجيل الدخول مطلوب", "Login required")}
-            </h2>
-            <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
-              {text(
-                "سجل الدخول لطلب ترويج حقيقي لإعلان معتمد تملكه.",
-                "Log in to request real promotion for an approved listing you own.",
-              )}
-            </p>
-            <Link
-              to="/login"
-              className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
-            >
+          <Panel
+            icon={<Rocket className="h-7 w-7 text-amber-700" />}
+            title={text("سجّل الدخول لتفعيل Boost", "Log in to use Boost")}
+            body={text(
+              "Search Boost متاح للإعلانات المعتمدة التي تملكها.",
+              "Search Boost is available for approved listings you own.",
+            )}
+          >
+            <Link to="/login" className="rawaj-button-primary mt-4 inline-flex px-5 py-2.5">
               {text("تسجيل الدخول", "Log in")}
             </Link>
-          </section>
+          </Panel>
         </main>
       </>
     );
@@ -325,318 +267,256 @@ function PromotionPage() {
 
   return (
     <>
-      <PageHeader title={text("ترويج إعلان", "Promote listing")} to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4">
-        <section className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-soft">
-          <h2 className="text-lg font-extrabold">
-            {text("طلب ترويج حقيقي", "Real promotion request")}
-          </h2>
-          <p className="mt-2 text-xs leading-6 text-primary-foreground/80">
-            {text(
-              "يتم مراجعة طلبات الترويج يدوياً قبل التفعيل. سيتم التواصل معك بخصوص طريقة الدفع المناسبة عند الحاجة.",
-              "Promotion requests are reviewed manually before activation. We will contact you about the suitable payment method when needed.",
-            )}
-          </p>
+      <PageHeader title="Boost" to="/more" backMode="history" />
+      <main className="container-wide mobile-page-bottom space-y-5 pt-4" dir={language === "ar" ? "rtl" : "ltr"}>
+        <section className="overflow-hidden rounded-2xl bg-[#241b0d] p-5 text-[#fff8e8] shadow-soft sm:p-6">
+          <div className="flex items-start gap-4">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-400 text-[#241b0d]">
+              <Rocket className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-xl font-black sm:text-2xl">Search Boost</h1>
+              <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50/80">
+                {text(
+                  "ارفع إعلانك في النتائج العادية ذات الصلة فقط. Boost لا يتجاوز البحث أو القسم أو الفلاتر.",
+                  "Move your listing up in relevant normal results. Boost never bypasses search, category, or filters.",
+                )}
+              </p>
+            </div>
+          </div>
         </section>
 
-        {listingsLoading && !hasLoadedListings ? (
-          <Panel title={text("جارٍ تحميل إعلاناتك", "Loading your listings")} />
-        ) : listingsError && !hasLoadedListings ? (
-          <Panel
-            title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
-            body={listingsError.message}
-            actionLabel={text("إعادة المحاولة", "Try again")}
-            onAction={() => void loadListings()}
-            actionDisabled={listingsLoading}
-          />
-        ) : approvedListings.length === 0 ? (
-          <>
-            {listingsError ? (
-              <RecoveryNotice
-                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                body={listingsError.message}
-                actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void loadListings()}
-                actionDisabled={listingsLoading}
-              />
-            ) : null}
-            <Panel
-              title={text(
-                "لا توجد إعلانات معتمدة قابلة للترويج",
-                "No approved listings available for promotion",
-              )}
-              body={text(
-                "يمكن طلب الترويج فقط لإعلان معتمد تملكه.",
-                "Promotion can be requested only for an approved listing you own.",
-              )}
-            />
-          </>
+        {listingsError && !hasLoadedListings ? (
+          <Panel title={text("تعذر تحميل إعلاناتك", "Could not load your listings")} body={listingsError.message}>
+            <RetryButton loading={listingsLoading} onClick={() => void loadListings()} text={text} />
+          </Panel>
+        ) : ordersError && !hasLoadedOrders ? (
+          <Panel title={text("تعذر تحميل طلبات Boost", "Could not load Boost requests")} body={ordersError.message}>
+            <RetryButton loading={ordersLoading} onClick={() => void loadOrders()} text={text} />
+          </Panel>
+        ) : listingsLoading || ordersLoading || !hasLoadedListings || !hasLoadedOrders ? (
+          <Panel title={text("جارٍ تجهيز Search Boost", "Preparing Search Boost")} />
         ) : (
-          <>
-            {listingsError ? (
-              <RecoveryNotice
-                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                body={listingsError.message}
-                actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void loadListings()}
-                actionDisabled={listingsLoading}
-              />
-            ) : null}
-            <form
-              onSubmit={(event) => void submit(event)}
-              aria-busy={saving}
-              className="rounded-2xl bg-card p-4 hairline"
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label={text("الإعلان", "Listing")}>
-                  <select
-                    value={selectedListingId}
-                    onChange={(event) => setSelectedListingId(event.target.value)}
-                    className="input"
-                  >
-                    {approvedListings.map((listing) => (
-                      <option key={listing.id} value={listing.id}>
-                        {listing.title}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label={text("موضع الترويج", "Promotion placement")}>
-                  <select
-                    value={promotionType}
-                    onChange={(event) => setPromotionType(event.target.value as PromotionType)}
-                    className="input"
-                  >
-                    {promotionOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                    {promotionOptions.find((option) => option.value === promotionType)?.description}
+          <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-5">
+            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+              <StepTitle number="1" title={text("اختر إعلاناً مؤهلاً", "Choose an eligible listing")} />
+              {eligibleListings.length ? (
+                <select
+                  value={selectedListingId}
+                  onChange={(event) => setSelectedListingId(event.target.value)}
+                  className="input mt-3 min-h-12 w-full"
+                  aria-label={text("الإعلان", "Listing")}
+                >
+                  {eligibleListings.map((listing) => (
+                    <option key={listing.id} value={listing.id}>{listing.title}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="mt-3 rounded-xl bg-muted-surface p-4 text-sm leading-6 text-muted-foreground">
+                  {text(
+                    "لا يوجد إعلان معتمد ومتاح من دون Boost نشط أو طلب مفتوح حالياً.",
+                    "No approved available listing without an active Boost or open request is currently eligible.",
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+              <StepTitle number="2" title={text("اختر مدة Boost", "Choose a Boost duration")} />
+              <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {SEARCH_BOOST_PACKAGES.map((boostPackage) => {
+                  const selected = boostPackage.code === selectedPackageCode;
+                  return (
+                    <button
+                      key={boostPackage.code}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setSelectedPackageCode(boostPackage.code)}
+                      className={`relative min-w-0 rounded-2xl p-4 text-start transition hairline ${
+                        selected ? "bg-amber-500/12 ring-2 ring-amber-600" : "bg-muted-surface hover:bg-amber-500/7"
+                      }`}
+                    >
+                      {boostPackage.recommended ? (
+                        <span className="absolute end-2 top-2 rounded-full bg-amber-600 px-2 py-1 text-[9px] font-extrabold text-white">
+                          {text("الأكثر اختياراً", "Popular")}
+                        </span>
+                      ) : null}
+                      <span className="block pe-14 text-sm font-black">{searchBoostName(boostPackage.code, text)}</span>
+                      <span className="mt-2 block text-xs text-muted-foreground">{searchBoostDurationLabel(boostPackage.code, text)}</span>
+                      <span className="mt-3 block text-base font-black text-amber-800 dark:text-amber-300">
+                        {formatSearchBoostPrice(boostPackage.priceMinor, language)}
+                      </span>
+                      {selected ? <CheckCircle2 className="absolute bottom-3 end-3 h-4 w-4 text-amber-700" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+              <StepTitle number="3" title={text("أثبت عملية الدفع", "Provide payment proof")} />
+              <div className="mt-3 rounded-xl bg-amber-500/10 p-4 text-xs leading-6 text-foreground">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-amber-700" />
+                  <p>
+                    {text(
+                      `القيمة ${formatSearchBoostPrice(selectedPackage.priceMinor, language)}. استخدم طريقة الدفع التي أكدها لك فريق رواج، ثم اكتب اسم الطريقة والمرجع وارفع الإيصال. لن تبدأ مدة Boost قبل التحقق والموافقة.`,
+                      `Amount: ${formatSearchBoostPrice(selectedPackage.priceMinor, language)}. Use the payment method confirmed by the RAWAJ team, then enter the method and reference and upload the receipt. Boost time starts only after verification and approval.`,
+                    )}
                   </p>
-                </Field>
-                <Field label={text("المدة", "Duration")}>
-                  <select
-                    value={requestedDays}
-                    onChange={(event) => setRequestedDays(Number(event.target.value))}
-                    className="input"
-                  >
-                    {durationOptions.map((days) => (
-                      <option key={days} value={days}>
-                        {text(`${days} أيام`, `${days} days`)}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label={text("طريقة دفع مرجعية اختيارية", "Optional payment method note")}>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Field label={text("طريقة الدفع المستخدمة", "Payment method used")} required>
                   <input
                     value={paymentMethod}
                     onChange={(event) => setPaymentMethod(event.target.value)}
                     maxLength={80}
-                    className="input"
+                    className="input min-h-12 w-full"
+                    autoComplete="off"
                   />
                 </Field>
-                <Field label={text("مرجع دفع اختياري", "Optional payment reference")}>
+                <Field label={text("مرجع الدفع", "Payment reference")}>
                   <input
                     value={paymentReference}
                     onChange={(event) => setPaymentReference(event.target.value)}
                     maxLength={160}
-                    className="input"
+                    className="input min-h-12 w-full"
+                    autoComplete="off"
                   />
                 </Field>
-                <Field label={text("إيصال التحويل", "Transfer receipt")}>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
-                    className="input"
-                  />
-                  {receiptFile && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">{receiptFile.name}</p>
+                <Field label={text("إيصال الدفع الخاص", "Private payment receipt")}>
+                  <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline focus-within:ring-2 focus-within:ring-amber-600">
+                    <Upload className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {receiptFile?.name ?? text("اختر صورة أو PDF", "Choose an image or PDF")}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
+                      className="sr-only"
+                    />
+                  </label>
+                </Field>
+                <div className="flex items-center gap-2 self-end rounded-xl bg-emerald-500/8 p-3 text-[11px] leading-5 text-muted-foreground">
+                  <FileCheck2 className="h-4 w-4 shrink-0 text-emerald-700" />
+                  {text(
+                    "الإيصال خاص ولا يراه إلا المشرف المخوّل.",
+                    "The receipt stays private and is visible only to authorized moderators.",
                   )}
-                </Field>
-              </div>
-              <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 text-foreground hairline">
-                {text(
-                  "يتم مراجعة طلبات الترويج يدوياً قبل التفعيل. سيتم التواصل معك بخصوص طريقة الدفع المناسبة عند الحاجة، ويصبح الإعلان مميزاً بعد موافقة الإدارة.",
-                  "Promotion requests are reviewed manually before activation. We will contact you about the suitable payment method when needed, and the listing becomes featured after admin approval.",
-                )}
+                </div>
               </div>
               <button
                 type="submit"
-                disabled={
-                  saving ||
-                  !selectedListingId ||
-                  !hasLoadedListings ||
-                  !hasLoadedRequests ||
-                  hasPendingForSelectedListing
-                }
-                aria-busy={saving}
-                className="mt-3 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-gold-foreground disabled:opacity-60"
+                disabled={saving || !selectedListingId || !eligibleListings.length}
+                className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
-                {saving
-                  ? text("جارٍ الإرسال", "Sending")
-                  : text("إرسال طلب الترويج", "Request promotion")}
+                <Rocket className="h-4 w-4" />
+                {saving ? text("جارٍ إرسال الطلب", "Submitting request") : text("إرسال طلب Search Boost", "Submit Search Boost")}
               </button>
-              {notice && (
-                <p className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">
-                  {notice}
-                </p>
-              )}
-            </form>
-          </>
+              {notice ? <p role="status" className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold leading-6">{notice}</p> : null}
+            </section>
+          </form>
         )}
 
-        <section className="rounded-2xl bg-card p-4 hairline">
-          <h3 className="text-sm font-extrabold">{text("طلباتك", "Your requests")}</h3>
-          {requestsLoading && !hasLoadedRequests ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {text("جارٍ تحميل طلباتك", "Loading your requests")}
-            </p>
-          ) : requestsError && !hasLoadedRequests ? (
-            <RecoveryNotice
-              title={text("تعذر تحميل طلباتك", "Could not load your requests")}
-              body={requestsError.message}
-              actionLabel={text("إعادة المحاولة", "Try again")}
-              onAction={() => void loadRequests()}
-              actionDisabled={requestsLoading}
-            />
-          ) : (
-            <>
-              {requestsError ? (
-                <RecoveryNotice
-                  title={text("تعذر تحديث طلباتك", "Could not refresh your requests")}
-                  body={requestsError.message}
-                  actionLabel={text("إعادة المحاولة", "Try again")}
-                  onAction={() => void loadRequests()}
-                  actionDisabled={requestsLoading}
-                />
-              ) : null}
-              {requests.length === 0 ? (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {text("لا توجد طلبات ترويج بعد.", "No promotion requests yet.")}
-                </p>
-              ) : (
-                <div className="mt-3 grid gap-2">
-                  {requests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="rounded-xl bg-muted-surface p-3 text-xs hairline"
-                    >
-                      <p className="font-bold">{request.listingTitle ?? request.listingId}</p>
-                      <p className="mt-1 text-muted-foreground">
-                        {promotionStatusLabel(request.status, text)} ·{" "}
-                        {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
-                        {text("يوم", "days")}
-                      </p>
-                      {request.adminNote && (
-                        <p className="mt-1 text-muted-foreground">{request.adminNote}</p>
-                      )}
+        <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-black">{text("طلبات Search Boost", "Search Boost requests")}</h2>
+            <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">{orders.length}</span>
+          </div>
+          {orders.length ? (
+            <div className="mt-3 grid gap-3">
+              {orders.map((order) => {
+                const remaining = remainingBoostTime(order.promotion.endsAt, nowMs);
+                const active = order.promotion.status === "approved" && remaining > 0;
+                const expired = order.promotion.status === "expired" || (order.promotion.status === "approved" && order.promotion.endsAt && remaining === 0);
+                return (
+                  <article key={order.promotion.id} className="rounded-xl bg-muted-surface p-4 hairline">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-black">{order.promotion.listingTitle ?? order.promotion.listingId}</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {searchBoostDurationLabel(order.package.code, text)} · {formatSearchBoostPrice(order.promotion.searchBoostPriceSyp ?? order.package.priceMinor, language)}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold ${active ? "bg-emerald-500/12 text-emerald-800" : expired ? "bg-muted text-muted-foreground" : order.promotion.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-amber-500/12 text-amber-800"}`}>
+                        {active
+                          ? text("نشط", "Active")
+                          : expired
+                            ? text("منتهي", "Expired")
+                            : order.promotion.status === "rejected"
+                              ? text("مرفوض", "Rejected")
+                              : order.promotion.status === "cancelled"
+                                ? text("ملغي", "Cancelled")
+                                : text("بانتظار مراجعة الدفع", "Pending payment review")}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
+                    {active ? (
+                      <p className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-800">
+                        <Clock3 className="h-4 w-4" />
+                        {text("الوقت المتبقي", "Time remaining")}: <span dir="ltr">{formatBoostCountdown(remaining)}</span>
+                      </p>
+                    ) : null}
+                    {order.promotion.adminNote ? <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{order.promotion.adminNote}</p> : null}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">{text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}</p>
           )}
         </section>
 
-        <Link
-          to="/support"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold hairline"
-        >
+        <Link to="/support" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold hairline">
           <LifeBuoy className="h-4 w-4" />
-          {text("الدعم والمساعدة", "Support")}
+          {text("الدعم والمساعدة", "Support & help")}
         </Link>
       </main>
     </>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function StepTitle({ number, title }: { number: string; title: string }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-bold text-muted-foreground">{label}</span>
+    <h2 className="flex items-center gap-3 text-base font-black">
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-600 text-xs text-white">{number}</span>
+      {title}
+    </h2>
+  );
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <label className="block min-w-0">
+      <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
+        {label}{required ? " *" : ""}
+      </span>
       {children}
     </label>
   );
 }
 
-function Panel({
-  title,
-  body,
-  actionLabel,
-  onAction,
-  actionDisabled,
-}: {
-  title: string;
-  body?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  actionDisabled?: boolean;
-}) {
+function Panel({ icon, title, body, children }: { icon?: React.ReactNode; title: string; body?: string; children?: React.ReactNode }) {
   return (
     <section className="rounded-2xl bg-card p-8 text-center hairline">
-      <p className="text-sm font-bold">{title}</p>
-      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
-      {actionLabel && onAction ? (
-        <button
-          type="button"
-          onClick={onAction}
-          disabled={actionDisabled}
-          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
-        >
-          {actionLabel}
-        </button>
-      ) : null}
+      {icon ? <span className="mx-auto grid place-items-center">{icon}</span> : null}
+      <h2 className={`${icon ? "mt-3" : ""} text-base font-black`}>{title}</h2>
+      {body ? <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {children}
     </section>
   );
 }
 
-function RecoveryNotice({
-  title,
-  body,
-  actionLabel,
-  onAction,
-  actionDisabled,
-}: {
-  title: string;
-  body: string;
-  actionLabel: string;
-  onAction: () => void;
-  actionDisabled?: boolean;
-}) {
+function RetryButton({ loading, onClick, text }: { loading: boolean; onClick: () => void; text: (ar: string, en: string) => string }) {
   return (
-    <div className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive hairline">
-      <p className="font-bold">{title}</p>
-      <p className="mt-1 text-xs leading-5">{body}</p>
-      <button
-        type="button"
-        onClick={onAction}
-        disabled={actionDisabled}
-        className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
-      >
-        {actionLabel}
-      </button>
-    </div>
+    <button type="button" disabled={loading} onClick={onClick} className="rawaj-button-primary mt-4 px-4 py-2 disabled:opacity-60">
+      {loading ? text("جارٍ التحميل", "Loading") : text("إعادة المحاولة", "Try again")}
+    </button>
   );
 }
 
-function promotionStatusLabel(
-  status: ListingPromotionRequest["status"],
-  text: (ar: string, en: string) => string,
-) {
-  if (status === "approved") return text("معتمد", "Approved");
-  if (status === "rejected") return text("مرفوض", "Rejected");
-  if (status === "expired") return text("منتهي", "Expired");
-  if (status === "cancelled") return text("ملغي", "Cancelled");
-  return text("قيد المراجعة", "Pending review");
-}
-
-function promotionTypeLabel(type: PromotionType, text: (ar: string, en: string) => string) {
-  if (type === "top_category") return text("أعلى القسم", "Top category");
-  if (type === "highlighted") return text("إبراز داخل النتائج", "Highlighted in results");
-  if (type === "urgent") return text("موضع مميز", "Priority placement");
-  return text("الصفحة الرئيسية", "Home page");
+function unknownError(error: unknown, fallback: string): ClassifiedsError {
+  return { code: "unknown", message: error instanceof Error ? error.message : fallback };
 }

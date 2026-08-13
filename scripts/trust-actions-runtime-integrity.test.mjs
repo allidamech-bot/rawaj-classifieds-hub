@@ -27,22 +27,21 @@ test("verification history and form remain usable after failures", () => {
   assert.ok((verification.match(/disabled=\{saving\}/g) ?? []).length >= 4);
 });
 
-test("promotion creation is single-flight and prevents duplicate pending requests", () => {
+test("Search Boost creation is single-flight and uses the shared eligibility guard", () => {
   assert.match(promotion, /const submitInFlightRef = useRef\(false\);/);
-  assert.match(promotion, /if \(!currentProfileId \|\| submitInFlightRef\.current\) return;/);
-  assert.match(promotion, /const hasPendingForSelectedListing = requests\.some/);
-  assert.match(promotion, /if \(hasPendingForSelectedListing\)/);
-  assert.match(promotion, /paymentMethod: paymentMethod\.trim\(\) \|\| null/);
-  assert.match(promotion, /paymentReference: paymentReference\.trim\(\) \|\| null/);
-  assert.match(promotion, /async function submit[\s\S]*?catch \(caught\)[\s\S]*?finally/);
+  assert.match(promotion, /if \(!profileId \|\| submitInFlightRef\.current\) return;/);
+  assert.match(promotion, /isListingEligibleForSearchBoost/);
+  assert.match(promotion, /eligibleListings\.some\(\(listing\) => listing\.id === selectedListingId\)/);
+  assert.match(promotion, /createSearchBoostRequest\(\{/);
+  assert.match(promotion, /paymentMethod,/);
+  assert.match(promotion, /paymentReference,/);
+  assert.match(promotion, /async function submit[\s\S]*?catch \(error\)[\s\S]*?finally/);
   assert.match(promotion, /submitInFlightRef\.current = false/);
   assert.match(promotion, /aria-busy=\{saving\}/);
-  assert.match(promotion, /hasPendingForSelectedListing/);
 });
 
-test("promotion receipt failure does not encourage duplicate submission", () => {
-  assert.match(promotion, /The promotion request was created, but the receipt could not upload/);
+test("Search Boost receipt failure does not encourage duplicate submission", () => {
+  assert.match(promotion, /The request was created, but the receipt could not upload/);
   assert.match(promotion, /Do not resubmit/);
-  assert.match(promotion, /setRequests\(\(current\) => \[/);
-  assert.match(promotion, /await loadRequests\(\)/);
+  assert.match(promotion, /await loadOrders\(\)/);
 });

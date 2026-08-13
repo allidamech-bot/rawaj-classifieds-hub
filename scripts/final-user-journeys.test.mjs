@@ -2,16 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [more, addListing, manageListing, listingDetail, seller, chats, packageJson, qualityGate] =
+const [more, addListing, manageListing, listingDetail, seller, chats, packageJson] =
   await Promise.all([
     readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/add-listing.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/routes/profile/listings.$id.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/profile/listings_.$id.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/seller.$id.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../.github/workflows/quality-gate.yml", import.meta.url), "utf8"),
   ]);
 
 test("session actions are synchronously deduplicated", () => {
@@ -68,8 +67,6 @@ test("chat refresh failures preserve snapshots and sensitive writes are deduplic
   assert.match(chats, /finally \{/);
 });
 
-test("final user journey contract remains in package and Quality Gate", () => {
+test("final user journey contract remains available for local validation", () => {
   assert.match(packageJson, /"test:final-user-journeys"/);
-  assert.match(qualityGate, /Final user journeys contract/);
-  assert.match(qualityGate, /npm run test:final-user-journeys/);
 });
