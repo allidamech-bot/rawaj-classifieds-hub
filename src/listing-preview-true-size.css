@@ -124,3 +124,23 @@ img.aspect-\[16\/7\] {
 .rawaj-adaptive-card[data-has-image="true"]:hover .rawaj-listing-media--image {
   transform: none !important;
 }
+
+/* home-marketplace-v2.css gives every rawaj-listing-media a legacy 0.42rem
+ * inset. Override the real-photo class directly so actual images always touch
+ * the media/card edge; placeholder artwork intentionally keeps its inset. */
+.rawaj-listing-media.rawaj-listing-media--image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
