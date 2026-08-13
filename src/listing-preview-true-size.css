@@ -159,3 +159,16 @@ img.aspect-\[16\/7\] {
   padding: 0 !important;
   border-radius: 0 !important;
 }
+
+/* Placeholder artwork also appears inside the signature homepage card shells,
+ * not only inside .rawaj-adaptive-card__media. Reset the legacy inset on the
+ * placeholder element itself so every card wrapper is flush and future shells
+ * cannot reintroduce the right-side stripe. */
+.rawaj-listing-media.rawaj-listing-media--placeholder {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
