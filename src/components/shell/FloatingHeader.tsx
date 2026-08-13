@@ -184,10 +184,12 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               to="/login"
               aria-label={text("تسجيل الدخول", "Log in")}
               title={text("تسجيل الدخول", "Log in")}
-              className="rawaj-header-cta rawaj-touch-target inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--rawaj-radius-button)] px-2.5 text-[11px] font-bold sm:px-3 sm:text-xs"
+              className="rawaj-header-login-cta rawaj-touch-target inline-flex shrink-0 items-center justify-center whitespace-nowrap"
             >
               <LogIn className="h-4 w-4 shrink-0" strokeWidth={2.1} />
-              <span className="font-bold">{text("تسجيل الدخول", "Log in")}</span>
+              <span className="rawaj-header-login-cta__label whitespace-nowrap font-bold">
+                {text("تسجيل الدخول", "Log in")}
+              </span>
             </Link>
           )}
         </div>
