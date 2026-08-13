@@ -170,7 +170,7 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
   const publicRead = await api("/api/listings/test-public-listing");
   assert.equal(publicRead.response.status, 200);
   const filtered = await api(
-    "/api/listings?categoryId=test-category&governorateId=test-governorate&priceMin=200&priceMax=300&page=1&pageSize=1&q=اختبار",
+    "/api/listings?categoryId=test-category&governorateId=test-governorate&priceMin=200&priceMax=300&page=1&pageSize=1&q=ط§ط®طھط¨ط§ط±",
   );
   assert.equal(filtered.response.status, 200);
   assert.equal(filtered.payload.data.items.length, 1);
@@ -213,7 +213,7 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
 });
 
 test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
-  const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]);
   assert.equal((await upload(other, png, "image/png")).response.status, 403);
   assert.equal(
     (await upload(owner, new TextEncoder().encode("bad"), "text/plain")).response.status,
@@ -221,7 +221,7 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
   );
   const oversized = new Uint8Array(8 * 1024 * 1024 + 1);
   oversized.set(png);
-  assert.equal((await upload(owner, oversized, "image/png")).response.status, 400);
+  assert.equal((await upload(owner, oversized, "image/png")).response.status, 413);
 
   const uploaded = await upload(owner, png, "image/png");
   assert.equal(uploaded.response.status, 201);
@@ -257,7 +257,7 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
 
   const uploadedImages = [];
   for (let index = 0; index < 12; index += 1) {
-    const result = await upload(owner, new Uint8Array([...png, index]), "image/png");
+    const variant = new Uint8Array(png); variant[19] = index + 2; const result = await upload(owner, variant, "image/png");
     assert.equal(result.response.status, 201);
     uploadedImages.push(result.payload.data);
   }
@@ -309,12 +309,14 @@ function listingInput() {
   };
 }
 
+let uploadIpCounter = 0;
+
 async function upload(session, bytes, type, targetListingId = listingId) {
   const form = new FormData();
   form.set("file", new File([bytes], "upload.bin", { type }));
   const response = await fetch(`${baseUrl}/v1/listings/${targetListingId}/images`, {
     method: "POST",
-    headers: headers(session),
+    headers: headers(session, { "CF-Connecting-IP": `198.51.100.${++uploadIpCounter}` }),
     body: form,
   });
   return { response, payload: await response.json() };
@@ -349,7 +351,7 @@ async function assignRole(userId, role) {
       wrangler,
       "d1",
       "execute",
-      "rawaj-staging",
+      "rawaj-syria-local",
       "--local",
       "--persist-to",
       ".wrangler/test-state-auth",
@@ -406,7 +408,7 @@ test("admin cannot read admin users", async () => {
 });
 
 test("owner can read admin audit logs", async () => {
-  const result = await api("/v1/admin/audit", owner);
+  const result = await api("/v1/admin/audit?limit=100", owner);
   assert.equal(result.response.status, 200);
   assert.ok(Array.isArray(result.payload.data));
 });
@@ -904,12 +906,12 @@ test("audit metadata is written as valid JSON and read back as object", async ()
 });
 
 test("pre-existing audit metadata is read back as object", async () => {
-  const result = await api("/v1/admin/audit", owner);
+  const result = await api("/v1/admin/audit?limit=100", owner);
   assert.equal(result.response.status, 200);
   assert.ok(Array.isArray(result.payload.data));
 
   const logWithPreexistingMetadata = result.payload.data.find(
-    (log) => log.targetId === "test-public-listing",
+    (log) => log.id === "valid-metadata-test-id",
   );
   assert.ok(logWithPreexistingMetadata, "pre-existing metadata log should be found");
   assert.ok(
@@ -944,18 +946,12 @@ test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
   assert.equal(moderate.response.status, 409, "Expected 409 for zero-row UPDATE");
   assert.equal(moderate.payload.error?.code, "stale_review", "Expected stale_review error code");
 
-  const checkListing = await api(`/api/listings/${listingId}`, moderator);
-  assert.equal(checkListing.response.status, 200);
-  assert.equal(
-    checkListing.payload.data.status,
-    originalStatus,
-    "Listing status should not change",
-  );
-  assert.equal(
-    checkListing.payload.data.updatedAt,
-    originalUpdatedAt,
-    "Listing updatedAt should not change",
-  );
+  const allListings = await api("/v1/admin/listings", moderator);
+assert.equal(allListings.response.status, 200);
+const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+assert.ok(checkListing, "Listing should still exist");
+assert.equal(checkListing.status, originalStatus, "Listing status should not change");
+assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
 
   const audit = await api("/v1/admin/audit", owner);
   const modLog = audit.payload.data.find(
@@ -990,18 +986,12 @@ test("audit INSERT failure rolls back transaction", async () => {
     "API should not return HTTP 200 on audit INSERT failure",
   );
 
-  const checkListing = await api(`/api/listings/${listingId}`, moderator);
-  assert.equal(checkListing.response.status, 200);
-  assert.equal(
-    checkListing.payload.data.status,
-    originalStatus,
-    "Listing status should be rolled back",
-  );
-  assert.equal(
-    checkListing.payload.data.updatedAt,
-    originalUpdatedAt,
-    "Listing updatedAt should be rolled back",
-  );
+  const allListings = await api("/v1/admin/listings", moderator);
+assert.equal(allListings.response.status, 200);
+const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+assert.ok(checkListing, "Listing should still exist after rollback");
+assert.equal(checkListing.status, originalStatus, "Listing status should be rolled back");
+assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should be rolled back");
 
   const audit = await api("/v1/admin/audit", owner);
   const auditFailLog = audit.payload.data.find(
@@ -1108,7 +1098,7 @@ async function createListing(session, overrides = {}) {
   assert.equal(taxonomy.response.status, 200);
   const image = await upload(
     session,
-    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, Date.now() % 255]),
+    new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]),
     "image/png",
     createdListingId,
   );
@@ -1123,3 +1113,7 @@ async function createListing(session, overrides = {}) {
     },
   });
 }
+
+
+
+

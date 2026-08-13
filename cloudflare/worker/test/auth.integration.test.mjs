@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -149,7 +149,7 @@ function localIdentityCount(userId) {
       wrangler,
       "d1",
       "execute",
-      "rawaj-staging",
+      "rawaj-syria-local",
       "--local",
       "--persist-to",
       ".wrangler/test-state-auth",
@@ -183,3 +183,4 @@ async function request(path, token, options = {}) {
   });
   return { response, payload: await response.json() };
 }
+

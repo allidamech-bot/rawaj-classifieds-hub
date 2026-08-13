@@ -1,4 +1,4 @@
-import { generateKeyPair, exportJWK, SignJWT } from "jose";
+﻿import { generateKeyPair, exportJWK, SignJWT } from "jose";
 
 export async function createFirebaseAuthFixture() {
   const { publicKey, privateKey } = await generateKeyPair("RS256");
@@ -45,3 +45,4 @@ export async function createFirebaseAuthFixture() {
     },
   };
 }
+
