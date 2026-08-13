@@ -46,6 +46,11 @@ export interface PublicCoreEnv {
 
 type JsonRecord = Record<string, unknown>;
 
+const ACTIVE_FEATURE_SQL = `CASE
+  WHEN l.is_featured = 1
+   AND (l.featured_until IS NULL OR l.featured_until > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  THEN 1 ELSE 0 END`;
+
 const API_VERSION = "v1";
 const DEFAULT_API_CACHE_SECONDS = 60;
 const DEFAULT_MEDIA_CACHE_SECONDS = 86_400;
@@ -453,6 +458,7 @@ async function listings(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Re
       l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
       l.listing_condition, l.status, l.district_ar, l.contact_name,
       l.contact_options, l.details, l.is_featured, l.featured_until,
+      ${ACTIVE_FEATURE_SQL} AS active_feature_rank,
       l.published_at, l.archived_at, l.reserved_at, l.expires_at,
       l.renewed_at, l.expiry_days, l.created_at, l.updated_at,
       c.name_ar AS category_name_ar, c.placeholder AS category_placeholder,
@@ -513,6 +519,7 @@ async function listingDetail(id: string, env: PublicCoreEnv, cors: Headers): Pro
        l.title, l.description, l.price, l.currency, l.price_type,
        l.listing_condition, l.status, l.district_ar, l.contact_name,
        l.contact_options, l.details, l.is_featured, l.featured_until,
+       ${ACTIVE_FEATURE_SQL} AS active_feature_rank,
        l.published_at, l.archived_at, l.reserved_at, l.expires_at,
        l.renewed_at, l.expiry_days, l.created_at, l.updated_at,
        c.name_ar AS category_name_ar, c.placeholder AS category_placeholder,
@@ -759,7 +766,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
     contactName: nullableString(row.contact_name),
     contactOptions: jsonObject(row.contact_options),
     details: sanitizePublicDetails(jsonObject(row.details)),
-    isFeatured: booleanValue(row.is_featured),
+    isFeatured: booleanValue(row.active_feature_rank),
     featuredUntil: nullableString(row.featured_until),
     reviewedBy: null,
     reviewedAt: null,
@@ -834,10 +841,9 @@ function readSort(value: string | null): ListingSort {
 }
 
 function listingOrder(sort: ListingSort): string {
-  if (sort === "featured") return "l.is_featured DESC, l.created_at DESC, l.id DESC";
   if (sort === "cheapest") return "l.price IS NULL ASC, l.price ASC, l.id ASC";
   if (sort === "expensive") return "l.price IS NULL ASC, l.price DESC, l.id ASC";
-  return "l.created_at DESC, l.id DESC";
+  return "active_feature_rank DESC, l.created_at DESC, l.id DESC";
 }
 
 function buildCursorClause(
@@ -847,18 +853,17 @@ function buildCursorClause(
 ): string | null {
   if (!cursor || cursor.sort !== sort || !cursor.id) return null;
 
-  if (sort === "latest" && cursor.createdAt) {
-    values.push(cursor.createdAt, cursor.createdAt, cursor.id);
-    return "(l.created_at < ? OR (l.created_at = ? AND l.id < ?))";
-  }
-
-  if (sort === "featured" && cursor.createdAt && typeof cursor.isFeatured === "boolean") {
+  if (
+    (sort === "latest" || sort === "featured") &&
+    cursor.createdAt &&
+    typeof cursor.isFeatured === "boolean"
+  ) {
     const featured = cursor.isFeatured ? 1 : 0;
     values.push(featured, featured, cursor.createdAt, cursor.createdAt, cursor.id);
     return `(
-      l.is_featured < ?
+      ${ACTIVE_FEATURE_SQL} < ?
       OR (
-        l.is_featured = ?
+        ${ACTIVE_FEATURE_SQL} = ?
         AND (l.created_at < ? OR (l.created_at = ? AND l.id < ?))
       )
     )`;
@@ -882,7 +887,9 @@ function cursorFromRow(sort: ListingSort, row: JsonRecord): ListingCursor {
     sort,
     id: stringValue(row.id),
     ...(sort === "latest" || sort === "featured" ? { createdAt: stringValue(row.created_at) } : {}),
-    ...(sort === "featured" ? { isFeatured: booleanValue(row.is_featured) } : {}),
+    ...(sort === "latest" || sort === "featured"
+      ? { isFeatured: booleanValue(row.active_feature_rank) }
+      : {}),
     ...(sort === "cheapest" || sort === "expensive" ? { price: nullableNumber(row.price) } : {}),
   };
 }

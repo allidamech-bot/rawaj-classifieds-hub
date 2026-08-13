@@ -442,6 +442,13 @@ export interface ListingPromotionRequest {
   createdAt: string;
   updatedAt: string;
   listingTitle?: string | null;
+  requesterDisplayName?: string | null;
+  searchBoostPackageCode?: string | null;
+  searchBoostDurationMinutes?: number | null;
+  searchBoostPriceSyp?: number | null;
+  searchBoostCurrency?: string | null;
+  searchBoostStatus?: "pending_payment" | "active" | "expired" | "rejected" | "cancelled" | null;
+  proofContentType?: string | null;
 }
 
 export interface CreateListingPromotionRequestPayload {
@@ -621,7 +628,7 @@ export interface PaginatedListingsResponse<T> {
 }
 
 export type ListingCursor =
-  | { type: "latest"; created_at: string; id: string }
+  | { type: "latest"; is_featured: boolean; created_at: string; id: string }
   | { type: "cheapest"; price: number | null; id: string }
   | { type: "expensive"; price: number | null; id: string }
   | { type: "featured"; is_featured: boolean; created_at: string; id: string };

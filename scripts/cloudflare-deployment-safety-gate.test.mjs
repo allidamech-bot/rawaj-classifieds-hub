@@ -188,7 +188,7 @@ test("health and post-deploy smoke verify only the Syria release identity", () =
   }
   assert.doesNotMatch(smokeSource, /rawaj-saudi|https:\/\/sa\.rawa-j\.com/);
   assert.match(entrySource, /const requestId = crypto\.randomUUID\(\)/);
-  assert.match(entrySource, /request\.method === "OPTIONS"[\s\S]*responseHeaders\(cors, requestId\)/);
+  assert.match(entrySource, /request\.method === "OPTIONS"[\s\S]*responseHeaders\(cors, requestId, request\)/);
   assert.match(entrySource, /headers\.set\("X-Content-Type-Options", "nosniff"\)/);
   assert.match(entrySource, /headers\.set\("Referrer-Policy", "no-referrer"\)/);
   assert.doesNotMatch(smokeSource, /\bwrangler\b/i);

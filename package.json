@@ -65,7 +65,8 @@
     "test:local-imports": "node scripts/local-import-integrity.mjs",
     "test:listing-lifecycle-completeness": "node --test scripts/listing-lifecycle-completeness-v1.test.mjs",
     "test:owner-listing-performance": "node --test scripts/owner-listing-performance-dashboard-v1.test.mjs",
-    "test:listing-price-offers": "node --test scripts/structured-listing-price-offers-v1.test.mjs"
+    "test:listing-price-offers": "node --test scripts/structured-listing-price-offers-v1.test.mjs",
+    "test:syria-growth": "node --test scripts/syria-growth-boost-contract.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",

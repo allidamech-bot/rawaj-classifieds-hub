@@ -187,9 +187,15 @@ export function validateListingCursor(
 
   switch (type) {
     case "latest": {
+      const is_featured = cursor.is_featured;
       const created_at = cursor.created_at;
-      if (typeof created_at !== "string" || !created_at.trim()) return null;
-      return { type: "latest", created_at, id };
+      if (
+        typeof is_featured !== "boolean" ||
+        typeof created_at !== "string" ||
+        !created_at.trim()
+      )
+        return null;
+      return { type: "latest", is_featured, created_at, id };
     }
     case "cheapest":
     case "expensive": {

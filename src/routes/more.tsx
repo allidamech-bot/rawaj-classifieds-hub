@@ -85,7 +85,7 @@ const secondaryShortcuts: (AccountRow & { world: string })[] = [
     titleAr: "Boost",
     titleEn: "Boost",
     hintAr: "احصل على عملاء أكثر",
-    hintEn: "Get more buyers",
+    hintEn: "Get more customers",
     to: "/promotion",
     icon: Rocket,
     world: "rawaj-world-orange",
@@ -351,6 +351,26 @@ function SecondaryShortcut({
   text: (ar: string, en: string) => string;
 }) {
   const Icon = row.icon;
+  if (row.to === "/promotion") {
+    return (
+      <Link
+        to="/promotion"
+        aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+        className="group col-span-full flex min-h-20 items-center gap-3 rounded-[1.15rem] bg-amber-500/12 p-3 text-start text-[#3b2a0b] ring-1 ring-inset ring-amber-700/20 transition hover:bg-amber-500/18 active:scale-[0.985] sm:col-span-1 dark:text-amber-50"
+      >
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-[#2b1d05] shadow-soft">
+          <Icon className="h-6 w-6" aria-hidden="true" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-black">Boost</span>
+          <span className="mt-0.5 block text-[10px] font-semibold leading-4 text-amber-950/70 dark:text-amber-100/75">
+            {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
+          </span>
+        </span>
+        <ChevronLeft className="ms-auto h-4 w-4 shrink-0 text-amber-800 rtl:rotate-180 dark:text-amber-200" />
+      </Link>
+    );
+  }
   return (
     <Link
       to={row.to ?? "/more"}

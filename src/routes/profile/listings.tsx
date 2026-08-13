@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Pencil,
   Plus,
+  Rocket,
   Square,
   Star,
   Trash2,
@@ -54,12 +55,18 @@ import {
 import type {
   ClassifiedListing,
   ClassifiedsError,
+  ListingPromotionRequest,
   PublicSellerProfile,
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
 import { listingStatusLabel } from "@/lib/status-labels";
+import {
+  fetchMySearchBoostOrders,
+  isListingEligibleForSearchBoost,
+  queueSearchBoostIntent,
+} from "@/lib/search-boost-growth";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -109,9 +116,12 @@ function MyListingsPage() {
   const [bulkFeedback, setBulkFeedback] = useState("");
   const [workspaceMessage, setWorkspaceMessage] = useState("");
   const [duplicatingListingId, setDuplicatingListingId] = useState<string | null>(null);
+  const [boostPromotions, setBoostPromotions] = useState<ListingPromotionRequest[]>([]);
+  const [boostEligibilityLoaded, setBoostEligibilityLoaded] = useState(false);
   const duplicateRequestIdsRef = useRef<Map<string, string>>(new Map());
   const listingsRequestIdRef = useRef(0);
   const sellerRequestIdRef = useRef(0);
+  const boostRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
   const profileIdRef = useRef<string | null>(profileId);
   profileIdRef.current = profileId;
@@ -202,10 +212,25 @@ function MyListingsPage() {
     }
   }, [profileId, text]);
 
+  const loadBoostEligibility = useCallback(async () => {
+    if (!profileId) return;
+    const currentProfileId = profileId;
+    const requestId = ++boostRequestIdRef.current;
+    setBoostEligibilityLoaded(false);
+    const result = await fetchMySearchBoostOrders(currentProfileId);
+    if (requestId !== boostRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      return;
+    if (result.ok) {
+      setBoostPromotions(result.data.map((order) => order.promotion));
+      setBoostEligibilityLoaded(true);
+    }
+  }, [profileId]);
+
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
       listingsRequestIdRef.current += 1;
       sellerRequestIdRef.current += 1;
+      boostRequestIdRef.current += 1;
       setListings([]);
       setSellerProfile(null);
       setListingsLoading(false);
@@ -214,11 +239,14 @@ function MyListingsPage() {
       setSellerLoading(false);
       setSellerHasLoaded(false);
       setSellerError(null);
+      setBoostPromotions([]);
+      setBoostEligibilityLoaded(false);
       return;
     }
 
     listingsRequestIdRef.current += 1;
     sellerRequestIdRef.current += 1;
+    boostRequestIdRef.current += 1;
     setListings([]);
     setSellerProfile(null);
     setListingsLoading(false);
@@ -227,13 +255,16 @@ function MyListingsPage() {
     setSellerLoading(false);
     setSellerHasLoaded(false);
     setSellerError(null);
-    void Promise.all([loadListings(), loadSellerProfile()]);
+    setBoostPromotions([]);
+    setBoostEligibilityLoaded(false);
+    void Promise.all([loadListings(), loadSellerProfile(), loadBoostEligibility()]);
 
     return () => {
       listingsRequestIdRef.current += 1;
       sellerRequestIdRef.current += 1;
+      boostRequestIdRef.current += 1;
     };
-  }, [auth.status, loadListings, loadSellerProfile, profileId]);
+  }, [auth.status, loadBoostEligibility, loadListings, loadSellerProfile, profileId]);
 
   function handleListingDeleted(actionProfileId: string | null, listingId: string) {
     if (!actionProfileId || actionProfileId !== profileIdRef.current) return;
@@ -676,6 +707,10 @@ function MyListingsPage() {
                         selected={selectedListingIds.has(listing.id)}
                         selectable={activeTab === "approved" && listing.status === "approved"}
                         duplicating={duplicatingListingId === listing.id}
+                        boostEligible={
+                          boostEligibilityLoaded &&
+                          isListingEligibleForSearchBoost(listing, boostPromotions)
+                        }
                         onSelectionChange={handleSelectionChange}
                         onDuplicate={handleDuplicateListing}
                         onDeleted={handleListingDeleted}
@@ -1061,6 +1096,7 @@ function StoreListingCard({
   selected,
   selectable,
   duplicating,
+  boostEligible,
   onSelectionChange,
   onDuplicate,
   onDeleted,
@@ -1072,6 +1108,7 @@ function StoreListingCard({
   selected: boolean;
   selectable: boolean;
   duplicating: boolean;
+  boostEligible: boolean;
   onSelectionChange: (listingId: string, selected: boolean) => void;
   onDuplicate: (listing: ClassifiedListing) => Promise<void>;
   onDeleted: (profileId: string | null, id: string) => void;
@@ -1475,6 +1512,18 @@ function StoreListingCard({
                 >
                   <Eye className="h-4 w-4" />
                 </Link>
+              ) : null}
+              {boostEligible ? (
+                <button
+                  type="button"
+                  onClick={() => queueSearchBoostIntent(listing.id)}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-500/12 px-3 text-xs font-black text-amber-900 transition hover:bg-amber-500/20 hairline dark:text-amber-100"
+                  aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                  title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                >
+                  <Rocket className="h-4 w-4" aria-hidden="true" />
+                  Boost
+                </button>
               ) : null}
               {canEdit ? (
                 <Link
