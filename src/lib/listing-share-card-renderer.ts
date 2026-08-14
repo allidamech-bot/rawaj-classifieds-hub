@@ -1,4 +1,6 @@
+import { resolveCategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
+import { listingShareHighlights } from "@/lib/listing-share-highlights";
 import type { ListingShareTemplate } from "@/lib/listing-share-growth";
 
 const CARD_WIDTH = 1080;
@@ -19,6 +21,11 @@ export async function renderListingShareCard(
 
   await document.fonts?.ready?.catch(() => undefined);
   const image = await loadListingImage(listing.primaryImageUrl);
+  const highlights = listingShareHighlights(
+    listing,
+    resolveCategoryFieldKind(null, null, listing),
+    language,
+  ).map(({ label, value }) => `${label}: ${value}`);
   const copy = {
     title: listing.title.trim() || (language === "en" ? "Listing on RAWAJ" : "إعلان على رواج"),
     price: listingSharePriceLabel(listing, language),
@@ -26,6 +33,7 @@ export async function renderListingShareCard(
     cta: language === "en" ? "View the listing on rawa-j.com" : "شاهد الإعلان على rawa-j.com",
     brand: language === "en" ? "RAWAJ  |  SYRIA" : "رواج  |  RAWAJ",
     noImage: language === "en" ? "RAWAJ Marketplace" : "سوق رواج سوريا",
+    highlights,
   };
   setDirection(ctx, language);
 
@@ -73,6 +81,7 @@ type CardCopy = {
   cta: string;
   brand: string;
   noImage: string;
+  highlights: string[];
 };
 
 function drawClassic(
@@ -87,9 +96,10 @@ function drawClassic(
   drawMedia(ctx, image, 66, 156, 948, 540, 22, "#D8C9A9", copy.noImage, language);
   fillRound(ctx, "#C99A43", 66, 724, 10, 218, 5);
   drawTextBlock(ctx, copy.title, language === "ar" ? 970 : 100, 758, 870, 50, 2, "#122238", 700, language);
-  drawText(ctx, copy.price, 100, 886, "#9A681A", 700, 43, language, "left");
-  drawText(ctx, copy.location, 970, 886, "#667085", 500, 28, language, "right");
-  drawText(ctx, copy.cta, 970, 974, "#122238", 700, 27, language, "right");
+  drawText(ctx, copy.price, 100, 878, "#9A681A", 700, 43, language, "left");
+  drawText(ctx, copy.location, 970, 878, "#667085", 500, 28, language, "right");
+  drawHighlights(ctx, copy.highlights, 970, 918, 870, 23, "#667085", language, "right");
+  drawText(ctx, copy.cta, 970, 1004, "#122238", 700, 25, language, "right");
 }
 
 function drawQuickSale(
@@ -109,8 +119,9 @@ function drawQuickSale(
   fillRound(ctx, "#21160F", 294, 698, 724, 2, 1);
   drawText(ctx, language === "en" ? "READY TO MOVE" : "جاهز للبيع", 1018, 748, "#CC641A", 800, 27, language, "right");
   drawTextBlock(ctx, copy.title, 1018, 812, 724, 51, 2, "#21160F", 800, language, "right");
-  drawText(ctx, copy.price, 1018, 946, "#CC641A", 900, 52, language, "right");
-  drawText(ctx, `${copy.location}  ·  ${copy.cta}`, 1018, 1021, "#715D50", 600, 24, language, "right");
+  drawText(ctx, copy.price, 1018, 940, "#CC641A", 900, 50, language, "right");
+  drawHighlights(ctx, copy.highlights, 1018, 978, 724, 22, "#715D50", language, "right");
+  drawText(ctx, `${copy.location}  ·  ${copy.cta}`, 1018, 1060, "#715D50", 600, 22, language, "right");
 }
 
 function drawMinimal(
@@ -124,9 +135,10 @@ function drawMinimal(
   fill(ctx, "#182537", 64, 103, 952, 2);
   drawMedia(ctx, image, 64, 144, 952, 540, 4, "#E8E2D7", copy.noImage, language);
   drawTextBlock(ctx, copy.title, 1016, 754, 952, 48, 2, "#182537", 700, language, "right");
-  drawText(ctx, copy.price, 1016, 883, "#182537", 800, 44, language, "right");
-  drawText(ctx, copy.location, 64, 947, "#667085", 500, 27, language, "left");
-  drawText(ctx, copy.cta, 1016, 1012, "#182537", 700, 25, language, "right");
+  drawText(ctx, copy.price, 1016, 876, "#182537", 800, 44, language, "right");
+  drawHighlights(ctx, copy.highlights, 1016, 918, 952, 23, "#667085", language, "right");
+  drawText(ctx, copy.location, 64, 1005, "#667085", 500, 25, language, "left");
+  drawText(ctx, copy.cta, 1016, 1027, "#182537", 700, 23, language, "right");
 }
 
 function drawEmerald(
@@ -139,11 +151,12 @@ function drawEmerald(
   fillRound(ctx, "#B49A62", 52, 52, 976, 646, 34);
   drawMedia(ctx, image, 64, 64, 952, 622, 26, "#285E55", copy.noImage, language);
   fillRound(ctx, "#F2F0E8", 52, 730, 976, 298, 30);
-  drawBrand(ctx, copy.brand, 92, 780, "#0C3B35", language, 28);
-  drawTextBlock(ctx, copy.title, 988, 842, 896, 45, 2, "#102B27", 800, language, "right");
-  drawText(ctx, copy.price, 988, 954, "#8C6A2F", 800, 40, language, "right");
-  drawText(ctx, copy.location, 92, 958, "#667A75", 600, 25, language, "left");
-  drawText(ctx, copy.cta, 988, 1002, "#0C3B35", 700, 23, language, "right");
+  drawBrand(ctx, copy.brand, 92, 772, "#0C3B35", language, 28);
+  drawTextBlock(ctx, copy.title, 988, 825, 896, 41, 2, "#102B27", 800, language, "right");
+  drawText(ctx, copy.price, 988, 916, "#8C6A2F", 800, 38, language, "right");
+  drawText(ctx, copy.location, 92, 916, "#667A75", 600, 24, language, "left");
+  drawHighlights(ctx, copy.highlights, 988, 948, 896, 21, "#667A75", language, "right");
+  drawText(ctx, copy.cta, 988, 1018, "#0C3B35", 700, 22, language, "right");
 }
 
 function drawPremium(
@@ -162,8 +175,9 @@ function drawPremium(
   drawTextBlock(ctx, copy.title, 944, 322, 190, 42, 5, "#202126", 800, language, "right");
   drawText(ctx, copy.price, 944, 632, "#8F6A2D", 900, 35, language, "right");
   drawTextBlock(ctx, copy.location, 944, 705, 190, 32, 2, "#746E65", 600, language, "right");
-  fillRound(ctx, "#202126", 744, 822, 210, 74, 12);
-  drawText(ctx, language === "en" ? "VIEW NOW" : "شاهد الآن", 849, 869, "#ECE5D8", 800, 23, language, "center");
+  drawHighlights(ctx, copy.highlights, 944, 768, 190, 25, "#746E65", language, "right");
+  fillRound(ctx, "#202126", 744, 842, 210, 74, 12);
+  drawText(ctx, language === "en" ? "VIEW NOW" : "شاهد الآن", 849, 889, "#ECE5D8", 800, 23, language, "center");
   drawText(ctx, "rawa-j.com", 988, 988, "#D9B66F", 700, 26, language, "right");
 }
 
@@ -184,9 +198,10 @@ function drawStory(
   fillRound(ctx, "#C78A2D", 72, 1230, 936, 8, 4);
   drawTextBlock(ctx, copy.title, 1008, 1345, 936, 72, 3, "#FFFFFF", 800, language, "right");
   drawText(ctx, copy.price, 1008, 1608, "#F0C676", 900, 58, language, "right");
-  drawText(ctx, copy.location, 1008, 1690, "#D4DEE9", 600, 31, language, "right");
-  fillRound(ctx, "#F5F0E6", 72, 1762, 936, 94, 18);
-  drawText(ctx, copy.cta, 540, 1821, "#14263D", 800, 28, language, "center");
+  drawText(ctx, copy.location, 1008, 1686, "#D4DEE9", 600, 31, language, "right");
+  drawHighlights(ctx, copy.highlights, 1008, 1724, 936, 27, "#D4DEE9", language, "right");
+  fillRound(ctx, "#F5F0E6", 72, 1814, 936, 74, 18);
+  drawText(ctx, copy.cta, 540, 1862, "#14263D", 800, 27, language, "center");
 }
 
 async function loadListingImage(source: string | null | undefined): Promise<HTMLImageElement | null> {
@@ -312,6 +327,42 @@ function drawText(
   ctx.textAlign = align;
   ctx.direction = language === "ar" ? "rtl" : "ltr";
   ctx.fillText(value, x, y);
+}
+
+function drawHighlights(
+  ctx: CanvasRenderingContext2D,
+  highlights: string[],
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  color: string,
+  language: string,
+  align: CanvasTextAlign,
+) {
+  ctx.font = `600 ${Math.round(lineHeight * 0.82)}px ${FONT_FAMILY}`;
+  highlights.slice(0, 3).forEach((highlight, index) => {
+    drawText(
+      ctx,
+      fitSingleLine(ctx, highlight, maxWidth),
+      x,
+      y + index * lineHeight,
+      color,
+      600,
+      Math.round(lineHeight * 0.82),
+      language,
+      align,
+    );
+  });
+}
+
+function fitSingleLine(ctx: CanvasRenderingContext2D, value: string, maxWidth: number) {
+  if (ctx.measureText(value).width <= maxWidth) return value;
+  let fitted = value;
+  while (fitted.length > 1 && ctx.measureText(`${fitted}…`).width > maxWidth) {
+    fitted = fitted.slice(0, -1);
+  }
+  return `${fitted.trim()}…`;
 }
 
 function setDirection(ctx: CanvasRenderingContext2D, language: string) {

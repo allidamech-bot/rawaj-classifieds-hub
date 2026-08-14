@@ -15,6 +15,7 @@ import {
   Pencil,
   Plus,
   Rocket,
+  Share2,
   Square,
   Star,
   Trash2,
@@ -60,6 +61,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { isClosedListingStatus, isReactivatableListingStatus } from "@/lib/listing-lifecycle-ui";
+import { queueListingSharePrompt } from "@/lib/listing-share-growth";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
 import { listingStatusLabel } from "@/lib/status-labels";
 import {
@@ -1156,6 +1158,7 @@ function StoreListingCard({
     listing.price > 0 &&
     (listing.priceType === "fixed" || listing.priceType === "negotiable");
   const canReactivate = isReactivatableListingStatus(listing.status);
+  const canShareCard = listing.status === "approved" || listing.status === "pending_review";
 
   async function handleConfirmDelete() {
     if (deleteInFlightRef.current) return;
@@ -1501,7 +1504,7 @@ function StoreListingCard({
             </p>
           )}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {listing.status === "approved" ? (
                 <Link
                   to="/listings/$id"
@@ -1512,6 +1515,17 @@ function StoreListingCard({
                 >
                   <Eye className="h-4 w-4" />
                 </Link>
+              ) : null}
+              {canShareCard ? (
+                <button
+                  type="button"
+                  onClick={() => queueListingSharePrompt(listing.id)}
+                  aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                  title={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                  className="grid h-10 w-10 place-items-center rounded-xl bg-muted-surface text-foreground transition hover:bg-secondary hairline"
+                >
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                </button>
               ) : null}
               {boostEligible ? (
                 <button
