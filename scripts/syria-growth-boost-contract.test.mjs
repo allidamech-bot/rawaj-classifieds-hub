@@ -123,3 +123,44 @@ test("the applied Syria growth-contract repair remains free of listings.is_demo"
   const repair = read("cloudflare/d1/migrations/0024_fix_syria_growth_listing_contract.sql");
   assert.doesNotMatch(repair, /\b(?:l|source)\.is_demo\b/i);
 });
+
+test("Syria Share Card Growth UI Arabic literals are valid UTF-8 and free of encoding mojibake", () => {
+  const growth = read("src/features/growth/RawajGrowthLayer.tsx");
+  const requiredArabic = [
+    "إعلانك قيد المراجعة",
+    "شارك إعلانك",
+    "اختر شكل البطاقة",
+    "شارك البطاقة",
+    "تنزيل",
+    "نسخ الرابط",
+    "تعذر تحميل الإعلان الآن",
+    "تم فتح نافذة المشاركة",
+    "تم نسخ رابط الإعلان",
+    "تعذر نسخ الرابط",
+    "تم تنزيل بطاقة الإعلان",
+    "تعذر إنشاء الصورة الآن",
+    "نجهز بطاقات إعلانك",
+    "تصاميم",
+    "إغلاق",
+  ];
+  for (const phrase of requiredArabic) {
+    assert.match(growth, new RegExp(phrase), `Growth component must contain correct Arabic: ${phrase}`);
+  }
+  const forbiddenMojibake = [
+    "ط§",
+    "ط¥",
+    "ظ„",
+    "طھظ…",
+    "ط¥ط±",
+    "ط´ط§ظ‡ط¯",
+    "طھط¹ط°ط±",
+    "طھظ†ط²ظٹظ„",
+  ];
+  for (const marker of forbiddenMojibake) {
+    assert.doesNotMatch(
+      growth,
+      new RegExp(marker),
+      `Growth component must not contain mojibake marker: ${marker}`,
+    );
+  }
+});
