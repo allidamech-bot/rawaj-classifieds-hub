@@ -118,6 +118,7 @@ export const auditedOverrideStyleHrefs = [
   homeNotificationOverlayFixCss,
   listingStudioMobileOverflowFixCss,
   listingPreviewTrueSizeCss,
+  listingDetailV3Css,
 ] as const;
 
 export interface RouteStyleScope {

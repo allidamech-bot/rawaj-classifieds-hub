@@ -36,11 +36,7 @@ interface StorefrontIdentityHeroProps {
   ratingAverage?: number | null;
   ratingCount?: number;
   approvedCount: number | null;
-  pendingCount?: number;
-  needsEditCount?: number;
-  closedCount?: number;
   completeness?: number;
-  onOwnerStatusChange?: (status: "approved" | "pending" | "needs_edit" | "closed") => void;
   extraActions?: ReactNode;
 }
 
@@ -58,11 +54,7 @@ export function StorefrontIdentityHero({
   ratingAverage,
   ratingCount = 0,
   approvedCount,
-  pendingCount = 0,
-  needsEditCount = 0,
-  closedCount = 0,
   completeness = 0,
-  onOwnerStatusChange,
   extraActions,
 }: StorefrontIdentityHeroProps) {
   const { language, text } = useUiPreferences();
@@ -92,10 +84,6 @@ export function StorefrontIdentityHero({
         verified={verified}
         completeness={completeness}
         approvedCount={approvedCount ?? 0}
-        pendingCount={pendingCount}
-        needsEditCount={needsEditCount}
-        closedCount={closedCount}
-        onStatusChange={onOwnerStatusChange}
       />
     );
   }

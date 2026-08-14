@@ -1117,3 +1117,516 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* V10 readability and hierarchy pass: a branded identity header above a calm owner workspace. */
+.rawaj-owner-control-center {
+  --store-canvas: #f3f0e8;
+  --store-surface: #fffdf8;
+  --store-surface-raised: #ffffff;
+  --store-line: #d5ded7;
+  --store-line-strong: #becdc4;
+  --store-ink: #183630;
+  --store-ink-soft: #4f675f;
+  --store-ink-muted: #6a7d75;
+  --store-green: #0f433b;
+  --store-green-deep: #082d29;
+  --store-gold: #b6873f;
+  --rawaj-text-primary: var(--store-ink);
+  --rawaj-text-secondary: var(--store-ink-soft);
+  --rawaj-text-muted: var(--store-ink-muted);
+  max-width: 82rem;
+  overflow: clip;
+  border-radius: 1.25rem;
+  padding: clamp(0.65rem, 2vw, 1.25rem);
+  background: var(--store-canvas);
+  color: var(--store-ink);
+}
+
+.rawaj-owner-workspace-summary {
+  border: 0;
+  border-radius: 1rem;
+  background:
+    linear-gradient(125deg, rgba(186, 139, 65, 0.12), transparent 34%),
+    linear-gradient(145deg, #103f38, #082d29 72%);
+  box-shadow: 0 18px 42px rgba(0, 24, 21, 0.22);
+}
+
+.rawaj-owner-workspace-summary__topline {
+  min-height: 2.75rem;
+  justify-content: flex-end;
+}
+
+.rawaj-owner-workspace-summary__name-row h1,
+.rawaj-owner-workspace-summary__completeness strong {
+  color: #fffdf8 !important;
+}
+
+.rawaj-owner-workspace-summary__copy > strong,
+.rawaj-owner-workspace-summary__location,
+.rawaj-owner-workspace-summary__bio,
+.rawaj-owner-workspace-summary__completeness span,
+.rawaj-owner-workspace-summary__completeness p {
+  color: #cbd9d3 !important;
+}
+
+.rawaj-owner-workspace-summary__verified {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f1d39f;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rawaj-owner-workspace-summary__completeness {
+  border-inline-start-color: rgba(255, 255, 255, 0.14);
+}
+
+.rawaj-owner-workspace-summary__progress {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.rawaj-owner-workspace-summary__progress > span {
+  background: #d8a958;
+}
+
+.rawaj-owner-workspace-summary__actions a {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #edf4f0;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
+  border-color: transparent;
+  color: #102f2a;
+  background: #e6bd73;
+  box-shadow: none;
+}
+
+.rawaj-owner-workspace-summary__metrics {
+  display: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-storefront-notice[data-tone="draft"] {
+  border-color: #e2c58f !important;
+  color: var(--store-ink) !important;
+  background: #fff7e7 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-storefront-notice[data-tone="draft"]
+  h3 {
+  color: #704c16 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-storefront-notice[data-tone="draft"]
+  p {
+  color: #665b49 !important;
+}
+
+.rawaj-owner-smart-insights :is(button, a),
+.rawaj-owner-control-center > [data-owner-performance-overview="true"] {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft);
+  background: var(--store-surface) !important;
+}
+
+.rawaj-owner-inventory {
+  border: 0;
+  border-radius: 1rem;
+  background: var(--store-surface);
+  box-shadow: 0 14px 36px rgba(19, 54, 47, 0.08);
+}
+
+.rawaj-owner-inventory__header p {
+  display: none;
+}
+
+.rawaj-owner-inventory__header h2 {
+  color: var(--store-ink);
+  font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+}
+
+.rawaj-owner-inventory__header span {
+  max-width: 62ch;
+  color: var(--store-ink-muted);
+  font-size: 0.76rem;
+}
+
+.rawaj-owner-inventory__header > strong {
+  border-color: var(--store-line);
+  color: var(--store-green);
+  background: #eef3ef;
+}
+
+.rawaj-owner-workspace-sticky {
+  border-color: var(--store-line);
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 10px 26px rgba(16, 52, 45, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.rawaj-storefront-owner-tabs button {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-storefront-owner-tabs button > span:last-child {
+  background: #edf2ee;
+}
+
+.rawaj-storefront-owner-tabs button[data-active="true"] {
+  border-color: #b9cbc1 !important;
+  color: #fff !important;
+  background: var(--store-green) !important;
+  box-shadow: none;
+}
+
+.rawaj-owner-listings-toolbar__search,
+.rawaj-owner-listings-toolbar__select,
+.rawaj-owner-listings-toolbar__filter-toggle,
+.rawaj-owner-listings-toolbar__select-visible,
+.rawaj-owner-listings-toolbar__add,
+.rawaj-owner-bulk-actions__controls :is(select, button) {
+  border-color: var(--store-line);
+  color: var(--store-ink-soft);
+  background: #f8faf8;
+}
+
+.rawaj-owner-listings-toolbar__search input,
+.rawaj-owner-listings-toolbar__select select {
+  color: var(--store-ink);
+}
+
+.rawaj-owner-listings-toolbar__add {
+  border-color: transparent;
+  color: #fff;
+  background: var(--store-green);
+}
+
+.rawaj-owner-listings-toolbar__count,
+.rawaj-owner-bulk-actions span,
+.rawaj-owner-bulk-actions p {
+  color: var(--store-ink-muted);
+}
+
+.rawaj-owner-bulk-actions {
+  border-color: #b8d2c5;
+  background: #edf7f1;
+}
+
+.rawaj-storefront-owner-grid {
+  gap: 0.9rem;
+}
+
+.rawaj-owner-listing-card {
+  grid-template-columns: minmax(12rem, 0.72fr) minmax(0, 1.28fr);
+  overflow: hidden;
+  border: 1px solid var(--store-line) !important;
+  border-radius: 0.95rem !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: var(--store-ink);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 28rem;
+}
+
+.rawaj-owner-listing-card .rawaj-product-media {
+  min-height: 100%;
+  border-inline-end-color: var(--store-line);
+  background: #eaf0ec;
+}
+
+.rawaj-owner-listing-card .rawaj-product-media > :is(img, div) {
+  height: 100%;
+  min-height: 17rem;
+  aspect-ratio: auto !important;
+}
+
+.rawaj-owner-listing-card__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.72rem;
+  padding: 1rem;
+}
+
+.rawaj-owner-listing-card__content > * {
+  margin: 0 !important;
+}
+
+.rawaj-owner-listing-card__content h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--store-ink) !important;
+  font-size: 1rem !important;
+  font-weight: 850;
+  line-height: 1.55 !important;
+}
+
+.rawaj-owner-listing-card__facts {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  color: var(--store-ink-muted);
+  font-size: 0.72rem;
+}
+
+.rawaj-owner-listing-card__facts strong {
+  flex: 1 0 100%;
+  color: var(--store-green-deep);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.rawaj-owner-listing-card__facts span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.rawaj-owner-listing-card__facts svg,
+.rawaj-owner-listing-card__signals svg,
+.rawaj-owner-listing-card__actions svg,
+.rawaj-owner-listing-management__duplicate svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+.rawaj-owner-listing-card__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rawaj-owner-listing-card__signals > span {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.58rem;
+  color: #52685f;
+  background: #edf2ee;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="success"],
+.rawaj-owner-listing-card__signals > span[data-tone="safe"] {
+  color: #1c624e;
+  background: #e7f5ed;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="warning"],
+.rawaj-owner-listing-card__signals > span[data-tone="draft"] {
+  color: #7b551c;
+  background: #fff2d8;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="danger"] {
+  color: #a33f38;
+  background: #fff0ed;
+}
+
+.rawaj-owner-listing-card [data-owner-listing-performance="true"] {
+  min-height: 3.25rem;
+  border: solid var(--store-line);
+  border-width: 1px 0;
+  border-radius: 0;
+  padding: 0.55rem 0;
+  background: transparent;
+}
+
+.rawaj-owner-listing-card [data-owner-listing-performance="true"] > div {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0.35rem;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem 0.3rem;
+  color: var(--store-ink-soft);
+  text-align: center;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] span {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--store-ink-muted);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] strong {
+  font-size: 0.76rem;
+}
+
+.rawaj-owner-listing-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto !important;
+}
+
+.rawaj-owner-listing-card__actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rawaj-owner-listing-card__actions :is(a, button),
+.rawaj-owner-listing-management__duplicate {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid var(--store-line);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  color: var(--store-ink-soft);
+  background: #f8faf8;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="primary"] {
+  border-color: transparent;
+  color: #fff;
+  background: var(--store-green);
+}
+
+.rawaj-owner-listing-card__actions [data-tone="share"] {
+  color: #1d6654;
+  background: #edf7f1;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="boost"] {
+  color: #78541c;
+  background: #fff4dc;
+}
+
+.rawaj-owner-listing-card__manage {
+  color: var(--store-green-deep) !important;
+  background: #fff !important;
+}
+
+.rawaj-owner-listing-management {
+  border-color: var(--store-line) !important;
+  background: #f7f9f7 !important;
+}
+
+.rawaj-owner-listing-management__duplicate {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.rawaj-owner-listing-management :is(input, select) {
+  color: var(--store-ink) !important;
+  background: #fff !important;
+}
+
+.rawaj-owner-control-center :is(a, button, input, select):focus-visible {
+  outline-color: #177363;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-owner-listing-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--store-line-strong) !important;
+    box-shadow: none !important;
+  }
+
+  .rawaj-owner-listing-card__actions :is(a, button):hover,
+  .rawaj-owner-listing-management__duplicate:hover {
+    border-color: var(--store-line-strong);
+    background: #eef3ef;
+  }
+}
+
+@media (max-width: 64rem) {
+  .rawaj-storefront-owner-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-owner-listing-card {
+    grid-template-columns: minmax(11rem, 0.6fr) minmax(0, 1.4fr);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-owner-control-center {
+    border-radius: 0;
+    padding-inline: 0.55rem;
+  }
+
+  .rawaj-owner-workspace-summary__topline {
+    padding-top: 0.7rem;
+  }
+
+  .rawaj-owner-workspace-summary__body {
+    gap: 1rem;
+  }
+
+  .rawaj-owner-workspace-summary__actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
+    grid-column: 1 / -1;
+  }
+
+  .rawaj-owner-inventory {
+    padding: 0.7rem;
+  }
+
+  .rawaj-owner-listing-card {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-owner-listing-card .rawaj-product-media {
+    min-height: 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--store-line);
+  }
+
+  .rawaj-owner-listing-card .rawaj-product-media > :is(img, div) {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .rawaj-owner-listing-card__content {
+    padding: 0.85rem;
+  }
+
+  .rawaj-owner-listing-card__actions {
+    align-items: stretch;
+  }
+
+  .rawaj-owner-listing-card__actions > div {
+    flex: 1 1 100%;
+  }
+
+  .rawaj-owner-listing-card__actions > div > * {
+    flex: 1 1 auto;
+  }
+
+  .rawaj-owner-listing-card__manage {
+    width: 100%;
+  }
+}

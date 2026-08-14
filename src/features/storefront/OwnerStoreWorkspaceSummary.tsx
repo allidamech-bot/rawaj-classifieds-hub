@@ -1,16 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Archive,
-  BadgeCheck,
-  CheckCircle2,
-  CircleDashed,
-  Eye,
-  FileWarning,
-  MapPin,
-  Pencil,
-  Plus,
-  Store,
-} from "lucide-react";
+import { BadgeCheck, CheckCircle2, Eye, MapPin, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -26,10 +15,6 @@ interface OwnerStoreWorkspaceSummaryProps {
   verified?: boolean;
   completeness: number;
   approvedCount: number;
-  pendingCount: number;
-  needsEditCount: number;
-  closedCount: number;
-  onStatusChange?: (status: "approved" | "pending" | "needs_edit" | "closed") => void;
 }
 
 export function OwnerStoreWorkspaceSummary({
@@ -43,10 +28,6 @@ export function OwnerStoreWorkspaceSummary({
   verified = false,
   completeness,
   approvedCount,
-  pendingCount,
-  needsEditCount,
-  closedCount,
-  onStatusChange,
 }: OwnerStoreWorkspaceSummaryProps) {
   const { text } = useUiPreferences();
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
@@ -54,41 +35,6 @@ export function OwnerStoreWorkspaceSummary({
   const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
   const showCover = Boolean(coverUrl && failedCoverUrl !== coverUrl);
   const avatarFallback = displayName.trim().slice(0, 1).toUpperCase() || "R";
-
-  const metrics = [
-    {
-      key: "approved",
-      label: text("نشطة", "Live"),
-      value: approvedCount,
-      icon: Store,
-      tone: "live",
-      status: "approved",
-    },
-    {
-      key: "pending",
-      label: text("قيد المراجعة", "In review"),
-      value: pendingCount,
-      icon: CircleDashed,
-      tone: "pending",
-      status: "pending",
-    },
-    {
-      key: "needs-edit",
-      label: text("تحتاج تدخلاً", "Needs action"),
-      value: needsEditCount,
-      icon: FileWarning,
-      tone: "action",
-      status: "needs_edit",
-    },
-    {
-      key: "closed",
-      label: text("مغلقة", "Closed"),
-      value: closedCount,
-      icon: Archive,
-      tone: "closed",
-      status: "closed",
-    },
-  ] as const;
 
   return (
     <section
@@ -110,7 +56,6 @@ export function OwnerStoreWorkspaceSummary({
       ) : null}
 
       <div className="rawaj-owner-workspace-summary__topline">
-        <span>{text("مركز متجرك", "Your store center")}</span>
         <strong data-tone={approvedCount > 0 ? "live" : "setup"}>
           <CheckCircle2 aria-hidden="true" />
           {approvedCount > 0
@@ -205,25 +150,6 @@ export function OwnerStoreWorkspaceSummary({
           <Pencil aria-hidden="true" />
           <span>{text("تعديل الهوية", "Edit identity")}</span>
         </Link>
-      </div>
-
-      <div
-        className="rawaj-owner-workspace-summary__metrics"
-        aria-label={text("ملخص حالات الإعلانات", "Listing status summary")}
-      >
-        {metrics.map(({ key, label, value, icon: Icon, tone, status }) => (
-          <button
-            key={key}
-            type="button"
-            data-tone={tone}
-            onClick={() => onStatusChange?.(status)}
-            disabled={!onStatusChange}
-          >
-            <Icon aria-hidden="true" />
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </button>
-        ))}
       </div>
     </section>
   );
