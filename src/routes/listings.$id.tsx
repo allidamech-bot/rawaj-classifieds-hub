@@ -506,16 +506,25 @@ function ListingDetailsPage() {
                 />
                 <div className="rawaj-detail-summary__badges">
                   {listing.isFeatured ? <Badge>{text("مميز", "Featured")}</Badge> : null}
-                  <span>{breadcrumbItems.at(-1)?.label ?? listingCategory}</span>
                   <span>{text("متاح", "Available")}</span>
                 </div>
                 <h1>{listing.title}</h1>
-                <div className="rawaj-detail-summary__meta">
-                  <span>
-                    <MapPin aria-hidden="true" />
-                    {locationLabel}
-                  </span>
-                  <span>
+                <div className="rawaj-detail-summary__essentials">
+                  <div className="rawaj-detail-summary__location">
+                    <span aria-hidden="true">
+                      <MapPin />
+                    </span>
+                    <div>
+                      <strong>{locationLabel}</strong>
+                      <small>
+                        {text(
+                          "اتفق على نقطة عامة وآمنة للمعاينة.",
+                          "Agree on a safe public inspection point.",
+                        )}
+                      </small>
+                    </div>
+                  </div>
+                  <span className="rawaj-detail-summary__date">
                     <Clock aria-hidden="true" />
                     {formatDate(listing.createdAt, language)}
                   </span>
@@ -532,14 +541,14 @@ function ListingDetailsPage() {
                       "Key listing details at a glance",
                     )}
                   />
-                  <div className="rawaj-detail-specs">
+                  <dl className="rawaj-detail-specs">
                     {categoryRows.map(([label, value]) => (
                       <div key={label}>
-                        <span>{label}</span>
-                        <strong>{value}</strong>
+                        <dt>{label}</dt>
+                        <dd>{value}</dd>
                       </div>
                     ))}
-                  </div>
+                  </dl>
                 </section>
               ) : null}
 
@@ -558,27 +567,6 @@ function ListingDetailsPage() {
                       "The seller has not added a detailed description.",
                     )}
                 </p>
-              </section>
-
-              <section className="rawaj-detail-section">
-                <SectionHeading
-                  title={text("الموقع", "Location")}
-                  subtitle={text("الموقع المعلن للسلعة", "Advertised item location")}
-                />
-                <div className="rawaj-detail-location">
-                  <span>
-                    <MapPin aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>{locationLabel}</strong>
-                    <p>
-                      {text(
-                        "اتفق على نقطة عامة وآمنة للمعاينة.",
-                        "Agree on a safe public inspection point.",
-                      )}
-                    </p>
-                  </div>
-                </div>
               </section>
 
               <ListingSafetyAndAlert
@@ -762,7 +750,6 @@ function buildListingBreadcrumbItems({
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="rawaj-detail-section__heading">
-      <span aria-hidden="true" />
       <h2>{title}</h2>
       <p>{subtitle}</p>
     </div>

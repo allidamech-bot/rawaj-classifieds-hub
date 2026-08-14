@@ -11,6 +11,7 @@ import {
   Copy,
   Eye,
   Heart,
+  MapPin,
   MessageCircle,
   Pencil,
   Plus,
@@ -340,13 +341,6 @@ function MyListingsPage() {
     });
   }
 
-  function openInventoryStatus(status: "approved" | "pending" | "needs_edit" | "closed") {
-    setActiveTab(status);
-    window.requestAnimationFrame(() => {
-      document.getElementById("rawaj-owner-inventory-title")?.scrollIntoView({ block: "start" });
-    });
-  }
-
   async function handleDuplicateListing(listing: ClassifiedListing) {
     if (!profileId || duplicatingListingId) return;
     setDuplicatingListingId(listing.id);
@@ -494,11 +488,7 @@ function MyListingsPage() {
           ratingAverage={ratingAverage}
           ratingCount={ratingCount}
           approvedCount={grouped.approved.length}
-          pendingCount={grouped.pending.length}
-          needsEditCount={grouped.needs_edit.length}
-          closedCount={grouped.closed.length}
           completeness={storeCompleteness}
-          onOwnerStatusChange={openInventoryStatus}
         />
 
         {latestDraft ? (
@@ -949,32 +939,27 @@ function OwnerListingPerformance({ listing }: { listing: ClassifiedListing; lang
     >
       {hasActivity ? (
         <div className="grid flex-1 grid-flow-col auto-cols-fr gap-1.5">
-          {visibleMetrics.map((metric) => (
-            <div key={metric.key} data-owner-metric={metric.key} className="text-center">
-              <p className="flex items-center justify-center gap-1 text-[9px] text-muted-foreground">
+          {visibleMetrics.map((metric) =>
+            metric.key === "unread" ? (
+              <Link key={metric.key} to="/chats" data-owner-metric={metric.key}>
                 {metric.icon}
-                <span>{formatOwnerMetric(metric.value)}</span>
-              </p>
-              <p className="mt-0.5 truncate text-[8px] font-semibold text-muted-foreground">
-                {metric.label}
-              </p>
-            </div>
-          ))}
+                <strong>{formatOwnerMetric(metric.value)}</strong>
+                <span>{metric.label}</span>
+              </Link>
+            ) : (
+              <div key={metric.key} data-owner-metric={metric.key}>
+                {metric.icon}
+                <strong>{formatOwnerMetric(metric.value)}</strong>
+                <span>{metric.label}</span>
+              </div>
+            ),
+          )}
         </div>
       ) : (
         <p className="flex-1 text-[10px] font-semibold text-muted-foreground">
           {text("لا يوجد تفاعل بعد", "No activity yet")}
         </p>
       )}
-      {(listing.unreadMessageCount ?? 0) > 0 ? (
-        <Link
-          to="/chats"
-          className="inline-flex min-h-8 items-center gap-1 rounded-lg bg-warning/10 px-2 text-[9px] font-bold text-foreground"
-        >
-          <BellRing className="h-3.5 w-3.5 text-warning" />
-          {formatOwnerMetric(listing.unreadMessageCount ?? 0)}
-        </Link>
-      ) : null}
     </div>
   );
 }
@@ -1050,13 +1035,6 @@ function ownerListingExpiryInsight(
     ),
     description: text("مدة الإعلان فعالة حالياً.", "The listing duration is currently active."),
   };
-}
-
-function ownerExpiryInsightClassName(tone: OwnerExpiryInsight["tone"]): string {
-  if (tone === "danger") return "border-destructive/25 bg-destructive/10 text-destructive";
-  if (tone === "warning") return "border-warning/30 bg-warning/10 text-foreground";
-  if (tone === "safe") return "border-emerald-trust/25 bg-emerald-trust/10 text-foreground";
-  return "border-border/70 bg-muted-surface text-foreground";
 }
 
 function daysUntilExpiry(value: string | null | undefined): number | null {
@@ -1402,71 +1380,56 @@ function StoreListingCard({
             className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
           />
         </div>
-        <div className="space-y-2 p-4">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="line-clamp-2 text-sm font-bold leading-5 text-primary">
-              {listing.title}
-            </h2>
+        <div className="rawaj-owner-listing-card__content">
+          <h2>{listing.title}</h2>
+          <div className="rawaj-owner-listing-card__facts">
+            <strong>
+              {formatPriceLocalized(
+                listing.price ?? 0,
+                listing.priceType,
+                language,
+                listing.currency,
+              )}
+            </strong>
+            <span>
+              {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+            </span>
+            <span>
+              <MapPin aria-hidden="true" />
+              {governorateName(
+                listing.governorateId,
+                listing.governorateNameAr ?? undefined,
+                language,
+              )}
+            </span>
           </div>
-          {listing.status === "draft" && (
-            <p className="rounded-lg bg-gold/10 p-2 text-[11px] font-semibold text-primary">
-              {text("مسودة محفوظة", "Saved draft")} · {text("آخر حفظ", "Last saved")}{" "}
-              {formatSavedAt(listing.updatedAt, language)}
-            </p>
-          )}
-          {listing.reservedAt ? (
-            <p className="rounded-lg bg-warning/10 p-2 text-[11px] font-semibold text-foreground">
-              {text("هذا الإعلان محجوز حالياً.", "This listing is currently reserved.")}
-            </p>
-          ) : null}
-          {listing.status === "approved" && (
-            <p className="rounded-lg bg-emerald-trust/10 p-2 text-[11px] font-semibold text-foreground">
-              {listing.renewedAt
-                ? `${text("آخر تأكيد للتوفر", "Availability last confirmed")}: ${formatSavedAt(listing.renewedAt, language)}`
-                : text(
-                    "لم يتم تأكيد استمرار التوفر بعد.",
-                    "Availability has not been confirmed yet.",
-                  )}
-            </p>
-          )}
-          {expiryInsight ? (
-            <div
-              data-owner-expiry-insight={expiryInsight.tone}
-              className={
-                "rounded-xl border p-2.5 " + ownerExpiryInsightClassName(expiryInsight.tone)
-              }
-            >
-              <p className="flex items-center gap-1.5 text-[11px] font-extrabold">
-                <Clock3 className="h-3.5 w-3.5" />
+          <div className="rawaj-owner-listing-card__signals">
+            {listing.status === "draft" ? (
+              <span data-tone="draft">
+                <Pencil aria-hidden="true" />
+                {text("مسودة", "Draft")} · {formatSavedAt(listing.updatedAt, language)}
+              </span>
+            ) : null}
+            {listing.reservedAt ? (
+              <span data-tone="warning">
+                <Clock3 aria-hidden="true" />
+                {text("محجوز حالياً", "Currently reserved")}
+              </span>
+            ) : listing.status === "approved" ? (
+              <span data-tone={listing.renewedAt ? "success" : "neutral"}>
+                <CircleCheckBig aria-hidden="true" />
+                {listing.renewedAt
+                  ? `${text("التوفر مؤكّد", "Availability confirmed")} · ${formatSavedAt(listing.renewedAt, language)}`
+                  : text("بانتظار تأكيد التوفر", "Availability not confirmed")}
+              </span>
+            ) : null}
+            {expiryInsight ? (
+              <span data-tone={expiryInsight.tone} title={expiryInsight.description}>
+                <Clock3 aria-hidden="true" />
                 {expiryInsight.title}
-              </p>
-              <p className="mt-1 text-[10px] leading-4 opacity-80">
-                {expiryInsight.description}
-                {listing.expiresAt
-                  ? " · " +
-                    text("التاريخ", "Date") +
-                    ": " +
-                    formatSavedAt(listing.expiresAt, language)
-                  : ""}
-              </p>
-            </div>
-          ) : null}
-          <div className="text-lg font-bold text-foreground">
-            {formatPriceLocalized(
-              listing.price ?? 0,
-              listing.priceType,
-              language,
-              listing.currency,
-            )}
+              </span>
+            ) : null}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)} ·{" "}
-            {governorateName(
-              listing.governorateId,
-              listing.governorateNameAr ?? undefined,
-              language,
-            )}
-          </p>
           <OwnerListingPerformance listing={listing} language={language} />
           {listing.status === "rejected" && (
             <div className="rounded-xl border border-destructive/20 bg-destructive/8 p-3">
@@ -1503,17 +1466,18 @@ function StoreListingCard({
               {reservationError}
             </p>
           )}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="rawaj-owner-listing-card__actions">
+            <div>
               {listing.status === "approved" ? (
                 <Link
                   to="/listings/$id"
                   params={{ id: listing.id }}
                   aria-label={text("عرض الإعلان", "View listing")}
                   title={text("عرض الإعلان", "View listing")}
-                  className="grid h-10 w-10 place-items-center rounded-xl bg-muted-surface text-foreground transition hover:bg-secondary hairline"
+                  data-tone="primary"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye aria-hidden="true" />
+                  <span>{text("عرض", "View")}</span>
                 </Link>
               ) : null}
               {canShareCard ? (
@@ -1522,21 +1486,22 @@ function StoreListingCard({
                   onClick={() => queueListingSharePrompt(listing.id)}
                   aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
                   title={text("مشاركة بطاقة الإعلان", "Share listing card")}
-                  className="grid h-10 w-10 place-items-center rounded-xl bg-muted-surface text-foreground transition hover:bg-secondary hairline"
+                  data-tone="share"
                 >
-                  <Share2 className="h-4 w-4" aria-hidden="true" />
+                  <Share2 aria-hidden="true" />
+                  <span>{text("بطاقة", "Card")}</span>
                 </button>
               ) : null}
               {boostEligible ? (
                 <button
                   type="button"
                   onClick={() => queueSearchBoostIntent(listing.id)}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-500/12 px-3 text-xs font-black text-amber-900 transition hover:bg-amber-500/20 hairline dark:text-amber-100"
+                  data-tone="boost"
                   aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
                   title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
                 >
-                  <Rocket className="h-4 w-4" aria-hidden="true" />
-                  Boost
+                  <Rocket aria-hidden="true" />
+                  <span>Boost</span>
                 </button>
               ) : null}
               {canEdit ? (
@@ -1545,28 +1510,19 @@ function StoreListingCard({
                   params={{ id: listing.id }}
                   aria-label={text("تعديل الإعلان", "Edit listing")}
                   title={text("تعديل الإعلان", "Edit listing")}
-                  className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary transition hover:bg-primary/15 hairline"
+                  data-tone="edit"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil aria-hidden="true" />
+                  <span>{text("تعديل", "Edit")}</span>
                 </Link>
               ) : null}
-              <button
-                type="button"
-                disabled={duplicating}
-                onClick={() => void onDuplicate(listing)}
-                aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
-                title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
-                className="grid h-10 w-10 place-items-center rounded-xl bg-muted-surface text-foreground transition hover:bg-secondary hairline disabled:opacity-50"
-              >
-                <Copy className={`h-4 w-4 ${duplicating ? "animate-pulse" : ""}`} />
-              </button>
             </div>
             <button
               type="button"
               aria-expanded={managementOpen}
               aria-controls={`${listing.id}-management-panel`}
               onClick={() => setManagementOpen((current) => !current)}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-muted-surface px-3 text-[10px] font-bold text-foreground hairline"
+              className="rawaj-owner-listing-card__manage"
             >
               {text("إدارة الإعلان", "Manage listing")}
               <ChevronDown
@@ -1582,6 +1538,19 @@ function StoreListingCard({
               aria-label={text("إجراءات الإعلان", "Listing actions")}
               className="rawaj-owner-listing-management space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline"
             >
+              <button
+                type="button"
+                disabled={duplicating}
+                onClick={() => void onDuplicate(listing)}
+                aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
+                title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
+                className="rawaj-owner-listing-management__duplicate"
+              >
+                <Copy className={duplicating ? "animate-pulse" : ""} aria-hidden="true" />
+                {duplicating
+                  ? text("جارٍ إنشاء النسخة", "Creating copy")
+                  : text("نسخ كمسودة", "Duplicate as draft")}
+              </button>
               {canReducePrice ? (
                 <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
                   <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
