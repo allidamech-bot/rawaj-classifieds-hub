@@ -26,6 +26,7 @@ import type {
 } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { buildListingStructuredData } from "@/lib/listing-structured-data";
+import { queueListingSharePrompt } from "@/lib/listing-share-growth";
 import { buildBreadcrumbStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { phoneHref, whatsappHref } from "@/lib/contact-phone";
 import {
@@ -298,6 +299,12 @@ function ListingDetailsPage() {
   async function shareListing() {
     if (!listing) return;
     setActionMessage(null);
+
+    if (auth.status === "signedIn" && auth.profile?.id === listing.ownerId) {
+      queueListingSharePrompt(listing.id);
+      return;
+    }
+
     const url = publicListingShareUrl(window.location.origin, listing.id);
 
     try {

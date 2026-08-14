@@ -29,6 +29,8 @@ test("all six Syria share-card templates render at exact square or story dimensi
   for (const id of ["classic", "quick-sale", "minimal", "emerald", "premium", "story"]) {
     assert.match(templates, new RegExp(`id: "${id}"`));
   }
+  assert.equal((templates.match(/format: "square",/g) ?? []).length, 5);
+  assert.equal((templates.match(/format: "story",/g) ?? []).length, 1);
   assert.match(renderer, /const CARD_WIDTH = 1080/);
   assert.match(renderer, /const SQUARE_HEIGHT = 1080/);
   assert.match(renderer, /const STORY_HEIGHT = 1920/);
@@ -37,6 +39,58 @@ test("all six Syria share-card templates render at exact square or story dimensi
   assert.match(renderer, /"Cairo"/);
   assert.match(renderer, /rawa-j\.com/);
   assert.doesNotMatch(renderer, /sa\.rawa-j\.com|SAR/);
+  for (const rendererName of [
+    "drawClassic",
+    "drawQuickSale",
+    "drawMinimal",
+    "drawEmerald",
+    "drawPremium",
+    "drawStory",
+  ]) {
+    assert.match(renderer, new RegExp(`function ${rendererName}\\(`));
+  }
+  assert.equal((renderer.match(/drawHighlights\(ctx, copy\.highlights/g) ?? []).length, 6);
+});
+
+test("listing detail routes owner Share into the existing card flow and preserves public sharing", () => {
+  const route = read("src/routes/listings.$id.tsx");
+  assert.match(route, /import \{ queueListingSharePrompt \} from "@\/lib\/listing-share-growth"/);
+  assert.match(
+    route,
+    /auth\.status === "signedIn" && auth\.profile\?\.id === listing\.ownerId[\s\S]*?queueListingSharePrompt\(listing\.id\);[\s\S]*?return;/,
+  );
+  assert.match(
+    route,
+    /const url = publicListingShareUrl\(window\.location\.origin, listing\.id\);[\s\S]*?navigator\.share[\s\S]*?copyPublicListingUrl\(url\)/,
+  );
+});
+
+test("owner listing cards expose Share Card only for approved and pending review", () => {
+  const ownerListings = read("src/routes/profile/listings.tsx");
+  assert.match(
+    ownerListings,
+    /const canShareCard = listing\.status === "approved" \|\| listing\.status === "pending_review";/,
+  );
+  assert.match(ownerListings, /\{canShareCard \? \([\s\S]*?queueListingSharePrompt\(listing\.id\)/);
+  assert.match(ownerListings, /مشاركة بطاقة الإعلان/);
+  assert.match(ownerListings, /Share listing card/);
+  assert.match(ownerListings, /<Share2/);
+  for (const excluded of ["draft", "rejected", "sold", "rented", "unavailable", "expired", "archived"]) {
+    assert.doesNotMatch(
+      ownerListings.match(/const canShareCard =[^;]+;/)?.[0] ?? "",
+      new RegExp(`"${excluded}"`),
+    );
+  }
+});
+
+test("share-card highlights stay centralized and Syria-only", () => {
+  const renderer = read("src/lib/listing-share-card-renderer.ts");
+  const helper = read("src/lib/listing-share-highlights.ts");
+  assert.match(renderer, /listingShareHighlights\(/);
+  assert.match(renderer, /resolveCategoryFieldKind\(null, null, listing\)/);
+  assert.match(helper, /\.slice\(0, 3\)/);
+  assert.match(helper, /like_new: \["كالجديد", "Like new"\]/);
+  assert.doesNotMatch(`${renderer}\n${helper}`, /sa\.rawa-j\.com|SAR|rawaj-saudi/i);
 });
 
 test("approved owner notifications and owner listing cards expose Share and eligible Boost actions", () => {
