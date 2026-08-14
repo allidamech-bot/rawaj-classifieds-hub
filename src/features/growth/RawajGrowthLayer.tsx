@@ -56,10 +56,10 @@ export default function RawajGrowthLayer() {
         if (cancelled) return;
         if (!result.ok) {
           setNotice(
-            text(
-              "طھظ… ط¥ط±ط³ط§ظ„ ط§ظ„ط¥ط¹ظ„ط§ظ†طŒ ظ„ظƒظ† طھط¹ط°ط± طھط¬ظ‡ظٹط² ط¨ط·ط§ظ‚ط© ط§ظ„ظ…ط´ط§ط±ظƒط© ط§ظ„ط¢ظ†.",
-              "The listing was submitted, but the share card could not be prepared right now.",
-            ),
+              text(
+                "تم إرسال الإعلان، لكن تعذر تجهيز بطاقة المشاركة الآن.",
+                "The listing was submitted, but the share card could not be prepared right now.",
+              ),
           );
           return;
         }
@@ -114,9 +114,9 @@ export default function RawajGrowthLayer() {
     if (!listing) return url;
     return [
       listing.title,
-      priceLabel ? `${text("ط§ظ„ط³ط¹ط±", "Price")}: ${priceLabel}` : null,
-      locationLabel ? `${text("ط§ظ„ظ…ظˆظ‚ط¹", "Location")}: ${locationLabel}` : null,
-      text("ط´ط§ظ‡ط¯ ط§ظ„ط¥ط¹ظ„ط§ظ† ط¹ظ„ظ‰ ط±ظˆط§ط¬:", "View the listing on RAWAJ:"),
+      priceLabel ? `${text("السعر", "Price")}: ${priceLabel}` : null,
+      locationLabel ? `${text("الموقع", "Location")}: ${locationLabel}` : null,
+      text("شاهد الإعلان على رواج:", "View the listing on RAWAJ:"),
       url,
     ]
       .filter(Boolean)
@@ -152,13 +152,13 @@ export default function RawajGrowthLayer() {
           !file || !navigator.canShare || safelyCanShare(() => navigator.canShare(shareData));
         if (canShareFiles) {
           await navigator.share(shareData);
-          setNotice(text("طھظ… ظپطھط­ ظ†ط§ظپط°ط© ط§ظ„ظ…ط´ط§ط±ظƒط©.", "Share sheet opened."));
+          setNotice(text("تم فتح نافذة المشاركة.", "Share sheet opened."));
           return;
         }
         await navigator.share({ title: listing.title, text: message });
         setNotice(
           text(
-            "طھظ… ظپطھط­ ظ†ط§ظپط°ط© ط§ظ„ظ…ط´ط§ط±ظƒط© ط¨ط§ظ„ط±ط§ط¨ط·.",
+            "تم فتح نافذة المشاركة بالرابط.",
             "Share sheet opened with the link.",
           ),
         );
@@ -168,14 +168,14 @@ export default function RawajGrowthLayer() {
       await copyText(message);
       setNotice(
         text(
-          "طھظ… طھظ†ط²ظٹظ„ ط§ظ„ط¨ط·ط§ظ‚ط© ظˆظ†ط³ط® ظ†طµ ط§ظ„ظ…ط´ط§ط±ظƒط©.",
+          "تم تنزيل البطاقة ونسخ نص المشاركة.",
           "The card was downloaded and the share text was copied.",
         ),
       );
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setNotice(
-        text("طھط¹ط°ط± ظپطھط­ ط§ظ„ظ…ط´ط§ط±ظƒط© ط§ظ„ط¢ظ†.", "Could not open sharing right now."),
+        text("تعذر فتح المشاركة الآن.", "Could not open sharing right now."),
       );
     } finally {
       setBusyAction(null);
@@ -197,10 +197,10 @@ export default function RawajGrowthLayer() {
     try {
       const blob = await buildCardBlob("download");
       downloadBlob(blob, `rawaj-${listing.id}-${selectedTemplate.id}.png`);
-      setNotice(text("طھظ… طھظ†ط²ظٹظ„ ط¨ط·ط§ظ‚ط© ط§ظ„ط¥ط¹ظ„ط§ظ†.", "Listing card downloaded."));
+      setNotice(text("تم تنزيل بطاقة الإعلان.", "Listing card downloaded."));
     } catch {
       setNotice(
-        text("طھط¹ط°ط± ط¥ظ†ط´ط§ط، ط§ظ„طµظˆط±ط© ط§ظ„ط¢ظ†.", "Could not create the image right now."),
+        text("تعذر إنشاء الصورة الآن.", "Could not create the image right now."),
       );
     } finally {
       setBusyAction(null);
@@ -212,9 +212,9 @@ export default function RawajGrowthLayer() {
     setBusyAction("copy");
     try {
       await copyText(shareUrlFor("copy"));
-      setNotice(text("طھظ… ظ†ط³ط® ط±ط§ط¨ط· ط§ظ„ط¥ط¹ظ„ط§ظ†.", "Listing link copied."));
+       setNotice(text("تم نسخ رابط الإعلان.", "Listing link copied."));
     } catch {
-      setNotice(text("طھط¹ط°ط± ظ†ط³ط® ط§ظ„ط±ط§ط¨ط·.", "Could not copy the link."));
+       setNotice(text("تعذر نسخ الرابط.", "Could not copy the link."));
     } finally {
       setBusyAction(null);
     }
@@ -240,17 +240,17 @@ export default function RawajGrowthLayer() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold text-brand-orange">
-              {text("ط¥ط¹ظ„ط§ظ†ظƒ ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©", "Your listing is under review")}
+              {text("إعلانك قيد المراجعة", "Your listing is under review")}
             </p>
             <h2 id="rawaj-share-prompt-title" className="mt-0.5 text-xl font-black text-foreground">
               {text(
-                "ط´ط§ط±ظƒ ط¥ط¹ظ„ط§ظ†ظƒ ظ…ظ† ط§ظ„ط¢ظ† ظˆط§ط¬ط°ط¨ ط§ظ„ظ…ظ‡طھظ…ظٹظ†",
+                "شارك إعلانك من الآن واجذب المهتمين",
                 "Share now and start attracting buyers",
               )}
             </h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
               {text(
-                "ط§ط®طھط± طھطµظ…ظٹظ…ط§ظ‹. ظ†ظپط³ ط§ظ„ط±ط§ط¨ط· ظٹط¹ظ…ظ„ ط§ظ„ط¢ظ† ط¨طµظپط­ط© ط¢ظ…ظ†ط©طŒ ظˆط¨ط¹ط¯ ط§ط¹طھظ…ط§ط¯ ط§ظ„ط¥ط¯ط§ط±ط© ظٹظپطھط­ ط§ظ„ط¥ط¹ظ„ط§ظ† ط§ظ„ظƒط§ظ…ظ„ طھظ„ظ‚ط§ط¦ظٹط§ظ‹.",
+                "اختر تصميماً. نفس الرابط يعمل الآن بصفحة آمنة، وبعد اعتماد الإدارة يفتح الإعلان الكامل تلقائياً.",
                 "Choose a design. The same link works now with a safe page, then automatically opens the full listing after approval.",
               )}
             </p>
@@ -261,7 +261,7 @@ export default function RawajGrowthLayer() {
             onClick={close}
             disabled={Boolean(busyAction)}
             className="rawaj-icon-button h-10 w-10 shrink-0 disabled:opacity-40"
-            aria-label={text("ط¥ط؛ظ„ط§ظ‚", "Close")}
+            aria-label={text("إغلاق", "Close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -269,24 +269,24 @@ export default function RawajGrowthLayer() {
         <div className="p-4 sm:p-6">
           {loadingListing ? (
             <div className="grid min-h-56 place-items-center rounded-[1.5rem] border border-border/60 bg-card text-sm font-bold text-muted-foreground">
-              {text("ظ†ط¬ظ‡ط² ط¨ط·ط§ظ‚ط§طھ ط¥ط¹ظ„ط§ظ†ظƒ...", "Preparing your listing cards...")}
+              {text("نجهز بطاقات إعلانك...", "Preparing your listing cards...")}
             </div>
           ) : listing ? (
             <>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-black text-foreground">
-                    {text("ط§ط®طھط± ط´ظƒظ„ ط§ظ„ط¨ط·ط§ظ‚ط©", "Choose a card design")}
+                    {text("اختر شكل البطاقة", "Choose a card design")}
                   </h3>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {text(
-                      "ط³طھ ط¨ط·ط§ظ‚ط§طھ ط¬ط§ظ‡ط²ط© ظƒط¨ط¯ط§ظٹط©طŒ ط¨ظٹظ†ظ‡ط§ ظ…ظ‚ط§ط³ ط³طھظˆط±ظٹ.",
+                      "ست بطاقات جاهزة كبداية، بينها مقاس ستوري.",
                       "Six starter designs, including a story format.",
                     )}
                   </p>
                 </div>
                 <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">
-                  6 {text("طھطµط§ظ…ظٹظ…", "designs")}
+                  6 {text("تصاميم", "designs")}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -309,7 +309,7 @@ export default function RawajGrowthLayer() {
                   className="rawaj-button-primary min-h-12 justify-center gap-2 rounded-2xl px-4 py-3 disabled:opacity-50"
                 >
                   <Share2 className="h-4 w-4" />
-                  {text("ط´ط§ط±ظƒ ط§ظ„ط¨ط·ط§ظ‚ط©", "Share card")}
+                  {text("شارك البطاقة", "Share card")}
                 </button>
                 <button
                   type="button"
@@ -330,7 +330,7 @@ export default function RawajGrowthLayer() {
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Download className="h-4 w-4" />
-                    {text("طھظ†ط²ظٹظ„", "Download")}
+                    {text("تنزيل", "Download")}
                   </span>
                 </button>
                 <button
@@ -341,7 +341,7 @@ export default function RawajGrowthLayer() {
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Copy className="h-4 w-4" />
-                    {text("ظ†ط³ط® ط§ظ„ط±ط§ط¨ط·", "Copy link")}
+                    {text("نسخ الرابط", "Copy link")}
                   </span>
                 </button>
               </div>
@@ -355,7 +355,7 @@ export default function RawajGrowthLayer() {
             <div className="rounded-2xl border border-border p-5 text-sm text-muted-foreground">
               {notice ??
                 text(
-                  "طھط¹ط°ط± طھط­ظ…ظٹظ„ ط§ظ„ط¥ط¹ظ„ط§ظ† ط§ظ„ط¢ظ†.",
+                  "تعذر تحميل الإعلان الآن.",
                   "Could not load the listing right now.",
                 )}
             </div>
