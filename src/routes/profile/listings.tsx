@@ -1424,9 +1424,12 @@ function StoreListingCard({
               </span>
             ) : null}
             {expiryInsight ? (
-              <span data-tone={expiryInsight.tone} title={expiryInsight.description}>
+              <span data-tone={expiryInsight.tone}>
                 <Clock3 aria-hidden="true" />
-                {expiryInsight.title}
+                {expiryInsight.title} · {expiryInsight.description}
+                {listing.expiresAt
+                  ? ` · ${text("التاريخ", "Date")}: ${formatSavedAt(listing.expiresAt, language)}`
+                  : ""}
               </span>
             ) : null}
           </div>
@@ -1489,7 +1492,7 @@ function StoreListingCard({
                   data-tone="share"
                 >
                   <Share2 aria-hidden="true" />
-                  <span>{text("بطاقة", "Card")}</span>
+                  <span>{text("مشاركة", "Share")}</span>
                 </button>
               ) : null}
               {boostEligible ? (
