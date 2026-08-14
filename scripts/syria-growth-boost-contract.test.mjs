@@ -50,6 +50,22 @@ test("all six Syria share-card templates render at exact square or story dimensi
     assert.match(renderer, new RegExp(`function ${rendererName}\\(`));
   }
   assert.equal((renderer.match(/drawHighlights\(ctx, copy\.highlights/g) ?? []).length, 6);
+
+  const premium = renderer.slice(
+    renderer.indexOf("function drawPremium"),
+    renderer.indexOf("function drawStory"),
+  );
+  const premiumHighlights = premium.match(
+    /drawHighlights\(ctx, copy\.highlights, \d+, (\d+), \d+, (\d+),/,
+  );
+  const premiumCta = premium.match(/fillRound\(ctx, "#202126", \d+, (\d+),/);
+  assert.ok(premiumHighlights, "Premium highlight coordinates must remain explicit");
+  assert.ok(premiumCta, "Premium CTA coordinates must remain explicit");
+  const thirdHighlightBaseline = Number(premiumHighlights[1]) + Number(premiumHighlights[2]) * 2;
+  assert.ok(
+    Number(premiumCta[1]) - thirdHighlightBaseline >= 20,
+    "Premium CTA must leave clear space after the third highlight",
+  );
 });
 
 test("listing detail routes owner Share into the existing card flow and preserves public sharing", () => {

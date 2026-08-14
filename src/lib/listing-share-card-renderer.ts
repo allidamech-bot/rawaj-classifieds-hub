@@ -176,8 +176,8 @@ function drawPremium(
   drawText(ctx, copy.price, 944, 632, "#8F6A2D", 900, 35, language, "right");
   drawTextBlock(ctx, copy.location, 944, 705, 190, 32, 2, "#746E65", 600, language, "right");
   drawHighlights(ctx, copy.highlights, 944, 768, 190, 25, "#746E65", language, "right");
-  fillRound(ctx, "#202126", 744, 822, 210, 74, 12);
-  drawText(ctx, language === "en" ? "VIEW NOW" : "شاهد الآن", 849, 869, "#ECE5D8", 800, 23, language, "center");
+  fillRound(ctx, "#202126", 744, 842, 210, 74, 12);
+  drawText(ctx, language === "en" ? "VIEW NOW" : "شاهد الآن", 849, 889, "#ECE5D8", 800, 23, language, "center");
   drawText(ctx, "rawa-j.com", 988, 988, "#D9B66F", 700, 26, language, "right");
 }
 
