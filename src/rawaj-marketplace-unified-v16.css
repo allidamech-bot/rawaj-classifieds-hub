@@ -1,0 +1,881 @@
+/* RAWAJ Unified Marketplace V16
+ * Shared visual contract for Saudi + Syria.
+ * Keep this file byte-identical in both repositories.
+ * Presentation only: no API, Share, Boost, referral, permissions, or data changes.
+ */
+
+:root {
+  --r16-page: #181b1c;
+  --r16-page-soft: #1d2021;
+  --r16-card: #222627;
+  --r16-card-raised: #282d2e;
+  --r16-card-inset: #1b1f20;
+  --r16-line: rgba(255, 255, 255, 0.085);
+  --r16-line-strong: rgba(255, 255, 255, 0.15);
+  --r16-text: #f6f3ed;
+  --r16-muted: #a8b0ac;
+  --r16-soft: #cdd2cf;
+  --r16-forest: #123f36;
+  --r16-forest-deep: #0d342d;
+  --r16-gold: #d8ae5f;
+  --r16-gold-soft: #e8ca8d;
+  --r16-success: #7ed1b2;
+  --r16-danger: #e9a39b;
+  --r16-radius-lg: 1.18rem;
+  --r16-radius-md: 0.86rem;
+  --r16-radius-sm: 0.68rem;
+  --r16-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================================
+   Shared mobile header — protect the page title from crowding
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .rawaj-shell-header__inner--context,
+  .rawaj-shell-header__inner--workspace {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: 0.42rem !important;
+    min-height: 3.7rem !important;
+    padding-inline: 0.55rem !important;
+  }
+
+  .rawaj-shell-header__inner--context .rawaj-shell-header__brand,
+  .rawaj-shell-header__inner--workspace .rawaj-shell-header__brand {
+    width: 2.55rem !important;
+    min-width: 2.55rem !important;
+    overflow: visible !important;
+  }
+
+  .rawaj-shell-header__inner--context .rawaj-shell-header__brand .rawaj-brand-lockup > span:last-child,
+  .rawaj-shell-header__inner--workspace .rawaj-shell-header__brand .rawaj-brand-lockup > span:last-child {
+    display: none !important;
+  }
+
+  .rawaj-shell-header__inner--context .rawaj-brand-mark,
+  .rawaj-shell-header__inner--workspace .rawaj-brand-mark {
+    width: 2.3rem !important;
+    height: 2.3rem !important;
+  }
+
+  .rawaj-shell-header__inner--context .rawaj-shell-header__title,
+  .rawaj-shell-header__inner--workspace .rawaj-shell-header__title {
+    position: absolute !important;
+    inset-inline-start: 50% !important;
+    width: min(45vw, 11rem) !important;
+    max-width: calc(100% - 9.4rem) !important;
+    transform: translateX(-50%) !important;
+    text-align: center !important;
+    pointer-events: none !important;
+  }
+
+  [dir="rtl"] .rawaj-shell-header__inner--context .rawaj-shell-header__title,
+  [dir="rtl"] .rawaj-shell-header__inner--workspace .rawaj-shell-header__title {
+    transform: translateX(50%) !important;
+  }
+
+  .rawaj-shell-header__title h1,
+  .rawaj-shell-header__title p {
+    overflow: hidden !important;
+    font-size: 0.86rem !important;
+    font-weight: 850 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .rawaj-shell-header__actions {
+    gap: 0.28rem !important;
+  }
+
+  .rawaj-shell-header__back,
+  .rawaj-shell-header__actions > .relative > button,
+  .rawaj-header-admin {
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    min-width: 2.45rem !important;
+    min-height: 2.45rem !important;
+    border-radius: 0.72rem !important;
+  }
+}
+
+/* =========================================================
+   MY STORE — compact, coherent owner dashboard
+   ========================================================= */
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] {
+  background:
+    radial-gradient(circle at 88% 5%, rgba(216, 174, 95, 0.055), transparent 24rem),
+    radial-gradient(circle at 8% 24%, rgba(18, 63, 54, 0.14), transparent 30rem),
+    var(--r16-page) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
+  width: min(100%, 76rem) !important;
+  max-width: 76rem !important;
+  gap: 0.72rem !important;
+  padding-inline: 0.7rem !important;
+  padding-bottom: 8.8rem !important;
+  color: var(--r16-text) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary {
+  border: 1px solid rgba(216, 174, 95, 0.2) !important;
+  border-radius: var(--r16-radius-lg) !important;
+  background:
+    radial-gradient(circle at 92% 6%, rgba(232, 202, 141, 0.12), transparent 30%),
+    linear-gradient(145deg, #16483e 0%, var(--r16-forest) 50%, #182724 100%) !important;
+  box-shadow: var(--r16-shadow) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__body {
+  gap: 1rem !important;
+  padding: 0.45rem 0.9rem 0.78rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__topline {
+  min-height: 2.4rem !important;
+  padding: 0.58rem 0.9rem 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__avatar {
+  width: 4rem !important;
+  height: 4rem !important;
+  flex-basis: 4rem !important;
+  border-radius: 1rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__name-row h1 {
+  color: #fff !important;
+  font-size: clamp(1.18rem, 3vw, 1.55rem) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__bio {
+  max-width: 40rem !important;
+  margin-top: 0.28rem !important;
+  color: rgba(245, 243, 237, 0.68) !important;
+  font-size: 0.7rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions {
+  gap: 0.42rem !important;
+  padding: 0 0.9rem 0.85rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions a {
+  min-height: 2.62rem !important;
+  border-radius: 0.78rem !important;
+  font-size: 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-smart-insights :is(button, a),
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] [data-owner-performance-overview="true"],
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory {
+  border-color: var(--r16-line) !important;
+  color: var(--r16-text) !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] [data-owner-performance-overview="true"] {
+  border-radius: 0.95rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] [data-owner-performance-overview="true"] > button {
+  min-height: 3.85rem !important;
+  padding: 0.7rem 0.82rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory {
+  border-radius: 1.08rem !important;
+  padding: 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header {
+  padding: 0.08rem 0.08rem 0.65rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header h2 {
+  color: var(--r16-text) !important;
+  font-size: 1.08rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header span {
+  color: var(--r16-muted) !important;
+  font-size: 0.67rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs {
+  gap: 0.2rem !important;
+  padding: 0.25rem !important;
+  border-color: var(--r16-line) !important;
+  border-radius: 0.82rem !important;
+  background: var(--r16-card-inset) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs button {
+  min-height: 2.32rem !important;
+  min-width: 4.8rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.64rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs button:is([aria-pressed="true"], [data-active="true"]) {
+  color: #17201e !important;
+  background: #f2eee4 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-sticky {
+  gap: 0.46rem !important;
+  margin: 0.58rem 0 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar {
+  gap: 0.38rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search,
+  .rawaj-owner-listings-toolbar__select,
+  .rawaj-owner-listings-toolbar__filter-toggle,
+  .rawaj-owner-listings-toolbar__select-visible
+) {
+  min-height: 2.58rem !important;
+  border-color: var(--r16-line) !important;
+  border-radius: 0.7rem !important;
+  color: var(--r16-soft) !important;
+  background: var(--r16-card-inset) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__add {
+  width: 2.58rem !important;
+  height: 2.58rem !important;
+  min-height: 2.58rem !important;
+  border-radius: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-grid {
+  gap: 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card {
+  overflow: hidden !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 1rem !important;
+  color: var(--r16-text) !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card .rawaj-product-media {
+  min-height: 0 !important;
+  aspect-ratio: 2 / 1 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--r16-line) !important;
+  background: #101314 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content {
+  gap: 0.42rem !important;
+  padding: 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content h2 {
+  font-size: 0.9rem !important;
+  line-height: 1.42 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__facts {
+  gap: 0.2rem 0.55rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__facts strong {
+  margin-bottom: 0.05rem !important;
+  color: var(--r16-gold-soft) !important;
+  font-size: 0.98rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.3rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span {
+  width: auto !important;
+  min-height: 0 !important;
+  flex: 1 1 10rem !important;
+  border-radius: 0.62rem !important;
+  padding: 0.34rem 0.46rem !important;
+  font-size: 0.61rem !important;
+  line-height: 1.42 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card [data-owner-listing-performance="true"] {
+  padding: 0.36rem 0.46rem !important;
+  border-radius: 0.62rem !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions {
+  gap: 0.34rem !important;
+  padding-top: 0.42rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions > div:first-child {
+  gap: 0.28rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions > div:first-child :is(a, button),
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__manage {
+  min-height: 2.34rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.59rem !important;
+}
+
+@media (max-width: 680px) {
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-smart-insights {
+    display: flex !important;
+    gap: 0.38rem !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.1rem !important;
+    scrollbar-width: none !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-smart-insights :is(button, a) {
+    min-width: 9.8rem !important;
+    min-height: 2.35rem !important;
+    flex: 0 0 auto !important;
+    padding: 0.38rem 0.52rem !important;
+    font-size: 0.61rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
+    grid-column: 1 / -1 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__search {
+    grid-column: 1 / -1 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions > div:first-child {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions > div:first-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* =========================================================
+   LISTING DETAIL — one dark premium language, no mixed skins
+   ========================================================= */
+
+.rawaj-detail-v2 {
+  color: var(--r16-text) !important;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(216, 174, 95, 0.05), transparent 26rem),
+    var(--r16-page) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-media__stage {
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 1.08rem !important;
+  background: #0e1112 !important;
+  box-shadow: var(--r16-shadow) !important;
+}
+
+.rawaj-detail-v2__layout {
+  gap: 0.7rem !important;
+  margin-top: 0.72rem !important;
+}
+
+.rawaj-detail-v2__content {
+  display: grid !important;
+  gap: 0.62rem !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--r16-text) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-detail-summary,
+.rawaj-detail-section,
+.rawaj-detail-reference,
+.rawaj-detail-safety {
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 1rem !important;
+  color: var(--r16-text) !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-detail-summary {
+  gap: 0.58rem !important;
+  padding: 0.9rem !important;
+}
+
+.rawaj-detail-summary h1,
+.rawaj-detail-section__heading h2 {
+  color: var(--r16-text) !important;
+  font-family: "Cairo", sans-serif !important;
+}
+
+.rawaj-detail-summary h1 {
+  margin-top: 0.4rem !important;
+  font-size: clamp(1.18rem, 4vw, 1.7rem) !important;
+  line-height: 1.42 !important;
+}
+
+.rawaj-detail-summary__meta,
+.rawaj-detail-section__heading p,
+.rawaj-detail-price > span,
+.rawaj-detail-price > small {
+  color: var(--r16-muted) !important;
+}
+
+.rawaj-detail-summary__badges > * {
+  min-height: 1.75rem !important;
+  border-color: rgba(126, 209, 178, 0.17) !important;
+  border-radius: 999px !important;
+  color: #c7eadc !important;
+  background: rgba(45, 123, 94, 0.1) !important;
+  font-size: 0.67rem !important;
+}
+
+.rawaj-detail-price {
+  margin-top: 0.55rem !important;
+  border: 1px solid rgba(216, 174, 95, 0.2) !important;
+  border-radius: 0.78rem !important;
+  background: var(--r16-card-inset) !important;
+  padding: 0.68rem 0.78rem !important;
+}
+
+.rawaj-detail-price > strong {
+  color: var(--r16-gold-soft) !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: clamp(1.1rem, 4vw, 1.55rem) !important;
+}
+
+.rawaj-detail-section {
+  padding: 0.85rem !important;
+}
+
+.rawaj-detail-specs {
+  gap: 0.42rem !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.rawaj-detail-specs > div {
+  min-height: 3.35rem !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.72rem !important;
+  color: var(--r16-soft) !important;
+  background: var(--r16-card-inset) !important;
+  padding: 0.58rem 0.64rem !important;
+}
+
+.rawaj-detail-specs > div :is(span, small, dt) {
+  color: var(--r16-muted) !important;
+}
+
+.rawaj-detail-specs > div :is(strong, dd) {
+  color: var(--r16-text) !important;
+}
+
+.rawaj-detail-description {
+  color: #d9ddda !important;
+  font-size: 0.88rem !important;
+  line-height: 1.85 !important;
+}
+
+.rawaj-detail-location {
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.76rem !important;
+  color: var(--r16-soft) !important;
+  background: var(--r16-card-inset) !important;
+  padding: 0.72rem !important;
+}
+
+.rawaj-detail-seller {
+  border: 1px solid rgba(216, 174, 95, 0.16) !important;
+  border-radius: 1rem !important;
+  color: var(--r16-text) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.08), transparent 34%),
+    linear-gradient(145deg, #15463c, #102e29 72%) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-detail-reference,
+.rawaj-detail-safety {
+  color: var(--r16-soft) !important;
+}
+
+.rawaj-detail-v2 :is(.rawaj-detail-reference, .rawaj-detail-safety) :is(h2, h3, strong) {
+  color: var(--r16-text) !important;
+}
+
+.rawaj-contact-dock {
+  border-top: 1px solid var(--r16-line) !important;
+  background: rgba(20, 23, 24, 0.94) !important;
+  backdrop-filter: blur(20px) saturate(1.1) !important;
+}
+
+@media (max-width: 680px) {
+  .rawaj-detail-v2 .rawaj-detail-media,
+  .rawaj-detail-v2__container {
+    width: calc(100% - 0.8rem) !important;
+  }
+
+  .rawaj-detail-v2 .rawaj-detail-media__stage {
+    min-height: 0 !important;
+    aspect-ratio: 4 / 3 !important;
+    border-radius: 0.95rem !important;
+  }
+
+  .rawaj-detail-summary {
+    padding: 0.78rem !important;
+  }
+
+  .rawaj-detail-specs {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-detail-v2__container {
+    padding-bottom: 8.8rem !important;
+  }
+}
+
+/* =========================================================
+   ACCOUNT EDITOR — compact real-world image previews
+   ========================================================= */
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-v2 {
+  padding-bottom: 8.8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor {
+  border-color: var(--r16-line) !important;
+  border-radius: 1rem !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor > header {
+  padding-bottom: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor form > .rounded-2xl.bg-muted-surface {
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.88rem !important;
+  background: var(--r16-card-inset) !important;
+  padding: 0.68rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rounded-xl.bg-card {
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.78rem !important;
+  background: var(--r16-card) !important;
+  padding: 0.62rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface {
+  height: 7.5rem !important;
+  min-height: 7.5rem !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.72rem !important;
+  background: #151819 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface.h-36 {
+  height: 8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor label.inline-flex.cursor-pointer,
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor button.inline-flex.items-center {
+  min-height: 2.15rem !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.62rem !important;
+  background: var(--r16-card-raised) !important;
+  padding: 0.35rem 0.62rem !important;
+  font-size: 0.65rem !important;
+}
+
+@media (max-width: 680px) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.gap-3.md\:grid-cols-\[minmax\(180px\,0\.8fr\)_minmax\(0\,1\.2fr\)\] {
+    gap: 0.55rem !important;
+  }
+}
+
+/* =========================================================
+   PUBLIC SELLER STOREFRONT — lighter hero, no box-in-box
+   ========================================================= */
+
+.rawaj-storefront-v2 {
+  color: var(--r16-text) !important;
+  background: var(--r16-page) !important;
+}
+
+.rawaj-storefront-v2 .rawaj-seller-premium-v3 {
+  padding-bottom: 8.8rem !important;
+}
+
+.rawaj-storefront-identity {
+  border: 1px solid rgba(216, 174, 95, 0.18) !important;
+  border-radius: 1.18rem !important;
+  background: linear-gradient(145deg, #123f36, #0f332d 65%, #192622) !important;
+  box-shadow: var(--r16-shadow) !important;
+}
+
+.rawaj-storefront-identity__scrim {
+  background:
+    linear-gradient(180deg, rgba(7, 26, 23, 0.16), rgba(7, 26, 23, 0.9) 84%),
+    linear-gradient(90deg, rgba(7, 26, 23, 0.74), rgba(7, 26, 23, 0.2)) !important;
+}
+
+.rawaj-storefront-identity__content {
+  min-height: 19rem !important;
+  padding: 0.95rem !important;
+}
+
+.rawaj-storefront-identity__topline {
+  inset-inline: 0.95rem !important;
+  top: 0.85rem !important;
+}
+
+.rawaj-storefront-identity__topline > span,
+.rawaj-storefront-identity__topline > strong {
+  min-height: 1.9rem !important;
+  padding-inline: 0.55rem !important;
+  font-size: 0.54rem !important;
+}
+
+.rawaj-storefront-identity__main {
+  gap: 0.72rem !important;
+}
+
+.rawaj-storefront-identity__avatar {
+  width: 4.7rem !important;
+  height: 4.7rem !important;
+  border-width: 2px !important;
+  border-radius: 1rem !important;
+}
+
+.rawaj-storefront-identity__copy h1 {
+  font-size: clamp(1.25rem, 5vw, 1.9rem) !important;
+}
+
+.rawaj-storefront-identity__bio {
+  max-width: 42rem !important;
+  margin-top: 0.6rem !important;
+  border-inline-start: 0 !important;
+  padding-inline-start: 0 !important;
+  color: rgba(245, 243, 237, 0.72) !important;
+  font-size: 0.64rem !important;
+  line-height: 1.65 !important;
+}
+
+.rawaj-storefront-identity__metrics {
+  gap: 0.38rem !important;
+  margin-top: 0.62rem !important;
+}
+
+.rawaj-storefront-identity__metrics > div {
+  min-height: 3rem !important;
+  border-radius: 0.72rem !important;
+  padding: 0.48rem !important;
+}
+
+.rawaj-storefront-identity__actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.35rem !important;
+  overflow: visible !important;
+  margin-top: 0.65rem !important;
+}
+
+.rawaj-storefront-identity__actions :is(a, button) {
+  min-height: 2.35rem !important;
+  justify-content: center !important;
+  border-radius: 0.68rem !important;
+  padding-inline: 0.48rem !important;
+  font-size: 0.58rem !important;
+}
+
+.rawaj-storefront-identity__actions > a:first-child {
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  color: #17201e !important;
+  background: linear-gradient(135deg, var(--r16-gold-soft), #c69547) !important;
+}
+
+.rawaj-storefront-v2__layout {
+  gap: 0.72rem !important;
+  margin-top: 0.65rem !important;
+}
+
+.rawaj-storefront-v2__main {
+  min-width: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-storefront-section-header {
+  margin-bottom: 0.55rem !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 0.92rem !important;
+  background: var(--r16-card) !important;
+  padding: 0.68rem 0.75rem !important;
+}
+
+.rawaj-storefront-section-header p {
+  color: var(--r16-gold) !important;
+}
+
+.rawaj-storefront-section-header h2 {
+  color: var(--r16-text) !important;
+  font-size: 1rem !important;
+}
+
+.rawaj-storefront-section-header > div > span {
+  color: var(--r16-muted) !important;
+}
+
+.rawaj-storefront-v2__product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.62rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-storefront-v2__product-grid .rawaj-adaptive-card {
+  overflow: hidden !important;
+  border: 1px solid var(--r16-line) !important;
+  border-radius: 1rem !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-storefront-v2__product-grid .rawaj-adaptive-card__media {
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  background: #101314 !important;
+}
+
+.rawaj-storefront-v2 #seller-reviews,
+.rawaj-storefront-v2 .rawaj-storefront-safety {
+  border-color: var(--r16-line) !important;
+  border-radius: 1rem !important;
+  color: var(--r16-soft) !important;
+  background: var(--r16-card) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 680px) {
+  .rawaj-storefront-identity__content {
+    min-height: 16.5rem !important;
+    padding: 0.82rem !important;
+  }
+
+  .rawaj-storefront-identity__topline {
+    inset-inline: 0.82rem !important;
+    top: 0.72rem !important;
+  }
+
+  .rawaj-storefront-identity__avatar {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .rawaj-storefront-identity__bio {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .rawaj-storefront-identity__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-storefront-identity__actions > a:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .rawaj-storefront-v2__product-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   Bottom dock — never cover content; never fake a seller section
+   ========================================================= */
+
+.rawaj-mobile-dock {
+  padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.rawaj-bottom-nav-shell {
+  border: 1px solid var(--r16-line) !important;
+  background: rgba(25, 28, 29, 0.94) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-dock-item[data-section="categories"][data-active="true"] {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-dock-item[data-section="categories"][data-active="true"] .rawaj-dock-icon {
+  color: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-dock-item[data-section="categories"][data-active="true"] .rawaj-bottom-dock__label {
+  font-weight: 500 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-owner-control-center *,
+  .rawaj-detail-v2 *,
+  .rawaj-account-v2 *,
+  .rawaj-storefront-v2 * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
