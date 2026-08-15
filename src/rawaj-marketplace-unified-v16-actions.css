@@ -358,7 +358,7 @@
   }
 
   .rawaj-feedback-trigger {
-    bottom: calc(var(--rawaj-mobile-obstruction, 0px) + 4.75rem) !important;
+    bottom: calc(var(--rawaj-mobile-obstruction, 4.3rem) + 0.55rem) !important;
   }
 
   .rawaj-contact-dock {
