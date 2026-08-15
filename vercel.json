@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
-    "deploymentEnabled": false
+    "deploymentEnabled": {
+      "preview/syria-premium-store-listing-v2-20260815": true
+    }
   },
   "rewrites": [
     {
