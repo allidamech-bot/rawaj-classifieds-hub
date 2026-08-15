@@ -1,0 +1,75 @@
+/* RAWAJ Unified V16 — action controls
+ * Byte-identical Saudi/Syria finishing layer for listing contact/owner actions.
+ */
+
+.rawaj-contact-dock__inner {
+  gap: 0.42rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border-radius: 0.92rem !important;
+  background: #222627 !important;
+  padding: 0.48rem !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-contact-dock__inner :is(
+  .rawaj-contact-dock__primary,
+  .rawaj-contact-dock__secondary,
+  .rawaj-contact-dock__offer
+) {
+  min-height: 2.65rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 0.7rem !important;
+  color: #e2e7e4 !important;
+  background: #2a2f30 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__primary {
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  color: #17201e !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__offer {
+  border-color: rgba(126, 209, 178, 0.18) !important;
+  color: #c9eadf !important;
+  background: rgba(45, 123, 94, 0.13) !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__secondary[data-tone="whatsapp"] {
+  border-color: rgba(93, 200, 150, 0.2) !important;
+  color: #bce8d3 !important;
+  background: rgba(42, 132, 91, 0.12) !important;
+}
+
+.rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__inner {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) !important;
+}
+
+.rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__primary {
+  color: #17201e !important;
+}
+
+.rawaj-contact-dock__inner :is(a, button):focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 390px) {
+  .rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__inner {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .rawaj-contact-dock__inner :is(
+    .rawaj-contact-dock__primary,
+    .rawaj-contact-dock__secondary,
+    .rawaj-contact-dock__offer
+  ) {
+    min-height: 2.5rem !important;
+    font-size: 0.65rem !important;
+  }
+}
