@@ -508,15 +508,16 @@
 
 .rawaj-storefront-identity__actions > a[href="#storefront-listings"] {
   color: #17201e !important;
+  background: #e8ca8d !important;
 }
 
 .rawaj-detail-summary__date {
-  color: #5a635f !important;
+  color: #cdd2cf !important;
 }
 
 .rawaj-detail-seller__actions > a:first-child {
   color: #17201e !important;
-  background: linear-gradient(135deg, #e2c47e, #bd8d42) !important;
+  background: #e2c47e !important;
 }
 
 .rawaj-detail-seller__actions > :is(a, button):not(:first-child),
