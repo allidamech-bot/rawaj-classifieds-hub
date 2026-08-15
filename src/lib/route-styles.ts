@@ -30,6 +30,7 @@ import "../auth-feedback-system-v12.css";
 import "../footer-contrast-system-v13.css";
 import "../lightweight-mobile-ux-polish.css";
 import "../home-notification-overlay-fix.css";
+import "../rawaj-marketplace-premium-v14.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -69,6 +70,7 @@ import lightweightMobileUxPolishCss from "../lightweight-mobile-ux-polish.css?ur
 import homeNotificationOverlayFixCss from "../home-notification-overlay-fix.css?url";
 import listingStudioMobileOverflowFixCss from "../listing-studio-mobile-overflow-fix.css?url";
 import listingPreviewTrueSizeCss from "../listing-preview-true-size.css?url";
+import premiumMarketplaceV14Css from "../rawaj-marketplace-premium-v14.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -119,6 +121,7 @@ export const auditedOverrideStyleHrefs = [
   listingStudioMobileOverflowFixCss,
   listingPreviewTrueSizeCss,
   listingDetailV3Css,
+  premiumMarketplaceV14Css,
 ] as const;
 
 export interface RouteStyleScope {
