@@ -196,11 +196,47 @@
   outline-offset: 2px !important;
 }
 
-/* My Store no longer belongs in the command-center card list; the header icon owns that job. */
+/* The header store icon owns My Store navigation now. Keep legacy markup hidden as a fallback. */
 .rawaj-more-v2 .rawaj-more-v2__command a[href="/profile/listings"] {
   display: none !important;
 }
 
 .rawaj-more-v2 .rawaj-more-v2__command > .rawaj-more-v2__command > a {
   grid-column: 1 / -1 !important;
+}
+
+/* Account hub de-duplication: support, safety and privacy live in their dedicated lists below. */
+.rawaj-trust-hero[data-mode="more"] .rawaj-trust-hero__actions {
+  display: none !important;
+}
+
+/* Mobile messages: collapse the desktop two-column grid completely. */
+@media (max-width: 1023px) {
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar,
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-panel {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    grid-column: 1 / -1 !important;
+    margin: 0 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar {
+    border-inline-end: 0 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="list"] .rawaj-conversation-sidebar {
+    display: block !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="list"] .rawaj-message-panel {
+    display: none !important;
+  }
 }
