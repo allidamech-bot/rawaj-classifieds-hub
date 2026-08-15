@@ -56,6 +56,7 @@ import auditCorrectionsV8Css from "../rawaj-audit-corrections-v8.css?url";
 import homeAuditV8Css from "../rawaj-home-audit-v8.css?url";
 import categoriesDiscoveryV8Css from "../rawaj-categories-discovery-v8.css?url";
 import ownerListingsWorkspaceV9Css from "../owner-listings-workspace-v9.css?url";
+import ownerListingCardPolishCss from "../owner-listing-card-polish.css?url";
 import listingStudioAuditV9Css from "../listing-studio-audit-v9.css?url";
 import personalSpaceAuditV9Css from "../personal-space-audit-v9.css?url";
 import profileIdentityLayerFixCss from "../profile-identity-layer-fix.css?url";
@@ -105,6 +106,7 @@ export const auditedOverrideStyleHrefs = [
   homeAuditV8Css,
   categoriesDiscoveryV8Css,
   ownerListingsWorkspaceV9Css,
+  ownerListingCardPolishCss,
   listingStudioAuditV9Css,
   personalSpaceAuditV9Css,
   profileIdentityLayerFixCss,
