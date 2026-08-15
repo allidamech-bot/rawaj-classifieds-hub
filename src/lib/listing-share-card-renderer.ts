@@ -1,56 +1,78 @@
 import { resolveCategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
-import { listingShareHighlights } from "@/lib/listing-share-highlights";
+import {
+  listingShareHighlights,
+  type ListingShareHighlight,
+} from "@/lib/listing-share-highlights";
 import type { ListingShareTemplate } from "@/lib/listing-share-growth";
 
 const CARD_WIDTH = 1080;
 const SQUARE_HEIGHT = 1080;
 const STORY_HEIGHT = 1920;
-const FONT_FAMILY = '"Cairo", "Noto Sans Arabic", Arial, sans-serif';
+const SYRIA_DOMAIN = "rawa-j.com";
+
+type CardLanguage = "ar" | "en";
 
 export async function renderListingShareCard(
   listing: ClassifiedListing,
   template: ListingShareTemplate,
   language: string,
 ): Promise<Blob> {
+  const width = CARD_WIDTH;
+  const height = template.format === "story" ? STORY_HEIGHT : SQUARE_HEIGHT;
   const canvas = document.createElement("canvas");
-  canvas.width = CARD_WIDTH;
-  canvas.height = template.format === "story" ? STORY_HEIGHT : SQUARE_HEIGHT;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas_unavailable");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("canvas_unavailable");
 
   await document.fonts?.ready?.catch(() => undefined);
-  const image = await loadListingImage(listing.primaryImageUrl);
+  const cardLanguage: CardLanguage = language === "en" ? "en" : "ar";
   const highlights = listingShareHighlights(
     listing,
     resolveCategoryFieldKind(null, null, listing),
-    language,
-  ).map(({ label, value }) => `${label}: ${value}`);
-  const copy = {
-    title: listing.title.trim() || (language === "en" ? "Listing on RAWAJ" : "إعلان على رواج"),
-    price: listingSharePriceLabel(listing, language),
-    location: listingShareLocationLabel(listing, language),
-    cta: language === "en" ? "View the listing on rawa-j.com" : "شاهد الإعلان على rawa-j.com",
-    brand: language === "en" ? "RAWAJ  |  SYRIA" : "رواج  |  RAWAJ",
-    noImage: language === "en" ? "RAWAJ Marketplace" : "سوق رواج سوريا",
-    highlights,
-  };
-  setDirection(ctx, language);
-
-  if (template.id === "quick-sale") drawQuickSale(ctx, image, copy, language);
-  else if (template.id === "minimal") drawMinimal(ctx, image, copy, language);
-  else if (template.id === "emerald") drawEmerald(ctx, image, copy, language);
-  else if (template.id === "premium") drawPremium(ctx, image, copy, language);
-  else if (template.id === "story") drawStory(ctx, image, copy, language);
-  else drawClassic(ctx, image, copy, language);
-
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("blob_failed"))),
-      "image/png",
-      0.94,
-    ),
+    cardLanguage,
   );
+  const image = await loadListingImage(listing.primaryImageUrl);
+
+  const input: ShareCardRenderInput = {
+    context,
+    listing,
+    template,
+    language: cardLanguage,
+    highlights,
+    image,
+    width,
+    height,
+  };
+
+  switch (template.id) {
+    case "classic":
+      drawClassic(input);
+      break;
+    case "quick-sale":
+      drawQuickSale(input);
+      break;
+    case "minimal":
+      drawMinimal(input);
+      break;
+    case "emerald":
+      drawEmerald(input);
+      break;
+    case "premium":
+      drawPremium(input);
+      break;
+    case "story":
+      drawStory(input);
+      break;
+  }
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("share_card_encode_failed"));
+    }, "image/png");
+  });
 }
 
 export function listingSharePriceLabel(listing: ClassifiedListing, language: string): string {
@@ -70,138 +92,452 @@ export function listingShareLocationLabel(listing: ClassifiedListing, language: 
   const values = [listing.districtAr, listing.governorateNameAr]
     .map((value) => value?.trim())
     .filter((value): value is string => Boolean(value));
-  if (values.length) return [...new Set(values)].join(" · ");
+  if (values.length) return [...new Set(values)].join(language === "en" ? ", " : "، ");
   return language === "en" ? "Syria" : "سوريا";
 }
 
-type CardCopy = {
-  title: string;
-  price: string;
-  location: string;
-  cta: string;
-  brand: string;
-  noImage: string;
-  highlights: string[];
-};
-
-function drawClassic(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#122238", 0, 0, 1080, 1080);
-  drawBrand(ctx, copy.brand, 64, 70, "#F5F0E6", language, 34);
-  fillRound(ctx, "#F5F0E6", 42, 132, 996, 900, 30);
-  drawMedia(ctx, image, 66, 156, 948, 540, 22, "#D8C9A9", copy.noImage, language);
-  fillRound(ctx, "#C99A43", 66, 724, 10, 218, 5);
-  drawTextBlock(ctx, copy.title, language === "ar" ? 970 : 100, 758, 870, 50, 2, "#122238", 700, language);
-  drawText(ctx, copy.price, 100, 878, "#9A681A", 700, 43, language, "left");
-  drawText(ctx, copy.location, 970, 878, "#667085", 500, 28, language, "right");
-  drawHighlights(ctx, copy.highlights, 970, 918, 870, 23, "#667085", language, "right");
-  drawText(ctx, copy.cta, 970, 1004, "#122238", 700, 25, language, "right");
+interface ShareCardRenderInput {
+  context: CanvasRenderingContext2D;
+  listing: ClassifiedListing;
+  template: ListingShareTemplate;
+  language: CardLanguage;
+  highlights: ListingShareHighlight[];
+  image: HTMLImageElement | null;
+  width: number;
+  height: number;
 }
 
-function drawQuickSale(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#F4EEE2", 0, 0, 1080, 1080);
-  fill(ctx, "#CC641A", 0, 0, 260, 1080);
-  ctx.save();
-  ctx.translate(130, 870);
-  ctx.rotate(-Math.PI / 2);
-  drawText(ctx, copy.brand, 0, 0, "#FFF7EC", 800, 34, language, "center");
-  ctx.restore();
-  drawMedia(ctx, image, 294, 62, 724, 600, 38, "#E4C6A7", copy.noImage, language);
-  fillRound(ctx, "#21160F", 294, 698, 724, 2, 1);
-  drawText(ctx, language === "en" ? "READY TO MOVE" : "جاهز للبيع", 1018, 748, "#CC641A", 800, 27, language, "right");
-  drawTextBlock(ctx, copy.title, 1018, 812, 724, 51, 2, "#21160F", 800, language, "right");
-  drawText(ctx, copy.price, 1018, 940, "#CC641A", 900, 50, language, "right");
-  drawHighlights(ctx, copy.highlights, 1018, 978, 724, 22, "#715D50", language, "right");
-  drawText(ctx, `${copy.location}  ·  ${copy.cta}`, 1018, 1060, "#715D50", 600, 22, language, "right");
+function drawClassic(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights } = input;
+  fillCardBackground(input);
+  drawBrandLockup(input, 64, 76, template.surface, template.accent);
+  drawShareImage(input, 64, 168, 548, 728, 38);
+  context.fillStyle = template.accent;
+  context.fillRect(644, 168, 6, 728);
+
+  const textX = language === "en" ? 688 : 1016;
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  context.fillStyle = template.surface;
+  context.font = "800 54px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, textX, 286, 328, 70, 3, language);
+  context.fillStyle = template.accent;
+  context.font = "800 46px Cairo, sans-serif";
+  context.fillText(listingSharePriceLabel(listing, language), textX, titleBottom + 82);
+  context.fillStyle = template.surface;
+  context.globalAlpha = 0.78;
+  context.font = "600 25px Cairo, sans-serif";
+  context.fillText(listingShareLocationLabel(listing, language), textX, titleBottom + 132);
+  context.globalAlpha = 1;
+  drawHighlightStack(input, highlights, 684, Math.max(595, titleBottom + 190), 324, 82, {
+    background: template.surface,
+    foreground: template.foreground,
+    muted: template.muted,
+  });
+  drawCardUrl(input, 64, 1010, template.surface, "left");
 }
 
-function drawMinimal(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#F7F4ED", 0, 0, 1080, 1080);
-  drawText(ctx, copy.brand, 64, 74, "#182537", 800, 30, language);
-  fill(ctx, "#182537", 64, 103, 952, 2);
-  drawMedia(ctx, image, 64, 144, 952, 540, 4, "#E8E2D7", copy.noImage, language);
-  drawTextBlock(ctx, copy.title, 1016, 754, 952, 48, 2, "#182537", 700, language, "right");
-  drawText(ctx, copy.price, 1016, 876, "#182537", 800, 44, language, "right");
-  drawHighlights(ctx, copy.highlights, 1016, 918, 952, 23, "#667085", language, "right");
-  drawText(ctx, copy.location, 64, 1005, "#667085", 500, 25, language, "left");
-  drawText(ctx, copy.cta, 1016, 1027, "#182537", 700, 23, language, "right");
+function drawQuickSale(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights, width } = input;
+  fillCardBackground(input);
+  context.fillStyle = template.surface;
+  context.fillRect(0, 0, width, 224);
+  drawBrandLockup(input, 56, 62, "#FFFFFF", "#FFFFFF");
+  configureLocalizedText(context, language, language === "en" ? "right" : "left");
+  context.fillStyle = "#FFFFFF";
+  context.font = "900 42px Cairo, sans-serif";
+  context.fillText(
+    language === "en" ? "READY TO SELL" : "جاهز للبيع",
+    language === "en" ? 1024 : 56,
+    154,
+  );
+  drawShareImage(input, 56, 178, 968, 506, 0);
+  context.fillStyle = template.foreground;
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  const textX = language === "en" ? 56 : 1024;
+  context.font = "900 50px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, textX, 758, 968, 62, 2, language);
+  context.fillStyle = template.surface;
+  roundedRectPath(context, 56, titleBottom + 34, 400, 86, 18);
+  context.fill();
+  context.fillStyle = "#FFFFFF";
+  context.font = "900 38px Cairo, sans-serif";
+  context.textAlign = "center";
+  context.fillText(listingSharePriceLabel(listing, language), 256, titleBottom + 90);
+  context.fillStyle = template.foreground;
+  configureLocalizedText(context, language, language === "en" ? "right" : "left");
+  context.font = "700 24px Cairo, sans-serif";
+  context.fillText(
+    listingShareLocationLabel(listing, language),
+    language === "en" ? 1024 : 56,
+    titleBottom + 88,
+  );
+  drawHighlightsInline(input, highlights, 56, 952, 968, template.foreground, template.muted, " · ");
+  drawCardUrl(input, 56, 1040, template.surface, "left");
 }
 
-function drawEmerald(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#0C3B35", 0, 0, 1080, 1080);
-  fillRound(ctx, "#B49A62", 52, 52, 976, 646, 34);
-  drawMedia(ctx, image, 64, 64, 952, 622, 26, "#285E55", copy.noImage, language);
-  fillRound(ctx, "#F2F0E8", 52, 730, 976, 298, 30);
-  drawBrand(ctx, copy.brand, 92, 772, "#0C3B35", language, 28);
-  drawTextBlock(ctx, copy.title, 988, 825, 896, 41, 2, "#102B27", 800, language, "right");
-  drawText(ctx, copy.price, 988, 916, "#8C6A2F", 800, 38, language, "right");
-  drawText(ctx, copy.location, 92, 916, "#667A75", 600, 24, language, "left");
-  drawHighlights(ctx, copy.highlights, 988, 948, 896, 21, "#667A75", language, "right");
-  drawText(ctx, copy.cta, 988, 1018, "#0C3B35", 700, 22, language, "right");
+function drawMinimal(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights } = input;
+  fillCardBackground(input);
+  context.strokeStyle = template.foreground;
+  context.globalAlpha = 0.18;
+  context.lineWidth = 2;
+  context.strokeRect(42, 42, 996, 996);
+  context.globalAlpha = 1;
+  context.fillStyle = template.foreground;
+  context.textAlign = "center";
+  context.direction = "ltr";
+  context.font = "800 28px Cairo, sans-serif";
+  context.fillText("RAWAJ", 540, 94);
+  drawShareImage(input, 170, 138, 740, 430, 6);
+  configureLocalizedText(context, language, "center");
+  context.fillStyle = template.foreground;
+  context.font = "700 47px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, 540, 650, 820, 60, 2, language);
+  context.font = "800 43px Cairo, sans-serif";
+  context.fillText(listingSharePriceLabel(listing, language), 540, titleBottom + 72);
+  context.fillStyle = template.muted;
+  context.font = "500 23px Cairo, sans-serif";
+  context.fillText(listingShareLocationLabel(listing, language), 540, titleBottom + 118);
+  context.strokeStyle = template.foreground;
+  context.globalAlpha = 0.14;
+  context.beginPath();
+  context.moveTo(116, 880);
+  context.lineTo(964, 880);
+  context.stroke();
+  context.globalAlpha = 1;
+  drawHighlightsColumns(input, highlights, 116, 920, 848, template.foreground, template.muted);
+  drawCardUrl(input, 540, 1015, template.foreground, "center");
 }
 
-function drawPremium(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#242529", 0, 0, 1080, 1080);
-  fillRound(ctx, "#B48A42", 48, 48, 984, 984, 34);
-  fillRound(ctx, "#242529", 54, 54, 972, 972, 30);
-  drawBrand(ctx, copy.brand, 92, 112, "#D9B66F", language, 31);
-  drawMedia(ctx, image, 92, 166, 584, 770, 22, "#3B3B3F", copy.noImage, language);
-  fillRound(ctx, "#ECE5D8", 710, 166, 278, 770, 22);
-  drawText(ctx, language === "en" ? "SELECTED" : "مختار", 944, 234, "#8F6A2D", 800, 22, language, "right");
-  drawTextBlock(ctx, copy.title, 944, 322, 190, 42, 5, "#202126", 800, language, "right");
-  drawText(ctx, copy.price, 944, 632, "#8F6A2D", 900, 35, language, "right");
-  drawTextBlock(ctx, copy.location, 944, 705, 190, 32, 2, "#746E65", 600, language, "right");
-  drawHighlights(ctx, copy.highlights, 944, 768, 190, 25, "#746E65", language, "right");
-  fillRound(ctx, "#202126", 744, 842, 210, 74, 12);
-  drawText(ctx, language === "en" ? "VIEW NOW" : "شاهد الآن", 849, 889, "#ECE5D8", 800, 23, language, "center");
-  drawText(ctx, "rawa-j.com", 988, 988, "#D9B66F", 700, 26, language, "right");
+function drawEmerald(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights } = input;
+  fillCardBackground(input);
+  context.fillStyle = template.accent;
+  context.globalAlpha = 0.12;
+  context.beginPath();
+  context.arc(90, 140, 230, 0, Math.PI * 2);
+  context.fill();
+  context.beginPath();
+  context.arc(1040, 1010, 300, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+  drawBrandLockup(input, 68, 72, template.surface, template.accent);
+  context.strokeStyle = template.accent;
+  context.lineWidth = 5;
+  roundedRectPath(context, 132, 156, 816, 492, 96);
+  context.stroke();
+  drawShareImage(input, 148, 172, 784, 460, 82);
+  configureLocalizedText(context, language, "center");
+  context.fillStyle = template.surface;
+  context.font = "800 48px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, 540, 724, 860, 60, 2, language);
+  context.fillStyle = template.accent;
+  context.font = "900 44px Cairo, sans-serif";
+  context.fillText(listingSharePriceLabel(listing, language), 540, titleBottom + 72);
+  context.fillStyle = template.surface;
+  context.globalAlpha = 0.76;
+  context.font = "600 23px Cairo, sans-serif";
+  context.fillText(listingShareLocationLabel(listing, language), 540, titleBottom + 116);
+  context.globalAlpha = 1;
+  drawHighlightsColumns(input, highlights, 110, 930, 860, template.surface, template.accent);
+  drawCardUrl(input, 540, 1040, template.accent, "center");
 }
 
-function drawStory(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  copy: CardCopy,
-  language: string,
-) {
-  fill(ctx, "#14263D", 0, 0, 1080, 1920);
-  drawMedia(ctx, image, 0, 0, 1080, 1180, 0, "#27415F", copy.noImage, language);
-  const overlay = ctx.createLinearGradient(0, 580, 0, 1220);
+function drawPremium(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights } = input;
+  fillCardBackground(input);
+  context.strokeStyle = template.accent;
+  context.lineWidth = 3;
+  context.strokeRect(34, 34, 1012, 1012);
+  context.globalAlpha = 0.35;
+  context.lineWidth = 1;
+  context.strokeRect(48, 48, 984, 984);
+  context.globalAlpha = 1;
+  drawBrandLockup(input, 76, 76, template.accent, template.accent);
+  drawShareImage(input, 84, 150, 912, 462, 14);
+  context.strokeStyle = template.accent;
+  context.lineWidth = 3;
+  context.strokeRect(84, 150, 912, 462);
+  configureLocalizedText(context, language, "center");
+  context.fillStyle = template.surface;
+  context.font = "700 48px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, 540, 686, 860, 60, 2, language);
+  context.fillStyle = template.accent;
+  context.font = "800 48px Cairo, sans-serif";
+  context.fillText(listingSharePriceLabel(listing, language), 540, titleBottom + 70);
+  context.fillStyle = template.surface;
+  context.globalAlpha = 0.7;
+  context.font = "500 22px Cairo, sans-serif";
+  context.fillText(listingShareLocationLabel(listing, language), 540, titleBottom + 112);
+  context.globalAlpha = 1;
+  drawHighlightsColumns(input, highlights, 96, 922, 888, template.surface, template.accent);
+  drawCardUrl(input, 540, 1012, template.accent, "center");
+}
+
+function drawStory(input: ShareCardRenderInput) {
+  const { context, template, listing, language, highlights, width, height } = input;
+  fillCardBackground(input);
+  drawShareImage(input, 0, 0, width, 1120, 0);
+  const overlay = context.createLinearGradient(0, 420, 0, 1120);
   overlay.addColorStop(0, "rgba(20,38,61,0)");
-  overlay.addColorStop(1, "rgba(20,38,61,1)");
-  ctx.fillStyle = overlay;
-  ctx.fillRect(0, 580, 1080, 680);
-  drawBrand(ctx, copy.brand, 72, 110, "#FFFFFF", language, 34);
-  fillRound(ctx, "#C78A2D", 72, 1230, 936, 8, 4);
-  drawTextBlock(ctx, copy.title, 1008, 1345, 936, 72, 3, "#FFFFFF", 800, language, "right");
-  drawText(ctx, copy.price, 1008, 1608, "#F0C676", 900, 58, language, "right");
-  drawText(ctx, copy.location, 1008, 1686, "#D4DEE9", 600, 31, language, "right");
-  drawHighlights(ctx, copy.highlights, 1008, 1724, 936, 27, "#D4DEE9", language, "right");
-  fillRound(ctx, "#F5F0E6", 72, 1814, 936, 74, 18);
-  drawText(ctx, copy.cta, 540, 1862, "#14263D", 800, 27, language, "center");
+  overlay.addColorStop(1, template.background);
+  context.fillStyle = overlay;
+  context.fillRect(0, 420, width, 700);
+  drawBrandLockup(input, 72, 82, "#FFFFFF", template.accent);
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  const textX = language === "en" ? 72 : width - 72;
+  context.fillStyle = "#FFFFFF";
+  context.font = "900 68px Cairo, sans-serif";
+  const titleBottom = drawWrappedText(context, listing.title, textX, 800, width - 144, 88, 3, language);
+  context.fillStyle = template.accent;
+  context.font = "900 62px Cairo, sans-serif";
+  context.fillText(listingSharePriceLabel(listing, language), textX, titleBottom + 88);
+  context.fillStyle = "#FFFFFF";
+  context.globalAlpha = 0.82;
+  context.font = "600 31px Cairo, sans-serif";
+  context.fillText(listingShareLocationLabel(listing, language), textX, titleBottom + 146);
+  context.globalAlpha = 1;
+  context.fillStyle = template.surface;
+  roundedRectPath(context, 72, 1190, width - 144, 500, 44);
+  context.fill();
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  context.fillStyle = template.foreground;
+  context.font = "800 35px Cairo, sans-serif";
+  context.fillText(language === "en" ? "Listing highlights" : "أبرز التفاصيل", textX, 1262);
+  drawHighlightStack(input, highlights, 112, 1315, width - 224, 96, {
+    background: "#FFFFFF",
+    foreground: template.foreground,
+    muted: template.muted,
+  });
+  configureLocalizedText(context, language, "center");
+  context.fillStyle = template.surface;
+  context.font = "800 34px Cairo, sans-serif";
+  context.fillText(
+    language === "en" ? "View the listing on RAWAJ" : "شاهد الإعلان على رواج",
+    width / 2,
+    1780,
+  );
+  drawCardUrl(input, width / 2, height - 74, template.accent, "center");
+}
+
+function fillCardBackground({ context, template, width, height }: ShareCardRenderInput) {
+  context.fillStyle = template.background;
+  context.fillRect(0, 0, width, height);
+  context.textBaseline = "alphabetic";
+}
+
+function drawBrandLockup(
+  input: ShareCardRenderInput,
+  margin: number,
+  y: number,
+  brandColor: string,
+  domainColor: string,
+) {
+  const { context, language, width } = input;
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  context.fillStyle = brandColor;
+  context.font = "800 38px Cairo, sans-serif";
+  context.fillText(language === "en" ? "RAWAJ" : "رواج", language === "en" ? margin : width - margin, y);
+  const previousDirection = context.direction;
+  context.direction = "ltr";
+  context.textAlign = language === "en" ? "right" : "left";
+  context.fillStyle = domainColor;
+  context.font = "700 22px Cairo, sans-serif";
+  context.fillText(SYRIA_DOMAIN, language === "en" ? width - margin : margin, y - 3);
+  context.direction = previousDirection;
+}
+
+function drawShareImage(
+  input: ShareCardRenderInput,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  const { context, image, template } = input;
+  context.save();
+  roundedRectPath(context, x, y, width, height, radius);
+  context.clip();
+  context.fillStyle = template.surface;
+  context.fillRect(x, y, width, height);
+  if (image) drawImageCover(context, image, x, y, width, height);
+  else drawImageFallback(context, x, y, width, height, template);
+  context.restore();
+}
+
+function drawHighlightStack(
+  input: ShareCardRenderInput,
+  highlights: ListingShareHighlight[],
+  x: number,
+  y: number,
+  width: number,
+  rowHeight: number,
+  colors: { background: string; foreground: string; muted: string },
+) {
+  const { context, language } = input;
+  highlights.forEach((highlight, index) => {
+    const rowY = y + index * (rowHeight + 12);
+    context.fillStyle = colors.background;
+    context.globalAlpha = 0.96;
+    roundedRectPath(context, x, rowY, width, rowHeight, 16);
+    context.fill();
+    context.globalAlpha = 1;
+    const textX = language === "en" ? x + 20 : x + width - 20;
+    configureLocalizedText(context, language, language === "en" ? "left" : "right");
+    context.fillStyle = colors.muted;
+    context.font = "700 17px Cairo, sans-serif";
+    context.fillText(highlight.label, textX, rowY + 27);
+    context.fillStyle = colors.foreground;
+    context.font = "800 24px Cairo, sans-serif";
+    context.fillText(fitCanvasText(context, highlight.value, width - 40), textX, rowY + 59);
+  });
+}
+
+function drawHighlightsColumns(
+  input: ShareCardRenderInput,
+  highlights: ListingShareHighlight[],
+  x: number,
+  y: number,
+  width: number,
+  foreground: string,
+  accent: string,
+) {
+  const { context, language } = input;
+  const columnWidth = width / Math.max(highlights.length, 1);
+  highlights.forEach((highlight, index) => {
+    const centerX = x + columnWidth * index + columnWidth / 2;
+    configureLocalizedText(context, language, "center");
+    context.fillStyle = accent;
+    context.font = "700 17px Cairo, sans-serif";
+    context.fillText(highlight.label, centerX, y);
+    context.fillStyle = foreground;
+    context.font = "800 23px Cairo, sans-serif";
+    context.fillText(fitCanvasText(context, highlight.value, columnWidth - 24), centerX, y + 34);
+  });
+}
+
+function drawHighlightsInline(
+  input: ShareCardRenderInput,
+  highlights: ListingShareHighlight[],
+  x: number,
+  y: number,
+  width: number,
+  foreground: string,
+  muted: string,
+  separator: string,
+) {
+  if (highlights.length === 0) return;
+  const { context, language } = input;
+  configureLocalizedText(context, language, language === "en" ? "left" : "right");
+  context.fillStyle = muted;
+  context.font = "700 21px Cairo, sans-serif";
+  const value = highlights.map((highlight) => `${highlight.label}: ${highlight.value}`).join(separator);
+  context.fillText(fitCanvasText(context, value, width), language === "en" ? x : x + width, y);
+  context.fillStyle = foreground;
+}
+
+function drawCardUrl(input: ShareCardRenderInput, x: number, y: number, color: string, align: CanvasTextAlign) {
+  const { context } = input;
+  context.direction = "ltr";
+  context.textAlign = align;
+  context.fillStyle = color;
+  context.font = "700 20px ui-monospace, monospace";
+  context.fillText(SYRIA_DOMAIN, x, y);
+}
+
+function configureLocalizedText(context: CanvasRenderingContext2D, language: CardLanguage, align: CanvasTextAlign) {
+  context.direction = language === "en" ? "ltr" : "rtl";
+  context.textAlign = align;
+}
+
+function fitCanvasText(context: CanvasRenderingContext2D, value: string, maxWidth: number) {
+  if (context.measureText(value).width <= maxWidth) return value;
+  let fitted = value;
+  while (fitted.length > 1 && context.measureText(`${fitted}…`).width > maxWidth) fitted = fitted.slice(0, -1);
+  return `${fitted.trimEnd()}…`;
+}
+
+function drawImageFallback(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  template: ListingShareTemplate,
+) {
+  context.fillStyle = template.surface;
+  context.fillRect(x, y, width, height);
+  context.fillStyle = template.foreground;
+  context.globalAlpha = 0.09;
+  context.beginPath();
+  context.arc(x + width * 0.68, y + height * 0.34, Math.min(width, height) * 0.28, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 1;
+  context.fillStyle = template.accent;
+  context.font = "800 64px Cairo, sans-serif";
+  context.textAlign = "center";
+  context.direction = "rtl";
+  context.fillText("رواج", x + width / 2, y + height / 2 + 20);
+}
+
+function drawImageCover(context: CanvasRenderingContext2D, image: HTMLImageElement, x: number, y: number, width: number, height: number) {
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const renderedWidth = image.naturalWidth * scale;
+  const renderedHeight = image.naturalHeight * scale;
+  const offsetX = x + (width - renderedWidth) / 2;
+  const offsetY = y + (height - renderedHeight) / 2;
+  context.drawImage(image, offsetX, offsetY, renderedWidth, renderedHeight);
+}
+
+function roundedRectPath(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  const r = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + width - r, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + r);
+  context.lineTo(x + width, y + height - r);
+  context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  context.lineTo(x + r, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+  context.closePath();
+}
+
+function drawWrappedText(
+  context: CanvasRenderingContext2D,
+  value: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number,
+  language: CardLanguage,
+) {
+  context.direction = language === "en" ? "ltr" : "rtl";
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return y;
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (context.measureText(next).width <= maxWidth || !line) {
+      line = next;
+      continue;
+    }
+    lines.push(line);
+    line = word;
+    if (lines.length === maxLines - 1) break;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  const consumedWords = lines.join(" ").split(/\s+/).length;
+  if (consumedWords < words.length && lines.length > 0) {
+    const lastIndex = lines.length - 1;
+    lines[lastIndex] = `${lines[lastIndex].replace(/[.…]+$/u, "")}…`;
+  }
+  lines.forEach((entry, index) => context.fillText(entry, x, y + index * lineHeight));
+  return y + (lines.length - 1) * lineHeight;
 }
 
 async function loadListingImage(source: string | null | undefined): Promise<HTMLImageElement | null> {
@@ -214,181 +550,4 @@ async function loadListingImage(source: string | null | undefined): Promise<HTML
     image.onerror = () => resolve(null);
     image.src = source;
   });
-}
-
-function drawMedia(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | null,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-  fallback: string,
-  fallbackLabel: string,
-  language: string,
-) {
-  ctx.save();
-  roundedRectPath(ctx, x, y, width, height, radius);
-  ctx.clip();
-  fill(ctx, fallback, x, y, width, height);
-  if (image) drawImageCover(ctx, image, x, y, width, height);
-  else {
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(x + width * 0.76, y + height * 0.28, Math.min(width, height) * 0.28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    drawText(ctx, fallbackLabel, x + width / 2, y + height / 2 + 12, "#FFFFFF", 800, Math.max(25, Math.min(44, width * 0.055)), language, "center");
-  }
-  ctx.restore();
-}
-
-function drawImageCover(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) {
-  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const sourceWidth = width / scale;
-  const sourceHeight = height / scale;
-  const sourceX = (image.naturalWidth - sourceWidth) / 2;
-  const sourceY = (image.naturalHeight - sourceHeight) / 2;
-  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
-}
-
-function drawBrand(
-  ctx: CanvasRenderingContext2D,
-  value: string,
-  x: number,
-  y: number,
-  color: string,
-  language: string,
-  size: number,
-) {
-  drawText(ctx, value, language === "ar" ? CARD_WIDTH - x : x, y, color, 800, size, language);
-}
-
-function drawTextBlock(
-  ctx: CanvasRenderingContext2D,
-  value: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  maxLines: number,
-  color: string,
-  weight: number,
-  language: string,
-  align: CanvasTextAlign = language === "ar" ? "right" : "left",
-) {
-  ctx.fillStyle = color;
-  ctx.font = `${weight} ${Math.round(lineHeight * 0.78)}px ${FONT_FAMILY}`;
-  ctx.textAlign = align;
-  ctx.direction = language === "ar" ? "rtl" : "ltr";
-  const words = value.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (ctx.measureText(next).width <= maxWidth || !line) line = next;
-    else {
-      lines.push(line);
-      line = word;
-      if (lines.length === maxLines - 1) break;
-    }
-  }
-  if (line && lines.length < maxLines) lines.push(line);
-  if (lines.length === maxLines && words.join(" ") !== lines.join(" ")) {
-    let last = lines[maxLines - 1];
-    while (last.length > 1 && ctx.measureText(`${last}…`).width > maxWidth) last = last.slice(0, -1);
-    lines[maxLines - 1] = `${last.trim()}…`;
-  }
-  lines.forEach((current, index) => ctx.fillText(current, x, y + index * lineHeight));
-}
-
-function drawText(
-  ctx: CanvasRenderingContext2D,
-  value: string,
-  x: number,
-  y: number,
-  color: string,
-  weight: number,
-  size: number,
-  language: string,
-  align: CanvasTextAlign = language === "ar" ? "right" : "left",
-) {
-  ctx.fillStyle = color;
-  ctx.font = `${weight} ${size}px ${FONT_FAMILY}`;
-  ctx.textAlign = align;
-  ctx.direction = language === "ar" ? "rtl" : "ltr";
-  ctx.fillText(value, x, y);
-}
-
-function drawHighlights(
-  ctx: CanvasRenderingContext2D,
-  highlights: string[],
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  color: string,
-  language: string,
-  align: CanvasTextAlign,
-) {
-  ctx.font = `600 ${Math.round(lineHeight * 0.82)}px ${FONT_FAMILY}`;
-  highlights.slice(0, 3).forEach((highlight, index) => {
-    drawText(
-      ctx,
-      fitSingleLine(ctx, highlight, maxWidth),
-      x,
-      y + index * lineHeight,
-      color,
-      600,
-      Math.round(lineHeight * 0.82),
-      language,
-      align,
-    );
-  });
-}
-
-function fitSingleLine(ctx: CanvasRenderingContext2D, value: string, maxWidth: number) {
-  if (ctx.measureText(value).width <= maxWidth) return value;
-  let fitted = value;
-  while (fitted.length > 1 && ctx.measureText(`${fitted}…`).width > maxWidth) {
-    fitted = fitted.slice(0, -1);
-  }
-  return `${fitted.trim()}…`;
-}
-
-function setDirection(ctx: CanvasRenderingContext2D, language: string) {
-  ctx.direction = language === "ar" ? "rtl" : "ltr";
-  ctx.textAlign = language === "ar" ? "right" : "left";
-  ctx.textBaseline = "alphabetic";
-}
-
-function fill(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, width: number, height: number) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, width, height);
-}
-
-function fillRound(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, width: number, height: number, radius: number) {
-  ctx.fillStyle = color;
-  roundedRectPath(ctx, x, y, width, height, radius);
-  ctx.fill();
-}
-
-function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
-  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + width, y, x + width, y + height, r);
-  ctx.arcTo(x + width, y + height, x, y + height, r);
-  ctx.arcTo(x, y + height, x, y, r);
-  ctx.arcTo(x, y, x + width, y, r);
-  ctx.closePath();
 }
