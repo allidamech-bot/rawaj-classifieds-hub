@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import {
   Archive,
   BadgeCheck,
-  CheckCircle2,
   CircleDashed,
   Eye,
   FileWarning,
@@ -106,13 +105,19 @@ export function OwnerStoreWorkspaceSummary({
             decoding="async"
             onError={() => setFailedCoverUrl(coverUrl ?? null)}
           />
+          <div className="rawaj-owner-workspace-summary__cover-scrim" />
         </div>
       ) : null}
+      <div className="rawaj-owner-workspace-summary__aurora" aria-hidden="true" />
+      <div className="rawaj-owner-workspace-summary__grid" aria-hidden="true" />
 
       <div className="rawaj-owner-workspace-summary__topline">
-        <span>{text("مركز متجرك", "Your store center")}</span>
-        <strong data-tone={approvedCount > 0 ? "live" : "setup"}>
-          <CheckCircle2 aria-hidden="true" />
+        <span className="rawaj-owner-workspace-summary__topline-brand">
+          <Store aria-hidden="true" />
+          {text("مركز متجرك", "Your store center")}
+        </span>
+        <strong data-tone={approvedCount > 0 ? "live" : "setup"} className="rawaj-owner-workspace-summary__status-pill">
+          <span className="rawaj-owner-workspace-summary__status-dot" aria-hidden="true" />
           {approvedCount > 0
             ? text("متاح للزوار", "Open to visitors")
             : text("جاهز للبدء", "Ready to start")}
@@ -135,6 +140,7 @@ export function OwnerStoreWorkspaceSummary({
             ) : (
               <span>{avatarFallback}</span>
             )}
+            <span className="rawaj-owner-workspace-summary__avatar-ring" aria-hidden="true" />
           </div>
 
           <div className="rawaj-owner-workspace-summary__copy">
@@ -150,7 +156,7 @@ export function OwnerStoreWorkspaceSummary({
               ) : null}
             </div>
             {secondaryName && secondaryName !== displayName ? (
-              <strong dir="auto">{secondaryName}</strong>
+              <strong dir="auto" className="rawaj-owner-workspace-summary__secondary">{secondaryName}</strong>
             ) : null}
             <span className="rawaj-owner-workspace-summary__location">
               <MapPin aria-hidden="true" />
@@ -167,7 +173,7 @@ export function OwnerStoreWorkspaceSummary({
         </div>
 
         <div className="rawaj-owner-workspace-summary__completeness">
-          <div>
+          <div className="rawaj-owner-workspace-summary__completeness-header">
             <span>{text("اكتمال واجهة المتجر", "Storefront completeness")}</span>
             <strong>{completeness}%</strong>
           </div>
@@ -181,7 +187,7 @@ export function OwnerStoreWorkspaceSummary({
           >
             <span style={{ inlineSize: `${completeness}%` }} />
           </span>
-          <p>
+          <p className="rawaj-owner-workspace-summary__completeness-hint">
             {completeness === 100
               ? text("هويتك العامة مكتملة.", "Your public identity is complete.")
               : text(
@@ -193,15 +199,15 @@ export function OwnerStoreWorkspaceSummary({
       </div>
 
       <div className="rawaj-owner-workspace-summary__actions">
-        <Link to="/add-listing" data-tone="primary">
+        <Link to="/add-listing" data-tone="primary" className="rawaj-owner-workspace-summary__action">
           <Plus aria-hidden="true" />
           <span>{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/seller/$id" params={{ id: sellerId }}>
+        <Link to="/seller/$id" params={{ id: sellerId }} className="rawaj-owner-workspace-summary__action">
           <Eye aria-hidden="true" />
           <span>{text("عرض المتجر", "View store")}</span>
         </Link>
-        <Link to="/profile">
+        <Link to="/profile" className="rawaj-owner-workspace-summary__action">
           <Pencil aria-hidden="true" />
           <span>{text("تعديل الهوية", "Edit identity")}</span>
         </Link>
@@ -218,10 +224,13 @@ export function OwnerStoreWorkspaceSummary({
             data-tone={tone}
             onClick={() => onStatusChange?.(status)}
             disabled={!onStatusChange}
+            className="rawaj-owner-workspace-summary__metric"
           >
-            <Icon aria-hidden="true" />
-            <span>{label}</span>
-            <strong>{value}</strong>
+            <span className="rawaj-owner-workspace-summary__metric-icon">
+              <Icon aria-hidden="true" />
+            </span>
+            <span className="rawaj-owner-workspace-summary__metric-label">{label}</span>
+            <strong className="rawaj-owner-workspace-summary__metric-value">{value}</strong>
           </button>
         ))}
       </div>
