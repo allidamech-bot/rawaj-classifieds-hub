@@ -28,7 +28,10 @@ const eligibilityRules = [
   ["وجود إعلان واحد معتمد على الأقل", "At least one approved listing"],
   ["عدم وجود تعليق أو تقييد نشط على الحساب", "No active suspension or account restriction"],
   ["عدم وجود طلب توثيق آخر قيد المراجعة", "No other verification request under review"],
-  ["وثيقة حكومية أو تجارية مطابقة لنوع الطلب", "A valid government or business document matching the request type"],
+  [
+    "وثيقة حكومية أو تجارية مطابقة لنوع الطلب",
+    "A valid government or business document matching the request type",
+  ],
 ] as const;
 
 function VerificationPage() {
@@ -121,7 +124,12 @@ function VerificationPage() {
     setNoticeKind("");
 
     if (!hasLoadedRequests || requestsLoading) {
-      fail(text("انتظر حتى يكتمل فحص سجل التوثيق ثم أعد المحاولة.", "Wait for verification history to finish loading, then try again."));
+      fail(
+        text(
+          "انتظر حتى يكتمل فحص سجل التوثيق ثم أعد المحاولة.",
+          "Wait for verification history to finish loading, then try again.",
+        ),
+      );
       return;
     }
     if (alreadyVerified) {
@@ -129,7 +137,12 @@ function VerificationPage() {
       return;
     }
     if (hasPendingRequest) {
-      fail(text("لديك طلب توثيق قيد المراجعة بالفعل.", "You already have a verification request under review."));
+      fail(
+        text(
+          "لديك طلب توثيق قيد المراجعة بالفعل.",
+          "You already have a verification request under review.",
+        ),
+      );
       return;
     }
     if (legalName.trim().length < 3) {
@@ -141,11 +154,21 @@ function VerificationPage() {
       return;
     }
     if (!documentType || !documentFile) {
-      fail(text("اختر نوع المستند وأرفق الوثيقة المطلوبة.", "Choose the document type and attach the required evidence."));
+      fail(
+        text(
+          "اختر نوع المستند وأرفق الوثيقة المطلوبة.",
+          "Choose the document type and attach the required evidence.",
+        ),
+      );
       return;
     }
     if (!acceptedRules) {
-      fail(text("يجب الإقرار بشروط التوثيق قبل إرسال الطلب.", "You must accept the verification conditions before submitting."));
+      fail(
+        text(
+          "يجب الإقرار بشروط التوثيق قبل إرسال الطلب.",
+          "You must accept the verification conditions before submitting.",
+        ),
+      );
       return;
     }
 
@@ -164,10 +187,14 @@ function VerificationPage() {
       if (
         submissionRequestId !== submissionRequestIdRef.current ||
         submissionProfileId !== profileIdRef.current
-      ) return;
+      )
+        return;
 
       if (result.ok) {
-        setRequests((current) => [result.data, ...current.filter((item) => item.id !== result.data.id)]);
+        setRequests((current) => [
+          result.data,
+          ...current.filter((item) => item.id !== result.data.id),
+        ]);
         setHasLoadedRequests(true);
         setNotice(
           text(
@@ -186,7 +213,12 @@ function VerificationPage() {
         fail(result.error.message);
       }
     } catch {
-      fail(text("تعذر إرسال طلب التوثيق. أعد المحاولة.", "Could not submit the verification request. Try again."));
+      fail(
+        text(
+          "تعذر إرسال طلب التوثيق. أعد المحاولة.",
+          "Could not submit the verification request. Try again.",
+        ),
+      );
     } finally {
       if (
         submissionRequestId === submissionRequestIdRef.current &&
@@ -210,11 +242,20 @@ function VerificationPage() {
         <main className="container-wide mobile-page-bottom pt-4">
           <section className="rounded-2xl bg-card p-7 text-center hairline">
             <BadgeCheck className="mx-auto h-9 w-9 text-gold" />
-            <h1 className="mt-3 text-base font-extrabold">{text("التوثيق يتطلب حساباً", "Verification requires an account")}</h1>
+            <h1 className="mt-3 text-base font-extrabold">
+              {text("التوثيق يتطلب حساباً", "Verification requires an account")}
+            </h1>
             <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
-              {text("سجّل الدخول أولاً. الطلبات تخضع لشروط أهلية وفحص آلي أولي ثم مراجعة بشرية من الإدارة.", "Log in first. Requests are subject to eligibility checks followed by manual admin review.")}
+              {text(
+                "سجّل الدخول أولاً. الطلبات تخضع لشروط أهلية وفحص آلي أولي ثم مراجعة بشرية من الإدارة.",
+                "Log in first. Requests are subject to eligibility checks followed by manual admin review.",
+              )}
             </p>
-            <Link to="/login" search={{ returnTo: "/verification" }} className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
+            <Link
+              to="/login"
+              search={{ returnTo: "/verification" }}
+              className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+            >
               {text("تسجيل الدخول", "Log in")}
             </Link>
           </section>
@@ -233,7 +274,9 @@ function VerificationPage() {
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="text-lg font-extrabold">{text("التوثيق ليس تلقائياً", "Verification is not automatic")}</h1>
+              <h1 className="text-lg font-extrabold">
+                {text("التوثيق ليس تلقائياً", "Verification is not automatic")}
+              </h1>
               <p className="mt-1 text-xs leading-6 text-muted-foreground">
                 {text(
                   "الشارة تمنح بعد استيفاء شروط الأهلية وفحص وثيقة خاصة ومراجعة يدوية. الشارة تعني أن رواج راجع الأدلة المقدمة وقت الطلب فقط؛ ولا تعني ضمان السلعة أو الملكية أو جودة الإعلان أو الدفع أو نجاح أي صفقة.",
@@ -245,10 +288,15 @@ function VerificationPage() {
         </section>
 
         <section className="rounded-2xl bg-card p-4 hairline">
-          <h2 className="text-sm font-extrabold">{text("شروط الأهلية قبل إرسال الطلب", "Eligibility before submitting")}</h2>
+          <h2 className="text-sm font-extrabold">
+            {text("شروط الأهلية قبل إرسال الطلب", "Eligibility before submitting")}
+          </h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {eligibilityRules.map(([ar, en]) => (
-              <div key={en} className="flex items-start gap-2 rounded-xl bg-muted-surface p-3 text-xs leading-5">
+              <div
+                key={en}
+                className="flex items-start gap-2 rounded-xl bg-muted-surface p-3 text-xs leading-5"
+              >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                 <span>{text(ar, en)}</span>
               </div>
@@ -270,68 +318,174 @@ function VerificationPage() {
             </div>
           </section>
         ) : (
-          <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="rounded-2xl bg-card p-4 hairline">
+          <form
+            onSubmit={(event) => void submit(event)}
+            aria-busy={saving}
+            className="rounded-2xl bg-card p-4 hairline"
+          >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text("نوع الطلب", "Request type")}>
-                <select value={requestType} onChange={(event) => changeRequestType(event.target.value as VerificationRequestType)} disabled={saving} className="input">
+                <select
+                  value={requestType}
+                  onChange={(event) =>
+                    changeRequestType(event.target.value as VerificationRequestType)
+                  }
+                  disabled={saving}
+                  className="input"
+                >
                   <option value="personal">{text("فرد", "Individual")}</option>
                   <option value="business">{text("منشأة / نشاط تجاري", "Business")}</option>
                 </select>
               </Field>
 
-              <Field label={text("الاسم القانوني كما في الوثيقة", "Legal name exactly as shown on the document")}>
-                <input value={legalName} onChange={(event) => setLegalName(event.target.value)} maxLength={120} required disabled={saving} className="input" />
+              <Field
+                label={text(
+                  "الاسم القانوني كما في الوثيقة",
+                  "Legal name exactly as shown on the document",
+                )}
+              >
+                <input
+                  value={legalName}
+                  onChange={(event) => setLegalName(event.target.value)}
+                  maxLength={120}
+                  required
+                  disabled={saving}
+                  className="input"
+                />
               </Field>
 
               {requestType === "business" ? (
                 <Field label={text("اسم المنشأة القانوني", "Legal business name")}>
-                  <input value={businessName} onChange={(event) => setBusinessName(event.target.value)} maxLength={120} required disabled={saving} className="input" />
+                  <input
+                    value={businessName}
+                    onChange={(event) => setBusinessName(event.target.value)}
+                    maxLength={120}
+                    required
+                    disabled={saving}
+                    className="input"
+                  />
                 </Field>
               ) : null}
 
               <Field label={text("نوع المستند", "Document type")}>
-                <select value={documentType} onChange={(event) => setDocumentType(event.target.value as VerificationDocumentType)} required disabled={saving} className="input">
+                <select
+                  value={documentType}
+                  onChange={(event) =>
+                    setDocumentType(event.target.value as VerificationDocumentType)
+                  }
+                  required
+                  disabled={saving}
+                  className="input"
+                >
                   <option value="">{text("اختر المستند", "Choose a document")}</option>
                   {availableDocumentTypes.map((option) => (
-                    <option key={option.value} value={option.value}>{text(option.ar, option.en)}</option>
+                    <option key={option.value} value={option.value}>
+                      {text(option.ar, option.en)}
+                    </option>
                   ))}
                 </select>
               </Field>
             </div>
 
             <label className="mt-4 block rounded-2xl bg-muted-surface p-4 hairline">
-              <span className="flex items-center gap-2 text-xs font-bold"><Upload className="h-4 w-4 text-primary" />{text("وثيقة خاصة للمراجعة", "Private evidence for review")}</span>
-              <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required onChange={(event) => setDocumentFile(event.target.files?.[0] ?? null)} disabled={saving} className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground" />
+              <span className="flex items-center gap-2 text-xs font-bold">
+                <Upload className="h-4 w-4 text-primary" />
+                {text("وثيقة خاصة للمراجعة", "Private evidence for review")}
+              </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                required
+                onChange={(event) => setDocumentFile(event.target.files?.[0] ?? null)}
+                disabled={saving}
+                className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
+              />
               {documentFile ? (
-                <span className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><FileKey2 className="h-4 w-4" /><span className="min-w-0 truncate">{documentFile.name}</span><span className="shrink-0">{formatFileSize(documentFile.size)}</span></span>
+                <span className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <FileKey2 className="h-4 w-4" />
+                  <span className="min-w-0 truncate">{documentFile.name}</span>
+                  <span className="shrink-0">{formatFileSize(documentFile.size)}</span>
+                </span>
               ) : null}
-              <small className="mt-2 block text-[11px] leading-5 text-muted-foreground">{text("JPG أو PNG أو WebP أو PDF بحد أقصى 10 MB. لا تُنشر الوثيقة في ملفك العام.", "JPG, PNG, WebP, or PDF up to 10 MB. The document is not published on your public profile.")}</small>
+              <small className="mt-2 block text-[11px] leading-5 text-muted-foreground">
+                {text(
+                  "JPG أو PNG أو WebP أو PDF بحد أقصى 10 MB. لا تُنشر الوثيقة في ملفك العام.",
+                  "JPG, PNG, WebP, or PDF up to 10 MB. The document is not published on your public profile.",
+                )}
+              </small>
             </label>
 
             <div className="mt-4 flex items-start gap-3 rounded-xl bg-muted-surface p-3 hairline">
-              <input id="verification-rules" type="checkbox" checked={acceptedRules} onChange={(event) => setAcceptedRules(event.target.checked)} disabled={saving} className="mt-1 h-4 w-4" />
-              <label htmlFor="verification-rules" className="text-[11px] leading-5 text-muted-foreground">
-                {text("أقر بصحة البيانات والوثيقة، وأفهم أن التوثيق قابل للرفض أو السحب عند ظهور معلومات غير صحيحة أو إساءة استخدام، وأن الشارة ليست ضماناً لأي معاملة. كما أوافق على ", "I confirm the information and evidence are accurate, understand verification may be refused or revoked for false information or abuse, and understand the badge is not a transaction guarantee. I also agree to the ")}
-                <Link to="/terms" className="font-bold text-primary hover:underline">{text("شروط الاستخدام", "Terms of Use")}</Link>
+              <input
+                id="verification-rules"
+                type="checkbox"
+                checked={acceptedRules}
+                onChange={(event) => setAcceptedRules(event.target.checked)}
+                disabled={saving}
+                className="mt-1 h-4 w-4"
+              />
+              <label
+                htmlFor="verification-rules"
+                className="text-[11px] leading-5 text-muted-foreground"
+              >
+                {text(
+                  "أقر بصحة البيانات والوثيقة، وأفهم أن التوثيق قابل للرفض أو السحب عند ظهور معلومات غير صحيحة أو إساءة استخدام، وأن الشارة ليست ضماناً لأي معاملة. كما أوافق على ",
+                  "I confirm the information and evidence are accurate, understand verification may be refused or revoked for false information or abuse, and understand the badge is not a transaction guarantee. I also agree to the ",
+                )}
+                <Link to="/terms" className="font-bold text-primary hover:underline">
+                  {text("شروط الاستخدام", "Terms of Use")}
+                </Link>
                 {text(" و", " and ")}
-                <Link to="/privacy" className="font-bold text-primary hover:underline">{text("سياسة الخصوصية", "Privacy Policy")}</Link>.
+                <Link to="/privacy" className="font-bold text-primary hover:underline">
+                  {text("سياسة الخصوصية", "Privacy Policy")}
+                </Link>
+                .
               </label>
             </div>
 
-            {notice ? <p role="status" className={`mt-3 rounded-xl p-3 text-xs font-semibold ${noticeKind === "success" ? "bg-emerald-500/10 text-emerald-400" : "bg-destructive/10 text-destructive"}`}>{notice}</p> : null}
+            {notice ? (
+              <p
+                role="status"
+                className={`mt-3 rounded-xl p-3 text-xs font-semibold ${noticeKind === "success" ? "bg-emerald-500/10 text-emerald-400" : "bg-destructive/10 text-destructive"}`}
+              >
+                {notice}
+              </p>
+            ) : null}
 
-            <button type="submit" disabled={saving || hasPendingRequest || !acceptedRules} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={saving || hasPendingRequest || !acceptedRules}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground disabled:opacity-50"
+            >
               <BadgeCheck className="h-4 w-4" />
-              {saving ? text("جارٍ إرسال الطلب", "Submitting request") : hasPendingRequest ? text("طلبك قيد المراجعة", "Request under review") : text("إرسال طلب التوثيق", "Submit verification request")}
+              {saving
+                ? text("جارٍ إرسال الطلب", "Submitting request")
+                : hasPendingRequest
+                  ? text("طلبك قيد المراجعة", "Request under review")
+                  : text("إرسال طلب التوثيق", "Submit verification request")}
             </button>
           </form>
         )}
 
         <section className="rounded-2xl bg-card p-4 hairline">
-          <h2 className="text-sm font-extrabold">{text("سجل طلبات التوثيق", "Verification history")}</h2>
-          {requestsLoading ? <p className="mt-3 text-xs text-muted-foreground">{text("جارٍ التحميل…", "Loading…")}</p> : requestsError ? <p className="mt-3 text-xs text-destructive">{requestsError.message}</p> : requests.length === 0 ? <p className="mt-3 text-xs text-muted-foreground">{text("لا توجد طلبات سابقة.", "No previous requests.")}</p> : (
+          <h2 className="text-sm font-extrabold">
+            {text("سجل طلبات التوثيق", "Verification history")}
+          </h2>
+          {requestsLoading ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {text("جارٍ التحميل…", "Loading…")}
+            </p>
+          ) : requestsError ? (
+            <p className="mt-3 text-xs text-destructive">{requestsError.message}</p>
+          ) : requests.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              {text("لا توجد طلبات سابقة.", "No previous requests.")}
+            </p>
+          ) : (
             <div className="mt-3 grid gap-2">
-              {requests.map((request) => <RequestRow key={request.id} request={request} language={language} text={text} />)}
+              {requests.map((request) => (
+                <RequestRow key={request.id} request={request} language={language} text={text} />
+              ))}
             </div>
           )}
         </section>
@@ -341,27 +495,62 @@ function VerificationPage() {
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="block"><span className="mb-1.5 block text-xs font-bold">{label}</span>{children}</label>;
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-bold">{label}</span>
+      {children}
+    </label>
+  );
 }
 
-function RequestRow({ request, language, text }: { request: SellerVerificationRequest; language: "ar" | "en"; text: (ar: string, en: string) => string }) {
+function RequestRow({
+  request,
+  language,
+  text,
+}: {
+  request: SellerVerificationRequest;
+  language: "ar" | "en";
+  text: (ar: string, en: string) => string;
+}) {
   const approved = request.status === "approved";
   const rejected = request.status === "rejected";
   return (
     <article className="flex items-start justify-between gap-3 rounded-xl bg-muted-surface p-3 hairline">
       <div className="min-w-0">
-        <strong className="block truncate text-xs">{request.requestType === "business" ? request.businessName || request.legalName : request.legalName}</strong>
-        <small className="mt-1 block text-[10px] text-muted-foreground">{new Date(request.createdAt).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}</small>
+        <strong className="block truncate text-xs">
+          {request.requestType === "business"
+            ? request.businessName || request.legalName
+            : request.legalName}
+        </strong>
+        <small className="mt-1 block text-[10px] text-muted-foreground">
+          {new Date(request.createdAt).toLocaleDateString(
+            language === "ar" ? "ar-SA" : "en-US",
+          )}
+        </small>
       </div>
-      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${approved ? "bg-emerald-500/10 text-emerald-400" : rejected ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>
-        {approved ? <CheckCircle2 className="h-3 w-3" /> : rejected ? <XCircle className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
-        {approved ? text("معتمد", "Approved") : rejected ? text("مرفوض", "Rejected") : text("قيد المراجعة", "Under review")}
+      <span
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${approved ? "bg-emerald-500/10 text-emerald-400" : rejected ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}
+      >
+        {approved ? (
+          <CheckCircle2 className="h-3 w-3" />
+        ) : rejected ? (
+          <XCircle className="h-3 w-3" />
+        ) : (
+          <ShieldCheck className="h-3 w-3" />
+        )}
+        {approved
+          ? text("معتمد", "Approved")
+          : rejected
+            ? text("مرفوض", "Rejected")
+            : text("قيد المراجعة", "Under review")}
       </span>
     </article>
   );
 }
 
-function documentTypeOptions(requestType: VerificationRequestType): { value: VerificationDocumentType; ar: string; en: string }[] {
+function documentTypeOptions(
+  requestType: VerificationRequestType,
+): { value: VerificationDocumentType; ar: string; en: string }[] {
   return requestType === "business"
     ? [
         { value: "commercial_registration", ar: "سجل تجاري", en: "Commercial registration" },
@@ -371,7 +560,11 @@ function documentTypeOptions(requestType: VerificationRequestType): { value: Ver
     : [
         { value: "national_id", ar: "هوية وطنية / شخصية", en: "National ID" },
         { value: "passport", ar: "جواز سفر", en: "Passport" },
-        { value: "other_government_id", ar: "وثيقة هوية حكومية أخرى", en: "Other government-issued ID" },
+        {
+          value: "other_government_id",
+          ar: "وثيقة هوية حكومية أخرى",
+          en: "Other government-issued ID",
+        },
       ];
 }
 
