@@ -171,28 +171,27 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           ) : null}
 
-          {signedIn ? (
-            <Link
-              to="/more"
-              aria-label={text("حسابي", "My account")}
-              title={text("حسابي", "My account")}
-              className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
-            >
+          <Link
+            to={signedIn ? "/more" : "/login"}
+            aria-label={signedIn ? text("حسابي", "My account") : text("تسجيل الدخول", "Log in")}
+            title={signedIn ? text("حسابي", "My account") : text("تسجيل الدخول", "Log in")}
+            className={
+              signedIn
+                ? "rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
+                : "rawaj-header-login-cta rawaj-touch-target inline-flex shrink-0 items-center justify-center"
+            }
+          >
+            {signedIn ? (
               <User className="h-4 w-4" strokeWidth={1.9} />
-            </Link>
-          ) : (
-            <Link
-              to="/login"
-              aria-label={text("تسجيل الدخول", "Log in")}
-              title={text("تسجيل الدخول", "Log in")}
-              className="rawaj-header-login-cta rawaj-touch-target inline-flex shrink-0 items-center justify-center whitespace-nowrap"
-            >
-              <LogIn className="h-4 w-4 shrink-0" strokeWidth={2.1} />
-              <span className="rawaj-header-login-cta__label whitespace-nowrap font-bold">
-                {text("تسجيل الدخول", "Log in")}
-              </span>
-            </Link>
-          )}
+            ) : (
+              <>
+                <LogIn className="h-4 w-4 shrink-0" strokeWidth={2} />
+                <span className="rawaj-header-login-cta__label whitespace-nowrap font-bold">
+                  {text("تسجيل الدخول", "Log in")}
+                </span>
+              </>
+            )}
+          </Link>
 
           {signedIn ? (
             <Link
