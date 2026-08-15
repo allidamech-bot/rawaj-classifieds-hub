@@ -523,9 +523,7 @@ function RequestRow({
             : request.legalName}
         </strong>
         <small className="mt-1 block text-[10px] text-muted-foreground">
-          {new Date(request.createdAt).toLocaleDateString(
-            language === "ar" ? "ar-SA" : "en-US",
-          )}
+          {new Date(request.createdAt).toLocaleDateString(language === "ar" ? "ar-SA" : "en-US")}
         </small>
       </div>
       <span
