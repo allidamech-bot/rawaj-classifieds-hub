@@ -235,10 +235,6 @@ export function StorefrontIdentityHero({
             {text("تصفح الإعلانات", "Browse listings")}
           </a>
           <SellerFollowButton sellerId={sellerId} />
-          <a href="#seller-reviews">
-            <Star aria-hidden="true" />
-            {text("التقييمات", "Reviews")}
-          </a>
           {extraActions}
         </div>
       </div>
