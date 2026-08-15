@@ -103,6 +103,7 @@ test.describe("authenticated launch-critical journey", () => {
       timeout: 45_000,
     });
 
+    await dismissPostSubmitSharePrompt(page);
     await page.getByRole("link", { name: /^(Manage listing|إدارة الإعلان)$/ }).click();
     await expect(page).toHaveURL(/\/profile\/listings\/e2e-owner-listing-\d+/, {
       timeout: 20_000,
@@ -125,6 +126,20 @@ async function waitForHydration(page: Page): Promise<void> {
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1, {
     timeout: 30_000,
   });
+}
+
+async function dismissPostSubmitSharePrompt(page: Page): Promise<void> {
+  const dialog = page.getByRole("dialog", {
+    name: /شارك إعلانك من الآن واجذب المهتمين|Share now and start attracting buyers/i,
+  });
+  const appeared = await dialog
+    .waitFor({ state: "visible", timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!appeared) return;
+
+  await dialog.getByRole("button", { name: /^(Maybe later|لاحقاً)$/ }).click();
+  await expect(dialog).toBeHidden({ timeout: 5_000 });
 }
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {
