@@ -36,6 +36,9 @@ interface StorefrontIdentityHeroProps {
   ratingAverage?: number | null;
   ratingCount?: number;
   approvedCount: number | null;
+  reviewCount?: number | null;
+  actionCount?: number | null;
+  archiveCount?: number | null;
   completeness?: number;
   extraActions?: ReactNode;
 }
@@ -54,6 +57,9 @@ export function StorefrontIdentityHero({
   ratingAverage,
   ratingCount = 0,
   approvedCount,
+  reviewCount,
+  actionCount,
+  archiveCount,
   completeness = 0,
   extraActions,
 }: StorefrontIdentityHeroProps) {
@@ -84,6 +90,9 @@ export function StorefrontIdentityHero({
         verified={verified}
         completeness={completeness}
         approvedCount={approvedCount ?? 0}
+        reviewCount={reviewCount ?? 0}
+        actionCount={actionCount ?? 0}
+        archiveCount={archiveCount ?? 0}
       />
     );
   }

@@ -1,5 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, CheckCircle2, Eye, MapPin, Pencil, Plus } from "lucide-react";
+import {
+  Archive,
+  BadgeCheck,
+  CircleDashed,
+  Eye,
+  FileWarning,
+  MapPin,
+  Pencil,
+  Plus,
+  Store,
+} from "lucide-react";
 import { useState } from "react";
 
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -15,6 +25,9 @@ interface OwnerStoreWorkspaceSummaryProps {
   verified?: boolean;
   completeness: number;
   approvedCount: number;
+  reviewCount?: number;
+  actionCount?: number;
+  archiveCount?: number;
 }
 
 export function OwnerStoreWorkspaceSummary({
@@ -28,6 +41,9 @@ export function OwnerStoreWorkspaceSummary({
   verified = false,
   completeness,
   approvedCount,
+  reviewCount = 0,
+  actionCount = 0,
+  archiveCount = 0,
 }: OwnerStoreWorkspaceSummaryProps) {
   const { text } = useUiPreferences();
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
@@ -35,6 +51,37 @@ export function OwnerStoreWorkspaceSummary({
   const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
   const showCover = Boolean(coverUrl && failedCoverUrl !== coverUrl);
   const avatarFallback = displayName.trim().slice(0, 1).toUpperCase() || "R";
+
+  const metrics = [
+    {
+      key: "approved",
+      label: text("نشطة", "Live"),
+      value: approvedCount,
+      icon: Store,
+      tone: "live",
+    },
+    {
+      key: "pending",
+      label: text("قيد المراجعة", "In review"),
+      value: reviewCount,
+      icon: CircleDashed,
+      tone: "pending",
+    },
+    {
+      key: "needs-edit",
+      label: text("تحتاج تدخلاً", "Needs action"),
+      value: actionCount,
+      icon: FileWarning,
+      tone: "action",
+    },
+    {
+      key: "closed",
+      label: text("مغلقة", "Closed"),
+      value: archiveCount,
+      icon: Archive,
+      tone: "closed",
+    },
+  ] as const;
 
   return (
     <section
@@ -52,12 +99,19 @@ export function OwnerStoreWorkspaceSummary({
             decoding="async"
             onError={() => setFailedCoverUrl(coverUrl ?? null)}
           />
+          <div className="rawaj-owner-workspace-summary__cover-scrim" />
         </div>
       ) : null}
+      <div className="rawaj-owner-workspace-summary__aurora" aria-hidden="true" />
+      <div className="rawaj-owner-workspace-summary__grid" aria-hidden="true" />
 
       <div className="rawaj-owner-workspace-summary__topline">
-        <strong data-tone={approvedCount > 0 ? "live" : "setup"}>
-          <CheckCircle2 aria-hidden="true" />
+        <span className="rawaj-owner-workspace-summary__topline-brand">
+          <Store aria-hidden="true" />
+          {text("مركز متجرك", "Your store center")}
+        </span>
+        <strong data-tone={approvedCount > 0 ? "live" : "setup"} className="rawaj-owner-workspace-summary__status-pill">
+          <span className="rawaj-owner-workspace-summary__status-dot" aria-hidden="true" />
           {approvedCount > 0
             ? text("متاح للزوار", "Open to visitors")
             : text("جاهز للبدء", "Ready to start")}
@@ -80,6 +134,7 @@ export function OwnerStoreWorkspaceSummary({
             ) : (
               <span>{avatarFallback}</span>
             )}
+            <span className="rawaj-owner-workspace-summary__avatar-ring" aria-hidden="true" />
           </div>
 
           <div className="rawaj-owner-workspace-summary__copy">
@@ -95,7 +150,7 @@ export function OwnerStoreWorkspaceSummary({
               ) : null}
             </div>
             {secondaryName && secondaryName !== displayName ? (
-              <strong dir="auto">{secondaryName}</strong>
+              <strong dir="auto" className="rawaj-owner-workspace-summary__secondary">{secondaryName}</strong>
             ) : null}
             <span className="rawaj-owner-workspace-summary__location">
               <MapPin aria-hidden="true" />
@@ -112,7 +167,7 @@ export function OwnerStoreWorkspaceSummary({
         </div>
 
         <div className="rawaj-owner-workspace-summary__completeness">
-          <div>
+          <div className="rawaj-owner-workspace-summary__completeness-header">
             <span>{text("اكتمال واجهة المتجر", "Storefront completeness")}</span>
             <strong>{completeness}%</strong>
           </div>
@@ -126,7 +181,7 @@ export function OwnerStoreWorkspaceSummary({
           >
             <span style={{ inlineSize: `${completeness}%` }} />
           </span>
-          <p>
+          <p className="rawaj-owner-workspace-summary__completeness-hint">
             {completeness === 100
               ? text("هويتك العامة مكتملة.", "Your public identity is complete.")
               : text(
@@ -138,18 +193,37 @@ export function OwnerStoreWorkspaceSummary({
       </div>
 
       <div className="rawaj-owner-workspace-summary__actions">
-        <Link to="/add-listing" data-tone="primary">
+        <Link to="/add-listing" data-tone="primary" className="rawaj-owner-workspace-summary__action">
           <Plus aria-hidden="true" />
           <span>{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/seller/$id" params={{ id: sellerId }}>
+        <Link to="/seller/$id" params={{ id: sellerId }} className="rawaj-owner-workspace-summary__action">
           <Eye aria-hidden="true" />
           <span>{text("عرض المتجر", "View store")}</span>
         </Link>
-        <Link to="/profile">
+        <Link to="/profile" className="rawaj-owner-workspace-summary__action">
           <Pencil aria-hidden="true" />
           <span>{text("تعديل الهوية", "Edit identity")}</span>
         </Link>
+      </div>
+
+      <div
+        className="rawaj-owner-workspace-summary__metrics"
+        aria-label={text("ملخص حالات الإعلانات", "Listing status summary")}
+      >
+        {metrics.map(({ key, label, value, icon: Icon, tone }) => (
+          <div
+            key={key}
+            data-tone={tone}
+            className="rawaj-owner-workspace-summary__metric"
+          >
+            <span className="rawaj-owner-workspace-summary__metric-icon">
+              <Icon aria-hidden="true" />
+            </span>
+            <span className="rawaj-owner-workspace-summary__metric-label">{label}</span>
+            <strong className="rawaj-owner-workspace-summary__metric-value">{value}</strong>
+          </div>
+        ))}
       </div>
     </section>
   );

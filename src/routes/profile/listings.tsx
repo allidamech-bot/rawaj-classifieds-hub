@@ -488,6 +488,9 @@ function MyListingsPage() {
           ratingAverage={ratingAverage}
           ratingCount={ratingCount}
           approvedCount={grouped.approved.length}
+          reviewCount={grouped.pending.length}
+          actionCount={grouped.needs_edit.length}
+          archiveCount={grouped.closed.length}
           completeness={storeCompleteness}
         />
 
