@@ -172,34 +172,73 @@ function TermsPage() {
       <main className="container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <section className="rounded-2xl bg-card p-5 hairline">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Scale className="h-5 w-5" /></span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Scale className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="text-lg font-extrabold">{text("قواعد واضحة قبل البيع أو الشراء", "Clear rules before buying or selling")}</h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">{text("آخر تحديث: 15 أغسطس 2026. هذه الشروط جزء من اتفاق استخدام المنصة وتُقرأ مع سياسة الخصوصية والمحتوى المحظور وإرشادات الأمان.", "Last updated: 15 August 2026. These Terms form part of the platform-use agreement and should be read with the Privacy Policy, prohibited-content rules, and safety guidance.")}</p>
+              <h1 className="text-lg font-extrabold">
+                {text("قواعد واضحة قبل البيع أو الشراء", "Clear rules before buying or selling")}
+              </h1>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                {text(
+                  "آخر تحديث: 15 أغسطس 2026. هذه الشروط جزء من اتفاق استخدام المنصة وتُقرأ مع سياسة الخصوصية والمحتوى المحظور وإرشادات الأمان.",
+                  "Last updated: 15 August 2026. These Terms form part of the platform-use agreement and should be read with the Privacy Policy, prohibited-content rules, and safety guidance.",
+                )}
+              </p>
             </div>
           </div>
         </section>
 
         <section className="rounded-2xl bg-warning/10 p-4 hairline">
-          <div className="flex items-start gap-2"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" /><p className="text-xs leading-6 text-warning">{text("تنبيه أساسي: رواج لا يضمن المستخدم أو الإعلان أو السلعة ولا يدير الدفع أو الإسكرو حالياً. افحص وتحقق قبل الدفع، ولا تشارك رموز التحقق أو بيانات البطاقة أو كلمة المرور.", "Key warning: RAWAJ does not guarantee a user, listing, or item and currently does not operate payment or escrow. Inspect and verify before paying, and never share verification codes, card details, or passwords.")}</p></div>
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <p className="text-xs leading-6 text-warning">
+              {text(
+                "تنبيه أساسي: رواج لا يضمن المستخدم أو الإعلان أو السلعة ولا يدير الدفع أو الإسكرو حالياً. افحص وتحقق قبل الدفع، ولا تشارك رموز التحقق أو بيانات البطاقة أو كلمة المرور.",
+                "Key warning: RAWAJ does not guarantee a user, listing, or item and currently does not operate payment or escrow. Inspect and verify before paying, and never share verification codes, card details, or passwords.",
+              )}
+            </p>
+          </div>
         </section>
 
         <div className="grid gap-3">
           {sections.map((section) => (
             <section key={section.enTitle} className="rounded-2xl bg-card p-4 hairline">
               <h2 className="text-sm font-extrabold">{text(section.arTitle, section.enTitle)}</h2>
-              <p className="mt-2 text-xs leading-7 text-muted-foreground">{text(section.arBody, section.enBody)}</p>
+              <p className="mt-2 text-xs leading-7 text-muted-foreground">
+                {text(section.arBody, section.enBody)}
+              </p>
             </section>
           ))}
         </div>
 
         <section className="rounded-2xl bg-card p-4 hairline">
-          <div className="flex items-center gap-2 text-xs font-bold"><ShieldCheck className="h-4 w-4 text-emerald-500" />{text("سياسات مرتبطة", "Related policies")}</div>
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            {text("سياسات مرتبطة", "Related policies")}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <Link to="/privacy" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("سياسة الخصوصية", "Privacy Policy")}</Link>
-            <Link to="/safety" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("إرشادات الأمان", "Safety guidance")}</Link>
-            <Link to="/prohibited" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("المحتوى المحظور", "Prohibited content")}</Link>
-            <Link to="/support" className="rounded-xl bg-primary px-3 py-2 font-bold text-primary-foreground">{text("الدعم والبلاغات", "Support and reports")}</Link>
+            <Link
+              to="/privacy"
+              className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline"
+            >
+              {text("سياسة الخصوصية", "Privacy Policy")}
+            </Link>
+            <Link to="/safety" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">
+              {text("إرشادات الأمان", "Safety guidance")}
+            </Link>
+            <Link
+              to="/prohibited"
+              className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline"
+            >
+              {text("المحتوى المحظور", "Prohibited content")}
+            </Link>
+            <Link
+              to="/support"
+              className="rounded-xl bg-primary px-3 py-2 font-bold text-primary-foreground"
+            >
+              {text("الدعم والبلاغات", "Support and reports")}
+            </Link>
           </div>
         </section>
       </main>
