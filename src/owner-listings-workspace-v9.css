@@ -3,9 +3,15 @@
  */
 
 .rawaj-owner-control-center {
+  --store-canvas: #f7f5f0;
   --store-line: color-mix(in srgb, var(--rawaj-border-strong) 82%, transparent);
+  --store-line-strong: color-mix(in srgb, var(--rawaj-border-strong) 98%, transparent);
   --store-surface: color-mix(in srgb, var(--rawaj-surface) 94%, #3d3138 6%);
-  --store-surface-raised: color-mix(in srgb, var(--rawaj-surface-raised) 90%, #44343e 10%);
+  --store-surface-raised: #ffffff;
+  --store-ink: color-mix(in srgb, var(--rawaj-text-primary) 90%, #000 10%);
+  --store-green-deep: #08312b;
+  --store-green: #0f5a4f;
+  --store-amber: #ca5b1a;
   display: grid;
   width: min(100%, 78rem);
   gap: clamp(0.85rem, 1.5vw, 1.25rem);
@@ -830,73 +836,214 @@
   object-fit: cover;
 }
 
-.rawaj-owner-listing-card > .space-y-2 {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.82rem !important;
+.rawaj-owner-listing-card__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 0.75rem !important;
+    gap: 0.42rem;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > * {
-  margin: 0 !important;
+.rawaj-owner-listing-card__content > * {
+    margin: 0 !important;
 }
 
 .rawaj-owner-listing-card h2 {
-  color: var(--rawaj-text-primary) !important;
-  font-size: 0.88rem !important;
-  line-height: 1.55 !important;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--store-ink) !important;
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > p {
-  color: var(--rawaj-text-secondary) !important;
-  font-size: 0.67rem !important;
-  line-height: 1.5 !important;
+.rawaj-owner-listing-card__facts {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.22rem;
+    font-size: 0.72rem;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > p[class*="bg-"] {
-  border: 1px solid var(--store-line) !important;
-  border-radius: 0.72rem !important;
-  padding: 0.45rem 0.55rem !important;
+.rawaj-owner-listing-card__facts strong {
+    flex: 1 0 100%;
+    color: var(--store-green-deep);
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .text-lg {
-  color: #f2d7a8 !important;
-  font-size: 1rem !important;
+.rawaj-owner-listing-card__facts span {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.28rem;
+    color: var(--rawaj-text-secondary);
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .text-\[11px\].text-muted-foreground {
-  color: var(--rawaj-text-muted) !important;
-  font-size: 0.68rem !important;
+.rawaj-owner-listing-card__facts svg,
+.rawaj-owner-listing-card__signals svg,
+.rawaj-owner-listing-card__actions svg,
+.rawaj-owner-listing-management__duplicate svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex: 0 0 auto;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .flex.items-center.justify-between {
-  margin-top: auto !important;
-  border-top: 1px solid var(--store-line);
-  padding-top: 0.55rem;
+.rawaj-owner-listing-card__signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    min-width: 0;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .flex.items-center.justify-between :is(a, button) {
-  min-width: 2.45rem;
-  min-height: 2.45rem;
-  border-radius: 0.72rem !important;
+.rawaj-owner-listing-card__signals > span {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 1.85rem;
+    align-items: center;
+    gap: 0.26rem;
+    border-radius: 0.55rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .flex.items-center.justify-between > button {
-  padding-inline: 0.68rem;
-  font-size: 0.68rem !important;
+.rawaj-owner-listing-card__signals > span[data-tone="success"],
+.rawaj-owner-listing-card__signals > span[data-tone="safe"] {
+    color: #1c624e;
+    background: #e7f5ed;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="warning"],
+.rawaj-owner-listing-card__signals > span[data-tone="draft"] {
+    color: #7b551c;
+    background: #fff2d8;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="danger"] {
+    color: #a33f38;
+    background: #fff0ed;
+}
+
+.rawaj-owner-listing-card__signals > span[data-tone="neutral"] {
+    color: var(--store-ink);
+    background: var(--rawaj-surface-inset);
+}
+
+.rawaj-owner-listing-card [data-owner-listing-performance="true"] {
+    min-height: 3rem;
+    border: solid var(--store-line);
+    border-width: 1px 0;
+    background: transparent;
+}
+
+.rawaj-owner-listing-card [data-owner-listing-performance="true"] > div {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto auto;
+    text-align: center;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] span {
+    grid-column: 1 / -1;
+    overflow: hidden;
+    color: var(--rawaj-text-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.rawaj-owner-listing-card [data-owner-metric] strong {
+    font-size: 0.74rem;
+    color: var(--store-ink);
+}
+
+.rawaj-owner-listing-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: auto !important;
+}
+
+.rawaj-owner-listing-card__actions > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.rawaj-owner-listing-card__actions :is(a, button),
+.rawaj-owner-listing-management__duplicate {
+    display: inline-flex;
+    min-width: 2.35rem;
+    min-height: 2.35rem;
+    border-radius: 0.66rem !important;
+    padding: 0.32rem 0.55rem;
+    font-size: 0.66rem !important;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="primary"] {
+    border-color: transparent;
+    color: var(--store-green-deep);
+    background: color-mix(in srgb, var(--store-green) 92%, #fff 8%);
+}
+
+.rawaj-owner-listing-card__actions [data-tone="share"] {
+    color: #1d6654;
+    background: #edf7f1;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="boost"] {
+    color: #78541c;
+    background: #fff4dc;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="edit"] {
+    color: var(--store-green-deep);
+    background: rgba(15, 90, 79, 0.08);
+}
+
+.rawaj-owner-listing-card__actions a:has(svg.lucide-pencil) {
+    grid-column: 1 / -1;
+}
+
+.rawaj-owner-listing-card__manage {
+    color: var(--store-green-deep) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--store-line) !important;
 }
 
 .rawaj-owner-listing-management {
-  border: 1px solid var(--store-line) !important;
-  border-radius: 0.9rem !important;
-  padding: 0.68rem !important;
-  background: rgba(14, 15, 19, 0.18) !important;
-  animation: rawaj-owner-disclose 170ms ease-out;
+    border: 1px solid var(--store-line) !important;
+    border-radius: 0.9rem !important;
+    padding: 0.62rem !important;
+    background: var(--store-surface-raised) !important;
+    animation: rawaj-owner-disclose 170ms ease-out;
 }
 
-.rawaj-owner-listing-card > .space-y-2 > .flex.flex-wrap.gap-2 > a:has(svg.lucide-pencil) {
-  grid-column: 1 / -1;
+.rawaj-owner-listing-management__duplicate {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.rawaj-owner-listing-management :is(input, select) {
+    color: var(--store-ink) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--store-line);
+    border-radius: 0.55rem;
 }
 
 .rawaj-owner-listing-select {
@@ -1039,8 +1186,14 @@
 
   .rawaj-owner-listing-card:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--rawaj-accent-pink) 28%, var(--store-line)) !important;
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2) !important;
+    border-color: color-mix(in srgb, var(--rawaj-accent-pink) 24%, var(--store-line)) !important;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  .rawaj-owner-listing-card__actions :is(a, button):hover,
+  .rawaj-owner-listing-management__duplicate:hover {
+    border-color: var(--store-line-strong);
+    background: var(--store-surface) !important;
   }
 }
 
@@ -1241,9 +1394,9 @@
     aspect-ratio: 16 / 9 !important;
   }
 
-  .rawaj-owner-listing-card > .space-y-2 {
-    padding: 0.75rem !important;
-  }
+.rawaj-owner-listing-card__content {
+      padding: 0.65rem !important;
+    }
 }
 
 @media (max-width: 24rem) {
