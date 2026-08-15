@@ -12,9 +12,7 @@ import {
   Rocket,
   ScrollText,
   ShieldAlert,
-  Store,
   User,
-  UserCog,
 } from "lucide-react";
 import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
@@ -61,15 +59,6 @@ type AccountRow = {
 
 const primaryShortcuts: (AccountRow & { world: string })[] = [
   {
-    titleAr: "متجري",
-    titleEn: "My store",
-    hintAr: "إعلاناتك وإدارة واجهتك",
-    hintEn: "Listings and storefront",
-    to: "/profile/listings",
-    icon: Store,
-    world: "rawaj-world-orange",
-  },
-  {
     titleAr: "النشاط",
     titleEn: "Activity",
     hintAr: "رسائلك وما يحتاج انتباهك",
@@ -85,7 +74,7 @@ const secondaryShortcuts: (AccountRow & { world: string })[] = [
     titleAr: "Boost",
     titleEn: "Boost",
     hintAr: "احصل على عملاء أكثر",
-    hintEn: "Get more customers",
+    hintEn: "Get more buyers",
     to: "/promotion",
     icon: Rocket,
     world: "rawaj-world-orange",
@@ -159,17 +148,6 @@ function MorePage() {
     },
   ];
 
-  if (auth.canAccessOwnerControls) {
-    settingsRows.unshift({
-      titleAr: "لوحة الإدارة",
-      titleEn: "Admin dashboard",
-      hintAr: "إدارة رواج والمراجعات",
-      hintEn: "Manage RAWAJ and reviews",
-      to: "/admin",
-      icon: UserCog,
-    });
-  }
-
   const helpRows: AccountRow[] = [
     {
       titleAr: "الدعم والمساعدة",
@@ -214,8 +192,8 @@ function MorePage() {
             eyebrow={text("الاختصارات", "Shortcuts")}
             title={text("مركز العمليات", "Command center")}
             description={text(
-              "وصول سريع إلى الإعلانات والرسائل والتنبيهات.",
-              "Quick access to listings, messages, and notifications.",
+              "وصول سريع إلى الرسائل والتنبيهات.",
+              "Quick access to messages and notifications.",
             )}
           />
           <div className="rawaj-more-v2__command">
@@ -351,34 +329,28 @@ function SecondaryShortcut({
   text: (ar: string, en: string) => string;
 }) {
   const Icon = row.icon;
-  if (row.to === "/promotion") {
-    return (
-      <Link
-        to="/promotion"
-        aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
-        className="group col-span-full flex min-h-20 items-center gap-3 rounded-[1.15rem] bg-amber-500/12 p-3 text-start text-[#3b2a0b] ring-1 ring-inset ring-amber-700/20 transition hover:bg-amber-500/18 active:scale-[0.985] sm:col-span-1 dark:text-amber-50"
-      >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-[#2b1d05] shadow-soft">
-          <Icon className="h-6 w-6" aria-hidden="true" />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-black">Boost</span>
-          <span className="mt-0.5 block text-[10px] font-semibold leading-4 text-amber-950/70 dark:text-amber-100/75">
-            {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
-          </span>
-        </span>
-        <ChevronLeft className="ms-auto h-4 w-4 shrink-0 text-amber-800 rtl:rotate-180 dark:text-amber-200" />
-      </Link>
-    );
-  }
+  const isBoost = row.to === "/promotion";
   return (
     <Link
       to={row.to ?? "/more"}
+      data-boost-shortcut={isBoost ? "true" : undefined}
+      aria-label={
+        isBoost ? text("Boost — احصل على عملاء أكثر", "Boost — Get more buyers") : undefined
+      }
       className={`rawaj-color-card ${row.world} flex min-h-20 flex-col items-center justify-center gap-2 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5`}
     >
-      <Icon className="relative h-4.5 w-4.5 text-primary" />
-      <span className="relative text-[10.5px] font-semibold text-foreground">
-        {text(row.titleAr, row.titleEn)}
+      <span className={isBoost ? "rawaj-boost-shortcut__icon" : undefined}>
+        <Icon className={isBoost ? "h-7 w-7" : "h-4.5 w-4.5"} />
+      </span>
+      <span className="relative">
+        <strong className="block text-[10.5px] font-semibold text-foreground">
+          {text(row.titleAr, row.titleEn)}
+        </strong>
+        {isBoost ? (
+          <small className="rawaj-boost-shortcut__hint mt-1 block text-[10px] font-semibold">
+            {text("احصل على عملاء أكثر", "Get more buyers")}
+          </small>
+        ) : null}
       </span>
     </Link>
   );
