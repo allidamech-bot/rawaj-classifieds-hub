@@ -84,7 +84,11 @@ export function ListingMediaExperience({
             </>
           ) : (
             <div className="rawaj-detail-media__placeholder">
-              <PlaceholderArt type={placeholder} aspect="wide" />
+              <PlaceholderArt
+                type={placeholder}
+                aspect="wide"
+                label={text("بدون صورة", "No image")}
+              />
             </div>
           )}
 
