@@ -59,52 +59,107 @@
   outline-offset: 2px !important;
 }
 
-/* The rating already lives in the hero metric. Do not repeat it as a second CTA. */
+/* The review metric itself is the review entry point; avoid a duplicate CTA below. */
 .rawaj-storefront-identity__actions > a[href="#seller-reviews"] {
   display: none !important;
 }
 
-/* Owner cards: actions must read as a compact utility rail, not a second content block. */
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] {
+  padding: 0 !important;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] > a {
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 100% !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 0.45rem !important;
+  align-items: center !important;
+  border-radius: inherit !important;
+  padding: 0.65rem !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"]:has(a:hover) {
+  border-color: rgba(232, 202, 141, 0.34) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"]:has(a:active) {
+  transform: scale(0.985) !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] > a:focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: -2px !important;
+}
+
+#seller-reviews {
+  scroll-margin-top: 5.5rem !important;
+}
+
+/* Owner cards: only the quick-action row is a 4-column toolbar. The outer block stays vertical. */
 @media (max-width: 767px) {
   .rawaj-owner-listing-card__actions {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0.3rem !important;
+    display: block !important;
     margin-top: 0.45rem !important;
     padding-top: 0.5rem !important;
   }
 
-  .rawaj-owner-listing-card__actions :is(a, button) {
+  .rawaj-owner-listing-card__actions > div:first-child {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.34rem !important;
+  }
+
+  .rawaj-owner-listing-card__actions > div:first-child :is(a, button) {
+    width: 100% !important;
     min-width: 0 !important;
-    min-height: 2.35rem !important;
-    gap: 0.22rem !important;
-    border-radius: 0.62rem !important;
-    padding: 0.26rem 0.2rem !important;
-    font-size: 0.64rem !important;
-    line-height: 1.15 !important;
+    min-height: 2.65rem !important;
+    gap: 0.28rem !important;
+    border-radius: 0.66rem !important;
+    padding: 0.38rem 0.3rem !important;
+    font-size: 0.67rem !important;
+    line-height: 1.2 !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
     box-shadow: none !important;
   }
 
-  .rawaj-owner-listing-card__actions :is(a, button) svg {
-    width: 0.92rem !important;
-    height: 0.92rem !important;
+  .rawaj-owner-listing-card__actions > div:first-child :is(a, button) svg {
+    width: 1rem !important;
+    height: 1rem !important;
     flex: 0 0 auto !important;
   }
 
   .rawaj-owner-listing-card__manage {
-    min-height: 2.4rem !important;
-    margin-top: 0.32rem !important;
-    border-radius: 0.65rem !important;
-    padding: 0.3rem 0.55rem !important;
-    font-size: 0.66rem !important;
+    display: flex !important;
+    width: 100% !important;
+    min-height: 2.55rem !important;
+    margin-top: 0.36rem !important;
+    border-radius: 0.66rem !important;
+    padding: 0.38rem 0.65rem !important;
+    font-size: 0.68rem !important;
     line-height: 1.2 !important;
     box-shadow: none !important;
   }
 
   .rawaj-owner-listing-card__manage svg {
-    width: 0.9rem !important;
-    height: 0.9rem !important;
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .rawaj-owner-listing-card__actions > div:first-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -120,9 +175,5 @@
   ) {
     min-height: 2.5rem !important;
     font-size: 0.65rem !important;
-  }
-
-  .rawaj-owner-listing-card__actions :is(a, button) {
-    font-size: 0.6rem !important;
   }
 }
