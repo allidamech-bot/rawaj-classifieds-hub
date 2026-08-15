@@ -59,6 +59,55 @@
   outline-offset: 2px !important;
 }
 
+/* The rating already lives in the hero metric. Do not repeat it as a second CTA. */
+.rawaj-storefront-identity__actions > a[href="#seller-reviews"] {
+  display: none !important;
+}
+
+/* Owner cards: actions must read as a compact utility rail, not a second content block. */
+@media (max-width: 767px) {
+  .rawaj-owner-listing-card__actions {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.3rem !important;
+    margin-top: 0.45rem !important;
+    padding-top: 0.5rem !important;
+  }
+
+  .rawaj-owner-listing-card__actions :is(a, button) {
+    min-width: 0 !important;
+    min-height: 2.35rem !important;
+    gap: 0.22rem !important;
+    border-radius: 0.62rem !important;
+    padding: 0.26rem 0.2rem !important;
+    font-size: 0.64rem !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+  }
+
+  .rawaj-owner-listing-card__actions :is(a, button) svg {
+    width: 0.92rem !important;
+    height: 0.92rem !important;
+    flex: 0 0 auto !important;
+  }
+
+  .rawaj-owner-listing-card__manage {
+    min-height: 2.4rem !important;
+    margin-top: 0.32rem !important;
+    border-radius: 0.65rem !important;
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.66rem !important;
+    line-height: 1.2 !important;
+    box-shadow: none !important;
+  }
+
+  .rawaj-owner-listing-card__manage svg {
+    width: 0.9rem !important;
+    height: 0.9rem !important;
+  }
+}
+
 @media (max-width: 390px) {
   .rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__inner {
     grid-template-columns: 1fr 1fr !important;
@@ -71,5 +120,9 @@
   ) {
     min-height: 2.5rem !important;
     font-size: 0.65rem !important;
+  }
+
+  .rawaj-owner-listing-card__actions :is(a, button) {
+    font-size: 0.6rem !important;
   }
 }
