@@ -126,7 +126,6 @@ export const auditedOverrideStyleHrefs = [
   homeNotificationOverlayFixCss,
   listingStudioMobileOverflowFixCss,
   listingPreviewTrueSizeCss,
-  listingDetailV3Css,
   premiumMarketplaceV14Css,
   finalMarketplaceV15Css,
   unifiedMarketplaceV16Css,
