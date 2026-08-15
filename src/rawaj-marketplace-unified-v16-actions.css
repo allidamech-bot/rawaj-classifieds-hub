@@ -177,3 +177,30 @@
     font-size: 0.65rem !important;
   }
 }
+
+/* Store discovery: signed-in users get a permanent direct store entry in the header. */
+.rawaj-header-store {
+  border: 1px solid rgba(216, 174, 95, 0.2) !important;
+  color: #e8ca8d !important;
+  background: rgba(216, 174, 95, 0.075) !important;
+}
+
+.rawaj-header-store[data-active="true"] {
+  border-color: rgba(232, 202, 141, 0.42) !important;
+  color: #17201e !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
+}
+
+.rawaj-header-store:focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: 2px !important;
+}
+
+/* My Store no longer belongs in the command-center card list; the header icon owns that job. */
+.rawaj-more-v2 .rawaj-more-v2__command a[href="/profile/listings"] {
+  display: none !important;
+}
+
+.rawaj-more-v2 .rawaj-more-v2__command > .rawaj-more-v2__command > a {
+  grid-column: 1 / -1 !important;
+}
