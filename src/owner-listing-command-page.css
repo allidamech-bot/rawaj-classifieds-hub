@@ -1,0 +1,541 @@
+/* RAWAJ Owner Listing Command Page
+ * Scoped exclusively to /profile/listings/:id manage mode.
+ * Reframes the existing Listing Studio as a focused owner command workspace
+ * without touching listing business logic or the public listing experience.
+ */
+
+.rawaj-listing-studio-v2--manage {
+  --owner-command-bg: #15191f;
+  --owner-command-surface: #1e242c;
+  --owner-command-surface-raised: #252c35;
+  --owner-command-surface-soft: #1a2027;
+  --owner-command-line: rgba(255, 255, 255, 0.075);
+  --owner-command-line-strong: rgba(226, 187, 112, 0.2);
+  --owner-command-ink: #f4f0e7;
+  --owner-command-muted: #a8b0b7;
+  --owner-command-gold: #dfb96c;
+  --owner-command-gold-deep: #b98a3c;
+  --owner-command-green: #72c7a1;
+  --owner-command-amber: #e6b261;
+  --owner-command-danger: #f08a82;
+  position: relative;
+  width: min(100%, 88rem);
+  color: var(--owner-command-ink);
+}
+
+.rawaj-listing-studio-v2--manage::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(223, 185, 108, 0.07), transparent 24rem),
+    radial-gradient(circle at 8% 72%, rgba(53, 109, 91, 0.08), transparent 28rem),
+    var(--owner-command-bg);
+}
+
+/* Command hero */
+.rawaj-listing-studio-v2--manage > .rawaj-studio-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 15rem;
+  border: 1px solid var(--owner-command-line-strong);
+  border-radius: 1.75rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
+  background:
+    linear-gradient(115deg, rgba(223, 185, 108, 0.08), transparent 38%),
+    radial-gradient(circle at 90% -10%, rgba(223, 185, 108, 0.16), transparent 36%),
+    linear-gradient(145deg, #202a35 0%, #18212a 58%, #151b22 100%);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.rawaj-listing-studio-v2--manage > .rawaj-studio-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.26;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0.7px, transparent 0.7px);
+  background-size: 1.25rem 1.25rem;
+  mask-image: linear-gradient(110deg, transparent 20%, #000 88%);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 48rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.42rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(223, 185, 108, 0.18);
+  border-radius: 999px;
+  padding: 0.3rem 0.68rem;
+  color: var(--owner-command-gold);
+  background: rgba(223, 185, 108, 0.065);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__eyebrow svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero h1 {
+  max-width: 28ch;
+  margin: 0;
+  color: var(--owner-command-ink) !important;
+  font-size: clamp(1.45rem, 4vw, 2.35rem);
+  font-weight: 900;
+  line-height: 1.28;
+  text-wrap: balance;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__description {
+  max-width: 62ch;
+  margin-top: 0.6rem;
+  color: #b9c0c5 !important;
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__status > span {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  border: 1px solid var(--owner-command-line);
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  color: #d7ddd9;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__status > span:first-child {
+  border-color: rgba(114, 199, 161, 0.2);
+  color: #a4dec3;
+  background: rgba(114, 199, 161, 0.07);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__visual {
+  opacity: 0.75;
+  filter: saturate(0.62) sepia(0.08);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions a {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--owner-command-line-strong);
+  border-radius: 0.9rem;
+  padding: 0.55rem 0.9rem;
+  color: var(--owner-command-ink) !important;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 0.72rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions a:first-child {
+  color: #241b0c !important;
+  border-color: transparent;
+  background: var(--owner-command-gold);
+}
+
+/* Trust strip becomes a compact command context row. */
+.rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0.75rem 0 1rem;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip > div {
+  min-height: 3.6rem;
+  border: 1px solid var(--owner-command-line);
+  border-radius: 1rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(30, 36, 44, 0.82);
+}
+
+.rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip strong {
+  color: #cdd3d5 !important;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip span {
+  color: var(--owner-command-gold);
+  background: rgba(223, 185, 108, 0.08);
+}
+
+/* State messages: concise operational alerts. */
+.rawaj-listing-studio-v2--manage > .mb-4 {
+  margin-bottom: 0.65rem !important;
+}
+
+.rawaj-listing-studio-v2--manage > .mb-4 .rawaj-studio-message {
+  min-height: 3.1rem;
+  border-radius: 1rem;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+/* Main command workspace */
+.rawaj-listing-studio-v2--manage > .rawaj-studio-shell[data-mode="manage"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: clamp(0.8rem, 2vw, 1.2rem);
+  align-items: start;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__content {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section {
+  overflow: hidden;
+  border: 1px solid var(--owner-command-line) !important;
+  border-radius: 1.2rem !important;
+  background: rgba(30, 36, 44, 0.88) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12) !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section__heading {
+  display: flex;
+  min-height: 4.15rem;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--owner-command-line);
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section__heading h2 {
+  margin: 0;
+  color: var(--owner-command-ink) !important;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section__heading p {
+  margin: 0.15rem 0 0;
+  color: var(--owner-command-muted) !important;
+  font-size: 0.66rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section__body {
+  padding: 1rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section label,
+.rawaj-listing-studio-v2--manage .rawaj-studio-section .text-sm,
+.rawaj-listing-studio-v2--manage .rawaj-studio-section .font-semibold {
+  color: #d8dddf;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section .input,
+.rawaj-listing-studio-v2--manage .rawaj-studio-section :is(input, textarea, select) {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  color: var(--owner-command-ink) !important;
+  background: #171d24 !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-section :is(input, textarea, select):focus {
+  border-color: rgba(223, 185, 108, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(223, 185, 108, 0.09) !important;
+}
+
+/* Media management should feel like a gallery, not a form grid. */
+.rawaj-listing-studio-v2--manage .rawaj-studio-media-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-media-card,
+.rawaj-listing-studio-v2--manage .rawaj-studio-media-picker {
+  overflow: hidden;
+  border: 1px solid var(--owner-command-line) !important;
+  border-radius: 1rem !important;
+  background: var(--owner-command-surface-soft) !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-media-picker {
+  color: var(--owner-command-muted);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-media-picker svg {
+  color: var(--owner-command-gold);
+}
+
+/* Right-side owner command rail. */
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside {
+  position: sticky;
+  top: calc(var(--rawaj-header-height, 4.5rem) + 0.75rem);
+  display: grid;
+  gap: 0.72rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-completion,
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview,
+.rawaj-listing-studio-v2--manage .rawaj-studio-quality,
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > .rawaj-studio-section {
+  border: 1px solid var(--owner-command-line) !important;
+  border-radius: 1.15rem !important;
+  background: rgba(30, 36, 44, 0.94) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-completion {
+  padding: 0.85rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-completion__icon {
+  color: var(--owner-command-gold);
+  background: rgba(223, 185, 108, 0.09);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-completion h2,
+.rawaj-listing-studio-v2--manage .rawaj-studio-quality h2,
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview h2,
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview h3 {
+  color: var(--owner-command-ink) !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview__media {
+  margin: 0 0.75rem;
+  border-radius: 0.95rem;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview__media img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-preview__body strong {
+  color: var(--owner-command-gold) !important;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-quality__track > span,
+.rawaj-listing-studio-v2--manage .rawaj-studio-completion[data-ready="true"] {
+  --rawaj-success: var(--owner-command-green);
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > .rawaj-studio-section:nth-last-of-type(2) button:first-of-type {
+  min-height: 3rem;
+  border-radius: 0.9rem !important;
+  font-weight: 850;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > .rawaj-studio-section:nth-last-of-type(2) .rawaj-button-primary {
+  color: #231b0e !important;
+  background: var(--owner-command-gold) !important;
+}
+
+/* Listing metadata becomes secondary, not visually equal to edit controls. */
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside dl > div {
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  padding: 0.45rem 0;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside dl > div:last-child {
+  border-bottom: 0;
+}
+
+.rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside dd {
+  max-width: 58%;
+  overflow: hidden;
+  color: #d8dddf;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions a:hover {
+    transform: translateY(-1px);
+    border-color: rgba(223, 185, 108, 0.38);
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-section {
+    transition: border-color 160ms ease, transform 160ms ease;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__content > .rawaj-studio-section:hover {
+    border-color: rgba(223, 185, 108, 0.14) !important;
+  }
+}
+
+@media (max-width: 64rem) {
+  .rawaj-listing-studio-v2--manage > .rawaj-studio-shell[data-mode="manage"] {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 52rem) {
+  .rawaj-listing-studio-v2--manage > .rawaj-studio-shell[data-mode="manage"] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside {
+    position: static;
+    width: 100%;
+    order: -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > :nth-child(2) {
+    grid-row: span 2;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > .rawaj-studio-section {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-listing-studio-v2--manage {
+    padding-inline: 0.55rem !important;
+  }
+
+  .rawaj-listing-studio-v2--manage > .rawaj-studio-hero {
+    min-height: 0;
+    border-radius: 1.2rem;
+    padding: 1rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__visual {
+    display: none;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__description {
+    max-width: none;
+    font-size: 0.72rem;
+    line-height: 1.65;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions a {
+    min-width: 0;
+    padding-inline: 0.55rem;
+  }
+
+  .rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.45rem;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .rawaj-listing-studio-v2--manage > .rawaj-studio-trust-strip > div {
+    flex: 0 0 78%;
+    min-height: 3.4rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > :nth-child(2) {
+    grid-row: auto;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-completion {
+    order: 1;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-preview {
+    order: 2;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-quality {
+    order: 3;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-shell__aside > .rawaj-studio-section {
+    order: 4;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-section {
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-section__heading {
+    min-height: 3.7rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-section__body {
+    padding: 0.8rem;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 23rem) {
+  .rawaj-listing-studio-v2--manage .rawaj-studio-hero__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-listing-studio-v2--manage .rawaj-studio-media-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-listing-studio-v2--manage *,
+  .rawaj-listing-studio-v2--manage *::before,
+  .rawaj-listing-studio-v2--manage *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
