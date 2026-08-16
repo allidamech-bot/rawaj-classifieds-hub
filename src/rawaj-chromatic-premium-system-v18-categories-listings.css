@@ -1,0 +1,256 @@
+/* RAWAJ Chromatic Premium System v18 — Categories + listing cards.
+ * Removes the remaining grey legacy surfaces and brings discovery/listing
+ * surfaces into the approved dark navy + gold + pink/violet visual language.
+ */
+
+/* Categories hero */
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+  overflow: hidden;
+  border: 1px solid rgba(216, 174, 95, 0.18) !important;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(74, 140, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 8% 92%, rgba(198, 44, 120, 0.14), transparent 38%),
+    radial-gradient(circle at 58% 12%, rgba(216, 174, 95, 0.075), transparent 34%),
+    linear-gradient(150deg, #20222d 0%, #171a24 52%, #11151d 100%) !important;
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero > div:first-child > .flex > span:first-child {
+  border: 1px solid rgba(255, 206, 116, 0.16) !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #d83658 0%, #c12b84 52%, #7465ef 100%) !important;
+  box-shadow: 0 10px 24px rgba(185, 39, 117, 0.24), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero .rawaj-eyebrow {
+  color: #ef93ca !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero h1 {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero p:not(.rawaj-eyebrow) {
+  color: #b8b3b1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search {
+  border-top: 1px solid rgba(216, 174, 95, 0.1) !important;
+  background: rgba(10, 13, 19, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label {
+  border-color: rgba(216, 174, 95, 0.14) !important;
+  color: #c8c2be !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.035), transparent 40%),
+    linear-gradient(145deg, #10141b, #0c1017) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label:focus-within {
+  border-color: rgba(216, 174, 95, 0.48) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input::placeholder {
+  color: #858d98 !important;
+}
+
+/* Directory cards */
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid {
+  gap: 0.75rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card,
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid > article,
+.rawaj-app-shell[data-resolved-pathname="/categories"] main > section.grid > article.rawaj-surface {
+  overflow: hidden;
+  border: 1px solid rgba(216, 174, 95, 0.12) !important;
+  border-radius: 1.15rem !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.055), transparent 38%),
+    linear-gradient(150deg, #1b1f28, #141820 62%, #11151c) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(4n + 1) {
+  border-color: rgba(74, 140, 255, 0.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 44%),
+    linear-gradient(150deg, #1a202c, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(4n + 2) {
+  border-color: rgba(219, 73, 179, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.12), transparent 44%),
+    linear-gradient(150deg, #211a25, #15171f) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(4n + 3) {
+  border-color: rgba(92, 178, 144, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(92,178,144,.105), transparent 44%),
+    linear-gradient(150deg, #17231f, #14191b) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(4n) {
+  border-color: rgba(216, 174, 95, 0.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.11), transparent 44%),
+    linear-gradient(150deg, #221f1a, #16181c) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .category-tile {
+  border: 1px solid rgba(255,255,255,.08) !important;
+  color: #e8ca8d !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.11), rgba(198,44,120,.09)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card :is(.text-foreground, h2, h3) {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .text-muted-foreground {
+  color: #9da3ab !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .text-brand-orange {
+  color: #ef93ca !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .text-gold {
+  color: #e8ca8d !important;
+}
+
+/* Listing cards sitewide */
+.rawaj-app-shell .rawaj-adaptive-card {
+  border: 1px solid rgba(216, 174, 95, 0.12) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.055), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(198,44,120,.04), transparent 42%),
+    linear-gradient(155deg, #1a1e27 0%, #141820 60%, #11151c 100%) !important;
+  box-shadow: 0 15px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card[data-featured="true"] {
+  border-color: rgba(219, 73, 179, 0.3) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.13), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(116,101,239,.075), transparent 42%),
+    linear-gradient(155deg, #231a27, #171822 62%, #12151c) !important;
+  box-shadow: 0 18px 40px rgba(65,25,55,.28), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__media {
+  background: #0d1117 !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__body {
+  background: transparent !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__price {
+  color: #f1d7df !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__category {
+  border: 1px solid rgba(219,73,179,.12) !important;
+  color: #d889bd !important;
+  background: rgba(219,73,179,.055) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__title {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__facts > div {
+  border: 1px solid rgba(255,255,255,.055) !important;
+  background: rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__facts dt {
+  color: #858d98 !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__facts dd {
+  color: #ddd7d1 !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__meta {
+  border-top-color: rgba(216,174,95,.085) !important;
+  color: #9299a2 !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__meta svg {
+  color: #67b7cf !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__action > :is(button, a) {
+  border: 1px solid rgba(216,174,95,.14) !important;
+  color: #f1ece5 !important;
+  background: rgba(24,27,35,.84) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.05) !important;
+  backdrop-filter: blur(14px) saturate(120%) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
+  border-color: rgba(255,255,255,.14) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #d93a68, #bb2b92 58%, #725fe7) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__status[data-tone="reserved"] {
+  border-color: rgba(216,174,95,.22) !important;
+  color: #f8ead0 !important;
+  background: rgba(111,82,40,.9) !important;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card__viewed {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #e8ca8d !important;
+  background: rgba(18,21,28,.82) !important;
+}
+
+/* Promoted/latest discovery groups must not fall back to legacy grey. */
+.rawaj-app-shell .rawaj-categories-discovery__group[data-tone="promoted"] {
+  border-color: rgba(219,73,179,.17) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.09), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(116,101,239,.055), transparent 40%),
+    linear-gradient(155deg, #1d1822, #12161d) !important;
+}
+
+.rawaj-app-shell .rawaj-categories-discovery__latest-grid .rawaj-adaptive-card,
+.rawaj-app-shell .rawaj-categories-discovery__promoted-grid .rawaj-adaptive-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.045), transparent 38%),
+    linear-gradient(155deg, #1a1e27, #12161d) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell .rawaj-adaptive-card:hover,
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:hover {
+    border-color: rgba(216,174,95,.36) !important;
+    box-shadow: 0 20px 46px rgba(0,0,0,.3), 0 0 0 1px rgba(216,174,95,.035) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+    border-radius: 1.25rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card,
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid > article {
+    border-radius: 1rem !important;
+  }
+}
