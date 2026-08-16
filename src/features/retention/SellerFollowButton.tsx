@@ -6,6 +6,7 @@ import {
   setSellerFollow,
   type SellerFollowSummary,
 } from "@/lib/classifieds-api";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -43,17 +44,38 @@ export function SellerFollowButton({
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError("");
-    const result = await fetchSellerFollowSummary(currentSellerId);
-    if (
-      requestId !== requestIdRef.current ||
-      currentProfileId !== profileIdRef.current ||
-      currentSellerId !== sellerIdRef.current
-    )
-      return;
-    if (result.ok) setSummary(result.data);
-    else setError(result.error.message);
-    setLoading(false);
-  }, [profileId, sellerId]);
+    try {
+      const result = await fetchSellerFollowSummary(currentSellerId);
+      if (
+        requestId !== requestIdRef.current ||
+        currentProfileId !== profileIdRef.current ||
+        currentSellerId !== sellerIdRef.current
+      )
+        return;
+      if (result.ok) setSummary(result.data);
+      else setError(result.error.message);
+    } catch (caught) {
+      if (
+        requestId !== requestIdRef.current ||
+        currentProfileId !== profileIdRef.current ||
+        currentSellerId !== sellerIdRef.current
+      )
+        return;
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحميل بيانات المتابعة.", "Could not load follow data."),
+      );
+    } finally {
+      if (
+        requestId === requestIdRef.current &&
+        currentProfileId === profileIdRef.current &&
+        currentSellerId === sellerIdRef.current
+      ) {
+        setLoading(false);
+      }
+    }
+  }, [profileId, sellerId, text]);
 
   useEffect(() => {
     requestIdRef.current += 1;
@@ -69,9 +91,7 @@ export function SellerFollowButton({
 
   if (isOwnProfile) return null;
 
-  const countLabel = new Intl.NumberFormat(language === "ar" ? "ar-SY" : "en-US").format(
-    summary.followerCount,
-  );
+  const countLabel = new Intl.NumberFormat(marketLocale(language)).format(summary.followerCount);
   const actionLabel = summary.isFollowing
     ? text("إلغاء المتابعة", "Unfollow")
     : text("متابعة البائع", "Follow seller");
@@ -115,6 +135,14 @@ export function SellerFollowButton({
         return;
       if (result.ok) setSummary(result.data);
       else setError(result.error.message);
+    } catch (caught) {
+      if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحديث المتابعة.", "Could not update follow status."),
+        );
+      }
     } finally {
       writeScopesRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current && currentSellerId === sellerIdRef.current)
