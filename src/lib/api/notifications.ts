@@ -9,6 +9,16 @@ import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
 const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20;
 const MAX_NOTIFICATIONS_PAGE_SIZE = 50;
+const RECENT_UNREAD_COUNT_WINDOW_MS = 5_000;
+
+interface RecentUnreadCount {
+  value: number;
+  fetchedAt: number;
+  generation: number;
+}
+
+let unreadCountGeneration = 0;
+let recentUnreadCount: RecentUnreadCount | null = null;
 
 export interface NotificationPageOptions {
   cursor?: NotificationCursor | null;
@@ -56,8 +66,31 @@ export async function fetchMyNotificationById(
   return request<NotificationItem | null>(`/v1/account/notifications/${encodeURIComponent(id)}`);
 }
 
-export function fetchUnreadNotificationsCount(): Promise<ClassifiedsResult<number>> {
-  return request<number>("/v1/account/notifications/unread-count");
+export async function fetchUnreadNotificationsCount(): Promise<ClassifiedsResult<number>> {
+  const generation = unreadCountGeneration;
+  const result = await request<number>("/v1/account/notifications/unread-count");
+  if (result.ok && generation === unreadCountGeneration) {
+    recentUnreadCount = {
+      value: Math.max(0, result.data),
+      fetchedAt: Date.now(),
+      generation,
+    };
+  }
+  return result;
+}
+
+export function getRecentUnreadNotificationsCount(
+  maxAgeMs = RECENT_UNREAD_COUNT_WINDOW_MS,
+): number | null {
+  const snapshot = recentUnreadCount;
+  if (!snapshot || snapshot.generation !== unreadCountGeneration) return null;
+  if (Date.now() - snapshot.fetchedAt > Math.max(0, maxAgeMs)) return null;
+  return snapshot.value;
+}
+
+function invalidateRecentUnreadNotificationsCount() {
+  unreadCountGeneration += 1;
+  recentUnreadCount = null;
 }
 
 export async function markNotificationRead(
@@ -69,7 +102,10 @@ export async function markNotificationRead(
     method: "PATCH",
     body: {},
   });
-  if (result.ok) emitUnreadActivityChanged();
+  if (result.ok) {
+    invalidateRecentUnreadNotificationsCount();
+    emitUnreadActivityChanged();
+  }
   return result;
 }
 
@@ -80,7 +116,10 @@ export async function markAllNotificationsRead(): Promise<
     "/v1/account/notifications/read-all",
     { method: "POST", body: {} },
   );
-  if (result.ok) emitUnreadActivityChanged();
+  if (result.ok) {
+    invalidateRecentUnreadNotificationsCount();
+    emitUnreadActivityChanged();
+  }
   return result;
 }
 
