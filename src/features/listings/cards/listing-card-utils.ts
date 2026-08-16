@@ -4,6 +4,7 @@ import {
   type CategorySpecificDetails,
 } from "@/lib/category-fields";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
+import { marketLocale } from "@/lib/market-locale";
 
 export type ListingCardVariant = "product" | "vehicle" | "property";
 export type ListingCardLanguage = "ar" | "en";
@@ -143,7 +144,7 @@ function text(language: ListingCardLanguage, ar: string, en: string) {
 }
 
 function formatNumber(value: number, language: ListingCardLanguage) {
-  return new Intl.NumberFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.NumberFormat(marketLocale(language), {
     maximumFractionDigits: 0,
   }).format(value);
 }
