@@ -1,0 +1,222 @@
+/* RAWAJ Chromatic Premium System v18 — home + marketplace discovery.
+ * Final ownership for discovery hero, search controls, category worlds,
+ * featured showcase, results toolbar/sidebar and their mobile states.
+ */
+
+/* Home hero */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-hero {
+  border-color: rgba(216,174,95,.16) !important;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(74,140,255,.15), transparent 34%),
+    radial-gradient(circle at 7% 90%, rgba(198,44,120,.13), transparent 38%),
+    radial-gradient(circle at 50% 0%, rgba(216,174,95,.07), transparent 34%),
+    linear-gradient(150deg, #1d202a, #141820 62%, #0f131a) !important;
+  box-shadow: 0 22px 52px rgba(0,0,0,.29), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-hero__copy h1 {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-hero__copy > p:not(.rawaj-discovery-kicker) {
+  color: #b8b3b1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-kicker {
+  color: #ef93ca !important;
+}
+
+/* Search overlay and controls */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-search-overlay,
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.045), transparent 42%),
+    linear-gradient(150deg, rgba(25,29,38,.97), rgba(15,19,26,.97)) !important;
+  box-shadow: 0 17px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+}
+
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-search-location,
+  .rawaj-search-filter,
+  .rawaj-search-toolbar__search,
+  .rawaj-search-toolbar__filter,
+  .rawaj-search-toolbar__sort,
+  .rawaj-search-toolbar__saved,
+  .rawaj-search-toolbar__views
+) {
+  border-color: rgba(216,174,95,.12) !important;
+  color: #d8d2cc !important;
+  background: #0f131a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.02) !important;
+}
+
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-search-toolbar__search
+):focus-within {
+  border-color: rgba(216,174,95,.46) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+.rawaj-app-shell :is(.rawaj-search-overlay__field, .rawaj-search-toolbar__search) input {
+  color: #f7f3ed !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell :is(.rawaj-search-overlay__field, .rawaj-search-toolbar__search) input::placeholder {
+  color: #858d98 !important;
+}
+
+.rawaj-app-shell .rawaj-search-overlay__submit {
+  border: 1px solid rgba(255,255,255,.1) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #d83658, #c12b84 55%, #7465ef) !important;
+  box-shadow: 0 9px 22px rgba(183,42,127,.23) !important;
+}
+
+/* Category worlds */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world {
+  border-color: rgba(216,174,95,.11) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.055), transparent 42%),
+    linear-gradient(145deg, #191d26, #12161d) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:nth-child(5n + 1) {
+  border-color: rgba(92,178,144,.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(92,178,144,.11), transparent 44%),
+    linear-gradient(145deg, #15211e, #12171a) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:nth-child(5n + 2) {
+  border-color: rgba(216,174,95,.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.11), transparent 44%),
+    linear-gradient(145deg, #211e18, #15171a) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:nth-child(5n + 3) {
+  border-color: rgba(219,73,179,.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.11), transparent 44%),
+    linear-gradient(145deg, #211925, #15171f) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:nth-child(5n + 4) {
+  border-color: rgba(74,140,255,.19) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.115), transparent 44%),
+    linear-gradient(145deg, #17202c, #141820) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:nth-child(5n) {
+  border-color: rgba(240,95,79,.17) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240,95,79,.1), transparent 44%),
+    linear-gradient(145deg, #211a1c, #15171c) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world__copy strong {
+  color: #f7f3ed !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world__copy small {
+  color: #9da3ab !important;
+}
+
+/* Featured showcase */
+.rawaj-app-shell .rawaj-featured-card {
+  overflow: hidden;
+  border: 1px solid rgba(216,174,95,.17) !important;
+  color: #fff !important;
+  background: #0d1117 !important;
+  box-shadow: 0 22px 52px rgba(0,0,0,.32), 0 0 0 1px rgba(216,174,95,.02) !important;
+}
+
+.rawaj-app-shell .rawaj-featured-card__scrim {
+  background:
+    linear-gradient(to top, rgba(10,12,18,.97) 0%, rgba(13,16,23,.74) 46%, rgba(16,18,26,.16) 78%),
+    linear-gradient(to right, rgba(111,35,91,.22), transparent 58%) !important;
+}
+
+.rawaj-app-shell .rawaj-featured-card__badge {
+  border: 1px solid rgba(255,255,255,.13) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #d83658, #c12b84 55%, #7465ef) !important;
+  box-shadow: 0 8px 20px rgba(183,42,127,.24) !important;
+}
+
+.rawaj-app-shell .rawaj-featured-card__category {
+  color: #ef93ca !important;
+}
+.rawaj-app-shell .rawaj-featured-card__price {
+  color: #f4d9e0 !important;
+}
+.rawaj-app-shell .rawaj-featured-card__content h3 {
+  color: #fff !important;
+}
+.rawaj-app-shell .rawaj-featured-card__facts span {
+  border: 1px solid rgba(216,174,95,.11) !important;
+  color: #d8d2cc !important;
+  background: rgba(15,19,26,.58) !important;
+  backdrop-filter: blur(10px) !important;
+}
+.rawaj-app-shell .rawaj-featured-card__location {
+  color: #aeb4bd !important;
+}
+.rawaj-app-shell .rawaj-featured-card__location svg {
+  color: #67b7cf !important;
+}
+.rawaj-app-shell .rawaj-featured-card__open {
+  color: #e8ca8d !important;
+}
+.rawaj-app-shell .rawaj-featured-card__action > :is(button, a) {
+  border-color: rgba(216,174,95,.15) !important;
+  color: #fff !important;
+  background: rgba(16,19,27,.84) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.26) !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+/* Results page */
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__heading h1 {
+  color: #f7f3ed !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__heading > strong {
+  border-color: rgba(216,174,95,.16) !important;
+  color: #e8ca8d !important;
+  background: rgba(216,174,95,.055) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1__sidebar {
+  border-color: rgba(216,174,95,.12) !important;
+  color: #d8d2cc !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.045), transparent 40%),
+    linear-gradient(150deg, #181c25, #11151c) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1__sidebar :is(input, select, button) {
+  border-color: rgba(216,174,95,.11) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world:hover,
+  .rawaj-app-shell .rawaj-featured-card:hover {
+    border-color: rgba(216,174,95,.36) !important;
+    box-shadow: 0 24px 56px rgba(0,0,0,.34), 0 0 0 1px rgba(216,174,95,.035) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-search-overlay {
+    border-radius: 1.1rem !important;
+  }
+
+  .rawaj-app-shell .rawaj-featured-card {
+    border-radius: 1.25rem !important;
+  }
+}
