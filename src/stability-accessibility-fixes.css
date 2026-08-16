@@ -1,3 +1,5 @@
+@import "./rawaj-chromatic-premium-system-v17.css";
+
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
  * override the current dark semantic tokens on audited surfaces.
