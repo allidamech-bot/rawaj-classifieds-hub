@@ -2,6 +2,7 @@
 @import "./rawaj-chromatic-premium-system-v17-shell.css";
 @import "./rawaj-chromatic-premium-system-v17-primitives.css";
 @import "./rawaj-chromatic-premium-system-v17-portals.css";
+@import "./rawaj-chromatic-premium-system-v17-corrections.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
