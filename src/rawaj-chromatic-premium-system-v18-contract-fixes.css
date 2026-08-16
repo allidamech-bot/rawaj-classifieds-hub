@@ -1,0 +1,4 @@
+/* RAWAJ V18 final contract corrections. */
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .category-tile {
+  background-color: #1b1722 !important;
+}
