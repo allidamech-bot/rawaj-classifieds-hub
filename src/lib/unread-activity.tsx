@@ -35,6 +35,7 @@ const EMPTY_COUNTS: UnreadActivityCounts = {
   notifications: 0,
   total: 0,
 };
+const UNREAD_POLL_INTERVAL_MS = 60_000;
 
 const UnreadActivityContext = createContext<UnreadActivityContextValue>({
   counts: EMPTY_COUNTS,
@@ -131,7 +132,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
         void refresh();
       }
     };
-    const interval = window.setInterval(refreshWhenVisible, 30_000);
+    const interval = window.setInterval(refreshWhenVisible, UNREAD_POLL_INTERVAL_MS);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
       window.clearInterval(interval);
