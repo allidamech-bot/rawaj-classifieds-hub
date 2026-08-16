@@ -32,16 +32,27 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Fix Syrian verification locale leak
+      - name: Apply targeted stability cleanup
         run: |
           python - <<'PY'
           from pathlib import Path
-          path = Path('src/routes/verification.tsx')
-          text = path.read_text()
-          old = 'language === "ar" ? "ar-SA" : "en-US"'
-          new = 'language === "ar" ? "ar-SY" : "en-US"'
-          if old in text:
-              path.write_text(text.replace(old, new))
+
+          verification = Path('src/routes/verification.tsx')
+          text = verification.read_text()
+          text = text.replace(
+              'language === "ar" ? "ar-SA" : "en-US"',
+              'language === "ar" ? "ar-SY" : "en-US"',
+          )
+          verification.write_text(text)
+
+          header = Path('src/components/shell/FloatingHeader.tsx')
+          text = header.read_text()
+          text = text.replace('    let timer: number | undefined;\n', '')
+          text = text.replace(
+              '    timer = window.setInterval(load, 60000);',
+              '    const timer = window.setInterval(load, 60000);',
+          )
+          header.write_text(text)
           PY
 
       - name: Format and autofix changed source files
