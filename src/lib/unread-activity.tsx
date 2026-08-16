@@ -53,6 +53,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
   const [countsProfileId, setCountsProfileId] = useState<string | null>(null);
   const profileId = auth.profile?.id ?? null;
   const activeProfileRef = useRef<string | null>(null);
+  const countsProfileIdRef = useRef<string | null>(null);
   const refreshInFlightRef = useRef<InFlightUnreadRefresh | null>(null);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
 
   const refreshFull = useCallback(async () => {
     if (auth.status !== "signedIn" || !profileId) {
+      countsProfileIdRef.current = null;
       setCounts(EMPTY_COUNTS);
       setCountsProfileId(null);
       setLoading(false);
@@ -85,7 +87,8 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
         if (activeProfileRef.current !== profileId) return;
 
         setCounts((current) => {
-          const currentForProfile = countsProfileId === profileId ? current : EMPTY_COUNTS;
+          const currentForProfile =
+            countsProfileIdRef.current === profileId ? current : EMPTY_COUNTS;
           const messages = conversationsResult.ok
             ? conversationsResult.data.reduce(
                 (sum, conversation) => sum + Math.max(0, conversation.unreadCount),
@@ -102,6 +105,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
             total: messages + notifications,
           };
         });
+        countsProfileIdRef.current = profileId;
         setCountsProfileId(profileId);
       } catch {
         // Keep the last known counters on transient/unexpected network failures.
@@ -115,7 +119,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     refreshRecord.promise = request;
     refreshInFlightRef.current = refreshRecord;
     return request;
-  }, [auth.status, countsProfileId, profileId]);
+  }, [auth.status, profileId]);
 
   const refresh = useCallback(async () => {
     if (auth.status !== "signedIn" || !profileId) {
@@ -123,7 +127,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     }
 
     const recentNotifications = getRecentUnreadNotificationsCount();
-    if (countsProfileId === profileId && recentNotifications !== null) {
+    if (countsProfileIdRef.current === profileId && recentNotifications !== null) {
       setCounts((current) => ({
         messages: current.messages,
         notifications: recentNotifications,
@@ -133,7 +137,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     }
 
     return refreshFull();
-  }, [auth.status, countsProfileId, profileId, refreshFull]);
+  }, [auth.status, profileId, refreshFull]);
 
   useEffect(() => {
     void refreshFull();
