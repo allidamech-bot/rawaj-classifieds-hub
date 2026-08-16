@@ -1,0 +1,611 @@
+/* RAWAJ Chromatic Premium System v17
+ * Sitewide visual language based on the premium /more experience:
+ * deep charcoal canvas, glass-like layered surfaces, restrained gold hairlines,
+ * and functional chromatic accents. This layer is intentionally visual-only:
+ * no route structure, business logic, or interaction semantics are changed.
+ */
+
+:root,
+.dark {
+  --rawaj-v17-canvas: #0b0e14;
+  --rawaj-v17-canvas-soft: #0f1219;
+  --rawaj-v17-surface: #141821;
+  --rawaj-v17-surface-raised: #191d27;
+  --rawaj-v17-surface-soft: #11151d;
+  --rawaj-v17-surface-glass: rgba(22, 26, 36, 0.82);
+  --rawaj-v17-gold: #d8ae5f;
+  --rawaj-v17-gold-soft: #e8ca8d;
+  --rawaj-v17-pink: #db49b3;
+  --rawaj-v17-magenta: #c52c78;
+  --rawaj-v17-violet: #8067ef;
+  --rawaj-v17-blue: #4a8cff;
+  --rawaj-v17-emerald: #5cb290;
+  --rawaj-v17-coral: #f05f4f;
+  --rawaj-v17-border: rgba(216, 174, 95, 0.16);
+  --rawaj-v17-border-strong: rgba(216, 174, 95, 0.3);
+  --rawaj-v17-border-neutral: rgba(255, 255, 255, 0.085);
+  --rawaj-v17-text: #f7f3ed;
+  --rawaj-v17-text-2: #c8c2be;
+  --rawaj-v17-text-3: #8e969f;
+  --rawaj-v17-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+  --rawaj-v17-shadow-raised: 0 22px 52px rgba(0, 0, 0, 0.32);
+  --rawaj-v17-inset: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --rawaj-v17-radius-card: 1.05rem;
+  --rawaj-v17-radius-panel: 1.35rem;
+  --rawaj-v17-gradient-action: linear-gradient(135deg, #cb334f 0%, #c92b77 46%, #725fe7 78%, #4c87f5 100%);
+  --rawaj-v17-gradient-icon: linear-gradient(145deg, #d83658 0%, #c12b84 50%, #7465ef 100%);
+
+  --rawaj-page-background: var(--rawaj-v17-canvas);
+  --rawaj-page-background-deep: #080b10;
+  --rawaj-card-background: var(--rawaj-v17-surface);
+  --rawaj-elevated-background: var(--rawaj-v17-surface-raised);
+  --rawaj-subtle-background: var(--rawaj-v17-surface-soft);
+  --rawaj-muted-surface: #171b24;
+  --rawaj-surface-active: #211d29;
+  --rawaj-surface-selected: #251b2a;
+  --rawaj-surface-inset: #0f131a;
+  --rawaj-border: var(--rawaj-v17-border-neutral);
+  --rawaj-border-strong: rgba(255, 255, 255, 0.14);
+  --rawaj-border-active: rgba(216, 174, 95, 0.46);
+  --rawaj-text-primary: var(--rawaj-v17-text);
+  --rawaj-text-secondary: var(--rawaj-v17-text-2);
+  --rawaj-text-muted: var(--rawaj-v17-text-3);
+  --rawaj-link: #ef93ca;
+  --rawaj-accent-gold: var(--rawaj-v17-gold);
+  --background: var(--rawaj-v17-canvas);
+  --card: var(--rawaj-v17-surface);
+  --popover: var(--rawaj-v17-surface-raised);
+  --muted: #171b24;
+  --border: var(--rawaj-v17-border-neutral);
+  --input: rgba(255, 255, 255, 0.13);
+  --ring: var(--rawaj-v17-gold);
+}
+
+html,
+body {
+  color-scheme: dark;
+  background: var(--rawaj-v17-canvas) !important;
+}
+
+body {
+  color: var(--rawaj-v17-text);
+  background:
+    radial-gradient(circle at 88% 3%, rgba(216, 174, 95, 0.07), transparent 24rem),
+    radial-gradient(circle at 5% 34%, rgba(112, 52, 103, 0.12), transparent 28rem),
+    radial-gradient(circle at 98% 72%, rgba(54, 82, 146, 0.06), transparent 24rem),
+    linear-gradient(180deg, #10131a 0%, #0d1016 48%, #0a0d12 100%) !important;
+}
+
+.rawaj-app-shell {
+  position: relative;
+  isolation: isolate;
+  color: var(--rawaj-v17-text);
+  background:
+    radial-gradient(circle at 90% 6%, rgba(216, 174, 95, 0.065), transparent 25rem),
+    radial-gradient(circle at 3% 42%, rgba(111, 39, 91, 0.11), transparent 29rem),
+    radial-gradient(circle at 92% 78%, rgba(63, 92, 155, 0.055), transparent 25rem),
+    linear-gradient(180deg, #10131a 0%, #0d1016 52%, #0b0e14 100%) !important;
+}
+
+.rawaj-app-shell::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image:
+    radial-gradient(circle, rgba(216, 174, 95, 0.18) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle, rgba(141, 85, 151, 0.14) 0 0.65px, transparent 0.85px);
+  background-position: 0 0, 7px 9px;
+  background-size: 18px 18px, 24px 24px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.35) 18%, rgba(0,0,0,.2) 68%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.35) 18%, rgba(0,0,0,.2) 68%, transparent 100%);
+}
+
+/* Page-specific ambient identity without changing layout. */
+.rawaj-app-shell[data-resolved-pathname="/"],
+.rawaj-app-shell[data-resolved-pathname="/categories"] {
+  background:
+    radial-gradient(circle at 88% 6%, rgba(216, 174, 95, 0.08), transparent 25rem),
+    radial-gradient(circle at 4% 42%, rgba(123, 40, 93, 0.12), transparent 28rem),
+    linear-gradient(180deg, #10131a, #0b0e14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings"] {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(70, 111, 190, 0.09), transparent 25rem),
+    radial-gradient(circle at 4% 48%, rgba(104, 47, 91, 0.1), transparent 29rem),
+    linear-gradient(180deg, #0f131a, #0b0e14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"],
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] {
+  background:
+    radial-gradient(circle at 88% 5%, rgba(203, 51, 79, 0.1), transparent 24rem),
+    radial-gradient(circle at 5% 48%, rgba(113, 91, 224, 0.1), transparent 28rem),
+    linear-gradient(180deg, #101219, #0b0e14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] {
+  background:
+    radial-gradient(circle at 92% 6%, rgba(216, 174, 95, 0.08), transparent 27rem),
+    radial-gradient(circle at 3% 56%, rgba(58, 102, 158, 0.08), transparent 30rem),
+    linear-gradient(180deg, #101319, #0a0d12) !important;
+}
+
+/* Header and navigation. */
+.rawaj-app-header {
+  border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216, 174, 95, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(25, 27, 35, 0.97), rgba(17, 20, 28, 0.965)) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), var(--rawaj-v17-inset) !important;
+  backdrop-filter: blur(22px) saturate(118%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+}
+
+.rawaj-app-header .rawaj-brand-divider {
+  background: linear-gradient(var(--rawaj-v17-gold), var(--rawaj-v17-pink), var(--rawaj-v17-violet)) !important;
+  opacity: 0.82 !important;
+}
+
+.rawaj-header-action,
+.rawaj-header-account,
+.rawaj-header-location,
+.rawaj-home-menu-action,
+.rawaj-app-header .order-3 > .relative > button {
+  border-color: rgba(216, 174, 95, 0.13) !important;
+  color: #e7e1da !important;
+  background: linear-gradient(145deg, rgba(31, 33, 43, 0.9), rgba(20, 23, 31, 0.86)) !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2), var(--rawaj-v17-inset) !important;
+}
+
+.rawaj-header-action:is(:hover, :focus-visible),
+.rawaj-header-account:is(:hover, :focus-visible),
+.rawaj-header-location:is(:hover, :focus-visible),
+.rawaj-home-menu-action:is(:hover, :focus-visible) {
+  border-color: rgba(216, 174, 95, 0.46) !important;
+  color: #fff8ea !important;
+  background: linear-gradient(145deg, rgba(55, 46, 39, 0.92), rgba(27, 27, 31, 0.9)) !important;
+}
+
+.rawaj-header-nav,
+.rawaj-app-shell nav[aria-label] {
+  border-color: rgba(216, 174, 95, 0.09) !important;
+}
+
+.rawaj-header-nav-item[data-active="true"],
+.rawaj-app-shell [aria-current="page"] {
+  color: #f8f0df !important;
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  background: linear-gradient(145deg, rgba(216, 174, 95, 0.1), rgba(111, 39, 91, 0.1)) !important;
+  box-shadow: inset 0 0 0 1px rgba(216, 174, 95, 0.06), 0 6px 16px rgba(0,0,0,.16) !important;
+}
+
+/* Universal premium surfaces. */
+.rawaj-surface,
+.rawaj-foundation-card,
+.rawaj-color-card,
+.rawaj-hero-surface,
+.rawaj-page-header,
+.rawaj-account-section,
+.rawaj-listing-card,
+.rawaj-result-card,
+.rawaj-detail-section,
+.rawaj-admin-card,
+.rawaj-admin-panel,
+.rawaj-support-card,
+.rawaj-notification-card,
+.rawaj-message-card,
+.rawaj-saved-search-card,
+.rawaj-favorite-card,
+[data-ui="card"],
+[data-slot="card"] {
+  border-color: var(--rawaj-v17-border) !important;
+  color: var(--rawaj-v17-text) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.04), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(108, 47, 91, 0.055), transparent 42%),
+    linear-gradient(150deg, #191d27 0%, #141821 56%, #11151d 100%) !important;
+  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
+}
+
+.rawaj-app-shell :is(section, article)[class*="rounded-"][class*="border"] {
+  border-color: rgba(216, 174, 95, 0.14) !important;
+}
+
+.rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-card"],
+.rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-background"] {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.035), transparent 38%),
+    linear-gradient(150deg, #181c25, #12161e) !important;
+  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
+}
+
+.rawaj-app-shell :is(.tap-card, [data-ui="card"][data-interactive="true"], .rawaj-color-card) {
+  transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease, filter 170ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell :is(.tap-card, [data-ui="card"][data-interactive="true"], .rawaj-color-card):hover {
+    transform: translateY(-2px);
+    border-color: rgba(216, 174, 95, 0.38) !important;
+    box-shadow: var(--rawaj-v17-shadow-raised), 0 0 0 1px rgba(216,174,95,.04), var(--rawaj-v17-inset) !important;
+  }
+}
+
+/* Chromatic card worlds. */
+.rawaj-world-gold,
+[data-tone="gold"],
+[data-accent="gold"] {
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.15), transparent 48%),
+    linear-gradient(150deg, #211f1a, #15181c) !important;
+}
+
+.rawaj-world-plum,
+[data-tone="plum"],
+[data-accent="pink"] {
+  border-color: rgba(175, 78, 145, 0.25) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(145, 62, 123, 0.19), transparent 46%),
+    linear-gradient(150deg, #211a26, #15171e) !important;
+}
+
+.rawaj-world-emerald,
+[data-tone="emerald"],
+[data-accent="green"] {
+  border-color: rgba(92, 178, 144, 0.25) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(60, 145, 112, 0.18), transparent 46%),
+    linear-gradient(150deg, #17231f, #13191a) !important;
+}
+
+[data-tone="blue"],
+[data-accent="blue"] {
+  border-color: rgba(74, 140, 255, 0.24) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.16), transparent 47%),
+    linear-gradient(150deg, #17202c, #13171f) !important;
+}
+
+[data-tone="danger"],
+[data-accent="danger"] {
+  border-color: rgba(240, 95, 79, 0.24) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240, 95, 79, 0.14), transparent 46%),
+    linear-gradient(150deg, #25191c, #15171d) !important;
+}
+
+/* Icon tiles and highlighted pictograms. */
+.rawaj-app-shell :is(.rawaj-icon-tile, .rawaj-feature-icon, .rawaj-command-icon, [data-ui="icon-tile"]) {
+  border: 1px solid rgba(255, 190, 86, 0.18) !important;
+  color: #fff !important;
+  background: var(--rawaj-v17-gradient-icon) !important;
+  box-shadow: 0 10px 24px rgba(182, 39, 104, 0.22), inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+/* Buttons and actions. */
+.rawaj-header-cta,
+.rawaj-app-shell :is(.rawaj-primary-action, .rawaj-cta, [data-ui="button"][data-variant="primary"]),
+.rawaj-app-shell :is(button, a)[class*="bg-primary"] {
+  border-color: rgba(255, 218, 154, 0.18) !important;
+  color: #fff !important;
+  background: var(--rawaj-v17-gradient-action) !important;
+  box-shadow: 0 10px 24px rgba(190, 42, 105, 0.24), inset 0 1px 0 rgba(255,255,255,.13) !important;
+}
+
+.rawaj-app-shell :is(button, a)[class*="border"][class*="bg-transparent"],
+.rawaj-app-shell :is(.rawaj-secondary-action, [data-ui="button"][data-variant="secondary"], [data-slot="button"][data-variant="outline"]) {
+  border-color: rgba(216, 174, 95, 0.2) !important;
+  color: #eee7df !important;
+  background: linear-gradient(145deg, rgba(30,33,42,.9), rgba(18,21,28,.9)) !important;
+  box-shadow: 0 7px 18px rgba(0,0,0,.17), var(--rawaj-v17-inset) !important;
+}
+
+.rawaj-app-shell :is(button, a):focus-visible {
+  outline: 2px solid rgba(232, 202, 141, 0.88) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(216, 174, 95, 0.12) !important;
+}
+
+.rawaj-app-shell :is(button, a)[aria-disabled="true"],
+.rawaj-app-shell button:disabled {
+  filter: saturate(.42) brightness(.82);
+  opacity: .58 !important;
+}
+
+/* Inputs, selects, search, and form controls. */
+.rawaj-app-shell :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-ui="input"], [data-slot="input"], [data-slot="textarea"], [role="combobox"]) {
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  color: #f5f0e9 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.035), transparent 38%),
+    linear-gradient(145deg, #11151d, #0e1218) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 5px 14px rgba(0,0,0,.12) !important;
+}
+
+.rawaj-app-shell :is(input, textarea)::placeholder {
+  color: #797f88 !important;
+}
+
+.rawaj-app-shell :is(input, textarea, select, [role="combobox"]):focus {
+  border-color: rgba(216, 174, 95, 0.52) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.095), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell :is(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--rawaj-v17-magenta);
+}
+
+/* Tabs, chips, pills, badges. */
+.rawaj-app-shell :is([role="tablist"], [data-slot="tabs-list"], .rawaj-tabs-list) {
+  border: 1px solid rgba(216,174,95,.11) !important;
+  background: rgba(15,18,25,.72) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell :is([role="tab"][aria-selected="true"], [data-slot="tabs-trigger"][data-state="active"]) {
+  color: #fff6e7 !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.15), rgba(120,45,98,.14)) !important;
+  box-shadow: inset 0 0 0 1px rgba(216,174,95,.17), 0 7px 18px rgba(0,0,0,.18) !important;
+}
+
+.rawaj-app-shell :is(.badge, [data-ui="badge"], [data-slot="badge"], [class*="rounded-full"][class*="border"]) {
+  border-color: rgba(216,174,95,.18) !important;
+  color: #e9dfd4 !important;
+  background: rgba(216,174,95,.045) !important;
+}
+
+/* Popovers, menus, dialogs, sheets and tooltips. */
+.rawaj-app-shell :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]) {
+  border-color: rgba(216,174,95,.2) !important;
+  color: var(--rawaj-v17-text) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.07), transparent 36%),
+    radial-gradient(circle at 0% 100%, rgba(111,39,91,.1), transparent 40%),
+    linear-gradient(150deg, rgba(27,31,41,.985), rgba(15,19,26,.99)) !important;
+  box-shadow: 0 28px 72px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.055) !important;
+  backdrop-filter: blur(22px) saturate(118%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+}
+
+.rawaj-app-shell :is([data-slot="dropdown-menu-item"], [data-slot="select-item"], [role="menuitem"], [role="option"]):is(:hover, [data-highlighted], [aria-selected="true"]) {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(216,174,95,.11), rgba(120,45,98,.09)) !important;
+}
+
+.rawaj-app-shell [data-state="open"][data-slot="dialog-overlay"],
+.rawaj-app-shell [data-slot="alert-dialog-overlay"],
+.rawaj-app-shell [data-slot="sheet-overlay"] {
+  background: rgba(3, 5, 9, 0.72) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+
+/* Tables and admin workspaces. */
+.rawaj-app-shell :is(table, [role="table"]) {
+  border-color: rgba(216,174,95,.13) !important;
+  color: var(--rawaj-v17-text) !important;
+}
+
+.rawaj-app-shell :is(thead, [role="rowgroup"]:first-child) {
+  background: linear-gradient(90deg, rgba(216,174,95,.075), rgba(111,39,91,.065)) !important;
+}
+
+.rawaj-app-shell :is(th, td, [role="cell"], [role="columnheader"]) {
+  border-color: rgba(216,174,95,.095) !important;
+}
+
+.rawaj-app-shell tbody tr:nth-child(even) {
+  background: rgba(255,255,255,.014) !important;
+}
+
+.rawaj-app-shell tbody tr:hover {
+  background: rgba(216,174,95,.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] :is(.rawaj-admin-card, .rawaj-admin-panel, [data-ui="card"]) {
+  border-color: rgba(216,174,95,.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.06), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(57,91,145,.06), transparent 42%),
+    linear-gradient(150deg, #191d26, #12161d) !important;
+}
+
+/* Listing discovery and marketplace cards. */
+.rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) {
+  overflow: hidden;
+  border-color: rgba(216,174,95,.14) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.055), transparent 40%),
+    linear-gradient(150deg, #181c25, #12161d) !important;
+}
+
+.rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) :is(.price, [data-price], [class*="text-brand-orange"]) {
+  color: #edc477 !important;
+}
+
+.rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) img {
+  background: #0d1117 !important;
+}
+
+/* Listing detail. */
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
+  border-color: rgba(216,174,95,.17) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.055), transparent 38%),
+    linear-gradient(150deg, #191d26, #12161d) !important;
+  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
+}
+
+/* Add/edit listing studio. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] :is(.rawaj-studio-panel, .rawaj-listing-studio-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] :is(.rawaj-studio-panel, .rawaj-listing-studio-card, [data-ui="card"]) {
+  border-color: rgba(190,86,155,.19) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(198,44,120,.075), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(113,91,224,.065), transparent 42%),
+    linear-gradient(150deg, #1a1923, #12151d) !important;
+}
+
+/* Personal space, profile, favorites, saved searches, activity. */
+.rawaj-app-shell[data-resolved-pathname="/profile"] :is(.rawaj-account-section, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/favorites"] :is(.rawaj-favorite-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/saved-searches"] :is(.rawaj-saved-search-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-activity-card, [data-ui="card"]) {
+  border-color: rgba(216,174,95,.17) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(139,60,126,.08), transparent 40%),
+    linear-gradient(150deg, #191c25, #12161d) !important;
+}
+
+/* Chats, notifications, communication. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] :is(.rawaj-message-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/notifications"] :is(.rawaj-notification-card, [data-ui="card"]) {
+  border-color: rgba(74,140,255,.17) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.085), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(116,101,239,.055), transparent 42%),
+    linear-gradient(150deg, #171d27, #11161e) !important;
+}
+
+/* Storefront, verification, safety and support. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(.rawaj-storefront-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/verification"] :is(.rawaj-support-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/safety"] :is(.rawaj-support-card, [data-ui="card"]),
+.rawaj-app-shell[data-resolved-pathname="/support"] :is(.rawaj-support-card, [data-ui="card"]) {
+  border-color: rgba(92,178,144,.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(60,145,112,.08), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(216,174,95,.04), transparent 42%),
+    linear-gradient(150deg, #17211f, #11171a) !important;
+}
+
+/* Auth pages. */
+.rawaj-app-shell :is(.rawaj-auth-v2, .rawaj-auth-card, [data-auth-surface]) {
+  border-color: rgba(216,174,95,.19) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.07), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(139,60,126,.1), transparent 42%),
+    linear-gradient(150deg, #1b1d26, #11151c) !important;
+  box-shadow: var(--rawaj-v17-shadow-raised), var(--rawaj-v17-inset) !important;
+}
+
+/* Empty states, skeletons and feedback. */
+.rawaj-app-shell :is(.rawaj-empty-state, [data-ui="empty-state"], [data-empty-state]) {
+  border-color: rgba(216,174,95,.16) !important;
+  color: var(--rawaj-v17-text-2) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216,174,95,.055), transparent 45%),
+    linear-gradient(180deg, #161a22, #10141b) !important;
+}
+
+.rawaj-app-shell :is(.skeleton, [data-slot="skeleton"], [data-ui="skeleton"]) {
+  background: linear-gradient(90deg, #151922 20%, #20232c 48%, #151922 76%) !important;
+  background-size: 220% 100% !important;
+}
+
+.rawaj-app-shell :is([role="status"], .rawaj-toast, [data-slot="toast"]) {
+  border-color: rgba(216,174,95,.2) !important;
+  color: #f6f1ea !important;
+  background: linear-gradient(145deg, rgba(28,32,42,.98), rgba(15,19,26,.98)) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.36), var(--rawaj-v17-inset) !important;
+}
+
+/* Footer and mobile dock. */
+.rawaj-app-shell footer,
+.rawaj-footer {
+  border-top-color: rgba(216,174,95,.11) !important;
+  color: var(--rawaj-v17-text-2) !important;
+  background:
+    radial-gradient(circle at 82% 0%, rgba(216,174,95,.05), transparent 38%),
+    linear-gradient(180deg, #10141b, #0b0e14) !important;
+}
+
+.rawaj-bottom-nav,
+.rawaj-mobile-dock,
+.rawaj-app-shell [data-mobile-dock] {
+  border: 1px solid rgba(216,174,95,.14) !important;
+  background: linear-gradient(180deg, rgba(27,30,38,.96), rgba(18,21,27,.97)) !important;
+  box-shadow: 0 -8px 32px rgba(0,0,0,.3), 0 18px 50px rgba(0,0,0,.4), var(--rawaj-v17-inset) !important;
+  backdrop-filter: blur(22px) saturate(118%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+}
+
+.rawaj-bottom-nav :is([aria-current="page"], [data-active="true"]),
+.rawaj-mobile-dock :is([aria-current="page"], [data-active="true"]) {
+  color: #f9ead1 !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.12), rgba(145,48,111,.12)) !important;
+  box-shadow: inset 0 0 0 1px rgba(216,174,95,.15) !important;
+}
+
+.rawaj-app-shell :is(.floating-action, .rawaj-floating-action, [data-floating-action="true"]) {
+  border-color: rgba(255,206,116,.2) !important;
+  color: #fff !important;
+  background: var(--rawaj-v17-gradient-action) !important;
+  box-shadow: 0 12px 30px rgba(187,41,112,.32), 0 0 0 1px rgba(255,255,255,.06) !important;
+}
+
+/* Scrollbars and selection complete the system. */
+.rawaj-app-shell * {
+  scrollbar-color: rgba(216,174,95,.34) rgba(255,255,255,.025);
+}
+
+.rawaj-app-shell *::selection {
+  color: #fff;
+  background: rgba(198, 44, 120, 0.58);
+}
+
+.rawaj-app-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.rawaj-app-shell ::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.02);
+}
+
+.rawaj-app-shell ::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(var(--rawaj-v17-gold), #9c6d57) padding-box;
+}
+
+/* Motion stays restrained and honors accessibility preferences. */
+@media (prefers-reduced-motion: no-preference) {
+  .rawaj-app-shell :is(button, a, input, textarea, select, [role="tab"], [role="menuitem"]) {
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell *,
+  .rawaj-app-shell *::before,
+  .rawaj-app-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* Small-screen density: preserve premium depth without heavy blur or oversized glow. */
+@media (max-width: 39.99rem) {
+  .rawaj-app-shell {
+    background:
+      radial-gradient(circle at 92% 3%, rgba(216,174,95,.055), transparent 17rem),
+      radial-gradient(circle at 2% 42%, rgba(111,39,91,.085), transparent 20rem),
+      linear-gradient(180deg, #10131a, #0b0e14) !important;
+  }
+
+  .rawaj-surface,
+  .rawaj-foundation-card,
+  .rawaj-color-card,
+  [data-ui="card"],
+  [data-slot="card"] {
+    box-shadow: 0 12px 28px rgba(0,0,0,.2), var(--rawaj-v17-inset) !important;
+  }
+}
