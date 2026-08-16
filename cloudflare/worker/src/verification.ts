@@ -42,6 +42,8 @@ export interface VerificationEnv {
 }
 
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+const MIN_ACCOUNT_AGE_DAYS = 7;
+const MIN_APPROVED_LISTINGS = 1;
 const DOCUMENT_TYPES = new Set([
   "national_id",
   "passport",
@@ -51,6 +53,11 @@ const DOCUMENT_TYPES = new Set([
   "tax_document",
 ]);
 const CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+
+type VerificationEligibility = {
+  eligible: boolean;
+  reasons: string[];
+};
 
 function asAuthEnv(env: VerificationEnv): AuthEnv {
   return env as unknown as AuthEnv;
@@ -153,6 +160,20 @@ async function createOwn(request: Request, env: VerificationEnv, cors: Headers):
     return json(
       { error: { code: "status_mismatch", message: "A verification request is already pending." } },
       409,
+      cors,
+    );
+  }
+
+  const eligibility = await evaluateEligibility(env, auth.userId);
+  if (!eligibility.eligible) {
+    return json(
+      {
+        error: {
+          code: "permission_denied",
+          message: `Verification eligibility requirements are not met: ${eligibility.reasons.join("; ")}`,
+        },
+      },
+      403,
       cors,
     );
   }
@@ -354,6 +375,21 @@ async function moderateRequest(
       cors,
     );
   }
+  if (status === "approved") {
+    const eligibility = await evaluateEligibility(env, existing.user_id);
+    if (!eligibility.eligible) {
+      return json(
+        {
+          error: {
+            code: "status_mismatch",
+            message: `Verification eligibility is no longer met: ${eligibility.reasons.join("; ")}`,
+          },
+        },
+        409,
+        cors,
+      );
+    }
+  }
   const timestamp = now();
   const results = await env.DB.batch([
     env.DB.prepare(
@@ -368,6 +404,48 @@ async function moderateRequest(
   return results.every((result) => result.success)
     ? json({ data: { success: true, updatedAt: timestamp } }, 200, cors)
     : databaseError(cors);
+}
+
+async function evaluateEligibility(
+  env: VerificationEnv,
+  userId: string,
+): Promise<VerificationEligibility> {
+  const profile = await env.DB.prepare(
+    `SELECT account_status, verification_status, display_name, business_name,
+      governorate, city_area, created_at
+      FROM public_profiles WHERE id = ?`,
+  )
+    .bind(userId)
+    .first<Row>();
+
+  if (!profile) return { eligible: false, reasons: ["profile is unavailable"] };
+
+  const approvedRow = await env.DB.prepare(
+    "SELECT COUNT(*) AS approved_count FROM listings WHERE owner_id = ? AND status = 'approved'",
+  )
+    .bind(userId)
+    .first<Row>();
+
+  const reasons: string[] = [];
+  const accountStatus = stringValue(profile.account_status);
+  const displayName = nullableString(profile.display_name) || nullableString(profile.business_name);
+  const location = nullableString(profile.city_area) || nullableString(profile.governorate);
+  const createdAt = stringValue(profile.created_at);
+  const createdAtMs = Date.parse(createdAt);
+  const ageMs = Number.isFinite(createdAtMs) ? Date.now() - createdAtMs : -1;
+  const approvedCount = numericValue(approvedRow?.approved_count);
+
+  if (accountStatus !== "active") reasons.push("account must be active");
+  if (!displayName) reasons.push("public name or business identity is incomplete");
+  if (!location) reasons.push("profile location is incomplete");
+  if (ageMs < MIN_ACCOUNT_AGE_DAYS * 24 * 60 * 60 * 1000) {
+    reasons.push(`account must be at least ${MIN_ACCOUNT_AGE_DAYS} days old`);
+  }
+  if (approvedCount < MIN_APPROVED_LISTINGS) {
+    reasons.push(`at least ${MIN_APPROVED_LISTINGS} approved listing is required`);
+  }
+
+  return { eligible: reasons.length === 0, reasons };
 }
 
 function mapOwner(row: Row) {
@@ -472,7 +550,15 @@ function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
 function nullableString(value: unknown): string | null {
-  return typeof value === "string" && value ? value : null;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+function numericValue(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
 }
 function now(): string {
   return new Date().toISOString();

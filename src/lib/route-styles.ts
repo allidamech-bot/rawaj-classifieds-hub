@@ -31,6 +31,14 @@ import "../auth-feedback-system-v12.css";
 import "../footer-contrast-system-v13.css";
 import "../lightweight-mobile-ux-polish.css";
 import "../home-notification-overlay-fix.css";
+import "../rawaj-marketplace-premium-v14.css";
+import "../rawaj-marketplace-final-polish-v15.css";
+import "../rawaj-marketplace-unified-v16.css";
+import "../rawaj-marketplace-unified-v16-actions.css";
+import "../account-command-premium.css";
+import "../activity-command-premium.css";
+import "../account-shortcuts-compact-row.css";
+import "../stability-accessibility-fixes.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -70,7 +78,15 @@ import lightweightMobileUxPolishCss from "../lightweight-mobile-ux-polish.css?ur
 import homeNotificationOverlayFixCss from "../home-notification-overlay-fix.css?url";
 import listingStudioMobileOverflowFixCss from "../listing-studio-mobile-overflow-fix.css?url";
 import listingPreviewTrueSizeCss from "../listing-preview-true-size.css?url";
+import premiumMarketplaceV14Css from "../rawaj-marketplace-premium-v14.css?url";
+import finalMarketplaceV15Css from "../rawaj-marketplace-final-polish-v15.css?url";
+import unifiedMarketplaceV16Css from "../rawaj-marketplace-unified-v16.css?url";
+import unifiedMarketplaceV16ActionsCss from "../rawaj-marketplace-unified-v16-actions.css?url";
+import accountCommandPremiumCss from "../account-command-premium.css?url";
+import activityCommandPremiumCss from "../activity-command-premium.css?url";
+import accountShortcutsCompactRowCss from "../account-shortcuts-compact-row.css?url";
 import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
+import stabilityAccessibilityFixesCss from "../stability-accessibility-fixes.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -120,8 +136,15 @@ export const auditedOverrideStyleHrefs = [
   homeNotificationOverlayFixCss,
   listingStudioMobileOverflowFixCss,
   listingPreviewTrueSizeCss,
-  listingDetailV3Css,
+  premiumMarketplaceV14Css,
+  finalMarketplaceV15Css,
+  unifiedMarketplaceV16Css,
+  unifiedMarketplaceV16ActionsCss,
+  accountCommandPremiumCss,
+  activityCommandPremiumCss,
+  accountShortcutsCompactRowCss,
   ownerStoreDarkRepairCss,
+  stabilityAccessibilityFixesCss,
 ] as const;
 
 export interface RouteStyleScope {

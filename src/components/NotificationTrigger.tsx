@@ -9,8 +9,9 @@ import {
   scanOwnerListingExpiryReminders,
 } from "@/lib/classifieds-api";
 import type { NotificationItem } from "@/lib/classifieds-types";
+import { marketLocale } from "@/lib/market-locale";
 import { notificationIsWithinReadCutoff } from "@/lib/notification-integrity";
-import { useUiPreferences } from "@/lib/ui-preferences";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
 
@@ -355,9 +356,9 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
   );
 }
 
-function formatNotificationDate(value: string, language: string) {
+function formatNotificationDate(value: string, language: Language) {
   if (!value) return "";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));

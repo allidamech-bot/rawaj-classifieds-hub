@@ -65,13 +65,17 @@ export async function resolveAuthenticatedMediaUrl(
   if (pending) return pending;
 
   const request = (async () => {
-    const response = await cloudflareAuthorizedFetch(path);
-    if (!response?.ok) return value;
-    const blob = await response.blob();
-    if (!blob.type.startsWith("image/")) return value;
-    const objectUrl = URL.createObjectURL(blob);
-    rememberResolvedMediaUrl(value, objectUrl);
-    return objectUrl;
+    try {
+      const response = await cloudflareAuthorizedFetch(path);
+      if (!response?.ok) return value;
+      const blob = await response.blob();
+      if (!blob.type.startsWith("image/")) return value;
+      const objectUrl = URL.createObjectURL(blob);
+      rememberResolvedMediaUrl(value, objectUrl);
+      return objectUrl;
+    } catch {
+      return value;
+    }
   })().finally(() => pendingMediaUrls.delete(value));
 
   pendingMediaUrls.set(value, request);

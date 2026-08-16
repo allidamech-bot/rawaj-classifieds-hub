@@ -20,6 +20,7 @@ interface StorefrontMetric {
   value: string | number;
   icon?: LucideIcon;
   tone?: "default" | "live" | "pending" | "action" | "closed";
+  href?: string;
 }
 
 interface StorefrontIdentityHeroProps {
@@ -101,6 +102,7 @@ export function StorefrontIdentityHero({
           : text("بائع جديد", "New seller"),
       value: ratingCount > 0 && ratingAverage != null ? ratingAverage.toFixed(1) : "—",
       icon: Star,
+      href: "#seller-reviews",
     },
   ];
 
@@ -195,11 +197,33 @@ export function StorefrontIdentityHero({
         <div className="rawaj-storefront-identity__metrics">
           {metrics.map((metric) => {
             const Icon = metric.icon;
-            return (
-              <div key={metric.label} data-tone={metric.tone ?? "default"}>
+            const metricContent = (
+              <>
                 {Icon ? <Icon aria-hidden="true" /> : null}
                 <strong>{metric.value}</strong>
                 <span>{metric.label}</span>
+              </>
+            );
+
+            return (
+              <div
+                key={metric.label}
+                data-tone={metric.tone ?? "default"}
+                data-interactive={metric.href ? "true" : undefined}
+              >
+                {metric.href ? (
+                  <a
+                    href={metric.href}
+                    aria-label={text(
+                      "عرض التقييمات والنجوم والتعليقات",
+                      "View ratings, stars and review comments",
+                    )}
+                  >
+                    {metricContent}
+                  </a>
+                ) : (
+                  metricContent
+                )}
               </div>
             );
           })}

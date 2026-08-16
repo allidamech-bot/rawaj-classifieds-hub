@@ -43,7 +43,10 @@ test("runtime source and package manifests contain no retired SDK or transport",
   const packageName = `@${vendor}/${vendor}-js`;
   assert.equal(packageJson.dependencies?.[packageName], undefined);
   for (const source of [packageSource, packageLock, workerPackage, workerLock]) {
-    assert.doesNotMatch(source, new RegExp(`@${vendor}|node_modules/@${vendor}|${vendor}-js-`, "i"));
+    assert.doesNotMatch(
+      source,
+      new RegExp(`@${vendor}|node_modules/@${vendor}|${vendor}-js-`, "i"),
+    );
   }
 
   const runtimeFiles = [...(await walk("src")), ...(await walk("cloudflare/worker/src"))];
@@ -51,7 +54,10 @@ test("runtime source and package manifests contain no retired SDK or transport",
     const source = await read(relativePath);
     assert.doesNotMatch(
       source,
-      new RegExp(`@${vendor}|${vendor[0].toUpperCase()}${vendor.slice(1)}Client|createClient\\s*\\(|\\.${vendor}\\.(?:co|com)|getClient\\s*\\(|\\.channel\\s*\\(`, "i"),
+      new RegExp(
+        `@${vendor}|${vendor[0].toUpperCase()}${vendor.slice(1)}Client|createClient\\s*\\(|\\.${vendor}\\.(?:co|com)|getClient\\s*\\(|\\.channel\\s*\\(`,
+        "i",
+      ),
       relativePath,
     );
   }
@@ -80,7 +86,8 @@ test("notifications and chat use bounded Cloudflare polling without realtime cha
     read("src/routes/notifications.tsx"),
     read("src/features/communication/useLiveChatWorkspace.ts"),
   ]);
-  assert.match(unread, /window\.setInterval\(refreshWhenVisible, 30_000\)/);
+  assert.match(unread, /const UNREAD_POLL_INTERVAL_MS = 60_000;/);
+  assert.match(unread, /window\.setInterval\(refreshWhenVisible, UNREAD_POLL_INTERVAL_MS\)/);
   assert.match(notifications, /window\.setInterval\(\(\) => void refreshWhenVisible\(\), 15_000\)/);
   assert.match(liveChat, /window\.setInterval\(refreshWhenVisible, 15_000\)/);
   for (const source of [unread, notifications, liveChat]) {

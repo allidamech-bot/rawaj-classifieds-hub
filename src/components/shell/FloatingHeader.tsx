@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Languages, LogIn, MapPin, Menu, Plus, Search, User, UserCog } from "lucide-react";
+import { Languages, LogIn, MapPin, Menu, Plus, Search, Store, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
@@ -26,6 +26,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
     select: (state) => state.resolvedLocation?.pathname ?? state.location.pathname,
   });
   const activeSection = resolvePrimaryNavigationSection(pathname);
+  const signedIn = auth.status === "signedIn";
 
   useEffect(() => {
     if (!auth.canAccessAdmin) {
@@ -33,7 +34,6 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       return;
     }
     let cancelled = false;
-    let timer: number | undefined;
     const load = async () => {
       const result = await adminFetchNotificationSummary(true);
       if (!cancelled && result.ok) setAdminUnread(result.data.unreadTotal);
@@ -42,7 +42,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
     const onFocus = () => void load();
     window.addEventListener("focus", onFocus);
     window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
-    timer = window.setInterval(load, 60000);
+    const timer = window.setInterval(load, 60000);
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
@@ -152,7 +152,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           ) : null}
 
-          {auth.status === "signedIn" ? <NotificationTrigger tone="light" /> : null}
+          {signedIn ? <NotificationTrigger tone="light" /> : null}
 
           {auth.canAccessAdmin ? (
             <Link
@@ -170,7 +170,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           ) : null}
 
-          {auth.status === "signedIn" ? (
+          {signedIn ? (
             <Link
               to="/more"
               aria-label={text("حسابي", "My account")}
@@ -192,6 +192,18 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               </span>
             </Link>
           )}
+
+          {signedIn ? (
+            <Link
+              to="/profile/listings"
+              aria-label={text("متجري", "My store")}
+              title={text("متجري", "My store")}
+              data-active={pathname.startsWith("/profile/listings") ? "true" : undefined}
+              className="rawaj-header-store rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
+            >
+              <Store className="h-4 w-4" strokeWidth={1.9} />
+            </Link>
+          ) : null}
         </div>
       </ShellHeaderFrame>
     </>

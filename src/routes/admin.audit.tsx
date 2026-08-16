@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Activity, Filter, ScrollText } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminFetchAuditLogs, type AdminAuditLogEntry } from "@/lib/classifieds-api";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -39,22 +40,32 @@ function AdminAuditPage() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setLoadError("");
-    const result = await adminFetchAuditLogs(canViewAuditLogs, {
-      limit: PAGE_SIZE,
-      offset: 0,
-      actionPrefix: actionPrefix || null,
-    });
-    if (requestId !== requestIdRef.current) return;
-    setLoading(false);
-    setOffset(0);
-    if (!result.ok) {
-      setLoadError(result.error.message);
-      return;
+    try {
+      const result = await adminFetchAuditLogs(canViewAuditLogs, {
+        limit: PAGE_SIZE,
+        offset: 0,
+        actionPrefix: actionPrefix || null,
+      });
+      if (requestId !== requestIdRef.current) return;
+      setOffset(0);
+      if (!result.ok) {
+        setLoadError(result.error.message);
+        return;
+      }
+      setEntries(result.data);
+      setHasMore(result.data.length === PAGE_SIZE);
+      setHasLoaded(true);
+    } catch (caught) {
+      if (requestId !== requestIdRef.current) return;
+      setLoadError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحميل سجل التدقيق.", "Could not load audit log."),
+      );
+    } finally {
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-    setEntries(result.data);
-    setHasMore(result.data.length === PAGE_SIZE);
-    setHasLoaded(true);
-  }, [actionPrefix, canViewAuditLogs]);
+  }, [actionPrefix, canViewAuditLogs, text]);
 
   useEffect(() => {
     requestIdRef.current += 1;
@@ -95,6 +106,13 @@ function AdminAuditPage() {
       });
       setOffset(nextOffset);
       setHasMore(result.data.length === PAGE_SIZE);
+    } catch (caught) {
+      if (requestId !== requestIdRef.current) return;
+      setLoadError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحميل المزيد من السجل.", "Could not load more audit entries."),
+      );
     } finally {
       loadMoreInFlightRef.current = false;
       if (requestId === requestIdRef.current) setLoadingMore(false);
@@ -121,7 +139,7 @@ function AdminAuditPage() {
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
             <Activity className="h-4 w-4 text-primary" />
-            {entries.length.toLocaleString()}
+            {new Intl.NumberFormat(marketLocale(language)).format(entries.length)}
           </span>
         </div>
 
@@ -266,7 +284,7 @@ function formatDateTime(value: string | null, language: "ar" | "en") {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);

@@ -5,8 +5,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
 import { fetchActivePriceDropOffers, type ListingPriceDropOffer } from "@/lib/classifieds-api";
 import { categoryName, formatPriceLocalized, governorateName } from "@/lib/i18n";
+import { marketLocale } from "@/lib/market-locale";
 import { createSeo } from "@/lib/seo";
-import { useUiPreferences } from "@/lib/ui-preferences";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export const Route = createFileRoute("/offers")({
   loader: async () => {
@@ -256,10 +257,10 @@ function formatDiscountPercent(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
-function formatDropDate(value: string, language: string): string {
+function formatDropDate(value: string, language: Language): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     day: "numeric",
     month: "short",
   }).format(date);

@@ -11,6 +11,7 @@ import {
 } from "@/lib/classifieds-api";
 import type { ClassifiedsError } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -421,7 +422,7 @@ function RecoveryNotice({
 }
 
 function formatDate(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "medium",
   }).format(new Date(value));
 }
@@ -433,6 +434,6 @@ function formatSnapshotPrice(
   text: (ar: string, en: string) => string,
 ) {
   if (price === null) return text("السعر غير محفوظ", "Price unavailable");
-  const formatted = new Intl.NumberFormat(language === "ar" ? "ar-SY" : "en-US").format(price);
+  const formatted = new Intl.NumberFormat(marketLocale(language)).format(price);
   return `${formatted} ${currency}`;
 }

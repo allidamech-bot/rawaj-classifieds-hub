@@ -1,0 +1,242 @@
+/* RAWAJ Unified V16 — action controls
+ * Byte-identical Saudi/Syria finishing layer for listing contact/owner actions.
+ */
+
+.rawaj-contact-dock__inner {
+  gap: 0.42rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border-radius: 0.92rem !important;
+  background: #222627 !important;
+  padding: 0.48rem !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-contact-dock__inner :is(
+  .rawaj-contact-dock__primary,
+  .rawaj-contact-dock__secondary,
+  .rawaj-contact-dock__offer
+) {
+  min-height: 2.65rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 0.7rem !important;
+  color: #e2e7e4 !important;
+  background: #2a2f30 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  font-family: "Cairo", sans-serif !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__primary {
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  color: #17201e !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__offer {
+  border-color: rgba(126, 209, 178, 0.18) !important;
+  color: #c9eadf !important;
+  background: rgba(45, 123, 94, 0.13) !important;
+}
+
+.rawaj-contact-dock__inner .rawaj-contact-dock__secondary[data-tone="whatsapp"] {
+  border-color: rgba(93, 200, 150, 0.2) !important;
+  color: #bce8d3 !important;
+  background: rgba(42, 132, 91, 0.12) !important;
+}
+
+.rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__inner {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) !important;
+}
+
+.rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__primary {
+  color: #17201e !important;
+}
+
+.rawaj-contact-dock__inner :is(a, button):focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: 2px !important;
+}
+
+/* The review metric itself is the review entry point; avoid a duplicate CTA below. */
+.rawaj-storefront-identity__actions > a[href="#seller-reviews"] {
+  display: none !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] {
+  padding: 0 !important;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] > a {
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 100% !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 0.45rem !important;
+  align-items: center !important;
+  border-radius: inherit !important;
+  padding: 0.65rem !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"]:has(a:hover) {
+  border-color: rgba(232, 202, 141, 0.34) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"]:has(a:active) {
+  transform: scale(0.985) !important;
+}
+
+.rawaj-storefront-identity__metrics > div[data-interactive="true"] > a:focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: -2px !important;
+}
+
+#seller-reviews {
+  scroll-margin-top: 5.5rem !important;
+}
+
+/* Owner cards: only the quick-action row is a 4-column toolbar. The outer block stays vertical. */
+@media (max-width: 767px) {
+  .rawaj-owner-listing-card__actions {
+    display: block !important;
+    margin-top: 0.45rem !important;
+    padding-top: 0.5rem !important;
+  }
+
+  .rawaj-owner-listing-card__actions > div:first-child {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.34rem !important;
+  }
+
+  .rawaj-owner-listing-card__actions > div:first-child :is(a, button) {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 2.65rem !important;
+    gap: 0.28rem !important;
+    border-radius: 0.66rem !important;
+    padding: 0.38rem 0.3rem !important;
+    font-size: 0.67rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
+  }
+
+  .rawaj-owner-listing-card__actions > div:first-child :is(a, button) svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    flex: 0 0 auto !important;
+  }
+
+  .rawaj-owner-listing-card__manage {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 2.55rem !important;
+    margin-top: 0.36rem !important;
+    border-radius: 0.66rem !important;
+    padding: 0.38rem 0.65rem !important;
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+    box-shadow: none !important;
+  }
+
+  .rawaj-owner-listing-card__manage svg {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .rawaj-owner-listing-card__actions > div:first-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .rawaj-contact-dock[data-owner="true"] .rawaj-contact-dock__inner {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .rawaj-contact-dock__inner :is(
+    .rawaj-contact-dock__primary,
+    .rawaj-contact-dock__secondary,
+    .rawaj-contact-dock__offer
+  ) {
+    min-height: 2.5rem !important;
+    font-size: 0.65rem !important;
+  }
+}
+
+/* Store discovery: signed-in users get a permanent direct store entry in the header. */
+.rawaj-header-store {
+  border: 1px solid rgba(216, 174, 95, 0.2) !important;
+  color: #e8ca8d !important;
+  background: rgba(216, 174, 95, 0.075) !important;
+}
+
+.rawaj-header-store[data-active="true"] {
+  border-color: rgba(232, 202, 141, 0.42) !important;
+  color: #17201e !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
+}
+
+.rawaj-header-store:focus-visible {
+  outline: 2px solid #e8ca8d !important;
+  outline-offset: 2px !important;
+}
+
+/* The header store icon owns My Store navigation now. Keep legacy markup hidden as a fallback. */
+.rawaj-more-v2 .rawaj-more-v2__command a[href="/profile/listings"] {
+  display: none !important;
+}
+
+.rawaj-more-v2 .rawaj-more-v2__command > .rawaj-more-v2__command > a {
+  grid-column: 1 / -1 !important;
+}
+
+/* Account hub de-duplication: support, safety and privacy live in their dedicated lists below. */
+.rawaj-trust-hero[data-mode="more"] .rawaj-trust-hero__actions {
+  display: none !important;
+}
+
+/* Mobile messages: collapse the desktop two-column grid completely. */
+@media (max-width: 1023px) {
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar,
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-panel {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    grid-column: 1 / -1 !important;
+    margin: 0 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar {
+    border-inline-end: 0 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="list"] .rawaj-conversation-sidebar {
+    display: block !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="list"] .rawaj-message-panel {
+    display: none !important;
+  }
+}

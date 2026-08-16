@@ -10,6 +10,7 @@ import {
 } from "@/features/communication/CommunicationExperience";
 import { fetchMyConversations, fetchMyNotificationsPage } from "@/lib/classifieds-api";
 import type { ClassifiedsError, Conversation, NotificationItem } from "@/lib/classifieds-types";
+import { marketLocale } from "@/lib/market-locale";
 import { mergeNotifications } from "@/lib/notification-integrity";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -440,7 +441,7 @@ function ActivityRecovery({
 }
 
 function formatDateTime(value: string, language: "ar" | "en") {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));

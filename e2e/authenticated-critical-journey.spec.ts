@@ -103,6 +103,15 @@ test.describe("authenticated launch-critical journey", () => {
       timeout: 45_000,
     });
 
+    const shareDialog = page.getByRole("dialog");
+    if (await shareDialog.isVisible().catch(() => false)) {
+      const dismissShareDialog = shareDialog.getByRole("button", {
+        name: /^(Later|لاحقاً|Close|إغلاق)$/,
+      });
+      await dismissShareDialog.last().click();
+      await expect(shareDialog).toBeHidden();
+    }
+
     await page.getByRole("link", { name: /^(Manage listing|إدارة الإعلان)$/ }).click();
     await expect(page).toHaveURL(/\/profile\/listings\/e2e-owner-listing-\d+/, {
       timeout: 20_000,

@@ -4,7 +4,8 @@ import {
   fetchListingPriceChangeContext,
   type ListingPriceChangeContext,
 } from "@/lib/classifieds-api";
-import { useUiPreferences } from "@/lib/ui-preferences";
+import { marketLocale } from "@/lib/market-locale";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
 export function PriceChangeBanner({ listingId }: { listingId: string }) {
@@ -20,10 +21,14 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
     }
 
     let cancelled = false;
-    void fetchListingPriceChangeContext(profileId, listingId).then((result) => {
-      if (cancelled) return;
-      setContext(result.ok ? result.data : null);
-    });
+    void fetchListingPriceChangeContext(profileId, listingId)
+      .then((result) => {
+        if (cancelled) return;
+        setContext(result.ok ? result.data : null);
+      })
+      .catch(() => {
+        if (!cancelled) setContext(null);
+      });
 
     return () => {
       cancelled = true;
@@ -55,8 +60,8 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
                 )}
           </p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {formatPrice(context.previousPrice, language)} →{" "}
-            {formatPrice(context.currentPrice, language)}
+            {formatPrice(context.previousPrice, context.currency, language)} →{" "}
+            {formatPrice(context.currentPrice, context.currency, language)}
           </p>
         </div>
       </section>
@@ -64,6 +69,6 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
   );
 }
 
-function formatPrice(value: number, language: "ar" | "en") {
-  return `${new Intl.NumberFormat(language === "ar" ? "ar-SY" : "en-US").format(value)} SYP`;
+function formatPrice(value: number, currency: string, language: Language) {
+  return `${new Intl.NumberFormat(marketLocale(language)).format(value)} ${currency}`;
 }

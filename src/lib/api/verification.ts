@@ -276,6 +276,18 @@ function normalizeApiCode(code: string): ClassifiedsErrorCode {
 }
 
 function localizedMessage(result: ApiFailure): string {
+  if (
+    result.code === "permission_denied" &&
+    /Verification eligibility requirements are not met/i.test(result.error)
+  ) {
+    return "طلب التوثيق غير مؤهل حالياً. تأكد من أن الحساب نشط منذ 7 أيام على الأقل، وأن الاسم والموقع مكتملان، ولديك إعلان معتمد واحد على الأقل، ثم أعد المحاولة.";
+  }
+  if (
+    result.code === "status_mismatch" &&
+    /Verification eligibility is no longer met/i.test(result.error)
+  ) {
+    return "لم تعد شروط أهلية التوثيق مستوفاة لهذا الحساب. راجع حالة الحساب والملف والإعلانات قبل اعتماد الطلب.";
+  }
   if (result.code === "status_mismatch" && /already pending/i.test(result.error)) {
     return "لديك طلب توثيق قيد المراجعة بالفعل.";
   }

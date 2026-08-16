@@ -94,6 +94,9 @@ function useDarkBrowserChrome() {
   }, []);
 }
 
+const ACCESSIBLE_FIELD_SELECTOR =
+  "input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea";
+
 function elementHasAccessibleFieldName(
   field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
 ) {
@@ -111,10 +114,10 @@ function elementHasAccessibleFieldName(
   return Boolean(wrappingLabel?.textContent?.trim());
 }
 
-function applyAccessibleFieldNameFallbacks() {
-  const fields = document.querySelectorAll<
-    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-  >("input:not([type='hidden']):not([type='button']):not([type='submit']), select, textarea");
+function applyAccessibleFieldNameFallbacks(scope: ParentNode = document) {
+  const fields = scope.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+    ACCESSIBLE_FIELD_SELECTOR,
+  );
 
   for (const field of fields) {
     if (elementHasAccessibleFieldName(field)) continue;
@@ -124,24 +127,36 @@ function applyAccessibleFieldNameFallbacks() {
   }
 }
 
+function mutationAddsAccessibleField(mutation: MutationRecord) {
+  for (const node of mutation.addedNodes) {
+    if (!(node instanceof Element)) continue;
+    if (node.matches(ACCESSIBLE_FIELD_SELECTOR) || node.querySelector(ACCESSIBLE_FIELD_SELECTOR)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function useAccessibleFieldNameFallbacks(pathname: string) {
   useEffect(() => {
     const root = document.documentElement;
+    const scope = document.querySelector<HTMLElement>(".rawaj-app-shell__content") ?? document.body;
     let frame = 0;
 
     const applyAndSignal = () => {
-      applyAccessibleFieldNameFallbacks();
+      applyAccessibleFieldNameFallbacks(scope);
       root.dataset.rawajA11yReady = "true";
     };
 
     applyAndSignal();
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      if (!mutations.some(mutationAddsAccessibleField)) return;
       root.dataset.rawajA11yReady = "pending";
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(applyAndSignal);
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(scope, { childList: true, subtree: true });
     return () => {
       observer.disconnect();
       window.cancelAnimationFrame(frame);
@@ -244,7 +259,9 @@ export function AppShell({
 
         <FeedbackWidget
           pathname={pathname}
-          triggerHidden={keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")}
+          triggerHidden={
+            keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")
+          }
         />
         {showBackToTop ? <BackToTop /> : null}
         <BottomDock pathname={pathname} />

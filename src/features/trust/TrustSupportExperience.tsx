@@ -58,8 +58,8 @@ export function TrustHubHero({
             "RAWAJ connects users and does not handle payments, guarantees, or escrow. Inspection and verification remain the parties’ responsibility.",
           )
         : text(
-            "إدارة الحساب والمتجر، الدعم، الأمان، التوثيق والسياسات من نقطة وصول واحدة.",
-            "Access account, store, support, safety, verification, and policies from one place.",
+            "إدارة الحساب والخدمات المساندة من نقطة وصول واحدة، بدون تكرار للاختصارات الموجودة في الترويسة.",
+            "Manage your account and supporting services from one place without duplicating header shortcuts.",
           );
   const Icon = mode === "support" ? LifeBuoy : mode === "safety" ? ShieldAlert : Sparkles;
 
@@ -112,21 +112,23 @@ export function TrustHubHero({
           </b>
         ) : null}
       </div>
-      <nav className="rawaj-trust-hero__actions">
-        <Link to="/support">
-          <LifeBuoy aria-hidden="true" />
-          {text("الدعم", "Support")}
-        </Link>
-        <Link to="/safety">
-          <ShieldAlert aria-hidden="true" />
-          {text("الأمان", "Safety")}
-        </Link>
-        <Link to="/privacy">
-          <LockKeyhole aria-hidden="true" />
-          {text("الخصوصية", "Privacy")}
-        </Link>
-        {actions}
-      </nav>
+      {mode !== "more" ? (
+        <nav className="rawaj-trust-hero__actions">
+          <Link to="/support">
+            <LifeBuoy aria-hidden="true" />
+            {text("الدعم", "Support")}
+          </Link>
+          <Link to="/safety">
+            <ShieldAlert aria-hidden="true" />
+            {text("الأمان", "Safety")}
+          </Link>
+          <Link to="/privacy">
+            <LockKeyhole aria-hidden="true" />
+            {text("الخصوصية", "Privacy")}
+          </Link>
+          {actions}
+        </nav>
+      ) : null}
     </section>
   );
 }
