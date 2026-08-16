@@ -1,0 +1,71 @@
+name: Agent Format Stability Branch
+
+on:
+  push:
+    branches:
+      - fix/sitewide-stability-audit-20260816
+
+permissions:
+  contents: write
+
+concurrency:
+  group: agent-format-stability-branch
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/sitewide-stability-audit-20260816
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Fix Syrian verification locale leak
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/routes/verification.tsx')
+          text = path.read_text()
+          old = 'language === "ar" ? "ar-SA" : "en-US"'
+          new = 'language === "ar" ? "ar-SY" : "en-US"'
+          if old in text:
+              path.write_text(text.replace(old, new))
+          PY
+
+      - name: Format and autofix changed source files
+        shell: bash
+        run: |
+          git fetch --no-tags origin main
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR origin/main...HEAD -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No changed JS/TS files."
+            exit 0
+          fi
+          npx prettier --write "${files[@]}"
+          npx eslint --fix --quiet "${files[@]}"
+          npx prettier --write "${files[@]}"
+
+      - name: Commit formatter fixes
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.mjs' '*.cjs'
+          git commit -m "chore: format stability audit changes"
+          git push origin HEAD:fix/sitewide-stability-audit-20260816
