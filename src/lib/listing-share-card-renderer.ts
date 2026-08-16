@@ -1,9 +1,6 @@
 import { resolveCategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
-import {
-  listingShareHighlights,
-  type ListingShareHighlight,
-} from "@/lib/listing-share-highlights";
+import { listingShareHighlights, type ListingShareHighlight } from "@/lib/listing-share-highlights";
 import type { ListingShareTemplate } from "@/lib/listing-share-growth";
 
 const CARD_WIDTH = 1080;
@@ -288,7 +285,16 @@ function drawStory(input: ShareCardRenderInput) {
   const textX = language === "en" ? 72 : width - 72;
   context.fillStyle = "#FFFFFF";
   context.font = "900 68px Cairo, sans-serif";
-  const titleBottom = drawWrappedText(context, listing.title, textX, 800, width - 144, 88, 3, language);
+  const titleBottom = drawWrappedText(
+    context,
+    listing.title,
+    textX,
+    800,
+    width - 144,
+    88,
+    3,
+    language,
+  );
   context.fillStyle = template.accent;
   context.font = "900 62px Cairo, sans-serif";
   context.fillText(listingSharePriceLabel(listing, language), textX, titleBottom + 88);
@@ -337,7 +343,11 @@ function drawBrandLockup(
   configureLocalizedText(context, language, language === "en" ? "left" : "right");
   context.fillStyle = brandColor;
   context.font = "800 38px Cairo, sans-serif";
-  context.fillText(language === "en" ? "RAWAJ" : "رواج", language === "en" ? margin : width - margin, y);
+  context.fillText(
+    language === "en" ? "RAWAJ" : "رواج",
+    language === "en" ? margin : width - margin,
+    y,
+  );
   const previousDirection = context.direction;
   context.direction = "ltr";
   context.textAlign = language === "en" ? "right" : "left";
@@ -432,12 +442,20 @@ function drawHighlightsInline(
   configureLocalizedText(context, language, language === "en" ? "left" : "right");
   context.fillStyle = muted;
   context.font = "700 21px Cairo, sans-serif";
-  const value = highlights.map((highlight) => `${highlight.label}: ${highlight.value}`).join(separator);
+  const value = highlights
+    .map((highlight) => `${highlight.label}: ${highlight.value}`)
+    .join(separator);
   context.fillText(fitCanvasText(context, value, width), language === "en" ? x : x + width, y);
   context.fillStyle = foreground;
 }
 
-function drawCardUrl(input: ShareCardRenderInput, x: number, y: number, color: string, align: CanvasTextAlign) {
+function drawCardUrl(
+  input: ShareCardRenderInput,
+  x: number,
+  y: number,
+  color: string,
+  align: CanvasTextAlign,
+) {
   const { context } = input;
   context.direction = "ltr";
   context.textAlign = align;
@@ -446,7 +464,11 @@ function drawCardUrl(input: ShareCardRenderInput, x: number, y: number, color: s
   context.fillText(SYRIA_DOMAIN, x, y);
 }
 
-function configureLocalizedText(context: CanvasRenderingContext2D, language: CardLanguage, align: CanvasTextAlign) {
+function configureLocalizedText(
+  context: CanvasRenderingContext2D,
+  language: CardLanguage,
+  align: CanvasTextAlign,
+) {
   context.direction = language === "en" ? "ltr" : "rtl";
   context.textAlign = align;
 }
@@ -454,7 +476,8 @@ function configureLocalizedText(context: CanvasRenderingContext2D, language: Car
 function fitCanvasText(context: CanvasRenderingContext2D, value: string, maxWidth: number) {
   if (context.measureText(value).width <= maxWidth) return value;
   let fitted = value;
-  while (fitted.length > 1 && context.measureText(`${fitted}…`).width > maxWidth) fitted = fitted.slice(0, -1);
+  while (fitted.length > 1 && context.measureText(`${fitted}…`).width > maxWidth)
+    fitted = fitted.slice(0, -1);
   return `${fitted.trimEnd()}…`;
 }
 
@@ -481,7 +504,14 @@ function drawImageFallback(
   context.fillText("رواج", x + width / 2, y + height / 2 + 20);
 }
 
-function drawImageCover(context: CanvasRenderingContext2D, image: HTMLImageElement, x: number, y: number, width: number, height: number) {
+function drawImageCover(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
   const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
   const renderedWidth = image.naturalWidth * scale;
   const renderedHeight = image.naturalHeight * scale;
@@ -490,7 +520,14 @@ function drawImageCover(context: CanvasRenderingContext2D, image: HTMLImageEleme
   context.drawImage(image, offsetX, offsetY, renderedWidth, renderedHeight);
 }
 
-function roundedRectPath(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+function roundedRectPath(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
   const r = Math.min(radius, width / 2, height / 2);
   context.beginPath();
   context.moveTo(x + r, y);
@@ -540,7 +577,9 @@ function drawWrappedText(
   return y + (lines.length - 1) * lineHeight;
 }
 
-async function loadListingImage(source: string | null | undefined): Promise<HTMLImageElement | null> {
+async function loadListingImage(
+  source: string | null | undefined,
+): Promise<HTMLImageElement | null> {
   if (!source) return null;
   return new Promise((resolve) => {
     const image = new Image();

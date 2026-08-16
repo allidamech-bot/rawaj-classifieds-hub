@@ -43,7 +43,10 @@ test("runtime source and package manifests contain no retired SDK or transport",
   const packageName = `@${vendor}/${vendor}-js`;
   assert.equal(packageJson.dependencies?.[packageName], undefined);
   for (const source of [packageSource, packageLock, workerPackage, workerLock]) {
-    assert.doesNotMatch(source, new RegExp(`@${vendor}|node_modules/@${vendor}|${vendor}-js-`, "i"));
+    assert.doesNotMatch(
+      source,
+      new RegExp(`@${vendor}|node_modules/@${vendor}|${vendor}-js-`, "i"),
+    );
   }
 
   const runtimeFiles = [...(await walk("src")), ...(await walk("cloudflare/worker/src"))];
@@ -51,7 +54,10 @@ test("runtime source and package manifests contain no retired SDK or transport",
     const source = await read(relativePath);
     assert.doesNotMatch(
       source,
-      new RegExp(`@${vendor}|${vendor[0].toUpperCase()}${vendor.slice(1)}Client|createClient\\s*\\(|\\.${vendor}\\.(?:co|com)|getClient\\s*\\(|\\.channel\\s*\\(`, "i"),
+      new RegExp(
+        `@${vendor}|${vendor[0].toUpperCase()}${vendor.slice(1)}Client|createClient\\s*\\(|\\.${vendor}\\.(?:co|com)|getClient\\s*\\(|\\.channel\\s*\\(`,
+        "i",
+      ),
       relativePath,
     );
   }

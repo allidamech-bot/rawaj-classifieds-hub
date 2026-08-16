@@ -406,7 +406,10 @@ async function moderateRequest(
     : databaseError(cors);
 }
 
-async function evaluateEligibility(env: VerificationEnv, userId: string): Promise<VerificationEligibility> {
+async function evaluateEligibility(
+  env: VerificationEnv,
+  userId: string,
+): Promise<VerificationEligibility> {
   const profile = await env.DB.prepare(
     `SELECT account_status, verification_status, display_name, business_name,
       governorate, city_area, created_at

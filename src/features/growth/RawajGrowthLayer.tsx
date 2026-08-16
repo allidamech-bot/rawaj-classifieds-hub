@@ -408,7 +408,8 @@ export default function RawajGrowthLayer() {
             </>
           ) : (
             <div className="rounded-[1.5rem] border border-warning/25 bg-warning/10 p-5 text-sm leading-7 text-foreground">
-              {notice ?? text("تعذر تجهيز البطاقة حالياً.", "The share card is unavailable right now.")}
+              {notice ??
+                text("تعذر تجهيز البطاقة حالياً.", "The share card is unavailable right now.")}
             </div>
           )}
 

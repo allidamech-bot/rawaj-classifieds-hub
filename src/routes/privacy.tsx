@@ -156,10 +156,19 @@ function PrivacyPage() {
       <main className="container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <section className="rounded-2xl bg-card p-5 hairline">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><LockKeyhole className="h-5 w-5" /></span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <LockKeyhole className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="text-lg font-extrabold">{text("خصوصيتك جزء من أمان المنصة", "Privacy is part of platform safety")}</h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">{text("آخر تحديث: 15 أغسطس 2026. هذه السياسة تُقرأ مع شروط الاستخدام وسياسات الأمان والمحتوى المحظور.", "Last updated: 15 August 2026. This policy should be read with the Terms of Use, safety guidance, and prohibited-content rules.")}</p>
+              <h1 className="text-lg font-extrabold">
+                {text("خصوصيتك جزء من أمان المنصة", "Privacy is part of platform safety")}
+              </h1>
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                {text(
+                  "آخر تحديث: 15 أغسطس 2026. هذه السياسة تُقرأ مع شروط الاستخدام وسياسات الأمان والمحتوى المحظور.",
+                  "Last updated: 15 August 2026. This policy should be read with the Terms of Use, safety guidance, and prohibited-content rules.",
+                )}
+              </p>
             </div>
           </div>
         </section>
@@ -167,7 +176,12 @@ function PrivacyPage() {
         <section className="rounded-2xl bg-warning/10 p-4 hairline">
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
-            <p className="text-xs leading-6 text-warning">{text("تنبيه: لا ترسل كلمة مرور أو رمز تحقق أو بيانات بطاقة أو نسخة هوية داخل إعلان عام أو محادثة. مسار التوثيق المخصص هو المكان الوحيد المخصص لوثائق التوثيق.", "Warning: never send passwords, verification codes, card details, or identity copies in a public listing or ordinary message. The dedicated verification flow is the only intended place for verification documents.")}</p>
+            <p className="text-xs leading-6 text-warning">
+              {text(
+                "تنبيه: لا ترسل كلمة مرور أو رمز تحقق أو بيانات بطاقة أو نسخة هوية داخل إعلان عام أو محادثة. مسار التوثيق المخصص هو المكان الوحيد المخصص لوثائق التوثيق.",
+                "Warning: never send passwords, verification codes, card details, or identity copies in a public listing or ordinary message. The dedicated verification flow is the only intended place for verification documents.",
+              )}
+            </p>
           </div>
         </section>
 
@@ -175,18 +189,37 @@ function PrivacyPage() {
           {sections.map((section) => (
             <section key={section.enTitle} className="rounded-2xl bg-card p-4 hairline">
               <h2 className="text-sm font-extrabold">{text(section.arTitle, section.enTitle)}</h2>
-              <p className="mt-2 text-xs leading-7 text-muted-foreground">{text(section.arBody, section.enBody)}</p>
+              <p className="mt-2 text-xs leading-7 text-muted-foreground">
+                {text(section.arBody, section.enBody)}
+              </p>
             </section>
           ))}
         </div>
 
         <section className="rounded-2xl bg-card p-4 hairline">
-          <div className="flex items-center gap-2 text-xs font-bold"><ShieldCheck className="h-4 w-4 text-emerald-500" />{text("روابط مرتبطة", "Related policies")}</div>
+          <div className="flex items-center gap-2 text-xs font-bold">
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            {text("روابط مرتبطة", "Related policies")}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <Link to="/terms" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("شروط الاستخدام", "Terms of Use")}</Link>
-            <Link to="/safety" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("إرشادات الأمان", "Safety guidance")}</Link>
-            <Link to="/prohibited" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">{text("المحتوى المحظور", "Prohibited content")}</Link>
-            <Link to="/support" className="rounded-xl bg-primary px-3 py-2 font-bold text-primary-foreground">{text("طلب خصوصية أو دعم", "Privacy or support request")}</Link>
+            <Link to="/terms" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">
+              {text("شروط الاستخدام", "Terms of Use")}
+            </Link>
+            <Link to="/safety" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">
+              {text("إرشادات الأمان", "Safety guidance")}
+            </Link>
+            <Link
+              to="/prohibited"
+              className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline"
+            >
+              {text("المحتوى المحظور", "Prohibited content")}
+            </Link>
+            <Link
+              to="/support"
+              className="rounded-xl bg-primary px-3 py-2 font-bold text-primary-foreground"
+            >
+              {text("طلب خصوصية أو دعم", "Privacy or support request")}
+            </Link>
           </div>
         </section>
       </main>

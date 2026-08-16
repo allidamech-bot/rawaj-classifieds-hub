@@ -115,9 +115,9 @@ function elementHasAccessibleFieldName(
 }
 
 function applyAccessibleFieldNameFallbacks(scope: ParentNode = document) {
-  const fields = scope.querySelectorAll<
-    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-  >(ACCESSIBLE_FIELD_SELECTOR);
+  const fields = scope.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+    ACCESSIBLE_FIELD_SELECTOR,
+  );
 
   for (const field of fields) {
     if (elementHasAccessibleFieldName(field)) continue;
@@ -259,7 +259,9 @@ export function AppShell({
 
         <FeedbackWidget
           pathname={pathname}
-          triggerHidden={keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")}
+          triggerHidden={
+            keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")
+          }
         />
         {showBackToTop ? <BackToTop /> : null}
         <BottomDock pathname={pathname} />

@@ -34,7 +34,6 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       return;
     }
     let cancelled = false;
-    let timer: number | undefined;
     const load = async () => {
       const result = await adminFetchNotificationSummary(true);
       if (!cancelled && result.ok) setAdminUnread(result.data.unreadTotal);
@@ -43,7 +42,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
     const onFocus = () => void load();
     window.addEventListener("focus", onFocus);
     window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
-    timer = window.setInterval(load, 60000);
+    const timer = window.setInterval(load, 60000);
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
