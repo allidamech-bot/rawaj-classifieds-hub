@@ -1,0 +1,421 @@
+/* RAWAJ Chromatic Premium System v18 — legacy-surface elimination.
+ * Final route-scoped presentation layer. Replaces remaining neutral-grey V9–V12
+ * surfaces with the approved charcoal/navy, gold hairline, chromatic accent system.
+ * No route, API, form, auth, moderation, or data behavior changes.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Personal space: /more + /profile                                           */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname="/more"] :is(
+  .rawaj-trust-hero[data-mode="more"],
+  .rawaj-more-v2__command > a.rawaj-color-card,
+  .rawaj-account-section
+),
+.rawaj-app-shell[data-resolved-pathname="/profile"] :is(
+  .rawaj-account-identity,
+  .rawaj-account-section
+) {
+  border-color: rgba(216,174,95,.15) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.055), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(198,44,120,.06), transparent 42%),
+    linear-gradient(150deg, #1b1f28, #141820 62%, #11151c) !important;
+  box-shadow: 0 15px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
+  background:
+    radial-gradient(circle at 95% 4%, rgba(74,140,255,.12), transparent 34%),
+    radial-gradient(circle at 4% 96%, rgba(198,44,120,.11), transparent 38%),
+    radial-gradient(circle at 56% 0%, rgba(216,174,95,.065), transparent 35%),
+    linear-gradient(150deg, #1d202a, #151922 66%, #11151d) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-world-orange {
+  border-color: rgba(240,95,79,.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240,95,79,.13), transparent 42%),
+    linear-gradient(150deg, #211b1e, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-world-indigo {
+  border-color: rgba(74,140,255,.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 42%),
+    linear-gradient(150deg, #18202c, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a {
+  background: linear-gradient(145deg, #171b24, #12161d) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.065), transparent 36%),
+    linear-gradient(150deg, #1c2029, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+  background:
+    radial-gradient(circle at 16% 15%, rgba(240,95,79,.42), transparent 28%),
+    radial-gradient(circle at 55% 0%, rgba(219,73,179,.34), transparent 33%),
+    radial-gradient(circle at 92% 28%, rgba(74,140,255,.34), transparent 32%),
+    linear-gradient(135deg, #211923, #151c28) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
+  border-color: #151922 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links a {
+  border: 1px solid rgba(216,174,95,.11) !important;
+  color: #c8c2be !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.05), transparent 38%),
+    linear-gradient(145deg, #181c25, #12161d) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Activity, notifications, favorites, saved searches                         */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) :is(.rawaj-communication-hero, .rawaj-activity-panel, .rawaj-notification-panel, .rawaj-communication-follow-up),
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"]
+) .rawaj-account-collection-v3 > :is(section, article, div.text-center) {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.06), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(198,44,120,.05), transparent 42%),
+    linear-gradient(150deg, #1a1e27, #13171f) !important;
+  box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"]
+) .rawaj-communication-hero {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 35%),
+    radial-gradient(circle at 0% 100%, rgba(219,73,179,.095), transparent 40%),
+    linear-gradient(150deg, #1c2029, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
+  border-color: rgba(216,174,95,.12) !important;
+  background: #10141b !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
+  border-color: rgba(216,174,95,.24) !important;
+  color: #f8ead0 !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.1), rgba(198,44,120,.075)) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/notifications"] :is(.rawaj-notification-timeline, .rawaj-notification-card),
+.rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-activity-feed > a, .rawaj-activity-feed > article) {
+  border-color: rgba(255,255,255,.07) !important;
+  color: #f7f3ed !important;
+  background: linear-gradient(145deg, #181c25, #12161d) !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+  .rawaj-account-collection-v3 [class*="bg-card"] {
+  border-color: rgba(216,174,95,.12) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.055), transparent 40%),
+    linear-gradient(145deg, #191d26, #12161d) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Listing studio: add/edit/manage                                             */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) :is(.rawaj-studio-hero, .rawaj-studio-section, .rawaj-studio-completion, .rawaj-studio-preview-card) {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.075), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(116,101,239,.055), transparent 42%),
+    linear-gradient(150deg, #1c1b26, #141820 62%, #11151c) !important;
+  box-shadow: 0 14px 32px rgba(0,0,0,.21), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) .rawaj-studio-hero {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(219,73,179,.11), transparent 38%),
+    linear-gradient(145deg, #1d202a, #151922) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) .rawaj-studio-steps {
+  border-color: rgba(216,174,95,.12) !important;
+  background: #10141b !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.2) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) .rawaj-studio-steps li[data-state="active"] button {
+  border-color: rgba(255,255,255,.1) !important;
+  background: linear-gradient(135deg, #d83658, #c12b84 55%, #7465ef) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) :is(input, textarea, select, .input) {
+  border-color: rgba(216,174,95,.13) !important;
+  color: #f7f3ed !important;
+  background: #0f131a !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"]
+) :is(input, textarea, select, .input):focus-visible {
+  border-color: rgba(216,174,95,.48) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Authentication                                                             */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/login"],
+  [data-resolved-pathname="/reset-password"],
+  [data-resolved-pathname="/auth/callback"]
+) {
+  --auth-v12-surface: #151922 !important;
+  --auth-v12-surface-soft: #10141b !important;
+  --auth-v12-border: rgba(216,174,95,.13) !important;
+  --auth-v12-border-active: rgba(216,174,95,.46) !important;
+  --auth-v12-copy: #c8c2be !important;
+  --auth-v12-muted: #858d98 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/login"],
+  [data-resolved-pathname="/reset-password"],
+  [data-resolved-pathname="/auth/callback"]
+) .rawaj-app-shell__page {
+  background:
+    radial-gradient(circle at 92% 2%, rgba(74,140,255,.07), transparent 28rem),
+    radial-gradient(circle at 6% 12%, rgba(219,73,179,.065), transparent 24rem),
+    linear-gradient(180deg, #10131a, #0b0e14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/login"] :is(.rawaj-auth-layout, .rawaj-auth-card),
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card,
+.rawaj-app-shell[data-resolved-pathname="/auth/callback"] :is(.rawaj-auth-callback-card, .rawaj-auth-card) {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.045), transparent 38%),
+    linear-gradient(150deg, #1a1e27, #12161d) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside {
+  border-color: rgba(216,174,95,.1) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.15), transparent 35%),
+    radial-gradient(circle at 0% 100%, rgba(219,73,179,.12), transparent 42%),
+    linear-gradient(145deg, #1d202a, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-divider span {
+  background: #151922 !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"])
+  :is(input, textarea, .input) {
+  border-color: rgba(216,174,95,.13) !important;
+  color: #f7f3ed !important;
+  background: #0f131a !important;
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"])
+  :is(input, textarea, .input):focus-visible {
+  border-color: rgba(216,174,95,.48) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Listing detail + seller storefront                                         */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2 {
+  background:
+    radial-gradient(circle at 92% 2%, rgba(74,140,255,.065), transparent 28rem),
+    radial-gradient(circle at 4% 55%, rgba(198,44,120,.055), transparent 30rem),
+    linear-gradient(180deg, #0f131a, #0b0e14) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
+  .rawaj-detail-summary,
+  .rawaj-detail-section,
+  .rawaj-detail-seller,
+  .rawaj-detail-reference,
+  .rawaj-detail-safety
+) {
+  border-color: rgba(216,174,95,.14) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.045), transparent 38%),
+    linear-gradient(150deg, #191d26, #12161d) !important;
+  box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219,73,179,.095), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(74,140,255,.06), transparent 38%),
+    linear-gradient(150deg, #1d1c26, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+  border-top-color: rgba(216,174,95,.11) !important;
+  background: rgba(15,18,25,.95) !important;
+  box-shadow: 0 -12px 32px rgba(0,0,0,.34) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity {
+  border-color: rgba(216,174,95,.14) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(219,73,179,.105), transparent 40%),
+    linear-gradient(145deg, #1d202a, #141820) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Support, safety, legal, verification, promotion                            */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/terms"],
+  [data-resolved-pathname="/privacy"],
+  [data-resolved-pathname="/prohibited"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) :is(.rawaj-trust-hero, .rawaj-trust-card, .rawaj-trust-link-card, .rawaj-trust-section, .rawaj-support-card) {
+  border-color: rgba(216,174,95,.14) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(92,178,144,.06), transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(216,174,95,.045), transparent 42%),
+    linear-gradient(150deg, #18201f, #12171a) !important;
+  box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/support"],
+  [data-resolved-pathname="/safety"],
+  [data-resolved-pathname="/verification"],
+  [data-resolved-pathname="/promotion"]
+) .rawaj-trust-hero {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.11), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(92,178,144,.08), transparent 40%),
+    linear-gradient(145deg, #19211f, #131820) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Admin                                                                       */
+/* -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(
+  section,
+  article,
+  form,
+  div
+)[class*="rounded-2xl"][class*="bg-card"][class*="hairline"],
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-card,
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-panel {
+  border-color: rgba(216,174,95,.12) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.045), transparent 38%),
+    linear-gradient(150deg, #191d26, #12161d) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child[class*="rounded-2xl"] {
+  border-color: rgba(216,174,95,.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74,140,255,.09), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(219,73,179,.065), transparent 36%),
+    linear-gradient(150deg, #1c2029, #141820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(table, [role="table"]) {
+  border-color: rgba(216,174,95,.11) !important;
+  color: #c8c2be !important;
+  background: linear-gradient(150deg, #171b24, #11151c) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 th {
+  color: #f7f3ed !important;
+  background: rgba(216,174,95,.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input) {
+  border-color: rgba(216,174,95,.13) !important;
+  color: #f7f3ed !important;
+  background: #0f131a !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input):focus-visible {
+  border-color: rgba(216,174,95,.48) !important;
+  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-access-notice {
+  border-color: rgba(216,174,95,.2) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.08), transparent 38%),
+    linear-gradient(150deg, #211e18, #15171a) !important;
+}
+
+/* Generic route-local inset surfaces that still carried neutral grey. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile"],
+  [data-resolved-pathname="/more"],
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"],
+  [data-resolved-pathname="/add-listing"],
+  [data-resolved-pathname^="/profile/listings/"],
+  [data-resolved-pathname^="/admin"]
+) [class*="bg-muted-surface"] {
+  border-color: rgba(255,255,255,.065) !important;
+  background: rgba(255,255,255,.026) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links a:hover,
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-color-card:hover,
+  .rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+    .rawaj-account-collection-v3 [class*="bg-card"]:hover {
+    border-color: rgba(216,174,95,.34) !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.03) !important;
+  }
+}
