@@ -238,6 +238,81 @@
   background: rgba(255, 255, 255, 0.025) !important;
 }
 
+/* Lower account groups: align legacy gray/pink/blue surfaces with the premium /more palette. */
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
+  gap: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section {
+  overflow: hidden;
+  border: 1px solid rgba(216, 174, 95, 0.16) !important;
+  border-radius: 1.05rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.045), transparent 34%),
+    linear-gradient(150deg, #191d24 0%, #141820 100%) !important;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > h2 {
+  margin: 0 !important;
+  border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
+  padding: 0.78rem 1rem 0.68rem !important;
+  color: #e8ca8d !important;
+  background: rgba(216, 174, 95, 0.025) !important;
+  font-size: 0.72rem !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.015em !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div {
+  border-color: rgba(216, 174, 95, 0.09) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) {
+  min-height: 4rem !important;
+  border-radius: 0 !important;
+  color: #f4f0e8 !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button):is(:hover, :focus-visible) {
+  background: rgba(216, 174, 95, 0.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:first-child {
+  border: 1px solid rgba(216, 174, 95, 0.18) !important;
+  color: #e6c47f !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.1), transparent 70%),
+    #171b22 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:first-child {
+  color: #f4f0e8 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:last-child {
+  color: #9299a2 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > svg {
+  color: #8d939b !important;
+}
+
+/* Preserve destructive semantics only for sign out. */
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button:has(.text-destructive) > span:first-child > span:first-child {
+  border-color: rgba(231, 101, 93, 0.2) !important;
+  color: #ef8179 !important;
+  background: rgba(173, 59, 54, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button:has(.text-destructive) .text-destructive {
+  color: #ef8179 !important;
+}
+
 @media (max-width: 639px) {
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
     padding-inline: 0.72rem !important;
