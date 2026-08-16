@@ -12,7 +12,6 @@ import {
   Rocket,
   ScrollText,
   ShieldAlert,
-  Store,
   User,
   UserCog,
 } from "lucide-react";
@@ -60,15 +59,6 @@ type AccountRow = {
 };
 
 const primaryShortcuts: (AccountRow & { world: string })[] = [
-  {
-    titleAr: "متجري",
-    titleEn: "My store",
-    hintAr: "إعلاناتك وإدارة واجهتك",
-    hintEn: "Listings and storefront",
-    to: "/profile/listings",
-    icon: Store,
-    world: "rawaj-world-orange",
-  },
   {
     titleAr: "النشاط",
     titleEn: "Activity",
