@@ -80,7 +80,8 @@ test("notifications and chat use bounded Cloudflare polling without realtime cha
     read("src/routes/notifications.tsx"),
     read("src/features/communication/useLiveChatWorkspace.ts"),
   ]);
-  assert.match(unread, /window\.setInterval\(refreshWhenVisible, 30_000\)/);
+  assert.match(unread, /const UNREAD_POLL_INTERVAL_MS = 60_000;/);
+  assert.match(unread, /window\.setInterval\(refreshWhenVisible, UNREAD_POLL_INTERVAL_MS\)/);
   assert.match(notifications, /window\.setInterval\(\(\) => void refreshWhenVisible\(\), 15_000\)/);
   assert.match(liveChat, /window\.setInterval\(refreshWhenVisible, 15_000\)/);
   for (const source of [unread, notifications, liveChat]) {
