@@ -21,6 +21,7 @@ import {
 } from "@/lib/classifieds-api";
 import type { ListingStatus } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -61,16 +62,26 @@ function AdminListingModerationConsole() {
     const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setLoadError("");
-    const result = await adminFetchModerationListings(canModerateListings);
-    if (requestId !== loadRequestIdRef.current) return;
-    setLoading(false);
-    if (!result.ok) {
-      setLoadError(result.error.message);
-      return;
+    try {
+      const result = await adminFetchModerationListings(canModerateListings);
+      if (requestId !== loadRequestIdRef.current) return;
+      if (!result.ok) {
+        setLoadError(result.error.message);
+        return;
+      }
+      setListings(result.data);
+      setHasLoaded(true);
+    } catch (caught) {
+      if (requestId !== loadRequestIdRef.current) return;
+      setLoadError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحميل الإعلانات.", "Could not load listings."),
+      );
+    } finally {
+      if (requestId === loadRequestIdRef.current) setLoading(false);
     }
-    setListings(result.data);
-    setHasLoaded(true);
-  }, [canModerateListings]);
+  }, [canModerateListings, text]);
 
   useEffect(() => {
     loadRequestIdRef.current += 1;
@@ -150,6 +161,12 @@ function AdminListingModerationConsole() {
       );
       setReasons((current) => ({ ...current, [listing.id]: "" }));
       await loadListings();
+    } catch (caught) {
+      setActionMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تنفيذ قرار الإعلان.", "Could not apply listing decision."),
+      );
     } finally {
       actionInFlightRef.current.delete(actionKey);
       setWorkingId((current) => (current === listing.id ? null : current));
@@ -326,6 +343,7 @@ function QueueCard({
   value: number | null;
   to: string;
 }) {
+  const { language } = useUiPreferences();
   return (
     <Link
       to={to as "/admin"}
@@ -335,7 +353,11 @@ function QueueCard({
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </span>
-        {value !== null ? <strong className="text-xl font-extrabold">{value}</strong> : null}
+        {value !== null ? (
+          <strong className="text-xl font-extrabold">
+            {new Intl.NumberFormat(marketLocale(language)).format(value)}
+          </strong>
+        ) : null}
       </div>
       <p className="mt-3 text-xs font-bold">{label}</p>
     </Link>
@@ -536,7 +558,7 @@ function formatDateTime(value: string | null, language: "ar" | "en") {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "short",
     timeStyle: "short",
   }).format(date);
