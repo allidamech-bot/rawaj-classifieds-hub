@@ -9,7 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { fetchMyConversations } from "@/lib/api/messaging";
-import { fetchUnreadNotificationsCount } from "@/lib/api/notifications";
+import {
+  fetchUnreadNotificationsCount,
+  getRecentUnreadNotificationsCount,
+} from "@/lib/api/notifications";
 import { UNREAD_ACTIVITY_CHANGED_EVENT } from "@/lib/unread-activity-events";
 import { useAuth } from "@/lib/use-auth";
 
@@ -56,7 +59,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     activeProfileRef.current = auth.status === "signedIn" ? profileId : null;
   }, [auth.status, profileId]);
 
-  const refresh = useCallback(async () => {
+  const refreshFull = useCallback(async () => {
     if (auth.status !== "signedIn" || !profileId) {
       setCounts(EMPTY_COUNTS);
       setCountsProfileId(null);
@@ -81,20 +84,27 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
 
         if (activeProfileRef.current !== profileId) return;
 
-        const messages = conversationsResult.ok
-          ? conversationsResult.data.reduce(
-              (sum, conversation) => sum + Math.max(0, conversation.unreadCount),
-              0,
-            )
-          : 0;
-        const notifications = notificationsResult.ok ? Math.max(0, notificationsResult.data) : 0;
+        setCounts((current) => {
+          const currentForProfile = countsProfileId === profileId ? current : EMPTY_COUNTS;
+          const messages = conversationsResult.ok
+            ? conversationsResult.data.reduce(
+                (sum, conversation) => sum + Math.max(0, conversation.unreadCount),
+                0,
+              )
+            : currentForProfile.messages;
+          const notifications = notificationsResult.ok
+            ? Math.max(0, notificationsResult.data)
+            : currentForProfile.notifications;
 
-        setCounts({
-          messages,
-          notifications,
-          total: messages + notifications,
+          return {
+            messages,
+            notifications,
+            total: messages + notifications,
+          };
         });
         setCountsProfileId(profileId);
+      } catch {
+        // Keep the last known counters on transient/unexpected network failures.
       } finally {
         if (activeProfileRef.current === profileId) setLoading(false);
       }
@@ -105,15 +115,33 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
     refreshRecord.promise = request;
     refreshInFlightRef.current = refreshRecord;
     return request;
-  }, [auth.status, profileId]);
+  }, [auth.status, countsProfileId, profileId]);
+
+  const refresh = useCallback(async () => {
+    if (auth.status !== "signedIn" || !profileId) {
+      return refreshFull();
+    }
+
+    const recentNotifications = getRecentUnreadNotificationsCount();
+    if (countsProfileId === profileId && recentNotifications !== null) {
+      setCounts((current) => ({
+        messages: current.messages,
+        notifications: recentNotifications,
+        total: current.messages + recentNotifications,
+      }));
+      return;
+    }
+
+    return refreshFull();
+  }, [auth.status, countsProfileId, profileId, refreshFull]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    void refreshFull();
+  }, [refreshFull]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const handleRefresh = () => void refresh();
+    const handleRefresh = () => void refreshFull();
     window.addEventListener(UNREAD_ACTIVITY_CHANGED_EVENT, handleRefresh);
     window.addEventListener("focus", handleRefresh);
     window.addEventListener("online", handleRefresh);
@@ -122,14 +150,14 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", handleRefresh);
       window.removeEventListener("online", handleRefresh);
     };
-  }, [refresh]);
+  }, [refreshFull]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId || typeof window === "undefined") return;
 
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible" && navigator.onLine !== false) {
-        void refresh();
+        void refreshFull();
       }
     };
     const interval = window.setInterval(refreshWhenVisible, UNREAD_POLL_INTERVAL_MS);
@@ -138,7 +166,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, [auth.status, profileId, refresh]);
+  }, [auth.status, profileId, refreshFull]);
 
   const visibleCounts =
     auth.status === "signedIn" && profileId && countsProfileId === profileId
