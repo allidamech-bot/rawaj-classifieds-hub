@@ -55,3 +55,149 @@
     font-size: 0.61rem !important;
   }
 }
+
+/* Account hub: the activity card and four compact shortcuts are self-explanatory. */
+.rawaj-app-shell[data-resolved-pathname="/more"]
+  .rawaj-more-v2__command > .rawaj-trust-section-header {
+  display: none !important;
+}
+
+/* Persistent My Store shortcut: make it deliberately distinct from Account/Admin. */
+.rawaj-header-store {
+  border: 1px solid rgba(216, 174, 95, 0.48) !important;
+  color: #f0c870 !important;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(233, 190, 101, 0.18), transparent 54%),
+    rgba(75, 57, 28, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(216, 174, 95, 0.05),
+    0 8px 22px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-header-store:hover,
+.rawaj-header-store[data-active="true"] {
+  border-color: rgba(240, 200, 112, 0.72) !important;
+  color: #ffe2a1 !important;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(244, 201, 107, 0.25), transparent 58%),
+    rgba(93, 68, 30, 0.42) !important;
+}
+
+/* My Store: neutralize the light owner-workspace overrides without changing layout. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
+  --store-canvas: #0d1016;
+  --store-surface: #151922;
+  --store-surface-raised: #1a1e27;
+  --store-line: #343943;
+  --store-line-strong: #4a515d;
+  --store-ink: #f5f1e9;
+  --store-ink-soft: #c4c8cf;
+  --store-ink-muted: #8f96a1;
+  --store-green-deep: #8fd2bf;
+  --store-gold: #d7b36c;
+  background: var(--store-canvas) !important;
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory {
+  border-color: var(--store-line) !important;
+  background: var(--store-surface) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-sticky {
+  border-color: var(--store-line) !important;
+  background: rgba(21, 25, 34, 0.97) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header h2,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content h2 {
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-inventory__header span,
+  .rawaj-owner-listings-toolbar__count,
+  .rawaj-owner-listing-card__facts
+) {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search,
+  .rawaj-owner-listings-toolbar__select,
+  .rawaj-owner-listings-toolbar__filter-toggle,
+  .rawaj-owner-listings-toolbar__select-visible
+) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft) !important;
+  background: #171b22 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search input,
+  .rawaj-owner-listings-toolbar__select select
+) {
+  color: var(--store-ink) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__add {
+  border-color: rgba(89, 205, 169, 0.24) !important;
+  color: #fff !important;
+  background: #0f5e50 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink) !important;
+  background: var(--store-surface-raised) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content {
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__facts strong {
+  color: var(--store-gold) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listing-card__actions a,
+  .rawaj-owner-listing-card__actions button,
+  .rawaj-owner-listing-management__duplicate,
+  .rawaj-owner-listing-card__manage
+) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft) !important;
+  background: #222730 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="primary"] {
+  border-color: rgba(89, 205, 169, 0.24) !important;
+  color: #fff !important;
+  background: #0f5e50 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="share"] {
+  color: #9bd7c3 !important;
+  background: rgba(43, 126, 98, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="boost"] {
+  color: #e8c985 !important;
+  background: rgba(151, 105, 31, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-management {
+  border-color: var(--store-line) !important;
+  background: #151a21 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-management :is(input, select) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink) !important;
+  background: #11151b !important;
+}
