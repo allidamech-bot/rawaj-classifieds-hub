@@ -10,6 +10,7 @@ import {
 import { categoryDetailDisplayRows, detectCategoryFieldKind } from "@/lib/category-fields";
 import type { ClassifiedListing, ClassifiedsError, ListingImage } from "@/lib/classifieds-types";
 import { categoryName, formatPriceLocalized, governorateName, uiLabel } from "@/lib/i18n";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -35,26 +36,41 @@ function PendingPage() {
   const [actionBusyIds, setActionBusyIds] = useState<Set<string>>(new Set());
   const loadRequestIdRef = useRef(0);
   const actionInFlightRef = useRef<Set<string>>(new Set());
+  const imageLoadInFlightRef = useRef<Set<string>>(new Set());
 
   const loadPending = useCallback(async () => {
     if (!canModerateListings) return;
     const requestId = ++loadRequestIdRef.current;
     setLoading(true);
     setError(null);
-    const result = await adminFetchPendingListings(canModerateListings);
-    if (requestId !== loadRequestIdRef.current) return;
-    if (result.ok) {
-      setListings(result.data);
-      setHasLoaded(true);
-    } else {
-      setError(result.error);
+    try {
+      const result = await adminFetchPendingListings(canModerateListings);
+      if (requestId !== loadRequestIdRef.current) return;
+      if (result.ok) {
+        setListings(result.data);
+        setHasLoaded(true);
+      } else {
+        setError(result.error);
+      }
+    } catch (caught) {
+      if (requestId !== loadRequestIdRef.current) return;
+      setError({
+        code: "unknown",
+        message:
+          caught instanceof Error
+            ? caught.message
+            : text("تعذر تحميل طابور المراجعة.", "Could not load review queue."),
+        operation: "admin_pending_load",
+      });
+    } finally {
+      if (requestId === loadRequestIdRef.current) setLoading(false);
     }
-    setLoading(false);
-  }, [canModerateListings]);
+  }, [canModerateListings, text]);
 
   useEffect(() => {
     loadRequestIdRef.current += 1;
     actionInFlightRef.current.clear();
+    imageLoadInFlightRef.current.clear();
     setActionBusyIds(new Set());
     if (!canModerateListings) {
       setListings([]);
@@ -71,6 +87,7 @@ function PendingPage() {
     return () => {
       loadRequestIdRef.current += 1;
       actionInFlightRef.current.clear();
+      imageLoadInFlightRef.current.clear();
     };
   }, [canModerateListings, loadPending]);
 
@@ -115,6 +132,12 @@ function PendingPage() {
           ? text("تم اعتماد الإعلان.", "Listing approved.")
           : text("تم رفض الإعلان.", "Listing rejected."),
       );
+    } catch (caught) {
+      setMessage(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحديث حالة الإعلان.", "Could not update listing status."),
+      );
     } finally {
       actionInFlightRef.current.delete(actionKey);
       setActionBusyIds((current) => {
@@ -126,7 +149,8 @@ function PendingPage() {
   }
 
   async function loadImages(listingId: string) {
-    if (imagesLoadingIds.has(listingId)) return;
+    if (imageLoadInFlightRef.current.has(listingId)) return;
+    imageLoadInFlightRef.current.add(listingId);
     setImagesLoadingIds((current) => new Set(current).add(listingId));
     setImageErrors((current) => ({ ...current, [listingId]: null }));
     try {
@@ -136,7 +160,20 @@ function PendingPage() {
       } else {
         setImageErrors((current) => ({ ...current, [listingId]: result.error }));
       }
+    } catch (caught) {
+      setImageErrors((current) => ({
+        ...current,
+        [listingId]: {
+          code: "unknown",
+          message:
+            caught instanceof Error
+              ? caught.message
+              : text("تعذر تحميل صور الإعلان.", "Could not load listing images."),
+          operation: "admin_pending_images",
+        },
+      }));
     } finally {
+      imageLoadInFlightRef.current.delete(listingId);
       setImagesLoadingIds((current) => {
         const next = new Set(current);
         next.delete(listingId);
@@ -581,7 +618,7 @@ function contactOptionsLabel(
 function formatDate(value: string, language: Language) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
