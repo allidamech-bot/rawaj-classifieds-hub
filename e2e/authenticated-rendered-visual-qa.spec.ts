@@ -14,40 +14,39 @@ const authenticatedRoutes = [
 test.describe("authenticated rendered visual QA", () => {
   test.setTimeout(180_000);
 
-  test(
-    "authenticated personal surfaces stay visually and structurally coherent",
-    async ({ page }, testInfo) => {
-      const mobile = testInfo.project.name.startsWith("mobile");
-      const desktop = testInfo.project.name.startsWith("desktop");
-      test.skip(!mobile && !desktop, "Only browser visual projects are relevant");
+  test("authenticated personal surfaces stay visually and structurally coherent", async ({
+    page,
+  }, testInfo) => {
+    const mobile = testInfo.project.name.startsWith("mobile");
+    const desktop = testInfo.project.name.startsWith("desktop");
+    test.skip(!mobile && !desktop, "Only browser visual projects are relevant");
 
-      await signIn(page, "/profile");
-      await expect(page).toHaveURL(/\/profile(?:[/?#]|$)/, { timeout: 30_000 });
+    await signIn(page, "/profile");
+    await expect(page).toHaveURL(/\/profile(?:[/?#]|$)/, { timeout: 30_000 });
 
-      for (const route of authenticatedRoutes) {
-        const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
-        expect(response?.status() ?? 200).toBeLessThan(500);
-        await waitForHydration(page);
-        await expect(page.locator("main")).toBeVisible();
-        await page.addStyleTag({
-          content: 'aside[data-placement-loading="true"]{display:none!important}',
-        });
-        await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
-        await page.waitForTimeout(75);
+    for (const route of authenticatedRoutes) {
+      const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      expect(response?.status() ?? 200).toBeLessThan(500);
+      await waitForHydration(page);
+      await expect(page.locator("main")).toBeVisible();
+      await page.addStyleTag({
+        content: 'aside[data-placement-loading="true"]{display:none!important}',
+      });
+      await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
+      await page.waitForTimeout(75);
 
-        await expectRenderedLayout(page, {
-          label: `authenticated:${testInfo.project.name}:${route.name}`,
-          mobile,
-        });
+      await expectRenderedLayout(page, {
+        label: `authenticated:${testInfo.project.name}:${route.name}`,
+        mobile,
+      });
 
-        await page.screenshot({
-          path: testInfo.outputPath(`authenticated-${route.name}.png`),
-          fullPage: true,
-          animations: "disabled",
-        });
-      }
-    },
-  );
+      await page.screenshot({
+        path: testInfo.outputPath(`authenticated-${route.name}.png`),
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
+  });
 });
 
 async function signIn(page: Page, returnTo: string): Promise<void> {
