@@ -1,0 +1,33 @@
+/* Final stability accessibility corrections.
+ * Loaded after route-specific styles so legacy light-theme declarations cannot
+ * override the current dark semantic tokens on audited surfaces.
+ */
+
+@media (max-width: 39.99rem) {
+  .rawaj-shell-header__back.rawaj-touch-target {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+.rawaj-auth-v2 a.text-brand-orange {
+  color: var(--rawaj-link) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-summary__date,
+.rawaj-detail-v2 .rawaj-detail-safety :is(p, li),
+.rawaj-detail-v2 .rawaj-detail-seller :is(p, small, span) {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+}
+
+.rawaj-storefront-v2 .rawaj-storefront-identity__actions > a:first-child {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+}
