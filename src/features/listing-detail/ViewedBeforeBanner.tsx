@@ -2,7 +2,8 @@ import { Clock3 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PriceChangeBanner } from "@/features/listing-detail/PriceChangeBanner";
 import { findLocalListingView } from "@/lib/listing-history";
-import { useUiPreferences } from "@/lib/ui-preferences";
+import { marketLocale } from "@/lib/market-locale";
+import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 
 export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
   const { language, text } = useUiPreferences();
@@ -39,8 +40,8 @@ export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
   );
 }
 
-function formatViewedAt(value: string, language: "ar" | "en") {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+function formatViewedAt(value: string, language: Language) {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
