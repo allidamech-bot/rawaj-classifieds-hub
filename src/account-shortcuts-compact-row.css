@@ -1,0 +1,57 @@
+/* Compact account shortcuts — four equal square cards in one mobile row. */
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+    align-items: stretch !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0.42rem 0.22rem !important;
+    gap: 0.34rem !important;
+    border-radius: 0.9rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card > svg,
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card > span:first-child svg {
+    width: 1.12rem !important;
+    height: 1.12rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
+    font-size: 0.67rem !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.68rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__hint {
+    display: none !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+    gap: 0.32rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
+    padding-inline: 0.12rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
+    font-size: 0.61rem !important;
+  }
+}
