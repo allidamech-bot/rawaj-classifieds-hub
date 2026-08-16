@@ -1,0 +1,252 @@
+/* My Store repair — keep /profile/listings aligned with the dark RAWAJ UI.
+ * This layer only neutralizes the later light V10 owner-store overrides.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
+  --store-canvas: #0d1016;
+  --store-surface: #151922;
+  --store-surface-raised: #1a1e27;
+  --store-line: #343943;
+  --store-line-strong: #4a515d;
+  --store-ink: #f5f1e9;
+  --store-ink-soft: #c4c8cf;
+  --store-ink-muted: #8f96a1;
+  --store-green: #176b59;
+  --store-green-deep: #8fd2bf;
+  --store-gold: #d7b36c;
+  --rawaj-text-primary: var(--store-ink);
+  --rawaj-text-secondary: var(--store-ink-soft);
+  --rawaj-text-muted: var(--store-ink-muted);
+  width: 100% !important;
+  max-width: 82rem !important;
+  min-width: 0 !important;
+  overflow: clip !important;
+  background: var(--store-canvas) !important;
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory {
+  min-width: 0 !important;
+  border: 1px solid var(--store-line) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.018), transparent 12rem), var(--store-surface) !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header h2 {
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header span,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__count,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-bulk-actions :is(span, p) {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory__header > strong {
+  border-color: var(--store-line) !important;
+  color: var(--store-gold) !important;
+  background: #1b2028 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-sticky {
+  min-width: 0 !important;
+  border-color: var(--store-line) !important;
+  background: rgba(21, 25, 34, 0.96) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs button {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs button > span:last-child {
+  color: var(--store-ink-soft) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs button[data-active="true"] {
+  border-color: rgba(216, 174, 95, 0.22) !important;
+  color: #fff !important;
+  background: rgba(149, 45, 118, 0.32) !important;
+  box-shadow: inset 0 -2px 0 #d35ba7 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search,
+  .rawaj-owner-listings-toolbar__select,
+  .rawaj-owner-listings-toolbar__filter-toggle,
+  .rawaj-owner-listings-toolbar__select-visible
+) {
+  min-width: 0 !important;
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft) !important;
+  background: #171b22 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search input,
+  .rawaj-owner-listings-toolbar__select select
+) {
+  min-width: 0 !important;
+  color: var(--store-ink) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listings-toolbar__search input,
+  .rawaj-owner-listings-toolbar__select select
+)::placeholder {
+  color: #747b86 !important;
+  opacity: 1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__add {
+  border-color: rgba(89, 205, 169, 0.22) !important;
+  color: #fff !important;
+  background: #0f5e50 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-bulk-actions {
+  border-color: rgba(89, 205, 169, 0.18) !important;
+  background: rgba(42, 112, 91, 0.12) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-bulk-actions__controls :is(select, button) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft) !important;
+  background: #171b22 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card {
+  min-width: 0 !important;
+  border-color: var(--store-line) !important;
+  background: var(--store-surface-raised) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2) !important;
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card .rawaj-product-media {
+  background: #0f1319 !important;
+  border-color: var(--store-line) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content {
+  min-width: 0 !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content h2 {
+  color: var(--store-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__facts {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__facts strong {
+  color: var(--store-gold) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span {
+  color: #bdc2ca !important;
+  background: #232832 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span[data-tone="success"],
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span[data-tone="safe"] {
+  color: #9bd7c3 !important;
+  background: rgba(43, 126, 98, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span[data-tone="warning"],
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span[data-tone="draft"] {
+  color: #e8c985 !important;
+  background: rgba(151, 105, 31, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__signals > span[data-tone="danger"] {
+  color: #efaaa3 !important;
+  background: rgba(143, 54, 49, 0.22) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card [data-owner-listing-performance="true"] {
+  border-color: var(--store-line) !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card [data-owner-metric] {
+  color: var(--store-ink-soft) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card [data-owner-metric] span {
+  color: var(--store-ink-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-owner-listing-card__actions a,
+  .rawaj-owner-listing-card__actions button,
+  .rawaj-owner-listing-management__duplicate
+) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink-soft) !important;
+  background: #222730 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="primary"] {
+  border-color: rgba(89, 205, 169, 0.22) !important;
+  color: #fff !important;
+  background: #0f5e50 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="share"] {
+  color: #9bd7c3 !important;
+  background: rgba(43, 126, 98, 0.16) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions [data-tone="boost"] {
+  color: #e8c985 !important;
+  background: rgba(151, 105, 31, 0.18) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__manage {
+  color: var(--store-ink) !important;
+  background: #222730 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-management {
+  border-color: var(--store-line) !important;
+  background: #151a21 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-management :is(input, select) {
+  border-color: var(--store-line) !important;
+  color: var(--store-ink) !important;
+  background: #11151b !important;
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-sticky,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-grid,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__content {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
+    padding-inline: 0.55rem !important;
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card .rawaj-product-media > :is(img, div) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+    object-fit: cover !important;
+  }
+}

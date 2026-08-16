@@ -19,6 +19,7 @@ import "../rawaj-audit-corrections-v8.css";
 import "../rawaj-home-audit-v8.css";
 import "../rawaj-categories-discovery-v8.css";
 import "../owner-listings-workspace-v9.css";
+import "../owner-store-dark-repair.css";
 import "../listing-studio-audit-v9.css";
 import "../personal-space-audit-v9.css";
 import "../profile-identity-layer-fix.css";
@@ -83,6 +84,7 @@ import unifiedMarketplaceV16ActionsCss from "../rawaj-marketplace-unified-v16-ac
 import accountCommandPremiumCss from "../account-command-premium.css?url";
 import activityCommandPremiumCss from "../activity-command-premium.css?url";
 import accountShortcutsCompactRowCss from "../account-shortcuts-compact-row.css?url";
+import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -140,6 +142,7 @@ export const auditedOverrideStyleHrefs = [
   accountCommandPremiumCss,
   activityCommandPremiumCss,
   accountShortcutsCompactRowCss,
+  ownerStoreDarkRepairCss,
 ] as const;
 
 export interface RouteStyleScope {
