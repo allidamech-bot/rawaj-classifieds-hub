@@ -133,16 +133,28 @@
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-emerald svg { color: #a4d6c3 !important; }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a[data-boost-shortcut="true"] {
-  border-color: rgba(255, 220, 118, 0.92) !important;
-  color: #211407 !important;
+  isolation: isolate;
+  border-color: rgba(217, 164, 65, 0.78) !important;
+  color: #f4eee3 !important;
   background:
-    radial-gradient(circle at 14% 6%, rgba(255, 255, 255, 0.6), transparent 23%),
-    radial-gradient(circle at 90% 100%, rgba(232, 137, 25, 0.34), transparent 42%),
-    linear-gradient(145deg, #ffe27f 0%, #ffc94d 48%, #eaa128 100%) !important;
+    radial-gradient(circle at 86% 8%, rgba(233, 196, 106, 0.09), transparent 32%),
+    radial-gradient(circle at 8% 100%, rgba(217, 164, 65, 0.055), transparent 40%),
+    linear-gradient(150deg, #1a1c21 0%, #15171c 58%, #111318 100%) !important;
   box-shadow:
-    0 15px 34px rgba(238, 167, 43, 0.28),
-    0 0 0 1px rgba(255, 224, 132, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.62) !important;
+    0 14px 30px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(217, 164, 65, 0.06),
+    0 0 18px rgba(217, 164, 65, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a[data-boost-shortcut="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(233, 196, 106, 0.055), transparent 32%, transparent 72%, rgba(217, 164, 65, 0.035));
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
@@ -150,24 +162,37 @@
   width: 2.9rem !important;
   height: 2.9rem !important;
   place-items: center !important;
-  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(217, 164, 65, 0.55) !important;
   border-radius: 0.85rem !important;
-  background: rgba(255, 250, 225, 0.72) !important;
-  box-shadow: 0 8px 18px rgba(101, 49, 5, 0.1) !important;
+  background: linear-gradient(145deg, #17191e, #101217) !important;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon svg {
-  color: #e53d2e !important;
-  stroke: #e53d2e !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] :is(strong, small, span) {
-  color: #251506 !important;
+  color: #ff4b3e !important;
+  stroke: #ff4b3e !important;
+  filter: drop-shadow(0 2px 6px rgba(255, 75, 62, 0.18));
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] strong {
+  color: #e9c46a !important;
   font-size: 0.78rem !important;
   font-weight: 950 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__hint {
+  color: #e6e6e6 !important;
+  font-weight: 650 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"]:is(:hover, :focus-visible) {
+  border-color: rgba(233, 196, 106, 0.95) !important;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.28),
+    0 0 22px rgba(217, 164, 65, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 > div[data-user-scope] > .rawaj-account-section {
