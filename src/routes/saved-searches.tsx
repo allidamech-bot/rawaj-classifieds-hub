@@ -16,6 +16,7 @@ import type {
   SavedSearchAlertFrequency,
 } from "@/lib/classifieds-types";
 import { uiLabel } from "@/lib/i18n";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -908,7 +909,7 @@ function frequencyLabel(value: LocalSearch["frequency"], language: Language) {
 }
 
 function formatDate(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === "ar" ? "ar-SY" : "en-US", {
+  return new Intl.DateTimeFormat(marketLocale(language), {
     dateStyle: "medium",
   }).format(new Date(value));
 }
