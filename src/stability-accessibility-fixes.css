@@ -7,6 +7,7 @@
 @import "./rawaj-chromatic-premium-system-v18-categories-listings.css";
 @import "./rawaj-chromatic-premium-system-v18-legacy-surfaces.css";
 @import "./rawaj-chromatic-premium-system-v18-home-discovery.css";
+@import "./rawaj-chromatic-premium-system-v18-signature-home.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
