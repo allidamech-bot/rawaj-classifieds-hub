@@ -16,7 +16,7 @@ export async function fetchPublicListingLocationPath(
     const locationNodeId =
       listing.locationNodeId ??
       (listing.districtAr?.startsWith("@") ? listing.districtAr.slice(1).trim() : null);
-    return locationNodeId ? fetchLocationPath(locationNodeId) : { ok: true, data: [] };
+    return locationNodeId ? await fetchLocationPath(locationNodeId) : { ok: true, data: [] };
   } catch (error) {
     return unexpectedFailure(error, "public_listing_location");
   }
