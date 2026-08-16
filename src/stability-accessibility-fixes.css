@@ -1,4 +1,5 @@
 @import "./rawaj-chromatic-premium-system-v17.css";
+@import "./rawaj-chromatic-premium-system-v17-shell.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
