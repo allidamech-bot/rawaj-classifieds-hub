@@ -8,6 +8,7 @@ import {
   type SellerReviewReportReason,
 } from "@/lib/classifieds-api";
 import type { PublicSellerReview } from "@/lib/classifieds-types";
+import { marketLocale } from "@/lib/market-locale";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
 
@@ -198,7 +199,7 @@ export function SellerReviewCard({
         <p className="mt-2 whitespace-pre-line text-xs leading-6">{review.comment}</p>
       ) : null}
       <p className="mt-1 text-[10px] text-muted-foreground">
-        {new Date(review.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US", {
+        {new Date(review.createdAt).toLocaleDateString(marketLocale(language), {
           timeZone: "UTC",
         })}
       </p>
