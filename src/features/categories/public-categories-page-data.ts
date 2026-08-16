@@ -28,6 +28,7 @@ export async function loadPublicCategoriesPageData(): Promise<PublicCategoriesPa
     fetchPublicSubcategories(),
   ]);
 
+  const taxonomyAvailable = taxonomyResult.ok && taxonomyResult.data.length > 0;
   const categoryError = !categoriesResult.ok
     ? categoriesResult.error
     : !subcategoriesResult.ok
@@ -38,12 +39,11 @@ export async function loadPublicCategoriesPageData(): Promise<PublicCategoriesPa
       ? taxonomyResult.error
       : null;
 
-  const taxonomyAvailable = taxonomyResult.ok;
   return {
-    taxonomyNodes: taxonomyResult.ok ? taxonomyResult.data : [],
+    taxonomyNodes: taxonomyAvailable ? taxonomyResult.data : [],
     taxonomyAvailable,
     categories: categoriesResult.ok ? categoriesResult.data : [],
     subcategories: subcategoriesResult.ok ? subcategoriesResult.data : [],
-    error: taxonomyError ?? (taxonomyAvailable ? null : categoryError),
+    error: taxonomyAvailable ? null : (categoryError ?? taxonomyError),
   };
 }
