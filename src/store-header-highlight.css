@@ -1,0 +1,112 @@
+/* RAWAJ shared store-action highlight — keep byte-for-byte identical in Syria and Saudi. */
+
+.rawaj-shell-header__actions .rawaj-header-store {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid !important;
+  min-width: 3.65rem;
+  grid-template-rows: auto auto;
+  place-items: center;
+  align-content: center;
+  gap: 0.12rem;
+  overflow: hidden;
+  border: 1px solid rgba(239, 190, 77, 0.56) !important;
+  background:
+    radial-gradient(circle at 50% -22%, rgba(255, 232, 166, 0.2), transparent 62%),
+    linear-gradient(145deg, rgba(218, 166, 52, 0.22), rgba(116, 75, 15, 0.16)) !important;
+  padding: 0.34rem 0.46rem 0.4rem !important;
+  color: #f6d57c !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 8px 24px rgba(207, 151, 35, 0.11) !important;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.rawaj-shell-header__actions .rawaj-header-store::before {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 18px rgba(255, 214, 111, 0.06);
+  content: "";
+  pointer-events: none;
+}
+
+.rawaj-shell-header__actions .rawaj-header-store::after {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  color: #ffe2a0;
+  content: attr(aria-label);
+  font-family: inherit;
+  font-size: 0.48rem;
+  font-weight: 800;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-shell-header__actions .rawaj-header-store svg {
+  position: relative;
+  z-index: 1;
+  width: 0.94rem;
+  height: 0.94rem;
+  color: currentColor;
+  stroke-width: 2.05;
+}
+
+.rawaj-shell-header__actions .rawaj-header-store:hover,
+.rawaj-shell-header__actions .rawaj-header-store:focus-visible {
+  border-color: rgba(248, 205, 105, 0.82) !important;
+  background:
+    radial-gradient(circle at 50% -22%, rgba(255, 237, 185, 0.27), transparent 62%),
+    linear-gradient(145deg, rgba(226, 176, 62, 0.28), rgba(126, 82, 16, 0.2)) !important;
+  color: #ffe59c !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 28px rgba(216, 161, 44, 0.16) !important;
+}
+
+.rawaj-shell-header__actions .rawaj-header-store:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.rawaj-shell-header__actions .rawaj-header-store[data-active="true"] {
+  border-color: rgba(255, 215, 119, 0.9) !important;
+  background:
+    radial-gradient(circle at 50% -18%, rgba(255, 240, 197, 0.3), transparent 60%),
+    linear-gradient(145deg, rgba(230, 181, 67, 0.31), rgba(132, 86, 18, 0.22)) !important;
+  color: #ffeba9 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 0 0 1px rgba(255, 209, 101, 0.1),
+    0 10px 30px rgba(216, 161, 44, 0.18) !important;
+}
+
+@media (max-width: 390px) {
+  .rawaj-shell-header__actions .rawaj-header-store {
+    min-width: 3.4rem;
+    padding-inline: 0.35rem !important;
+  }
+
+  .rawaj-shell-header__actions .rawaj-header-store::after {
+    font-size: 0.45rem;
+  }
+
+  .rawaj-shell-header__actions .rawaj-header-store svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-shell-header__actions .rawaj-header-store {
+    transition: none;
+  }
+}
