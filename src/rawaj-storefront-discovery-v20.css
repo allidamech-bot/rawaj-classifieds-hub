@@ -1,0 +1,115 @@
+/* RAWAJ storefront discovery v20
+ * Makes the storefront affordance visibly distinct from generic header utilities
+ * without expanding the mobile header footprint. */
+
+.rawaj-header-store.rawaj-storefront-cta {
+  position: relative !important;
+  display: inline-flex !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  overflow: visible !important;
+  padding: 5px 4px 4px !important;
+  border: 1px solid rgba(245, 196, 103, 0.42) !important;
+  color: #fff2d6 !important;
+  background:
+    radial-gradient(circle at 12% 5%, rgba(226, 68, 163, 0.34), transparent 44%),
+    radial-gradient(circle at 95% 95%, rgba(71, 137, 255, 0.22), transparent 48%),
+    linear-gradient(145deg, #2c1b2b 0%, #181923 58%, #11151d 100%) !important;
+  box-shadow:
+    0 0 0 1px rgba(218, 174, 95, 0.06),
+    0 11px 28px rgba(194, 47, 128, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  isolation: isolate;
+}
+
+.rawaj-header-store.rawaj-storefront-cta::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border: 1px solid rgba(221, 73, 179, 0.2);
+  border-radius: calc(var(--rawaj-radius-button) + 3px);
+  pointer-events: none;
+}
+
+.rawaj-header-store.rawaj-storefront-cta svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 auto;
+  color: #f5cc7d !important;
+  filter: drop-shadow(0 4px 8px rgba(245, 115, 183, 0.28));
+}
+
+.rawaj-header-store.rawaj-storefront-cta .rawaj-header-store__label {
+  max-width: 100%;
+  overflow: hidden;
+  color: #fff0d2;
+  font-size: 8.5px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-header-store.rawaj-storefront-cta .rawaj-header-store__label--compact {
+  display: none;
+}
+
+.rawaj-header-store.rawaj-storefront-cta:is(:hover, :focus-visible),
+.rawaj-header-store.rawaj-storefront-cta[data-active="true"] {
+  border-color: rgba(247, 205, 126, 0.72) !important;
+  background:
+    radial-gradient(circle at 12% 5%, rgba(235, 75, 172, 0.43), transparent 46%),
+    radial-gradient(circle at 95% 95%, rgba(76, 143, 255, 0.29), transparent 50%),
+    linear-gradient(145deg, #342035 0%, #1d1b28 58%, #121720 100%) !important;
+  box-shadow:
+    0 0 0 3px rgba(219, 73, 179, 0.09),
+    0 13px 32px rgba(194, 47, 128, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+@media (max-width: 360px) {
+  .rawaj-header-store.rawaj-storefront-cta {
+    width: 48px !important;
+    min-width: 48px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+  }
+
+  .rawaj-header-store.rawaj-storefront-cta .rawaj-header-store__label--full {
+    display: none;
+  }
+
+  .rawaj-header-store.rawaj-storefront-cta .rawaj-header-store__label--compact {
+    display: inline;
+  }
+}
+
+@media (min-width: 1024px) {
+  .rawaj-header-store.rawaj-storefront-cta {
+    width: auto !important;
+    min-width: 92px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex-direction: row !important;
+    gap: 7px !important;
+    padding-inline: 12px !important;
+  }
+
+  .rawaj-header-store.rawaj-storefront-cta .rawaj-header-store__label {
+    font-size: 11.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-header-store.rawaj-storefront-cta {
+    transition: none !important;
+  }
+}
