@@ -57,3 +57,116 @@
   border-color: rgba(216, 174, 95, 0.5) !important;
   box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
+
+/* /account was the remaining personal-space route still inheriting a broad grey
+ * identity surface. Keep the same content and layout, but align its canvas with
+ * the approved /more and /profile visual language. */
+.rawaj-app-shell[data-resolved-pathname="/account"] .rawaj-account-identity {
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(74, 140, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 8% 96%, rgba(219, 73, 179, 0.1), transparent 38%),
+    linear-gradient(150deg, #1c2029, #141820 64%, #10141b) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/account"] .rawaj-account-identity__cover > div {
+  background:
+    radial-gradient(circle at 16% 15%, rgba(240, 95, 79, 0.2), transparent 30%),
+    radial-gradient(circle at 55% 0%, rgba(219, 73, 179, 0.16), transparent 34%),
+    radial-gradient(circle at 92% 28%, rgba(74, 140, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(11, 14, 20, 0.16), rgba(11, 14, 20, 0.88)) !important;
+}
+
+/* Support and safety heroes are brand surfaces, not neutral grey cards. */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"]
+  ) .rawaj-trust-hero {
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(74, 140, 255, 0.13), transparent 34%),
+    radial-gradient(circle at 7% 96%, rgba(219, 73, 179, 0.11), transparent 39%),
+    radial-gradient(circle at 58% 0%, rgba(216, 174, 95, 0.07), transparent 36%),
+    linear-gradient(150deg, #1d202a, #151922 66%, #11151d) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-requests {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+/* Trust/legal copy was visually undersized compared with the marketplace shell.
+ * Raise only presentation typography; no content or information architecture changes. */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"]
+  ) :is(
+    .rawaj-support-topic p,
+    .rawaj-support-faq details p,
+    .rawaj-support-timeline p,
+    .rawaj-support-timeline blockquote,
+    .rawaj-support-notice,
+    .rawaj-safety-guide li,
+    .rawaj-trust-empty p
+  ) {
+  font-size: max(0.68rem, 11px) !important;
+  line-height: 1.75 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/support"],
+    [data-resolved-pathname="/safety"]
+  ) :is(.rawaj-support-topic h3, .rawaj-support-faq summary, .rawaj-safety-guide h2) {
+  font-size: max(0.76rem, 12px) !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"]
+  ) :is(.rawaj-legal-v3 p, .rawaj-legal-v3 li, .rawaj-prohibited-v3 p, .rawaj-prohibited-v3 li) {
+  font-size: max(0.7rem, 11px) !important;
+  line-height: 1.8 !important;
+}
+
+/* On narrow detail screens the price and specification rows must adapt to the
+ * available width instead of clipping or breaking Arabic one character per line. */
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.25rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > :is(span, small, strong) {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-width: 0 !important;
+    justify-self: start !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > strong {
+    max-width: 100% !important;
+    font-size: clamp(1.05rem, 5.8vw, 1.4rem) !important;
+    line-height: 1.35 !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.2rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs dd {
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+}
