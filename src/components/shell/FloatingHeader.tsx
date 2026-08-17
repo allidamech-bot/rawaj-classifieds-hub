@@ -12,6 +12,7 @@ import {
 import { resolvePrimaryNavigationSection } from "@/lib/primary-navigation";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import "../../rawaj-storefront-discovery-v20.css";
 
 export interface FloatingHeaderProps {
   compact?: boolean;
@@ -60,6 +61,12 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
     },
     { to: "/offers" as const, section: "offers" as const, label: text("العروض", "Offers") },
   ];
+
+  const storeLabel = signedIn ? text("متجري", "My store") : text("متجر مجاني", "Free store");
+  const storeCompactLabel = signedIn ? text("متجري", "My store") : text("متجر", "Store");
+  const storeAccessibleLabel = signedIn
+    ? text("متجري — إدارة منتجاتي", "My store — manage my products")
+    : text("افتح متجرك مجاناً على رواج", "Open your free store on RAWAJ");
 
   return (
     <>
@@ -193,17 +200,22 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             </Link>
           )}
 
-          {signedIn ? (
-            <Link
-              to="/profile/listings"
-              aria-label={text("متجري", "My store")}
-              title={text("متجري", "My store")}
-              data-active={pathname.startsWith("/profile/listings") ? "true" : undefined}
-              className="rawaj-header-store rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
-            >
-              <Store className="h-4 w-4" strokeWidth={1.9} />
-            </Link>
-          ) : null}
+          <Link
+            to={signedIn ? "/profile/listings" : "/login"}
+            aria-label={storeAccessibleLabel}
+            title={storeAccessibleLabel}
+            data-active={signedIn && pathname.startsWith("/profile/listings") ? "true" : undefined}
+            data-signed-in={signedIn ? "true" : "false"}
+            className="rawaj-header-store rawaj-storefront-cta rawaj-touch-target shrink-0 rounded-[var(--rawaj-radius-button)]"
+          >
+            <Store strokeWidth={2} />
+            <span className="rawaj-header-store__label rawaj-header-store__label--full">
+              {storeLabel}
+            </span>
+            <span className="rawaj-header-store__label rawaj-header-store__label--compact">
+              {storeCompactLabel}
+            </span>
+          </Link>
         </div>
       </ShellHeaderFrame>
     </>
