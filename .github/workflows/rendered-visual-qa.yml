@@ -33,6 +33,8 @@ jobs:
       - name: Audit and capture rendered surfaces
         env:
           RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
         run: npx playwright test e2e/rendered-visual-qa.spec.ts e2e/authenticated-rendered-visual-qa.spec.ts --project=mobile-chromium --project=desktop-chromium
       - name: Upload rendered screenshots and traces
