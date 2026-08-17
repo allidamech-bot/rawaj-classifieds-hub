@@ -44,6 +44,14 @@
     min-height: 44px !important;
     padding-block: 0.65rem !important;
   }
+
+  /* My Listings status tabs are real controls, not decorative chips. */
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+    [data-rawaj-segmented-control="true"]
+    button {
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
 }
 
 /* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
@@ -66,4 +74,33 @@
   .rawaj-communication-hero__copy
   > p {
   color: #c3c7ce !important;
+}
+
+/* The owner storefront summary had legacy gradients that could collapse the
+ * fallback initial and primary CTA contrast after the chromatic layer resolved.
+ * Own both foreground and background here so the result is deterministic. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__avatar {
+  color: #fff7f1 !important;
+  background: linear-gradient(145deg, #4a253f 0%, #261b2d 56%, #19263a 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__avatar
+  > span {
+  color: #fff7f1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="primary"] {
+  color: #fff !important;
+  background: linear-gradient(135deg, #b72f4d 0%, #992d70 52%, #5850b8 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="primary"]
+  span {
+  color: #fff !important;
 }
