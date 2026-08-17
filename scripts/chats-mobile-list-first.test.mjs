@@ -2,19 +2,28 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [chats, baseCss, mobileCss, routeStyles, resolution, bottomDock, liveWorkspace] =
-  await Promise.all([
-    readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/journey-target-resolution.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
-    readFile(
-      new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
-      "utf8",
-    ),
-  ]);
+const [
+  chats,
+  baseCss,
+  mobileCss,
+  finalChatsCss,
+  routeStyles,
+  resolution,
+  bottomDock,
+  liveWorkspace,
+] = await Promise.all([
+  readFile(new URL("../src/routes/chats.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v2.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/communication-center-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-chromatic-premium-system-v18-chats.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/lib/journey-target-resolution.ts", import.meta.url), "utf8"),
+  readFile(new URL("../src/components/shell/BottomDock.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../src/features/communication/useLiveChatWorkspace.ts", import.meta.url),
+    "utf8",
+  ),
+]);
 
 test("opening /chats without a conversation query stays list-first (no auto-open)", () => {
   assert.doesNotMatch(
@@ -56,6 +65,36 @@ test("mobile list mode removes the blank message panel through route state and e
   );
   assert.match(liveWorkspace, /import "\.\.\/\.\.\/communication-center-v3\.css";/);
   assert.match(routeStyles, /communicationCenterV2: communicationCenterV3Css/);
+});
+
+test("final mobile chats layer cannot inherit the desktop two-column workspace", () => {
+  assert.match(
+    finalChatsCss,
+    /@media \(max-width: 1023px\)[\s\S]*\.rawaj-message-workspace\[data-view="list"\][\s\S]*display: block !important;/,
+  );
+  assert.match(
+    finalChatsCss,
+    /\.rawaj-message-workspace\[data-view="list"\][\s\S]*grid-template-columns: minmax\(0, 1fr\) !important;/,
+  );
+  assert.match(
+    finalChatsCss,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-conversation-sidebar \{[\s\S]*width: 100% !important;[\s\S]*max-width: 100% !important;/,
+  );
+  assert.match(
+    finalChatsCss,
+    /\.rawaj-message-workspace\[data-view="list"\] \.rawaj-message-panel \{[\s\S]*display: none !important;[\s\S]*width: 0 !important;/,
+  );
+});
+
+test("final chats search uses the full available mobile sidebar width", () => {
+  assert.match(
+    finalChatsCss,
+    /\.rawaj-communication-search \{[\s\S]*width: 100% !important;[\s\S]*max-width: none !important;[\s\S]*min-width: 0 !important;/,
+  );
+  assert.match(
+    finalChatsCss,
+    /\.rawaj-communication-search input \{[\s\S]*width: 100% !important;[\s\S]*min-width: 0 !important;[\s\S]*flex: 1 1 auto !important;/,
+  );
 });
 
 test("conversation mode hides the sidebar and keeps a computed mobile message height", () => {

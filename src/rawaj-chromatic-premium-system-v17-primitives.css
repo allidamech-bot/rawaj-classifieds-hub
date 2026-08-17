@@ -1,0 +1,257 @@
+/* RAWAJ Chromatic Premium System v17 — small UI primitive finishing layer. */
+
+.rawaj-app-shell [data-slot="accordion-item"] {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+}
+
+.rawaj-app-shell [data-slot="accordion-trigger"] {
+  color: #eee8e0 !important;
+}
+
+.rawaj-app-shell [data-slot="accordion-trigger"]:is(:hover, :focus-visible),
+.rawaj-app-shell [data-slot="accordion-item"][data-state="open"] [data-slot="accordion-trigger"] {
+  color: #f2ce88 !important;
+}
+
+.rawaj-app-shell [data-slot="accordion-content"] {
+  color: #aeb0b6 !important;
+}
+
+.rawaj-app-shell [data-slot="alert"] {
+  border-color: rgba(216, 174, 95, 0.17) !important;
+  color: #eee8df !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.06), transparent 40%),
+    linear-gradient(145deg, #181c24, #11151c) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.rawaj-app-shell [data-slot="alert"][data-variant="destructive"] {
+  border-color: rgba(240, 95, 79, 0.28) !important;
+  color: #ffd8d2 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240,95,79,.12), transparent 44%),
+    linear-gradient(145deg, #271a1d, #151418) !important;
+}
+
+.rawaj-app-shell [data-slot="avatar"] {
+  border: 1px solid rgba(216, 174, 95, 0.24) !important;
+  background: linear-gradient(145deg, #23242b, #12161d) !important;
+  box-shadow: 0 7px 18px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.rawaj-app-shell [data-slot="avatar-fallback"] {
+  color: #f1d59c !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.12), rgba(139,60,126,.13)) !important;
+}
+
+.rawaj-app-shell [data-slot="breadcrumb"] {
+  color: #9398a0 !important;
+}
+
+.rawaj-app-shell [data-slot="breadcrumb-link"]:is(:hover, :focus-visible) {
+  color: #e7bc69 !important;
+}
+
+.rawaj-app-shell [data-slot="breadcrumb-page"] {
+  color: #eee9e2 !important;
+}
+
+.rawaj-app-shell [data-slot="breadcrumb-separator"] {
+  color: rgba(216,174,95,.52) !important;
+}
+
+.rawaj-app-shell [data-slot="checkbox"] {
+  border-color: rgba(216,174,95,.32) !important;
+  background: #10141b !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.rawaj-app-shell [data-slot="checkbox"][data-state="checked"] {
+  border-color: rgba(234,199,129,.42) !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #c73764, #775fe9) !important;
+  box-shadow: 0 5px 13px rgba(178,43,113,.22), inset 0 1px 0 rgba(255,255,255,.13) !important;
+}
+
+.rawaj-app-shell [data-slot="radio-group-item"] {
+  border-color: rgba(216,174,95,.34) !important;
+  color: #e7bd6d !important;
+  background: #10141b !important;
+}
+
+.rawaj-app-shell [data-slot="switch"] {
+  border: 1px solid rgba(216,174,95,.15) !important;
+  background: #252832 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.28) !important;
+}
+
+.rawaj-app-shell [data-slot="switch"][data-state="checked"] {
+  border-color: rgba(216,174,95,.28) !important;
+  background: linear-gradient(90deg, #b42a72, #6e5ed7) !important;
+}
+
+.rawaj-app-shell [data-slot="switch-thumb"] {
+  background: #f5efe6 !important;
+  box-shadow: 0 2px 7px rgba(0,0,0,.3) !important;
+}
+
+.rawaj-app-shell [data-slot="progress"] {
+  background: rgba(255,255,255,.065) !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.2) !important;
+}
+
+.rawaj-app-shell [data-slot="progress-indicator"] {
+  background: linear-gradient(90deg, #d8ae5f, #ca3676, #765fe7) !important;
+  box-shadow: 0 0 12px rgba(202,54,118,.18) !important;
+}
+
+.rawaj-app-shell [data-slot="slider-track"] {
+  background: rgba(255,255,255,.07) !important;
+}
+
+.rawaj-app-shell [data-slot="slider-range"] {
+  background: linear-gradient(90deg, #d8ae5f, #c52c78, #8067ef) !important;
+}
+
+.rawaj-app-shell [data-slot="slider-thumb"] {
+  border-color: rgba(232,202,141,.52) !important;
+  background: #f7f0e6 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.28), 0 0 0 3px rgba(216,174,95,.08) !important;
+}
+
+.rawaj-app-shell [data-slot="toggle"],
+.rawaj-app-shell [data-slot="toggle-group-item"] {
+  border-color: rgba(216,174,95,.11) !important;
+  color: #b8b5b6 !important;
+  background: rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell [data-slot="toggle"][data-state="on"],
+.rawaj-app-shell [data-slot="toggle-group-item"][data-state="on"] {
+  border-color: rgba(216,174,95,.28) !important;
+  color: #f4d99e !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.11), rgba(139,60,126,.11)) !important;
+}
+
+.rawaj-app-shell [data-slot="tooltip-content"] {
+  border: 1px solid rgba(216,174,95,.16) !important;
+  color: #f4eee6 !important;
+  background: #181c24 !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35) !important;
+}
+
+.rawaj-app-shell [data-slot="hover-card-content"] {
+  border-color: rgba(216,174,95,.18) !important;
+  color: #eee8e0 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.06), transparent 40%),
+    linear-gradient(145deg, #1b1e27, #12161d) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+
+.rawaj-app-shell [data-slot="pagination"] :is(a, button) {
+  border-color: rgba(216,174,95,.12) !important;
+  color: #c0bdbe !important;
+  background: rgba(255,255,255,.025) !important;
+}
+
+.rawaj-app-shell [data-slot="pagination"] :is(a, button)[aria-current="page"] {
+  border-color: rgba(216,174,95,.38) !important;
+  color: #f7dfa9 !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.12), rgba(139,60,126,.11)) !important;
+}
+
+.rawaj-app-shell [data-slot="calendar"] {
+  border-color: rgba(216,174,95,.18) !important;
+  color: #eee8df !important;
+  background: linear-gradient(145deg, #191d26, #11151c) !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.045) !important;
+}
+
+.rawaj-app-shell [data-slot="calendar"] [data-selected-single="true"],
+.rawaj-app-shell [data-slot="calendar"] [aria-selected="true"] {
+  color: #fff !important;
+  background: linear-gradient(145deg, #c52c78, #775fe9) !important;
+}
+
+.rawaj-app-shell [data-slot="calendar"] [data-today="true"] {
+  color: #f0cf90 !important;
+  box-shadow: inset 0 0 0 1px rgba(216,174,95,.28) !important;
+}
+
+.rawaj-app-shell [data-slot="carousel"] :is([data-slot="carousel-previous"], [data-slot="carousel-next"]) {
+  border-color: rgba(216,174,95,.2) !important;
+  color: #f0e8df !important;
+  background: rgba(17,20,27,.9) !important;
+  box-shadow: 0 7px 18px rgba(0,0,0,.24) !important;
+}
+
+.rawaj-app-shell [data-slot="scroll-area-scrollbar"] {
+  background: rgba(255,255,255,.018) !important;
+}
+
+.rawaj-app-shell [data-slot="scroll-area-thumb"] {
+  background: linear-gradient(#d8ae5f, #925f6e) !important;
+}
+
+.rawaj-app-shell [data-slot="resizable-handle"] {
+  background: rgba(216,174,95,.13) !important;
+}
+
+.rawaj-app-shell [data-slot="menubar"],
+.rawaj-app-shell [data-slot="navigation-menu"] {
+  border-color: rgba(216,174,95,.13) !important;
+  background: rgba(17,20,27,.78) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.rawaj-app-shell [data-slot="menubar-trigger"][data-state="open"],
+.rawaj-app-shell [data-slot="navigation-menu-trigger"][data-state="open"] {
+  color: #f3d797 !important;
+  background: linear-gradient(145deg, rgba(216,174,95,.1), rgba(139,60,126,.1)) !important;
+}
+
+.rawaj-app-shell [data-slot="command"] {
+  border-color: rgba(216,174,95,.18) !important;
+  color: #eee8df !important;
+  background: linear-gradient(145deg, #191d26, #11151c) !important;
+}
+
+.rawaj-app-shell [data-slot="command-item"][data-selected="true"] {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(216,174,95,.1), rgba(139,60,126,.1)) !important;
+}
+
+.rawaj-app-shell [data-slot="chart-tooltip"] {
+  border-color: rgba(216,174,95,.16) !important;
+  color: #eee8df !important;
+  background: rgba(20,24,32,.97) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.32) !important;
+}
+
+.rawaj-app-shell :is([data-slot="sidebar"], [data-sidebar="sidebar"]) {
+  border-color: rgba(216,174,95,.11) !important;
+  color: #d8d2cc !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216,174,95,.045), transparent 40%),
+    linear-gradient(180deg, #151922, #0f131a) !important;
+}
+
+.rawaj-app-shell :is([data-slot="sidebar-menu-button"], [data-sidebar="menu-button"])[data-active="true"] {
+  color: #f5dca7 !important;
+  background: linear-gradient(90deg, rgba(216,174,95,.11), rgba(139,60,126,.09)) !important;
+  box-shadow: inset 0 0 0 1px rgba(216,174,95,.1) !important;
+}
+
+.rawaj-app-shell :is([data-slot="label"], label) {
+  color: #d5cfca !important;
+}
+
+.rawaj-app-shell :is([data-slot="form-description"], .form-description) {
+  color: #8e959d !important;
+}
+
+.rawaj-app-shell :is([data-slot="form-message"], .form-message) {
+  color: #f28c82 !important;
+}

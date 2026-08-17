@@ -1,0 +1,61 @@
+/* RAWAJ Chromatic Premium System v18 — public ad placement.
+ * Keeps arbitrary ad media untouched while making the surrounding inventory
+ * frame part of the approved dark navy / gold / chromatic design language.
+ */
+
+.rawaj-app-shell .rawaj-ad-placement {
+  margin-top: clamp(0.75rem, 2vw, 1.1rem) !important;
+}
+
+.rawaj-app-shell .rawaj-ad-placement__grid {
+  gap: 0.8rem !important;
+}
+
+.rawaj-app-shell .rawaj-ad-placement__frame {
+  border: 1px solid transparent !important;
+  border-radius: 1.25rem !important;
+  background:
+    linear-gradient(#10141b, #10141b) padding-box,
+    linear-gradient(
+      118deg,
+      rgba(216, 174, 95, 0.28),
+      rgba(219, 73, 179, 0.18),
+      rgba(116, 101, 239, 0.16),
+      rgba(74, 140, 255, 0.2)
+    ) border-box !important;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell .rawaj-ad-placement__scrim {
+  background:
+    linear-gradient(180deg, rgba(7, 10, 15, 0.08), transparent 34%, rgba(7, 10, 15, 0.18)),
+    linear-gradient(90deg, rgba(198, 44, 120, 0.035), transparent 35%, rgba(74, 140, 255, 0.035)) !important;
+}
+
+.rawaj-app-shell .rawaj-ad-placement__label {
+  border: 1px solid rgba(216, 174, 95, 0.18) !important;
+  color: #f8ead0 !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.12), transparent 62%),
+    rgba(14, 18, 25, 0.88) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24) !important;
+  backdrop-filter: blur(12px) saturate(120%) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell .rawaj-ad-placement__frame:hover {
+    border-color: transparent !important;
+    transform: translateY(-2px) !important;
+    box-shadow:
+      0 20px 46px rgba(0, 0, 0, 0.32),
+      0 0 0 1px rgba(216, 174, 95, 0.035) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .rawaj-app-shell .rawaj-ad-placement__frame {
+    border-radius: 1.15rem !important;
+  }
+}

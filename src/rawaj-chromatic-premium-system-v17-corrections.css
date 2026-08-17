@@ -1,0 +1,27 @@
+/* RAWAJ Chromatic Premium System v17 — surgical cascade corrections. */
+
+.rawaj-app-shell nav[aria-label="breadcrumb"] {
+  border-color: transparent !important;
+  color: #9197a0 !important;
+}
+
+.rawaj-app-shell nav[aria-label="breadcrumb"] [aria-current="page"] {
+  border-color: transparent !important;
+  color: #ece7df !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell nav[aria-label="breadcrumb"] a {
+  color: #969ba3 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell nav[aria-label="breadcrumb"] a:is(:hover, :focus-visible) {
+  color: #e1b867 !important;
+}
+
+.rawaj-app-shell nav[aria-label="breadcrumb"] [role="presentation"] {
+  color: rgba(216,174,95,.5) !important;
+}

@@ -1,0 +1,125 @@
+/* RAWAJ V18 final contract corrections. */
+
+/* Categories must retain the richer rounded-card language on mobile, while
+ * exposing a concrete background color for the icon contract. */
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .category-tile {
+  background-color: #1b1722 !important;
+}
+
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card,
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid > article {
+    border-radius: 1.125rem !important;
+  }
+}
+
+/* Authenticated account actions must preserve a real mobile touch target. */
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] #account-info button[type="submit"] {
+    min-height: 44px !important;
+    padding-block: 0.7rem !important;
+  }
+
+  /* NotificationTrigger is rendered in the shell header and is not guaranteed
+   * to be nested beneath the route-scoped .rawaj-app-shell content node. */
+  button.rawaj-touch-target[aria-label="الإشعارات"],
+  button.rawaj-touch-target[aria-label="Notifications"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* Mark-all lives inside the communication hero instead of the shared touch
+   * target primitive. Keep the signed-in notification action fully tappable. */
+  .rawaj-app-shell[data-resolved-pathname="/notifications"]
+    .rawaj-communication-hero__actions
+    > button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
+
+  /* Per-row notification read actions are full-width on mobile but the legacy
+   * 2.3rem height is below the 44px touch contract. Preserve the row layout and
+   * raise only the interactive height. */
+  .rawaj-app-shell[data-resolved-pathname="/notifications"]
+    button.rawaj-notification-timeline__read {
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
+
+  /* My Listings status tabs are real controls, not decorative chips. */
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+    [data-rawaj-segmented-control="true"]
+    button {
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
+}
+
+/* The unread counter sits inside the global header trigger and can appear on
+ * every authenticated route. Own both colors explicitly so tiny count text
+ * remains AA-readable regardless of route-specific destructive tokens. */
+button.rawaj-touch-target[aria-label="الإشعارات"] > span.absolute.-top-1.-end-1,
+button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-end-1 {
+  color: #ffffff !important;
+  background-color: #76163f !important;
+  box-shadow: 0 0 0 1px rgba(244, 184, 96, 0.42) !important;
+}
+
+/* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
+.rawaj-app-shell[data-resolved-pathname="/activity"] .text-muted-foreground {
+  color: #b7bdc6 !important;
+}
+
+/* activity-command-premium.css owns this row with an equally-important,
+ * higher-specificity selector, so mirror that selector here at the end of the
+ * audited cascade instead of relying on a broad utility override. */
+.rawaj-app-shell[data-resolved-pathname="/activity"]
+  a.rawaj-notification-timeline
+  p:last-child {
+  color: #b7bdc6 !important;
+}
+
+/* The communication-center eyebrow is intentionally small; give it enough
+ * luminance on the notification hero to clear AA without flattening the palette. */
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  .rawaj-communication-hero__copy
+  > p {
+  color: #c3c7ce !important;
+}
+
+/* The owner storefront summary had legacy gradients that could collapse the
+ * fallback initial and primary CTA contrast after the chromatic layer resolved.
+ * Own both foreground and background here so the result is deterministic. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__avatar {
+  color: #fff7f1 !important;
+  background: linear-gradient(145deg, #4a253f 0%, #261b2d 56%, #19263a 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__avatar
+  > span {
+  color: #fff7f1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="primary"] {
+  color: #fff !important;
+  background: linear-gradient(135deg, #b72f4d 0%, #992d70 52%, #5850b8 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="primary"]
+  span {
+  color: #fff !important;
+}
