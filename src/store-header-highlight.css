@@ -8,13 +8,13 @@
   grid-template-rows: auto auto;
   place-items: center;
   align-content: center;
-  gap: 0.2rem;
+  gap: 0.12rem;
   overflow: hidden;
   border: 1px solid rgba(239, 190, 77, 0.56) !important;
   background:
     radial-gradient(circle at 50% -22%, rgba(255, 232, 166, 0.2), transparent 62%),
     linear-gradient(145deg, rgba(218, 166, 52, 0.22), rgba(116, 75, 15, 0.16)) !important;
-  padding: 0.38rem 0.5rem !important;
+  padding: 0.34rem 0.46rem 0.4rem !important;
   color: #f6d57c !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -45,9 +45,9 @@
   color: #ffe2a0;
   content: attr(aria-label);
   font-family: inherit;
-  font-size: 0.54rem;
+  font-size: 0.48rem;
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.18;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -55,10 +55,10 @@
 .rawaj-shell-header__actions .rawaj-header-store svg {
   position: relative;
   z-index: 1;
-  width: 1.08rem;
-  height: 1.08rem;
+  width: 0.94rem;
+  height: 0.94rem;
   color: currentColor;
-  stroke-width: 2.1;
+  stroke-width: 2.05;
 }
 
 .rawaj-shell-header__actions .rawaj-header-store:hover,
@@ -96,7 +96,12 @@
   }
 
   .rawaj-shell-header__actions .rawaj-header-store::after {
-    font-size: 0.5rem;
+    font-size: 0.45rem;
+  }
+
+  .rawaj-shell-header__actions .rawaj-header-store svg {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 }
 
