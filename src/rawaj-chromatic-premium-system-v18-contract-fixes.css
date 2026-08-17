@@ -13,9 +13,10 @@
   }
 }
 
-/* Authenticated account actions must preserve a real mobile touch target. */
+/* Authenticated account and chat actions must preserve a real mobile touch target. */
 @media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target,
+  .rawaj-app-shell[data-resolved-pathname="/chats"] button.rawaj-touch-target {
     min-width: 44px !important;
     min-height: 44px !important;
   }
@@ -26,7 +27,9 @@
   }
 }
 
-/* Small activity timestamps were just below AA contrast after the V18 palette. */
-.rawaj-app-shell[data-resolved-pathname="/activity"] p.mt-1.text-muted-foreground {
-  color: #a9afb8 !important;
+/* Activity secondary copy/timestamps must stay comfortably above AA contrast.
+ * This route-level rule is intentionally broader than a single utility shape:
+ * activity rows use multiple font-size utilities for timestamp metadata. */
+.rawaj-app-shell[data-resolved-pathname="/activity"] .text-muted-foreground {
+  color: #b7bdc6 !important;
 }
