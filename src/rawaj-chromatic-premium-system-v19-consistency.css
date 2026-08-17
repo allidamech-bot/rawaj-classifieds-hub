@@ -1,0 +1,195 @@
+/* RAWAJ Chromatic Premium System V19 — final consistency pass.
+ * Re-owns shared semantic surfaces after all route-specific systems so legacy
+ * neutral-grey declarations cannot leak into brand, search, shell, card, form,
+ * footer, workspace, or portal surfaces. Visual-only: no behavior changes.
+ */
+
+:root,
+.dark {
+  --rawaj-page-background: #0b0e14 !important;
+  --rawaj-page-background-deep: #080b10 !important;
+  --rawaj-card-background: #141821 !important;
+  --rawaj-elevated-background: #191d27 !important;
+  --rawaj-subtle-background: #11151d !important;
+  --rawaj-muted-surface: #171b24 !important;
+  --rawaj-surface-active: #211d29 !important;
+  --rawaj-surface-selected: #251b2a !important;
+  --rawaj-surface-inset: #0d1118 !important;
+  --rawaj-surface-card: #141821 !important;
+  --rawaj-surface-sage: #151b22 !important;
+  --rawaj-surface-sage-strong: #1a2028 !important;
+  --rawaj-surface-warm: #1c171d !important;
+  --rawaj-surface-gold: #1d1a14 !important;
+  --rawaj-surface-elevated: #191d27 !important;
+  --card: #141821 !important;
+  --card-warm: #171b24 !important;
+  --popover: #191d27 !important;
+  --secondary: #171b24 !important;
+  --muted: #171b24 !important;
+}
+
+/* Brand artwork must float directly on the shell. The approved mark has its own
+ * transparent pixels; no wrapper may add a rectangular plate behind it. */
+.rawaj-brand-lockup,
+.rawaj-shell-header__brand,
+.rawaj-site-footer .rawaj-brand-lockup,
+.rawaj-site-footer__mobile-brand,
+.rawaj-site-footer__mobile-brand .rawaj-brand-lockup {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.rawaj-brand-mark,
+.rawaj-brand-mark img {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-brand-mark img {
+  filter: drop-shadow(0 5px 11px rgba(0, 0, 0, 0.24)) !important;
+}
+
+/* Shared shell: deep charcoal/navy glass rather than the old medium-grey band. */
+.rawaj-app-header,
+.rawaj-shell-header,
+.rawaj-shell-header--workspace,
+.rawaj-shell-header--context {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(74, 140, 255, 0.055), transparent 38%),
+    radial-gradient(circle at 8% 0%, rgba(198, 44, 120, 0.045), transparent 38%),
+    linear-gradient(180deg, rgba(19, 23, 32, 0.985), rgba(12, 16, 23, 0.97)) !important;
+}
+
+.rawaj-shell-header__back,
+.rawaj-header-action,
+.rawaj-header-account,
+.rawaj-header-admin,
+.rawaj-header-location,
+.rawaj-header-store,
+.rawaj-home-menu-action,
+.rawaj-shell-header__actions > .relative > button {
+  border-color: rgba(216, 174, 95, 0.12) !important;
+  color: #ddd8d3 !important;
+  background: linear-gradient(145deg, #181d27, #10151d) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 8px 20px rgba(0, 0, 0, 0.19) !important;
+}
+
+/* Search is one system across home, categories, listings, chats and header. */
+.rawaj-header-search,
+.rawaj-signature-search,
+.rawaj-search-overlay,
+.rawaj-search-toolbar,
+.rawaj-communication-search,
+.rawaj-categories-v2__hero-search label,
+.rawaj-search-overlay__field,
+.rawaj-search-location,
+.rawaj-search-filter,
+.rawaj-search-toolbar__search,
+.rawaj-search-toolbar__filter,
+.rawaj-search-toolbar__sort,
+.rawaj-search-toolbar__saved,
+.rawaj-search-toolbar__views {
+  border-color: rgba(216, 174, 95, 0.13) !important;
+  color: #d8d2cc !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
+    linear-gradient(145deg, #0f141d, #0a0f16) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
+}
+
+.rawaj-signature-search label,
+.rawaj-communication-search input,
+.rawaj-signature-search input,
+.rawaj-search-overlay__field input,
+.rawaj-search-toolbar__search input,
+.rawaj-categories-v2__hero-search input {
+  color: #f7f3ed !important;
+  background: transparent !important;
+}
+
+.rawaj-communication-search input::placeholder,
+.rawaj-signature-search input::placeholder,
+.rawaj-search-overlay__field input::placeholder,
+.rawaj-search-toolbar__search input::placeholder,
+.rawaj-categories-v2__hero-search input::placeholder {
+  color: #8e969f !important;
+}
+
+.rawaj-header-search:is(:hover, :focus-visible),
+.rawaj-signature-search:focus-within,
+.rawaj-communication-search:focus-within,
+.rawaj-search-overlay__field:focus-within,
+.rawaj-search-toolbar__search:focus-within,
+.rawaj-categories-v2__hero-search label:focus-within {
+  border-color: rgba(216, 174, 95, 0.46) !important;
+  box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+/* Generic shared cards/panels: prevent old #30xxxx/#37xxxx greys from winning on
+ * pages that do not own a dedicated route-specific selector. */
+.rawaj-surface,
+.rawaj-foundation-card,
+.rawaj-color-card,
+.rawaj-hero-surface,
+.rawaj-page-header,
+[data-ui="card"][data-variant="default"],
+[data-ui="card"][data-variant="subtle"],
+[data-ui="card"][data-variant="elevated"],
+[data-ui="card"][data-variant="flat"] {
+  border-color: rgba(216, 174, 95, 0.105) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
+}
+
+/* Common inset controls and secondary surfaces. */
+.rawaj-app-shell :is(input, textarea, select, .input)[data-ui="input"],
+.rawaj-app-shell .input,
+.rawaj-app-shell textarea.input,
+.rawaj-app-shell select.input,
+.rawaj-app-shell [data-ui="button"][data-variant="soft"],
+.rawaj-app-shell [data-ui="button"][data-variant="outline"],
+.rawaj-app-shell [data-ui="button"][data-variant="secondary"],
+.rawaj-chip,
+[data-ui="badge"] {
+  border-color: rgba(216, 174, 95, 0.105) !important;
+  background: #10151d !important;
+}
+
+/* Footer should feel continuous with the page, never like a legacy grey slab. */
+.rawaj-site-footer,
+.rawaj-site-footer__mobile {
+  border-color: rgba(216, 174, 95, 0.09) !important;
+  background:
+    radial-gradient(circle at 50% 100%, rgba(198, 44, 120, 0.045), transparent 42%),
+    linear-gradient(180deg, #0d1118, #090d13) !important;
+}
+
+.rawaj-site-footer__mobile nav a {
+  border-color: rgba(216, 174, 95, 0.12) !important;
+  color: #c8c2be !important;
+  background: #10151d !important;
+}
+
+/* Portal content is outside the route shell in older Radix primitives. */
+body :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *) {
+  border-color: rgba(216, 174, 95, 0.13) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(116, 101, 239, 0.055), transparent 38%),
+    linear-gradient(155deg, #191d27, #10151d) !important;
+}
+
+/* Keep mobile dock aligned with the approved /more reference on every route. */
+.rawaj-bottom-nav-shell {
+  border-color: rgba(216, 174, 95, 0.14) !important;
+  background:
+    radial-gradient(circle at 50% -45%, rgba(219, 73, 179, 0.07), transparent 40%),
+    rgba(14, 18, 25, 0.97) !important;
+  box-shadow: 0 17px 40px rgba(0, 0, 0, 0.43), inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
