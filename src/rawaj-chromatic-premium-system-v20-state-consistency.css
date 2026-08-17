@@ -1,0 +1,280 @@
+/* RAWAJ Chromatic Premium System v20 — residual state consistency.
+ * Visual-only final pass for signed-out, loading, empty, error, and access-gate
+ * surfaces that intentionally sit outside the richer route-specific workspaces.
+ * No route, auth, API, moderation, persistence, or business behavior changes.
+ */
+
+/* Shared premium state canvas. Keep the selectors narrow so normal content cards
+ * retain their route-specific visual hierarchy. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  main.container-wide
+  > .rawaj-surface.text-center,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.container-wide
+  > section.text-center[class*="bg-card"],
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"]
+  )
+  .rawaj-account-collection-v3
+  > div.text-center,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out,
+.rawaj-app-shell[data-resolved-pathname="/verification"]
+  main.container-wide
+  > section.text-center[class*="bg-card"],
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide
+  > section.text-center[class*="bg-card"],
+.rawaj-app-shell[data-resolved-pathname^="/admin"]
+  main.rawaj-admin-v3
+  > section.text-center[class*="bg-card"],
+.rawaj-feedback-state {
+  overflow: hidden;
+  border: 1px solid rgba(216, 174, 95, 0.15) !important;
+  border-radius: 1.5rem !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.075), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(219, 73, 179, 0.055), transparent 44%),
+    radial-gradient(circle at 52% -20%, rgba(216, 174, 95, 0.045), transparent 42%),
+    linear-gradient(150deg, #1b1f28 0%, #141820 62%, #11151c 100%) !important;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+/* State copy should read the same way whether the page originates from account,
+ * communication, listing studio, trust, promotion, admin, or the root boundary. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  main.container-wide
+  > .rawaj-surface.text-center
+  > :is(h1, h2, h3, p:first-child),
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > :is(h1, h2, h3, p:first-child),
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"]
+  )
+  .rawaj-account-collection-v3
+  > div.text-center
+  > :is(h1, h2, h3, p:first-of-type),
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out
+  > :is(h1, h2, h3),
+.rawaj-app-shell[data-resolved-pathname="/verification"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > :is(h1, h2, h3),
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > :is(h1, h2, h3),
+.rawaj-app-shell[data-resolved-pathname^="/admin"]
+  main.rawaj-admin-v3
+  > section.text-center[class*="bg-card"]
+  > :is(h1, h2, h3),
+.rawaj-feedback-state > :is(h1, h2, h3) {
+  color: #f7f3ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  main.container-wide
+  > .rawaj-surface.text-center
+  > p:not(:first-child),
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > p:not(:first-child),
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"]
+  )
+  .rawaj-account-collection-v3
+  > div.text-center
+  > p:not(:first-of-type),
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out
+  > p,
+.rawaj-app-shell[data-resolved-pathname="/verification"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > p,
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > p,
+.rawaj-app-shell[data-resolved-pathname^="/admin"]
+  main.rawaj-admin-v3
+  > section.text-center[class*="bg-card"]
+  > p,
+.rawaj-feedback-state > p:not(:first-child) {
+  color: #aeb3bb !important;
+}
+
+/* Icon wells: one quiet dark/chromatic treatment while preserving each route's
+ * semantic icon color (gold, orange, warning, etc.). */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"]
+  )
+  .rawaj-account-collection-v3
+  > div.text-center
+  > span:first-child,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out
+  > span:first-child,
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > span:first-child {
+  border: 1px solid rgba(216, 174, 95, 0.18) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.08), transparent 70%),
+    linear-gradient(145deg, #20242d, #141820) !important;
+  box-shadow:
+    0 9px 22px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/verification"]
+  main.container-wide
+  > section.text-center[class*="bg-card"]
+  > svg:first-child,
+.rawaj-app-shell[data-resolved-pathname^="/admin"]
+  main.rawaj-admin-v3
+  > section.text-center[class*="bg-card"]
+  > svg:first-child {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.24));
+}
+
+/* Keep action hierarchy deterministic. Primary actions retain the approved
+ * chromatic action gradient; secondary actions remain dark inset controls. */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"],
+    [data-resolved-pathname="/verification"],
+    [data-resolved-pathname="/promotion"],
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname="/profile/listings"]
+  )
+  main.container-wide
+  :is(.rawaj-button-primary, a.bg-primary, button.bg-primary),
+.rawaj-app-shell[data-resolved-pathname^="/admin"]
+  main.rawaj-admin-v3
+  > section.text-center[class*="bg-card"]
+  a.bg-primary,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out
+  > a:first-of-type,
+.rawaj-feedback-state [data-ui="button"][data-variant="default"] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #c93457 0%, #bf2f7b 52%, #6f5de0 100%) !important;
+  box-shadow:
+    0 11px 26px rgba(155, 40, 111, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/favorites"],
+    [data-resolved-pathname="/saved-searches"]
+  )
+  .rawaj-account-collection-v3
+  > div.text-center
+  a.bg-muted-surface,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/activity"],
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/chats"]
+  )
+  .rawaj-communication-signed-out
+  > a:nth-of-type(2) {
+  border: 1px solid rgba(216, 174, 95, 0.12) !important;
+  color: #d8d2cc !important;
+  background: linear-gradient(145deg, #181d27, #10151d) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+/* Empty/error panels should feel intentional without competing with the route
+ * heroes above them. Their spacing is slightly tighter on phones. */
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"]
+    main.container-wide
+    > .rawaj-surface.text-center,
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+    main.container-wide
+    > section.text-center[class*="bg-card"],
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/favorites"],
+      [data-resolved-pathname="/saved-searches"]
+    )
+    .rawaj-account-collection-v3
+    > div.text-center,
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/activity"],
+      [data-resolved-pathname="/notifications"],
+      [data-resolved-pathname="/chats"]
+    )
+    .rawaj-communication-signed-out,
+  .rawaj-app-shell[data-resolved-pathname="/verification"]
+    main.container-wide
+    > section.text-center[class*="bg-card"],
+  .rawaj-app-shell[data-resolved-pathname="/promotion"]
+    main.container-wide
+    > section.text-center[class*="bg-card"],
+  .rawaj-app-shell[data-resolved-pathname^="/admin"]
+    main.rawaj-admin-v3
+    > section.text-center[class*="bg-card"],
+  .rawaj-feedback-state {
+    padding: 1.6rem 1.25rem !important;
+    border-radius: 1.35rem !important;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/favorites"],
+      [data-resolved-pathname="/saved-searches"],
+      [data-resolved-pathname="/verification"],
+      [data-resolved-pathname="/promotion"],
+      [data-resolved-pathname="/add-listing"]
+    )
+    main.container-wide
+    :is(.rawaj-button-primary, a.bg-primary, button.bg-primary):hover,
+  .rawaj-app-shell[data-resolved-pathname^="/admin"]
+    main.rawaj-admin-v3
+    > section.text-center[class*="bg-card"]
+    a.bg-primary:hover,
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/activity"],
+      [data-resolved-pathname="/notifications"],
+      [data-resolved-pathname="/chats"]
+    )
+    .rawaj-communication-signed-out
+    > a:first-of-type:hover {
+    filter: brightness(1.06);
+  }
+}
