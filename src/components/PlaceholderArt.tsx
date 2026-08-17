@@ -56,11 +56,11 @@ export function PlaceholderArt({ type, label, className = "", aspect = "wide" }:
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-[var(--rawaj-radius-card)] border border-white/10 bg-[#24262b] ${ratio} ${className}`}
+      className={`rawaj-placeholder-art relative w-full overflow-hidden rounded-[var(--rawaj-radius-card)] border border-[#d8ae5f]/10 bg-[#0d121a] ${ratio} ${className}`}
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(225,77,191,0.11),transparent_30%),radial-gradient(circle_at_58%_58%,rgba(255,111,79,0.08),transparent_36%),linear-gradient(145deg,#2b2d33,#202227)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.055),transparent_38%,rgba(0,0,0,0.14))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(225,77,191,0.10),transparent_30%),radial-gradient(circle_at_58%_58%,rgba(74,140,255,0.07),transparent_38%),linear-gradient(145deg,#151a24,#0b1017)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),transparent_38%,rgba(0,0,0,0.16))]" />
       <div className="absolute inset-0 grid place-items-center p-3">
         <span className="relative grid place-items-center">
           <span className="absolute h-10 w-16 rounded-full bg-fuchsia-500/10 blur-xl sm:h-12 sm:w-20" />

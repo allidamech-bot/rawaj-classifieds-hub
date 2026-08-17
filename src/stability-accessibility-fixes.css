@@ -10,6 +10,8 @@
 @import "./rawaj-chromatic-premium-system-v18-signature-home.css";
 @import "./rawaj-chromatic-premium-system-v18-ad-placement.css";
 @import "./rawaj-chromatic-premium-system-v18-contract-fixes.css";
+@import "./rawaj-chromatic-premium-system-v19-consistency.css";
+@import "./rawaj-chromatic-premium-system-v19-specificity.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
