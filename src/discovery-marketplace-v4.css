@@ -370,3 +370,241 @@
     transition: none;
   }
 }
+
+/* Sitewide visual convergence audit — final presentation layer.
+ * Design-only: owns neutral surfaces and responsive presentation after all
+ * legacy route styles. Functional chromatic accents and application behavior
+ * remain untouched. Keep this block byte-for-byte identical in Syria + Saudi. */
+:root,
+.dark {
+  --rawaj-page-background: #0b0e14 !important;
+  --rawaj-page-background-deep: #080b10 !important;
+  --rawaj-card-background: #141821 !important;
+  --rawaj-elevated-background: #191d27 !important;
+  --rawaj-subtle-background: #11151d !important;
+  --rawaj-muted-surface: #171b24 !important;
+  --rawaj-surface-active: #211d29 !important;
+  --rawaj-surface-selected: #251b2a !important;
+  --rawaj-surface-inset: #0d1118 !important;
+  --rawaj-surface-card: #141821 !important;
+  --rawaj-surface-sage: #151b22 !important;
+  --rawaj-surface-sage-strong: #1a2028 !important;
+  --rawaj-surface-warm: #1c171d !important;
+  --rawaj-surface-gold: #1d1a14 !important;
+  --rawaj-surface-elevated: #191d27 !important;
+  --background: #0b0e14 !important;
+  --card: #141821 !important;
+  --card-warm: #171b24 !important;
+  --popover: #191d27 !important;
+  --secondary: #171b24 !important;
+  --muted: #171b24 !important;
+}
+
+html,
+body,
+.rawaj-app-shell {
+  background-color: #0b0e14 !important;
+}
+
+/* Neutral cards and signed-out / system states should share one dark canvas. */
+.rawaj-app-shell :is(
+    .rawaj-surface,
+    .rawaj-foundation-card,
+    .rawaj-communication-signed-out,
+    .rawaj-auth-layout,
+    .rawaj-account-section,
+    .rawaj-conversation-sidebar,
+    .rawaj-message-panel,
+    .rawaj-notification-panel,
+    .rawaj-activity-panel,
+    .rawaj-communication-follow-up,
+    .rawaj-trust-empty
+  ) {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
+}
+
+.rawaj-app-shell :is(input, textarea, select, .input)[data-ui="input"],
+.rawaj-app-shell .input,
+.rawaj-app-shell textarea.input,
+.rawaj-app-shell select.input {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background: #10151d !important;
+}
+
+/* Offers keep their own identity, but use the same deep shell instead of grey. */
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage {
+  border-color: rgba(216, 174, 95, 0.2) !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 112, 84, 0.13), transparent 34%),
+    radial-gradient(circle at 8% 100%, rgba(74, 140, 255, 0.1), transparent 40%),
+    linear-gradient(145deg, #17221f 0%, #111821 58%, #0c1219 100%) !important;
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-id-stat {
+  border-color: rgba(216, 174, 95, 0.14) !important;
+  color: #f7f3ed !important;
+  background: rgba(12, 17, 24, 0.7) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-product-card,
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty {
+  border-color: rgba(216, 174, 95, 0.12) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(219, 73, 179, 0.055), transparent 40%),
+    linear-gradient(150deg, #181c25, #11151d) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] :is(h2, h3, .rawaj-product-card h3) {
+  color: #f7f3ed !important;
+}
+
+/* Support, safety and policy routes: remove the legacy white/grey cards while
+ * retaining warning, danger, gold and coral meaning. */
+.rawaj-support-v2 :is(.rawaj-support-panel, .rawaj-support-topics, .rawaj-support-faq),
+.rawaj-safety-v2 .rawaj-safety-guide,
+.rawaj-support-topic,
+.rawaj-support-faq details {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-safety-v2 .rawaj-safety-guide[data-warning="true"] {
+  border-color: rgba(216, 174, 95, 0.28) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.09), transparent 42%),
+    linear-gradient(150deg, #1d1a14, #12151b) !important;
+}
+
+.rawaj-legal-v3 > p:first-child {
+  border-color: rgba(216, 174, 95, 0.2) !important;
+  color: #c8c0b7 !important;
+  background: linear-gradient(145deg, #1d1a14, #13171e) !important;
+}
+
+.rawaj-legal-v3 > div > section,
+.rawaj-prohibited-v3 > div:first-child,
+.rawaj-prohibited-v3 > div.grid > div {
+  border-color: rgba(216, 174, 95, 0.12) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(198, 44, 120, 0.04), transparent 42%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-legal-v3 :is(h2, h3),
+.rawaj-prohibited-v3 :is(h2, h3) {
+  color: #f7f3ed !important;
+}
+
+.rawaj-legal-v3 :is(p, li),
+.rawaj-prohibited-v3 :is(p, li) {
+  color: #b8b3b1 !important;
+}
+
+/* Listing detail had its own legacy warm-light palette. Rebind only presentation
+ * tokens to the approved dark system and keep all media/actions/data untouched. */
+.rawaj-detail-v2 {
+  --detail-canvas: #0b0e14 !important;
+  --detail-surface: #141821 !important;
+  --detail-surface-muted: #171b24 !important;
+  --detail-line: rgba(216, 174, 95, 0.12) !important;
+  --detail-line-strong: rgba(216, 174, 95, 0.2) !important;
+  --detail-ink: #f7f3ed !important;
+  --detail-ink-soft: #b8b3b1 !important;
+  --detail-ink-muted: #9299a2 !important;
+  --detail-green: #e8ca8d !important;
+  --detail-gold: #d8ae5f !important;
+  background: #0b0e14 !important;
+  color: #f7f3ed !important;
+}
+
+.rawaj-detail-v2 :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
+  border: 1px solid rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-price {
+  border: 1px solid rgba(216, 174, 95, 0.16) !important;
+  background: linear-gradient(145deg, rgba(216, 174, 95, 0.09), rgba(20, 24, 33, 0.95)) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-seller__actions :is(a, button) {
+  border-color: rgba(216, 174, 95, 0.12) !important;
+  color: #ddd7d1 !important;
+  background: #171b24 !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
+  border-color: transparent !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #c24431, #9b286f) !important;
+}
+
+.rawaj-detail-v2 :is(.rawaj-demo-listing-notice, .rawaj-detail-reserved) {
+  border: 1px solid rgba(216, 174, 95, 0.2) !important;
+  color: #ead7ad !important;
+  background: linear-gradient(145deg, #241d13, #17171a) !important;
+}
+
+.rawaj-detail-v2 .rawaj-detail-similar__item,
+.rawaj-detail-v2 .rawaj-detail-v2__message {
+  border-color: rgba(216, 174, 95, 0.11) !important;
+  color: #f7f3ed !important;
+  background: #141821 !important;
+}
+
+/* First-session feedback teaser must never cover content on mobile. It remains
+ * fully accessible through its aria-label, but renders as the same compact
+ * floating control used after the teaser expires. */
+@media (max-width: 639px) {
+  .rawaj-feedback-teaser {
+    display: grid !important;
+    width: 3rem !important;
+    height: 3rem !important;
+    min-width: 3rem !important;
+    min-height: 3rem !important;
+    place-items: center !important;
+    gap: 0 !important;
+    border-radius: 999px !important;
+    padding: 0 !important;
+  }
+
+  .rawaj-feedback-teaser > span {
+    display: none !important;
+  }
+
+  .rawaj-feedback-teaser > svg {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+  }
+
+  /* Prevent narrow spec values from breaking one Arabic character per line. */
+  .rawaj-detail-specs > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.2rem !important;
+  }
+
+  .rawaj-detail-specs dd {
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+}
