@@ -13,10 +13,9 @@
   }
 }
 
-/* Authenticated account and chat actions must preserve a real mobile touch target. */
+/* Authenticated account actions must preserve a real mobile touch target. */
 @media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target,
-  .rawaj-app-shell[data-resolved-pathname="/chats"] button.rawaj-touch-target {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target {
     min-width: 44px !important;
     min-height: 44px !important;
   }
@@ -25,11 +24,28 @@
     min-height: 44px !important;
     padding-block: 0.7rem !important;
   }
+
+  /* NotificationTrigger is rendered in the shell header and is not guaranteed
+   * to be nested beneath the route-scoped .rawaj-app-shell content node. */
+  button.rawaj-touch-target[aria-label="الإشعارات"],
+  button.rawaj-touch-target[aria-label="Notifications"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
 }
 
-/* Activity secondary copy/timestamps must stay comfortably above AA contrast.
- * This route-level rule is intentionally broader than a single utility shape:
- * activity rows use multiple font-size utilities for timestamp metadata. */
+/* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .text-muted-foreground {
+  color: #b7bdc6 !important;
+}
+
+/* activity-command-premium.css owns this row with an equally-important,
+ * higher-specificity selector, so mirror that selector here at the end of the
+ * audited cascade instead of relying on a broad utility override. */
+.rawaj-app-shell[data-resolved-pathname="/activity"]
+  a.rawaj-notification-timeline
+  p:last-child {
   color: #b7bdc6 !important;
 }
