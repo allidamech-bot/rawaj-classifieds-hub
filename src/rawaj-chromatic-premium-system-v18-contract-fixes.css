@@ -34,6 +34,16 @@
     min-width: 44px !important;
     min-height: 44px !important;
   }
+
+  /* Mark-all lives inside the communication hero instead of the shared touch
+   * target primitive. Keep the signed-in notification action fully tappable. */
+  .rawaj-app-shell[data-resolved-pathname="/notifications"]
+    .rawaj-communication-hero__actions
+    > button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
 }
 
 /* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
@@ -48,4 +58,12 @@
   a.rawaj-notification-timeline
   p:last-child {
   color: #b7bdc6 !important;
+}
+
+/* The communication-center eyebrow is intentionally small; give it enough
+ * luminance on the notification hero to clear AA without flattening the palette. */
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  .rawaj-communication-hero__copy
+  > p {
+  color: #c3c7ce !important;
 }
