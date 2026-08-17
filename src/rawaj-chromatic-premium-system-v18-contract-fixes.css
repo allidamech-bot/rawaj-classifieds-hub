@@ -45,6 +45,15 @@
     padding-block: 0.65rem !important;
   }
 
+  /* Per-row notification read actions are full-width on mobile but the legacy
+   * 2.3rem height is below the 44px touch contract. Preserve the row layout and
+   * raise only the interactive height. */
+  .rawaj-app-shell[data-resolved-pathname="/notifications"]
+    button.rawaj-notification-timeline__read {
+    min-height: 44px !important;
+    padding-block: 0.65rem !important;
+  }
+
   /* My Listings status tabs are real controls, not decorative chips. */
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
     [data-rawaj-segmented-control="true"]
