@@ -1,4 +1,32 @@
 /* RAWAJ V18 final contract corrections. */
+
+/* Categories must retain the richer rounded-card language on mobile, while
+ * exposing a concrete background color for the icon contract. */
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .category-tile {
   background-color: #1b1722 !important;
+}
+
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card,
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-grid > article {
+    border-radius: 1.125rem !important;
+  }
+}
+
+/* Authenticated account actions must preserve a real mobile touch target. */
+@media (max-width: 639px) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] button.rawaj-touch-target {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] #account-info button[type="submit"] {
+    min-height: 44px !important;
+    padding-block: 0.7rem !important;
+  }
+}
+
+/* Small activity timestamps were just below AA contrast after the V18 palette. */
+.rawaj-app-shell[data-resolved-pathname="/activity"] p.mt-1.text-muted-foreground {
+  color: #a9afb8 !important;
 }
