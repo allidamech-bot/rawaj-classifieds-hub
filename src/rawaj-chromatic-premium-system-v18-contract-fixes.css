@@ -54,6 +54,16 @@
   }
 }
 
+/* The unread counter sits inside the global header trigger and can appear on
+ * every authenticated route. Own both colors explicitly so tiny count text
+ * remains AA-readable regardless of route-specific destructive tokens. */
+button.rawaj-touch-target[aria-label="الإشعارات"] > span.absolute.-top-1.-end-1,
+button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-end-1 {
+  color: #ffffff !important;
+  background-color: #76163f !important;
+  box-shadow: 0 0 0 1px rgba(244, 184, 96, 0.42) !important;
+}
+
 /* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .text-muted-foreground {
   color: #b7bdc6 !important;
