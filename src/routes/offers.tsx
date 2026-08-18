@@ -122,7 +122,10 @@ function OffersPage() {
             {error ? (
               <OffersState
                 title={text("تعذر تحميل العروض", "Could not load offers")}
-                body={error.message}
+                body={text(
+                  "لم نتمكن من جلب التخفيضات الآن. حاول مرة أخرى بعد قليل.",
+                  "We could not load price drops right now. Please try again shortly.",
+                )}
                 actionLabel={text("إعادة المحاولة", "Try again")}
                 onAction={() => void retryOffers()}
                 actionDisabled={retrying}
