@@ -3,10 +3,30 @@
  * Keep byte-for-byte identical in Syria + Saudi.
  */
 
-/* Listing studio: the workflow has four steps, while an older base layer still
- * reserved three explicit grid columns. The fourth implicit column widened the
- * signed-in page on both phone and desktop viewports. Own the final geometry here
- * so all four steps stay inside the workspace without widening the document.
+/* Listing studio: V3 left a logical -12vw inset on the decorative ::before layer,
+ * while V5 later positioned the same pseudo-element with a physical left/width.
+ * Because both rules target the same pseudo-element, the stale opposite inset kept
+ * contributing to document width. Reset both logical/physical insets explicitly;
+ * the glow remains centered and bounded to the viewport instead of widening it.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-listing-studio-v4::before {
+  inset-inline: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  width: min(76rem, 96vw) !important;
+  max-width: 96vw !important;
+  transform: translateX(-50%) !important;
+}
+
+/* The workflow has four steps, while an older base layer reserved three explicit
+ * columns. Own the final geometry so all four steps stay inside the workspace and
+ * mobile no longer clips the later steps.
  */
 .rawaj-app-shell:is(
     [data-resolved-pathname="/add-listing"],
