@@ -1,0 +1,21 @@
+/* RAWAJ live repair sweep V24.
+ * Contrast corrections discovered by the authenticated rendered WCAG audit.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+/* The active listing-studio step label rendered at 4.26:1 on the final dark
+ * surface. It is essential navigation copy, so use the primary audited text tone.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-studio-steps li[data-active="true"] small {
+  color: var(--studio-v5-text, #f4f1ed) !important;
+}
+
+/* The Boost request-count pill landed at 4.47:1, just below WCAG AA. Keep the
+ * muted pill surface but promote its tiny count copy to the primary text tone.
+ */
+.rawaj-app-shell[data-resolved-pathname="/promotion"] span.rounded-full.bg-muted.px-3 {
+  color: var(--rawaj-text-primary, #f4f1ed) !important;
+}
