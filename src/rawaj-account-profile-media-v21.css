@@ -327,30 +327,6 @@
   box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.065) !important;
 }
 
-/* The identity preview uses the uploaded artwork's intended framing more closely. */
-.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
-  height: auto !important;
-  min-height: 0 !important;
-  aspect-ratio: 16 / 6.5;
-  background: #0b1017 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  background: #0b1017 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  background: #0b1017 !important;
-}
-
 /* Safe breathing room above the persistent mobile dock. */
 @media (max-width: 63.99rem) {
   .rawaj-app-shell[data-resolved-pathname="/profile"] main.rawaj-account-hub-v3.mobile-page-bottom {
@@ -382,10 +358,6 @@
     > div:first-child
     > .grid {
     grid-template-columns: 1fr !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
-    aspect-ratio: 16 / 7;
   }
 }
 
