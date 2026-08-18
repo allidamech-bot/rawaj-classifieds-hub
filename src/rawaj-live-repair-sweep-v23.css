@@ -1,0 +1,24 @@
+/* RAWAJ live repair sweep V23.
+ * Final mobile corrections discovered from the rendered page-by-page sweep.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+@media (max-width: 47.99rem) {
+  /* The first listing-detail viewport still placed the fixed contact actions on
+   * top of the price after the 4:3 media correction. A 16:9 phone gallery keeps
+   * the image useful while exposing the primary title/location/price above the
+   * action layer, which is the expected marketplace hierarchy.
+   */
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
+    min-height: 0 !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  /* Do not stack a second floating feedback trigger over routes that already own
+   * the shell's reserved sticky-action region (listing detail, listing studio,
+   * conversation). Feedback remains available on standard pages.
+   */
+  .rawaj-app-shell[data-shell-sticky-action="true"] .rawaj-feedback-trigger {
+    display: none !important;
+  }
+}
