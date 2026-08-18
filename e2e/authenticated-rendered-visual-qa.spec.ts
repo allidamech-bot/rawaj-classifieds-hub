@@ -26,7 +26,7 @@ test.describe("authenticated rendered visual QA", () => {
 
     for (const route of authenticatedRoutes) {
       const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      expect(response?.status() ?? 200).toBeLessThan(500);
+      expect(response?.status() ?? 200).toBe(200);
       await waitForHydration(page);
       await expect(page.locator("main")).toBeVisible();
       await page.addStyleTag({
