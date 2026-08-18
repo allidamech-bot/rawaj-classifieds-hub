@@ -38,6 +38,17 @@ test("listing studio four-step rail stays inside the document width", () => {
   );
 });
 
+test("listing studio active step and preview count keep readable contrast", () => {
+  assert.match(
+    repairCss,
+    /li\[data-state="active"\][\s\S]*?\.rawaj-studio-steps__copy[\s\S]*?small\s*\{[\s\S]*?color: var\(--studio-v5-text-soft, #c7c7cd\) !important/,
+  );
+  assert.match(
+    repairCss,
+    /\.rawaj-studio-preview__heading[\s\S]*?> span\s*\{[\s\S]*?color: var\(--studio-v5-text, #f4f1ed\) !important/,
+  );
+});
+
 test("listing detail mobile media and contact dock keep the summary readable", () => {
   assert.match(
     repairCss,
