@@ -9,7 +9,7 @@
 .rawaj-app-shell:is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname^="/profile/listings/"]
-  ) .rawaj-studio-steps li[data-active="true"] small {
+  ) .rawaj-studio-steps li[data-state="active"] small {
   color: var(--studio-v5-text, #f4f1ed) !important;
 }
 
