@@ -52,17 +52,24 @@ function FavoritesPage() {
         setItems(result.data);
         setHasLoaded(true);
       } else {
-        setError(result.error);
+        setError({
+          code: result.error.code,
+          message: text(
+            "تعذر تحميل المفضلة. حاول مرة أخرى.",
+            "Could not load favorites. Try again.",
+          ),
+          operation: result.error.operation ?? "favorite_journey_load",
+        });
       }
-    } catch (caught) {
+    } catch {
       if (requestId !== loadRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
       setError({
         code: "unknown",
-        message:
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل المفضلة. حاول مرة أخرى.", "Could not load favorites. Try again."),
+        message: text(
+          "تعذر تحميل المفضلة. حاول مرة أخرى.",
+          "Could not load favorites. Try again.",
+        ),
         operation: "favorite_journey_load",
       });
     } finally {
@@ -110,16 +117,22 @@ function FavoritesPage() {
       const result = await unfavoriteListing(currentProfileId, listingId);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
-        setActionMessage(result.error.message);
+        setActionMessage(
+          text(
+            "تعذر إزالة الإعلان من المفضلة.",
+            "Could not remove the listing from favorites.",
+          ),
+        );
         return;
       }
       setItems((current) => current.filter((item) => item.listingId !== listingId));
-    } catch (caught) {
+    } catch {
       if (currentProfileId !== profileIdRef.current) return;
       setActionMessage(
-        caught instanceof Error
-          ? caught.message
-          : text("تعذر إزالة الإعلان من المفضلة.", "Could not remove the listing from favorites."),
+        text(
+          "تعذر إزالة الإعلان من المفضلة.",
+          "Could not remove the listing from favorites.",
+        ),
       );
     } finally {
       removeInFlightRef.current.delete(scopeKey);
