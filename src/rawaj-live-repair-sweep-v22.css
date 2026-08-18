@@ -1,0 +1,55 @@
+/* RAWAJ live repair sweep V22.
+ * Final, narrowly-scoped corrections found during page-by-page rendered review.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+/* Listing detail: the legacy mobile media stage was tall enough that the fixed
+ * contact dock landed directly over the title/price summary in the first viewport.
+ * Keep the gallery substantial, but use a predictable 4:3 stage on phones and
+ * compact the dock so essential listing information remains readable.
+ */
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
+    min-height: 0 !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__container {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+    padding: 0.45rem 0.6rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+    min-height: 3.45rem !important;
+    gap: 0.38rem !important;
+    padding: 0.34rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"]
+    :is(.rawaj-contact-dock__primary, .rawaj-contact-dock__offer, .rawaj-contact-dock__secondary) {
+    min-height: 2.65rem !important;
+    padding-inline: 0.68rem !important;
+    font-size: max(0.62rem, 10px) !important;
+  }
+}
+
+@media (max-width: 22rem) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+    padding-inline: 0.42rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+    gap: 0.3rem !important;
+    padding: 0.3rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"]
+    :is(.rawaj-contact-dock__primary, .rawaj-contact-dock__offer) {
+    padding-inline: 0.52rem !important;
+    font-size: max(0.59rem, 9.5px) !important;
+  }
+}
