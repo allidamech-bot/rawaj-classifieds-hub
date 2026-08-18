@@ -8,7 +8,7 @@ const stability = await readFile(new URL("../src/stability-accessibility-fixes.c
 test("active listing-studio step uses the primary audited text tone", () => {
   assert.match(
     css,
-    /rawaj-studio-steps li\[data-active="true"\] small[\s\S]*?color:\s*var\(--studio-v5-text, #f4f1ed\)\s*!important/,
+    /rawaj-studio-steps li\[data-state="active"\] small[\s\S]*?color:\s*var\(--studio-v5-text, #f4f1ed\)\s*!important/,
   );
 });
 
