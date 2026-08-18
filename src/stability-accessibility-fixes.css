@@ -13,6 +13,7 @@
 @import "./rawaj-chromatic-premium-system-v19-consistency.css";
 @import "./rawaj-chromatic-premium-system-v19-specificity.css";
 @import "./rawaj-chromatic-premium-system-v20-state-consistency.css";
+@import "./rawaj-account-profile-media-v21.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot
