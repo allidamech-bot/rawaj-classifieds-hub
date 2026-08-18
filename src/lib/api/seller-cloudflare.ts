@@ -1,4 +1,5 @@
 import type {
+  ClassifiedsErrorCode,
   ClassifiedsResult,
   PublicSellerProfile,
   PublicSellerSearchResult,
@@ -79,18 +80,12 @@ async function requestJson<T>(path: string, operation: string): Promise<Classifi
     });
     const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
     if (!response.ok || payload?.data === undefined) {
+      const code = responseErrorCode(response.status);
       return {
         ok: false,
         error: {
-          code:
-            response.status === 404
-              ? "not_found"
-              : response.status === 400
-                ? "validation_error"
-                : response.status === 503
-                  ? "setup_required"
-                  : "unknown",
-          message: payload?.error?.message?.trim() || "تعذر تحميل بيانات البائع.",
+          code,
+          message: publicSellerErrorMessage(operation, code),
           details: payload?.error?.details,
           operation,
         },
@@ -102,7 +97,7 @@ async function requestJson<T>(path: string, operation: string): Promise<Classifi
       ok: false,
       error: {
         code: "unknown",
-        message: "تعذر الاتصال بخدمة بيانات رَوَاج.",
+        message: publicSellerErrorMessage(operation, "unknown"),
         details: error instanceof Error ? error.message : String(error),
         operation,
       },
@@ -110,6 +105,21 @@ async function requestJson<T>(path: string, operation: string): Promise<Classifi
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function responseErrorCode(status: number): ClassifiedsErrorCode {
+  if (status === 404) return "not_found";
+  if (status === 400) return "validation_error";
+  if (status === 503) return "setup_required";
+  return "unknown";
+}
+
+function publicSellerErrorMessage(operation: string, code: ClassifiedsErrorCode): string {
+  if (operation === "cloudflare_public_seller_search") {
+    return "تعذر البحث عن البائعين الآن. حاول مرة أخرى.";
+  }
+  if (code === "not_found") return "بيانات المتجر غير متاحة حالياً.";
+  return "تعذر تحميل بيانات المتجر الآن. حاول مرة أخرى.";
 }
 
 function absoluteUrl(value: string | null, base: string): string | null {
