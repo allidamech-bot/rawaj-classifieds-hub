@@ -1,0 +1,444 @@
+/* RAWAJ account profile media polish v21.
+ * Design-only final ownership for /profile. Keeps account/media behavior intact
+ * while correcting the oversized grey editor, spacing, controls, and image framing.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor {
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(112, 54, 97, 0.08), transparent 35%),
+    linear-gradient(150deg, #171c25 0%, #121720 62%, #10151d 100%) !important;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor > header {
+  border-bottom-color: rgba(216, 174, 95, 0.11) !important;
+  padding: 0.78rem 0.88rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 72, 170, 0.055), transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.006)) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rawaj-account-section__body {
+  padding: 0.78rem !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form {
+  display: grid;
+  gap: 0.8rem !important;
+}
+
+/* Account photos shell: one quiet layer instead of card-inside-card grey nesting. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child {
+  border: 1px solid rgba(216, 174, 95, 0.11) !important;
+  border-radius: 1rem !important;
+  padding: 0.78rem !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.045), transparent 35%),
+    linear-gradient(145deg, #121821, #0e141c) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > h3 {
+  margin: 0 0 0.62rem !important;
+  color: #f4efe8 !important;
+  font-size: 0.76rem !important;
+  line-height: 1.4 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid {
+  gap: 0.68rem !important;
+}
+
+/* Individual media fields. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div {
+  min-width: 0;
+  border: 1px solid rgba(216, 174, 95, 0.09) !important;
+  border-radius: 0.92rem !important;
+  padding: 0.7rem !important;
+  color: #eee9e2 !important;
+  background: linear-gradient(145deg, #111720, #0c1219) !important;
+  box-shadow: none !important;
+}
+
+/* Avatar editor is compact and horizontal. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:first-child {
+  display: grid !important;
+  grid-template-columns: 5.7rem minmax(0, 1fr);
+  grid-template-areas:
+    "preview heading"
+    "preview helper"
+    "preview actions";
+  column-gap: 0.72rem !important;
+  row-gap: 0.18rem !important;
+  align-items: center;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:first-child
+  > div:first-child {
+  grid-area: heading;
+  margin: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:first-child
+  > div:nth-of-type(2) {
+  grid-area: preview;
+  width: 5.7rem !important;
+  height: 5.7rem !important;
+  min-height: 5.7rem !important;
+  aspect-ratio: 1;
+  margin: 0 !important;
+  border-radius: 1.15rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:first-child
+  > p {
+  grid-area: helper;
+  margin: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:first-child
+  > div:last-child {
+  grid-area: actions;
+  margin: 0 !important;
+}
+
+/* Cover preview keeps the full uploaded artwork visible while remaining compact. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div:last-child
+  > div:nth-of-type(2) {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 7;
+  border-radius: 0.9rem !important;
+}
+
+/* Preview media is never cropped in the editor. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:nth-of-type(2) {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.055) !important;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(216, 174, 95, 0.045), transparent 55%),
+    #090e15 !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:nth-of-type(2)
+  > img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #090e15 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > p {
+  color: #8f98a5 !important;
+  font-size: 0.66rem !important;
+  line-height: 1.5 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:last-child {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 0.42rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:last-child
+  > :is(label, button) {
+  min-height: 2.4rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  border: 1px solid rgba(216, 174, 95, 0.14) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.42rem 0.66rem !important;
+  color: #ddd8d0 !important;
+  background: linear-gradient(145deg, #171e28, #111821) !important;
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:last-child
+  > label {
+  border-color: rgba(216, 174, 95, 0.22) !important;
+  color: #f0d493 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.08), transparent 55%),
+    linear-gradient(145deg, #1a2027, #121820) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > div:first-child
+  > .grid
+  > div
+  > div:last-child
+  > button {
+  border-color: rgba(234, 113, 104, 0.16) !important;
+  color: #efaaa5 !important;
+  background: rgba(234, 113, 104, 0.035) !important;
+}
+
+/* Inputs below the photo editor use the same deep surface instead of legacy grey. */
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  > form
+  > .grid {
+  gap: 0.72rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  .input {
+  min-height: 2.7rem;
+  border-color: rgba(216, 174, 95, 0.1) !important;
+  border-radius: 0.78rem !important;
+  color: #f3efe9 !important;
+  background: #0d131b !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  textarea.input {
+  min-height: 6rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"]
+  .rawaj-account-profile-editor
+  .rawaj-account-section__body
+  .input:focus {
+  border-color: rgba(216, 174, 95, 0.38) !important;
+  box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.065) !important;
+}
+
+/* The identity preview uses the uploaded artwork's intended framing more closely. */
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 16 / 6.5;
+  background: #0b1017 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #0b1017 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #0b1017 !important;
+}
+
+/* Safe breathing room above the persistent mobile dock. */
+@media (max-width: 63.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] main.rawaj-account-hub-v3.mobile-page-bottom {
+    padding-bottom: calc(7.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor > header {
+    padding: 0.72rem 0.78rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rawaj-account-section__body {
+    padding: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child {
+    padding: 0.62rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child
+    > .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
+    aspect-ratio: 16 / 7;
+  }
+}
+
+@media (max-width: 22rem) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child
+    > .grid
+    > div:first-child {
+    grid-template-columns: 5rem minmax(0, 1fr);
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child
+    > .grid
+    > div:first-child
+    > div:nth-of-type(2) {
+    width: 5rem !important;
+    height: 5rem !important;
+    min-height: 5rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child
+    > .grid
+    > div
+    > div:last-child
+    > :is(label, button) {
+    min-height: 2.3rem !important;
+    padding-inline: 0.55rem !important;
+    font-size: 0.64rem !important;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/profile"]
+    .rawaj-account-profile-editor
+    .rawaj-account-section__body
+    > form
+    > div:first-child
+    > .grid
+    > div
+    > div:last-child
+    > :is(label, button):hover {
+    border-color: rgba(216, 174, 95, 0.3) !important;
+    filter: brightness(1.06);
+  }
+}
