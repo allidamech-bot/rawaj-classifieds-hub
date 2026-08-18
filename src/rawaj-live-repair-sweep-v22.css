@@ -106,6 +106,32 @@
   white-space: nowrap !important;
 }
 
+/* Signed-in QA exposed two low-contrast pieces that were still inheriting the
+ * subdued V5 token: the active step description and the zero-photo preview badge.
+ * Keep the hierarchy quiet, but lift both above WCAG AA on the dark surfaces.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  li[data-state="active"]
+  .rawaj-studio-steps__copy
+  small {
+  color: var(--studio-v5-text-soft, #c7c7cd) !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-preview__heading
+  > span {
+  border: 1px solid rgba(104, 173, 255, 0.26) !important;
+  background: rgba(104, 173, 255, 0.14) !important;
+  color: var(--studio-v5-text, #f4f1ed) !important;
+}
+
 /* Listing detail: the legacy mobile media stage was tall enough that the fixed
  * contact dock landed directly over the title/price summary in the first viewport.
  * Keep the gallery substantial, but use a predictable 4:3 stage on phones and
