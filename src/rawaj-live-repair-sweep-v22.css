@@ -3,12 +3,135 @@
  * Keep byte-for-byte identical in Syria + Saudi.
  */
 
+/* Listing studio: the workflow has four steps, while an older base layer still
+ * reserved three explicit grid columns. The fourth implicit column widened the
+ * signed-in page on both phone and desktop viewports. Own the final geometry here
+ * so all four steps stay inside the workspace without widening the document.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li
+  > button,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li {
+  min-width: 0 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li
+  > button {
+  overflow: hidden !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy {
+  overflow: hidden !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy
+  strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
 /* Listing detail: the legacy mobile media stage was tall enough that the fixed
  * contact dock landed directly over the title/price summary in the first viewport.
  * Keep the gallery substantial, but use a predictable 4:3 stage on phones and
  * compact the dock so essential listing information remains readable.
  */
 @media (max-width: 47.99rem) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps {
+    gap: 0.2rem !important;
+    padding: 0.28rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps
+    > li
+    > button {
+    min-height: 3.4rem !important;
+    gap: 0.16rem !important;
+    padding: 0.34rem 0.2rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps__index {
+    width: 1.6rem !important;
+    height: 1.6rem !important;
+    flex-basis: 1.6rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps__copy
+    strong {
+    font-size: max(0.6rem, 9.5px) !important;
+  }
+
   .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
     min-height: 0 !important;
     aspect-ratio: 4 / 3 !important;
