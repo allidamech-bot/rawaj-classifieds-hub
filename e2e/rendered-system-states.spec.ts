@@ -15,7 +15,7 @@ test("root error boundary remains usable when reference data fails", async ({ pa
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => {
-    history.pushState({}, "", "/category/cars");
+    history.pushState({}, "", "/category/vehicles");
     window.dispatchEvent(new PopStateEvent("popstate", { state: history.state }));
   });
 
