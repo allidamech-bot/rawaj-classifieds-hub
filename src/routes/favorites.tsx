@@ -54,10 +54,7 @@ function FavoritesPage() {
       } else {
         setError({
           code: result.error.code,
-          message: text(
-            "تعذر تحميل المفضلة. حاول مرة أخرى.",
-            "Could not load favorites. Try again.",
-          ),
+          message: text("تعذر تحميل المفضلة. حاول مرة أخرى.", "Could not load favorites. Try again."),
           operation: result.error.operation ?? "favorite_journey_load",
         });
       }
@@ -66,10 +63,7 @@ function FavoritesPage() {
         return;
       setError({
         code: "unknown",
-        message: text(
-          "تعذر تحميل المفضلة. حاول مرة أخرى.",
-          "Could not load favorites. Try again.",
-        ),
+        message: text("تعذر تحميل المفضلة. حاول مرة أخرى.", "Could not load favorites. Try again."),
         operation: "favorite_journey_load",
       });
     } finally {
@@ -117,23 +111,13 @@ function FavoritesPage() {
       const result = await unfavoriteListing(currentProfileId, listingId);
       if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
-        setActionMessage(
-          text(
-            "تعذر إزالة الإعلان من المفضلة.",
-            "Could not remove the listing from favorites.",
-          ),
-        );
+        setActionMessage(text("تعذر إزالة الإعلان من المفضلة.", "Could not remove the listing from favorites."));
         return;
       }
       setItems((current) => current.filter((item) => item.listingId !== listingId));
     } catch {
       if (currentProfileId !== profileIdRef.current) return;
-      setActionMessage(
-        text(
-          "تعذر إزالة الإعلان من المفضلة.",
-          "Could not remove the listing from favorites.",
-        ),
-      );
+      setActionMessage(text("تعذر إزالة الإعلان من المفضلة.", "Could not remove the listing from favorites."));
     } finally {
       removeInFlightRef.current.delete(scopeKey);
       if (currentProfileId === profileIdRef.current) {
