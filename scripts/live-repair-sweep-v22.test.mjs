@@ -7,8 +7,19 @@ const [repairCss, stabilityCss] = await Promise.all([
   readFile(new URL("../src/stability-accessibility-fixes.css", import.meta.url), "utf8"),
 ]);
 
-test("listing studio four-step rail stays inside the document width", () => {
+test("listing studio decorative backdrop cannot widen the document", () => {
   assert.match(stabilityCss, /@import "\.\/rawaj-live-repair-sweep-v22\.css";/);
+  assert.match(
+    repairCss,
+    /\.rawaj-listing-studio-v4::before\s*\{[\s\S]*?inset-inline: auto !important;[\s\S]*?left: 50% !important;[\s\S]*?right: auto !important/,
+  );
+  assert.match(
+    repairCss,
+    /\.rawaj-listing-studio-v4::before\s*\{[\s\S]*?width: min\(76rem, 96vw\) !important;[\s\S]*?max-width: 96vw !important/,
+  );
+});
+
+test("listing studio four-step rail stays inside the document width", () => {
   assert.match(
     repairCss,
     /\.rawaj-studio-steps\s*\{[\s\S]*?grid-template-columns: repeat\(4, minmax\(0, 1fr\)\) !important/,
