@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
+import { CustomerPromotionRequestButton } from "@/features/storefront/CustomerPromotionRequestButton";
 import {
   StorefrontIdentityHero,
   StorefrontNotice,
@@ -1506,6 +1507,9 @@ function StoreListingCard({
                   <Rocket aria-hidden="true" />
                   <span>Boost</span>
                 </button>
+              ) : null}
+              {listing.status === "approved" ? (
+                <CustomerPromotionRequestButton listing={listing} />
               ) : null}
               {canEdit ? (
                 <Link
