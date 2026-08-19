@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 const action = process.argv[2] ?? "production operation";
 
-const workflowApproval = "DEPLOY_RAWAJ_WORKER_PRODUCTION";
+const workflowApproval = "DEPLOY_RAWAJ_SYRIA_WORKER_PRODUCTION";
 const localApproval = "DEPLOY_RAWAJ_SYRIA_PRODUCTION";
 
 const expectedCommitSha = process.env.RAWAJ_EXPECTED_COMMIT_SHA?.trim() ?? "";
