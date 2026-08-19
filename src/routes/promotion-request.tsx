@@ -9,16 +9,9 @@ import {
   Rocket,
   Search,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import {
   createListingPromotionRequest,
@@ -28,13 +21,14 @@ import {
 } from "@/lib/classifieds-api";
 import type {
   ClassifiedListing,
-  ClassifiedsError,
   ListingPromotionRequest,
   PromotionType,
 } from "@/lib/classifieds-types";
 import { createSeo } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+
+const DURATION_OPTIONS = [3, 7, 14, 30] as const;
 
 export const Route = createFileRoute("/promotion-request")({
   head: () =>
@@ -52,33 +46,27 @@ function PromotionRequestPage() {
   const auth = useAuth();
   const { text } = useUiPreferences();
   const profileId = auth.profile?.id ?? null;
+  const requestIdRef = useRef(0);
+  const submitInFlightRef = useRef(false);
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
   const [requests, setRequests] = useState<ListingPromotionRequest[]>([]);
-  const [listingsLoading, setListingsLoading] = useState(false);
-  const [requestsLoading, setRequestsLoading] = useState(false);
-  const [listingsError, setListingsError] = useState<ClassifiedsError | null>(null);
-  const [requestsError, setRequestsError] = useState<ClassifiedsError | null>(null);
-  const [hasLoadedListings, setHasLoadedListings] = useState(false);
-  const [hasLoadedRequests, setHasLoadedRequests] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState("");
   const [selectedListingId, setSelectedListingId] = useState("");
   const [promotionType, setPromotionType] = useState<PromotionType>("featured_home");
-  const [requestedDays, setRequestedDays] = useState(7);
+  const [requestedDays, setRequestedDays] = useState<number>(7);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
-  const listingsRequestIdRef = useRef(0);
-  const requestsRequestIdRef = useRef(0);
-  const submitInFlightRef = useRef(false);
-  const profileIdRef = useRef<string | null>(profileId);
-  profileIdRef.current = profileId;
 
   const approvedListings = useMemo(
     () => listings.filter((listing) => listing.status === "approved"),
     [listings],
   );
-  const generalRequests = useMemo(
+  const customRequests = useMemo(
     () => requests.filter((request) => !request.searchBoostPackageCode),
     [requests],
   );
@@ -90,14 +78,14 @@ function PromotionRequestPage() {
     value: PromotionType;
     label: string;
     description: string;
-    icon: typeof Home;
+    icon: LucideIcon;
   }> = [
     {
       value: "featured_home",
       label: text("مساحة رئيسية", "Homepage placement"),
       description: text(
-        "طلب ظهور ضمن المساحات المميزة في الصفحة الرئيسية حسب التوفر.",
-        "Request a featured homepage placement, subject to availability.",
+        "ظهور ضمن المساحات المميزة في الصفحة الرئيسية حسب التوفر.",
+        "Featured homepage visibility, subject to availability.",
       ),
       icon: Home,
     },
@@ -114,8 +102,8 @@ function PromotionRequestPage() {
       value: "top_category",
       label: text("الأقسام", "Categories"),
       description: text(
-        "طلب ظهور مميز داخل القسم المناسب لإعلانك.",
-        "Request prominent visibility inside the listing's relevant category.",
+        "ظهور مميز داخل القسم المناسب لإعلانك.",
+        "Prominent visibility inside the listing's relevant category.",
       ),
       icon: LayoutGrid,
     },
@@ -123,134 +111,82 @@ function PromotionRequestPage() {
       value: "urgent",
       label: text("حملة إعلانية", "Advertising campaign"),
       description: text(
-        "طلب حملة أو أولوية تسويقية خاصة يراجعها فريق رواج يدوياً.",
-        "Request a custom campaign or marketing priority reviewed manually by RAWAJ.",
+        "حملة أو أولوية تسويقية خاصة يراجعها فريق رواج يدوياً.",
+        "A custom campaign or marketing priority reviewed manually by RAWAJ.",
       ),
       icon: Megaphone,
     },
   ];
-  const durationOptions = [3, 7, 14, 30];
 
-  const loadListings = useCallback(async () => {
-    if (!profileId) return;
-    const currentProfileId = profileId;
-    const requestId = ++listingsRequestIdRef.current;
-    setListingsLoading(true);
-    setListingsError(null);
-    try {
-      const result = await fetchCurrentUserListings(currentProfileId);
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
-        return;
-      if (result.ok) {
-        setListings(result.data);
-        setHasLoadedListings(true);
-        setSelectedListingId((current) => {
-          const currentStillEligible = result.data.some(
-            (item) => item.id === current && item.status === "approved",
-          );
-          if (currentStillEligible) return current;
-          return result.data.find((item) => item.status === "approved")?.id ?? "";
-        });
-      } else {
-        setListingsError(result.error);
-      }
-    } catch (caught) {
-      if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
-        return;
-      setListingsError({
-        code: "unknown",
-        message:
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل إعلاناتك.", "Could not load your listings."),
-        operation: "promotion_request_listings_load",
-      });
-    } finally {
-      if (requestId === listingsRequestIdRef.current && currentProfileId === profileIdRef.current) {
-        setListingsLoading(false);
-      }
-    }
-  }, [profileId, text]);
+  const load = useCallback(async () => {
+    if (!profileId || auth.status !== "signedIn") return;
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+    setError("");
 
-  const loadRequests = useCallback(async () => {
-    if (!profileId) return;
-    const currentProfileId = profileId;
-    const requestId = ++requestsRequestIdRef.current;
-    setRequestsLoading(true);
-    setRequestsError(null);
     try {
-      const result = await fetchMyPromotionRequests(currentProfileId);
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      const [listingsResult, requestsResult] = await Promise.all([
+        fetchCurrentUserListings(profileId),
+        fetchMyPromotionRequests(profileId),
+      ]);
+      if (requestId !== requestIdRef.current) return;
+
+      if (!listingsResult.ok) {
+        setError(listingsResult.error.message);
         return;
-      if (result.ok) {
-        setRequests(result.data);
-        setHasLoadedRequests(true);
-      } else {
-        setRequestsError(result.error);
       }
-    } catch (caught) {
-      if (requestId !== requestsRequestIdRef.current || currentProfileId !== profileIdRef.current)
+      if (!requestsResult.ok) {
+        setError(requestsResult.error.message);
         return;
-      setRequestsError({
-        code: "unknown",
-        message:
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل طلبات الترويج.", "Could not load promotion requests."),
-        operation: "promotion_request_history_load",
+      }
+
+      setListings(listingsResult.data);
+      setRequests(requestsResult.data);
+      setSelectedListingId((current) => {
+        const stillApproved = listingsResult.data.some(
+          (listing) => listing.id === current && listing.status === "approved",
+        );
+        if (stillApproved) return current;
+        return listingsResult.data.find((listing) => listing.status === "approved")?.id ?? "";
       });
+      setLoaded(true);
+    } catch (caught) {
+      if (requestId !== requestIdRef.current) return;
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر تحميل بيانات الترويج.", "Could not load promotion data."),
+      );
     } finally {
-      if (requestId === requestsRequestIdRef.current && currentProfileId === profileIdRef.current) {
-        setRequestsLoading(false);
-      }
+      if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [profileId, text]);
+  }, [auth.status, profileId, text]);
 
   useEffect(() => {
     if (auth.status !== "signedIn" || !profileId) {
-      listingsRequestIdRef.current += 1;
-      requestsRequestIdRef.current += 1;
+      requestIdRef.current += 1;
       setListings([]);
       setRequests([]);
-      setListingsLoading(false);
-      setRequestsLoading(false);
-      setListingsError(null);
-      setRequestsError(null);
-      setHasLoadedListings(false);
-      setHasLoadedRequests(false);
+      setLoaded(false);
+      setLoading(false);
+      setError("");
       setSelectedListingId("");
       return;
     }
 
-    setListings([]);
-    setRequests([]);
-    setListingsError(null);
-    setRequestsError(null);
-    setHasLoadedListings(false);
-    setHasLoadedRequests(false);
-    setSelectedListingId("");
-    void loadListings();
-    void loadRequests();
-
+    void load();
     return () => {
-      listingsRequestIdRef.current += 1;
-      requestsRequestIdRef.current += 1;
+      requestIdRef.current += 1;
     };
-  }, [auth.status, loadListings, loadRequests, profileId]);
+  }, [auth.status, load, profileId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const currentProfileId = profileId;
-    if (!currentProfileId || submitInFlightRef.current) return;
+    if (!profileId || submitInFlightRef.current) return;
     setNotice("");
 
-    if (!hasLoadedListings || !hasLoadedRequests || listingsLoading || requestsLoading) {
-      setNotice(
-        text(
-          "انتظر اكتمال تحميل بياناتك قبل الإرسال.",
-          "Wait until your data finishes loading before submitting.",
-        ),
-      );
+    if (!loaded || loading) {
+      setNotice(text("انتظر اكتمال تحميل بياناتك.", "Wait until your data finishes loading."));
       return;
     }
     if (!selectedListingId) {
@@ -272,31 +208,23 @@ function PromotionRequestPage() {
     try {
       const result = await createListingPromotionRequest({
         listingId: selectedListingId,
-        requesterUserId: currentProfileId,
+        requesterUserId: profileId,
         promotionType,
         requestedDays,
         paymentMethod: paymentMethod.trim() || null,
         paymentReference: paymentReference.trim() || null,
       });
-      if (currentProfileId !== profileIdRef.current) return;
       if (!result.ok) {
         setNotice(result.error.message);
         return;
       }
 
-      setRequests((current) => [
-        result.data,
-        ...current.filter((item) => item.id !== result.data.id),
-      ]);
-      setHasLoadedRequests(true);
-
       if (receiptFile) {
         const receiptResult = await uploadPromotionReceipt({
-          userId: currentProfileId,
+          userId: profileId,
           requestId: result.data.id,
           file: receiptFile,
         });
-        if (currentProfileId !== profileIdRef.current) return;
         if (!receiptResult.ok) {
           setNotice(
             text(
@@ -304,32 +232,30 @@ function PromotionRequestPage() {
               "The request was created, but the receipt could not upload. Do not resubmit; contact support to attach it.",
             ),
           );
-          await loadRequests();
+          await load();
           return;
         }
       }
 
-      setNotice(
-        text(
-          "تم إرسال طلب الترويج. ستراجعه الإدارة ثم تتواصل معك بشأن التوفر والتكلفة والتفعيل.",
-          "Promotion request sent. Admin will review availability, pricing, and activation with you.",
-        ),
-      );
       setPaymentMethod("");
       setPaymentReference("");
       setReceiptFile(null);
-      await loadRequests();
+      setNotice(
+        text(
+          "تم إرسال الطلب. ستراجعه الإدارة ثم تتواصل معك بشأن التوفر والتكلفة والتفعيل.",
+          "Request sent. Admin will review availability, pricing, and activation with you.",
+        ),
+      );
+      await load();
     } catch (caught) {
-      if (currentProfileId === profileIdRef.current) {
-        setNotice(
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."),
-        );
-      }
+      setNotice(
+        caught instanceof Error
+          ? caught.message
+          : text("تعذر إرسال طلب الترويج.", "Could not submit the promotion request."),
+      );
     } finally {
       submitInFlightRef.current = false;
-      if (currentProfileId === profileIdRef.current) setSaving(false);
+      setSaving(false);
     }
   }
 
@@ -342,18 +268,24 @@ function PromotionRequestPage() {
           backMode="history"
         />
         <main className="container-wide mobile-page-bottom pt-4">
-          <Panel
-            icon={<Megaphone className="h-7 w-7 text-gold" />}
-            title={text("سجّل الدخول لطلب الترويج", "Log in to request promotion")}
-            body={text(
-              "طلبات الترويج متاحة للإعلانات المعتمدة التي تملكها.",
-              "Promotion requests are available for approved listings you own.",
-            )}
-          >
-            <Link to="/login" className="rawaj-button-primary mt-4 inline-flex px-5 py-2.5">
+          <section className="rounded-2xl bg-card p-8 text-center hairline">
+            <Megaphone className="mx-auto h-7 w-7 text-gold" />
+            <h1 className="mt-3 text-base font-black">
+              {text("سجّل الدخول لطلب الترويج", "Log in to request promotion")}
+            </h1>
+            <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
+              {text(
+                "طلبات الترويج متاحة للإعلانات المعتمدة التي تملكها.",
+                "Promotion requests are available for approved listings you own.",
+              )}
+            </p>
+            <Link
+              to="/login"
+              className="mt-4 inline-flex rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground"
+            >
               {text("تسجيل الدخول", "Log in")}
             </Link>
-          </Panel>
+          </section>
         </main>
       </>
     );
@@ -367,55 +299,46 @@ function PromotionRequestPage() {
         backMode="history"
       />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4">
-        <section className="overflow-hidden rounded-2xl bg-[#17131d] p-5 text-white shadow-soft sm:p-6">
+        <section className="rounded-2xl bg-[#17131d] p-5 text-white shadow-soft sm:p-6">
           <div className="flex items-start gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-fuchsia-500/15 text-fuchsia-200 hairline">
-              <Megaphone className="h-7 w-7" aria-hidden="true" />
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-fuchsia-500/15 text-fuchsia-200 hairline">
+              <Megaphone className="h-6 w-6" aria-hidden="true" />
             </span>
-            <div className="min-w-0">
+            <div>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200/80">
                 RAWAJ PROMOTION
               </p>
-              <h1 className="mt-1 text-xl font-black sm:text-2xl">
+              <h1 className="mt-1 text-xl font-black">
                 {text("اختر أين تريد أن يظهر إعلانك", "Choose where your listing should appear")}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-7 text-white/70">
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-white/70">
                 {text(
-                  "هذا المسار للترويج المخصص والحملات. أما رفع ترتيب الإعلان تلقائياً داخل النتائج فله Boost منفصل.",
-                  "This flow is for custom promotion and campaigns. Automatic ranking in relevant results remains a separate Boost product.",
+                  "للمساحات والحملات استخدم هذا الطلب. لرفع ترتيب إعلانك تلقائياً استخدم Boost.",
+                  "Use this request for placements and campaigns. Use Boost for automatic ranking lift.",
                 )}
               </p>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              to="/promotion"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-[#241b0d]"
-            >
-              <Rocket className="h-4 w-4" />
-              Boost
-            </Link>
-            <Link
-              to="/profile/listings"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/7 px-4 py-2 text-xs font-bold text-white hairline"
-            >
-              {text("العودة إلى متجري", "Back to my store")}
-            </Link>
-          </div>
+          <Link
+            to="/promotion"
+            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-[#241b0d]"
+          >
+            <Rocket className="h-4 w-4" />
+            Boost
+          </Link>
         </section>
 
-        {listingsLoading && !hasLoadedListings ? (
-          <Panel title={text("جارٍ تحميل إعلاناتك", "Loading your listings")} />
-        ) : listingsError && !hasLoadedListings ? (
-          <Panel
-            title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
-            body={listingsError.message}
+        {loading && !loaded ? (
+          <StatePanel title={text("جارٍ تحميل بياناتك", "Loading your data")} />
+        ) : error && !loaded ? (
+          <StatePanel
+            title={text("تعذر تحميل بيانات الترويج", "Could not load promotion data")}
+            body={error}
             actionLabel={text("إعادة المحاولة", "Try again")}
-            onAction={() => void loadListings()}
-            actionDisabled={listingsLoading}
+            onAction={() => void load()}
           />
         ) : approvedListings.length === 0 ? (
-          <Panel
+          <StatePanel
             title={text(
               "لا توجد إعلانات معتمدة قابلة للترويج",
               "No approved listings available for promotion",
@@ -426,19 +349,11 @@ function PromotionRequestPage() {
             )}
           />
         ) : (
-          <form
-            onSubmit={(event) => void submit(event)}
-            aria-busy={saving}
-            className="space-y-5"
-          >
-            {listingsError ? (
-              <RecoveryNotice
-                title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                body={listingsError.message}
-                actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void loadListings()}
-                actionDisabled={listingsLoading}
-              />
+          <form onSubmit={(event) => void submit(event)} className="space-y-5">
+            {error ? (
+              <div className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive hairline">
+                {error}
+              </div>
             ) : null}
 
             <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
@@ -458,8 +373,8 @@ function PromotionRequestPage() {
               {hasPendingForSelectedListing ? (
                 <p className="mt-3 rounded-xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-200">
                   {text(
-                    "هذا الإعلان لديه طلب ترويج أو Boost قيد المراجعة. انتظر قرار الإدارة قبل إرسال طلب جديد.",
-                    "This listing already has a promotion or Boost request under review. Wait for the admin decision before submitting another.",
+                    "يوجد طلب ترويج أو Boost قيد المراجعة لهذا الإعلان.",
+                    "A promotion or Boost request is already under review for this listing.",
                   )}
                 </p>
               ) : null}
@@ -468,38 +383,24 @@ function PromotionRequestPage() {
             <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
               <StepTitle number="2" title={text("اختر نوع الترويج", "Choose promotion type")} />
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {promotionOptions.map((option) => {
-                  const Icon = option.icon;
-                  const selected = option.value === promotionType;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => setPromotionType(option.value)}
-                      className={`rounded-2xl p-4 text-start transition hairline ${
-                        selected
-                          ? "bg-fuchsia-500/10 ring-2 ring-fuchsia-500/55"
-                          : "bg-muted-surface hover:bg-fuchsia-500/5"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 text-sm font-black text-foreground">
-                        <Icon className="h-4 w-4 text-fuchsia-500" />
-                        {option.label}
-                      </span>
-                      <span className="mt-2 block text-xs leading-6 text-muted-foreground">
-                        {option.description}
-                      </span>
-                    </button>
-                  );
-                })}
+                {promotionOptions.map((option) => (
+                  <PromotionOption
+                    key={option.value}
+                    option={option}
+                    selected={promotionType === option.value}
+                    onSelect={() => setPromotionType(option.value)}
+                  />
+                ))}
               </div>
             </section>
 
             <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
-              <StepTitle number="3" title={text("المدة وبيانات التواصل المالي", "Duration and payment details")} />
+              <StepTitle number="3" title={text("المدة والتفاصيل", "Duration and details")} />
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Field label={text("المدة المطلوبة", "Requested duration")}>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
+                    {text("المدة المطلوبة", "Requested duration")}
+                  </span>
                   <div className="relative">
                     <Clock3 className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <select
@@ -507,33 +408,31 @@ function PromotionRequestPage() {
                       onChange={(event) => setRequestedDays(Number(event.target.value))}
                       className="input min-h-12 w-full ps-10"
                     >
-                      {durationOptions.map((days) => (
+                      {DURATION_OPTIONS.map((days) => (
                         <option key={days} value={days}>
                           {text(`${days} أيام`, `${days} days`)}
                         </option>
                       ))}
                     </select>
                   </div>
-                </Field>
-                <Field label={text("طريقة الدفع — اختياري", "Payment method — optional")}>
-                  <input
-                    value={paymentMethod}
-                    onChange={(event) => setPaymentMethod(event.target.value)}
-                    maxLength={80}
-                    className="input min-h-12 w-full"
-                    placeholder={text("مثال: تحويل بنكي", "Example: bank transfer")}
-                  />
-                </Field>
-                <Field label={text("مرجع الدفع — اختياري", "Payment reference — optional")}>
-                  <input
-                    value={paymentReference}
-                    onChange={(event) => setPaymentReference(event.target.value)}
-                    maxLength={160}
-                    className="input min-h-12 w-full"
-                  />
-                </Field>
-                <Field label={text("إيصال الدفع — اختياري", "Payment receipt — optional")}>
-                  <label className="flex min-h-12 cursor-pointer items-center gap-2 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
+                </label>
+                <TextField
+                  label={text("طريقة الدفع — اختياري", "Payment method — optional")}
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  maxLength={80}
+                />
+                <TextField
+                  label={text("مرجع الدفع — اختياري", "Payment reference — optional")}
+                  value={paymentReference}
+                  onChange={setPaymentReference}
+                  maxLength={160}
+                />
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
+                    {text("إيصال الدفع — اختياري", "Payment receipt — optional")}
+                  </span>
+                  <span className="flex min-h-12 cursor-pointer items-center gap-2 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
                     <FileUp className="h-4 w-4 text-muted-foreground" />
                     <span className="min-w-0 truncate">
                       {receiptFile?.name || text("اختيار ملف", "Choose file")}
@@ -544,34 +443,27 @@ function PromotionRequestPage() {
                       onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
                       className="sr-only"
                     />
-                  </label>
-                </Field>
+                  </span>
+                </label>
               </div>
               <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
                 {text(
-                  "لا يلزم الدفع قبل إرسال الطلب. إذا لم تكن قد اتفقت على السعر بعد، اترك حقول الدفع فارغة وستتواصل الإدارة معك.",
-                  "Payment is not required before submitting. If pricing has not been agreed yet, leave payment fields empty and admin will contact you.",
+                  "الدفع غير مطلوب قبل إرسال الطلب. اترك بيانات الدفع فارغة إذا لم يتم الاتفاق على السعر بعد.",
+                  "Payment is not required before submitting. Leave payment details empty if pricing is not agreed yet.",
                 )}
               </p>
             </section>
 
             <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
-              <StepTitle number="4" title={text("إرسال للمراجعة", "Send for review")} />
-              <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              <p className="text-xs leading-6 text-muted-foreground">
                 {text(
-                  "الإرسال لا يفعّل الترويج تلقائياً. تبدأ المساحة أو الحملة فقط بعد مراجعة الإدارة والاتفاق على التفاصيل.",
-                  "Submitting does not activate promotion automatically. Placement or campaign starts only after admin review and agreement on details.",
+                  "الإرسال لا يفعّل الترويج تلقائياً. يبدأ الترويج بعد مراجعة الإدارة والاتفاق على التفاصيل.",
+                  "Submitting does not activate promotion automatically. Promotion starts after admin review and agreement.",
                 )}
               </p>
               <button
                 type="submit"
-                disabled={
-                  saving ||
-                  !selectedListingId ||
-                  !hasLoadedListings ||
-                  !hasLoadedRequests ||
-                  hasPendingForSelectedListing
-                }
+                disabled={saving || loading || hasPendingForSelectedListing}
                 aria-busy={saving}
                 className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-2 text-xs font-black text-white disabled:opacity-50"
               >
@@ -597,59 +489,34 @@ function PromotionRequestPage() {
               "Boost orders remain on the Boost page and are not duplicated here.",
             )}
           </p>
-          {requestsLoading && !hasLoadedRequests ? (
+          {customRequests.length === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">
-              {text("جارٍ تحميل طلباتك", "Loading your requests")}
+              {text("لا توجد طلبات ترويج مخصصة بعد.", "No custom promotion requests yet.")}
             </p>
-          ) : requestsError && !hasLoadedRequests ? (
-            <RecoveryNotice
-              title={text("تعذر تحميل طلباتك", "Could not load your requests")}
-              body={requestsError.message}
-              actionLabel={text("إعادة المحاولة", "Try again")}
-              onAction={() => void loadRequests()}
-              actionDisabled={requestsLoading}
-            />
           ) : (
-            <>
-              {requestsError ? (
-                <RecoveryNotice
-                  title={text("تعذر تحديث طلباتك", "Could not refresh your requests")}
-                  body={requestsError.message}
-                  actionLabel={text("إعادة المحاولة", "Try again")}
-                  onAction={() => void loadRequests()}
-                  actionDisabled={requestsLoading}
-                />
-              ) : null}
-              {generalRequests.length === 0 ? (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {text("لا توجد طلبات ترويج مخصصة بعد.", "No custom promotion requests yet.")}
-                </p>
-              ) : (
-                <div className="mt-3 grid gap-2">
-                  {generalRequests.map((request) => (
-                    <article key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-black text-foreground">
-                            {request.listingTitle ?? request.listingId}
-                          </p>
-                          <p className="mt-1 text-muted-foreground">
-                            {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
-                            {text("يوم", "days")}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-card px-2.5 py-1 text-[10px] font-black hairline">
-                          {promotionStatusLabel(request.status, text)}
-                        </span>
-                      </div>
-                      {request.adminNote ? (
-                        <p className="mt-2 leading-5 text-muted-foreground">{request.adminNote}</p>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="mt-3 grid gap-2">
+              {customRequests.map((request) => (
+                <article key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-black text-foreground">
+                        {request.listingTitle ?? request.listingId}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {promotionTypeLabel(request.promotionType, text)} · {request.requestedDays}{" "}
+                        {text("يوم", "days")}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-card px-2.5 py-1 text-[10px] font-black hairline">
+                      {promotionStatusLabel(request.status, text)}
+                    </span>
+                  </div>
+                  {request.adminNote ? (
+                    <p className="mt-2 leading-5 text-muted-foreground">{request.adminNote}</p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
           )}
         </section>
 
@@ -665,10 +532,71 @@ function PromotionRequestPage() {
   );
 }
 
+function PromotionOption({
+  option,
+  selected,
+  onSelect,
+}: {
+  option: {
+    value: PromotionType;
+    label: string;
+    description: string;
+    icon: LucideIcon;
+  };
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const Icon = option.icon;
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={`rounded-2xl p-4 text-start transition hairline ${
+        selected
+          ? "bg-fuchsia-500/10 ring-2 ring-fuchsia-500/55"
+          : "bg-muted-surface hover:bg-fuchsia-500/5"
+      }`}
+    >
+      <span className="flex items-center gap-2 text-sm font-black text-foreground">
+        <Icon className="h-4 w-4 text-fuchsia-500" />
+        {option.label}
+      </span>
+      <span className="mt-2 block text-xs leading-6 text-muted-foreground">
+        {option.description}
+      </span>
+    </button>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  maxLength: number;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-bold text-muted-foreground">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        maxLength={maxLength}
+        className="input min-h-12 w-full"
+      />
+    </label>
+  );
+}
+
 function StepTitle({ number, title }: { number: string; title: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="grid h-7 w-7 place-items-center rounded-full bg-fuchsia-500/12 text-xs font-black text-fuchsia-500">
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-fuchsia-500/10 text-xs font-black text-fuchsia-500">
         {number}
       </span>
       <h2 className="text-sm font-black text-foreground">{title}</h2>
@@ -676,78 +604,31 @@ function StepTitle({ number, title }: { number: string; title: string }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-bold text-muted-foreground">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function Panel({
-  icon,
+function StatePanel({
   title,
   body,
   actionLabel,
   onAction,
-  actionDisabled,
-  children,
 }: {
-  icon?: ReactNode;
   title: string;
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
-  actionDisabled?: boolean;
-  children?: ReactNode;
 }) {
   return (
     <section className="rounded-2xl bg-card p-8 text-center hairline">
-      {icon ? <div className="mx-auto mb-3 w-fit">{icon}</div> : null}
       <p className="text-sm font-bold">{title}</p>
       {body ? <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p> : null}
       {actionLabel && onAction ? (
         <button
           type="button"
           onClick={onAction}
-          disabled={actionDisabled}
-          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60"
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
         >
           {actionLabel}
         </button>
       ) : null}
-      {children}
     </section>
-  );
-}
-
-function RecoveryNotice({
-  title,
-  body,
-  actionLabel,
-  onAction,
-  actionDisabled,
-}: {
-  title: string;
-  body: string;
-  actionLabel: string;
-  onAction: () => void;
-  actionDisabled?: boolean;
-}) {
-  return (
-    <div className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive hairline">
-      <p className="font-bold">{title}</p>
-      <p className="mt-1 text-xs leading-5">{body}</p>
-      <button
-        type="button"
-        onClick={onAction}
-        disabled={actionDisabled}
-        className="mt-3 rounded-xl bg-card px-4 py-2 text-xs font-bold text-foreground hairline disabled:opacity-60"
-      >
-        {actionLabel}
-      </button>
-    </div>
   );
 }
 
