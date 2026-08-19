@@ -1,7 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, CheckCircle2, Eye, MapPin, Pencil, Plus } from "lucide-react";
+import {
+  BadgeCheck,
+  CheckCircle2,
+  Eye,
+  MapPin,
+  Megaphone,
+  Pencil,
+  Plus,
+  Rocket,
+} from "lucide-react";
 import { useState } from "react";
 
+import "@/owner-promotion-entry-fix.css";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface OwnerStoreWorkspaceSummaryProps {
@@ -141,6 +151,14 @@ export function OwnerStoreWorkspaceSummary({
         <Link to="/add-listing" data-tone="primary">
           <Plus aria-hidden="true" />
           <span>{text("إضافة إعلان", "Post listing")}</span>
+        </Link>
+        <Link to="/promotion" data-tone="boost">
+          <Rocket aria-hidden="true" />
+          <span>Boost</span>
+        </Link>
+        <Link to="/promotion-request" data-tone="promotion">
+          <Megaphone aria-hidden="true" />
+          <span>{text("طلب ترويج", "Promotion request")}</span>
         </Link>
         <Link to="/seller/$id" params={{ id: sellerId }}>
           <Eye aria-hidden="true" />
