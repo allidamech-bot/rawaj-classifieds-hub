@@ -1,0 +1,411 @@
+/* RAWAJ live repair sweep V25.
+ * Shared Syria/Saudi repair layer for search-field consistency and the
+ * customer-facing paid promotion request flow.
+ */
+
+/* Search controls: prevent the browser/native search input from painting a
+ * lighter inner rectangle inside the dark RAWAJ search shell. */
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search label
+) input[type="search"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: #f7f3ed !important;
+  -webkit-text-fill-color: #f7f3ed !important;
+}
+
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search label
+) input[type="search"]:-webkit-autofill,
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search label
+) input[type="search"]:-webkit-autofill:hover,
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search label
+) input[type="search"]:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f7f3ed !important;
+  caret-color: #f7f3ed !important;
+  -webkit-box-shadow: 0 0 0 1000px #0d121a inset !important;
+  box-shadow: 0 0 0 1000px #0d121a inset !important;
+  transition: background-color 9999s ease-out 0s !important;
+}
+
+.rawaj-app-shell input[type="search"]::-webkit-search-decoration,
+.rawaj-app-shell input[type="search"]::-webkit-search-cancel-button,
+.rawaj-app-shell input[type="search"]::-webkit-search-results-button,
+.rawaj-app-shell input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Paid promotion is a separate sales action next to Boost, not another neutral
+ * management control. */
+.rawaj-owner-listing-card__actions [data-tone="advertise"] {
+  border-color: rgba(94, 200, 255, 0.3) !important;
+  color: #bcecff !important;
+  background: linear-gradient(145deg, rgba(24, 76, 105, 0.72), rgba(12, 35, 52, 0.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(221, 247, 255, 0.07) !important;
+}
+
+.rawaj-owner-listing-card__actions [data-tone="advertise"]:is(:hover, :focus-visible) {
+  border-color: rgba(117, 215, 255, 0.55) !important;
+  background: linear-gradient(145deg, rgba(31, 92, 124, 0.82), rgba(14, 43, 62, 0.96)) !important;
+}
+
+.rawaj-customer-promotion-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(3, 7, 12, 0.74);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+.rawaj-customer-promotion-dialog {
+  width: 100%;
+  max-height: 94dvh;
+  overflow: auto;
+  border: 1px solid rgba(216, 174, 95, 0.16);
+  border-radius: 1.6rem 1.6rem 0 0;
+  color: #f7f3ed;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(65, 177, 232, 0.09), transparent 35%),
+    linear-gradient(160deg, #151b24, #0d1219 70%);
+  box-shadow: 0 -18px 55px rgba(0, 0, 0, 0.45);
+}
+
+.rawaj-customer-promotion-dialog__header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(216, 174, 95, 0.11);
+  background: rgba(15, 20, 29, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.rawaj-customer-promotion-dialog__header > div > p {
+  color: #8bdcff;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.rawaj-customer-promotion-dialog__header h3 {
+  margin-top: 0.15rem;
+  color: #fffaf2;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.rawaj-customer-promotion-dialog__header > div > span {
+  display: block;
+  margin-top: 0.25rem;
+  color: #aeb7c2;
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
+.rawaj-customer-promotion-dialog__icon {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(97, 207, 255, 0.26);
+  border-radius: 0.9rem;
+  color: #aee8ff;
+  background: rgba(35, 118, 157, 0.2);
+}
+
+.rawaj-customer-promotion-dialog__icon svg,
+.rawaj-customer-promotion-dialog__close svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.rawaj-customer-promotion-dialog__close {
+  display: grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(216, 174, 95, 0.13);
+  border-radius: 0.85rem;
+  color: #cfd5dc;
+  background: #151b24;
+}
+
+.rawaj-customer-promotion-dialog__body {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.rawaj-customer-promotion-listing {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(216, 174, 95, 0.11);
+  border-radius: 1rem;
+  background: #10161e;
+}
+
+.rawaj-customer-promotion-listing span,
+.rawaj-customer-promotion-field > span,
+.rawaj-customer-promotion-dialog legend {
+  color: #9ea7b2;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.rawaj-customer-promotion-listing strong {
+  overflow: hidden;
+  color: #f7f3ed;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-customer-promotion-dialog fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.rawaj-customer-promotion-dialog legend {
+  margin-bottom: 0.55rem;
+}
+
+.rawaj-customer-promotion-targets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.rawaj-customer-promotion-targets button {
+  min-width: 0;
+  min-height: 4.65rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(216, 174, 95, 0.1);
+  border-radius: 1rem;
+  text-align: start;
+  background: linear-gradient(145deg, #151b24, #10151d);
+}
+
+.rawaj-customer-promotion-targets button strong,
+.rawaj-customer-promotion-targets button span {
+  display: block;
+}
+
+.rawaj-customer-promotion-targets button strong {
+  color: #f8f3eb;
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.rawaj-customer-promotion-targets button span {
+  margin-top: 0.2rem;
+  color: #929da9;
+  font-size: 0.61rem;
+  line-height: 1.55;
+}
+
+.rawaj-customer-promotion-targets button[data-selected="true"] {
+  border-color: rgba(101, 207, 255, 0.48);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(94, 207, 255, 0.11), transparent 52%),
+    linear-gradient(145deg, #172530, #101820);
+  box-shadow: inset 0 0 0 1px rgba(85, 197, 245, 0.08);
+}
+
+.rawaj-customer-promotion-targets button[data-selected="true"] strong {
+  color: #bcecff;
+}
+
+.rawaj-customer-promotion-field {
+  position: relative;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.rawaj-customer-promotion-field :is(select, textarea) {
+  width: 100%;
+  border: 1px solid rgba(216, 174, 95, 0.12) !important;
+  border-radius: 0.95rem;
+  outline: 0;
+  color: #f7f3ed !important;
+  background: #0f151d !important;
+  box-shadow: none !important;
+}
+
+.rawaj-customer-promotion-field select {
+  min-height: 2.9rem;
+  padding-inline: 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.rawaj-customer-promotion-field textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.75;
+}
+
+.rawaj-customer-promotion-field :is(select, textarea):focus {
+  border-color: rgba(95, 204, 250, 0.46) !important;
+  box-shadow: 0 0 0 3px rgba(77, 190, 239, 0.07) !important;
+}
+
+.rawaj-customer-promotion-field small {
+  justify-self: end;
+  color: #77828d;
+  font-size: 0.6rem;
+}
+
+.rawaj-customer-promotion-error {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 0.9rem;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.18);
+  font-size: 0.7rem;
+  line-height: 1.7;
+}
+
+.rawaj-customer-promotion-submit {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(119, 218, 255, 0.4);
+  border-radius: 1rem;
+  color: #071018;
+  background: linear-gradient(135deg, #a9e8ff, #62c7ef);
+  box-shadow: 0 10px 24px rgba(54, 166, 210, 0.16);
+  font-size: 0.77rem;
+  font-weight: 900;
+}
+
+.rawaj-customer-promotion-submit svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-customer-promotion-submit:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.rawaj-customer-promotion-success {
+  display: grid;
+  justify-items: center;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.rawaj-customer-promotion-success > svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #6ee7b7;
+}
+
+.rawaj-customer-promotion-success h4 {
+  margin-top: 0.8rem;
+  color: #f8f5ee;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.rawaj-customer-promotion-success p {
+  max-width: 30rem;
+  margin-top: 0.4rem;
+  color: #aab4bf;
+  font-size: 0.74rem;
+  line-height: 1.8;
+}
+
+.rawaj-customer-promotion-success > div {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.rawaj-customer-promotion-success :is(a, button) {
+  display: inline-flex;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1rem;
+  border: 1px solid rgba(216, 174, 95, 0.12);
+  border-radius: 0.9rem;
+  color: #e9edf1;
+  background: #151b24;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.rawaj-customer-promotion-success a {
+  border-color: rgba(99, 209, 255, 0.26);
+  color: #bcecff;
+}
+
+@media (min-width: 40rem) {
+  .rawaj-customer-promotion-backdrop {
+    align-items: center;
+    padding: 1.25rem;
+  }
+
+  .rawaj-customer-promotion-dialog {
+    max-width: 42rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.52);
+  }
+
+  .rawaj-customer-promotion-dialog__header,
+  .rawaj-customer-promotion-dialog__body {
+    padding: 1.25rem;
+  }
+
+  .rawaj-customer-promotion-targets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 23rem) {
+  .rawaj-customer-promotion-targets {
+    grid-template-columns: 1fr;
+  }
+}
