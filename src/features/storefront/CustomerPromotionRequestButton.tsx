@@ -7,13 +7,7 @@ import { createMySupportRequest } from "@/lib/classifieds-api";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
-type AdvertisingTarget =
-  | "home"
-  | "search_results"
-  | "categories"
-  | "listing_detail"
-  | "offers"
-  | "campaign";
+type AdvertisingTarget = "home" | "search_results" | "categories" | "listing_detail" | "offers" | "campaign";
 
 interface AdvertisingTargetOption {
   id: AdvertisingTarget;
@@ -308,7 +302,10 @@ export function CustomerPromotionRequestButton({
         }}
         data-tone="advertise"
         aria-label={text("طلب مساحة إعلانية أو حملة", "Request an ad placement or campaign")}
-        title={text("ترويج مدفوع — مساحة إعلانية أو حملة", "Paid promotion — ad placement or campaign")}
+        title={text(
+          "ترويج مدفوع — مساحة إعلانية أو حملة",
+          "Paid promotion — ad placement or campaign",
+        )}
       >
         <Megaphone aria-hidden="true" />
         <span>{text("ترويج", "Promote")}</span>
