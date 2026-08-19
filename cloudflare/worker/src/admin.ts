@@ -109,6 +109,9 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
   const pendingListings = await env.DB.prepare(
     "SELECT count(*) AS count FROM listings WHERE status = 'pending_review'",
   ).first<{ count: number }>();
+  const pendingPromotions = await env.DB.prepare(
+    "SELECT count(*) AS count FROM listing_promotion_requests WHERE status = 'pending_review'",
+  ).first<{ count: number }>();
   const openListingReports = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_reports WHERE status IN ('open', 'reviewing')",
   ).first<{ count: number }>();
@@ -133,7 +136,7 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
         openListingReports: numberValue(openListingReports?.count),
         openMessageReports: 0,
         pendingVerifications: 0,
-        pendingPromotions: 0,
+        pendingPromotions: numberValue(pendingPromotions?.count),
         activeRestrictions: numberValue(activeRestrictions?.count),
         adminCount: numberValue(adminCount?.count),
         moderatorCount: numberValue(moderatorCount?.count),
@@ -238,7 +241,13 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
 
   const result = await env.DB.prepare(
     `SELECT l.id, l.owner_id, l.title, l.status, l.category_id, l.governorate_id,
-            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at
+            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at,
+            (SELECT a.reason FROM listing_moderation_actions a
+              WHERE a.listing_id = l.id
+              ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS rejection_reason,
+            (SELECT a.created_at FROM listing_moderation_actions a
+              WHERE a.listing_id = l.id
+              ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS reviewed_at
        FROM listings l
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
@@ -254,9 +263,9 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
     status: stringValue(row.status, "pending_review"),
     categoryId: stringValue(row.category_id),
     governorateId: stringValue(row.governorate_id),
-    rejectionReason: null,
+    rejectionReason: nullableString(row.rejection_reason),
     expiresAt: nullableString(row.expires_at),
-    reviewedAt: null,
+    reviewedAt: nullableString(row.reviewed_at),
     publishedAt: nullableString(row.published_at),
     archivedAt: nullableString(row.archived_at),
     createdAt: stringValue(row.created_at),
@@ -273,7 +282,13 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
 
   const result = await env.DB.prepare(
     `SELECT l.id, l.owner_id, l.title, l.status, l.category_id, l.governorate_id,
-            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at
+            l.expires_at, l.published_at, l.archived_at, l.created_at, l.updated_at,
+            (SELECT a.reason FROM listing_moderation_actions a
+              WHERE a.listing_id = l.id
+              ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS rejection_reason,
+            (SELECT a.created_at FROM listing_moderation_actions a
+              WHERE a.listing_id = l.id
+              ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS reviewed_at
        FROM listings l
       WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
       ORDER BY l.updated_at DESC
@@ -289,9 +304,9 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
     status: stringValue(row.status, "pending_review"),
     categoryId: stringValue(row.category_id),
     governorateId: stringValue(row.governorate_id),
-    rejectionReason: null,
+    rejectionReason: nullableString(row.rejection_reason),
     expiresAt: nullableString(row.expires_at),
-    reviewedAt: null,
+    reviewedAt: nullableString(row.reviewed_at),
     publishedAt: nullableString(row.published_at),
     archivedAt: nullableString(row.archived_at),
     createdAt: stringValue(row.created_at),
@@ -563,13 +578,7 @@ const NOTIFICATION_EVENT_TYPES = new Set([
   "support_created",
   "report_created",
 ]);
-const NOTIFICATION_ENTITY_TYPES = new Set([
-  "users",
-  "listings",
-  "feedback",
-  "support",
-  "reports",
-]);
+const NOTIFICATION_ENTITY_TYPES = new Set(["users", "listings", "feedback", "support", "reports"]);
 
 export async function ensureAdminNotification(
   env: AdminEnv,
@@ -655,9 +664,7 @@ async function adminListNotifications(request: Request, env: AdminEnv, cors: Hea
   const limit = integerParam(request, 50, 1, 200);
 
   const whereClause =
-    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType)
-      ? "WHERE an.entity_type = ?"
-      : null;
+    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType) ? "WHERE an.entity_type = ?" : null;
   const statement = env.DB.prepare(
     `SELECT an.id, an.event_type, an.entity_type, an.entity_id, an.title, an.body,
             an.event_key, an.created_at,
@@ -731,11 +738,7 @@ async function adminCreateNotification(request: Request, env: AdminEnv, cors: He
   return json({ data: { eventKey } }, 201, cors);
 }
 
-async function adminMarkNotificationsReadByEntity(
-  request: Request,
-  env: AdminEnv,
-  cors: Headers,
-) {
+async function adminMarkNotificationsReadByEntity(request: Request, env: AdminEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);

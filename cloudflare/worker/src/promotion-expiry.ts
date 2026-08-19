@@ -39,9 +39,9 @@ export async function expireTimedPromotions(
           SET is_featured = CASE
                 WHEN EXISTS (
                   SELECT 1
-                    FROM listing_promotion_requests active
+                    FROM listing_search_boost_orders active
                    WHERE active.listing_id = listings.id
-                     AND active.status = 'approved'
+                     AND active.status = 'active'
                      AND active.ends_at IS NOT NULL
                      AND active.ends_at > ?
                 ) THEN 1
@@ -49,9 +49,9 @@ export async function expireTimedPromotions(
               END,
               featured_until = (
                 SELECT MAX(active.ends_at)
-                  FROM listing_promotion_requests active
+                  FROM listing_search_boost_orders active
                  WHERE active.listing_id = listings.id
-                   AND active.status = 'approved'
+                   AND active.status = 'active'
                    AND active.ends_at IS NOT NULL
                    AND active.ends_at > ?
               ),
@@ -63,7 +63,9 @@ export async function expireTimedPromotions(
   ]);
 
   const failed = results.find((result) => !result.success);
-  if (failed) throw new Error(`timed_promotion_expiry_failed:${failed.error ?? "unknown"}`);
+  if (failed) {
+    throw new Error(`timed_promotion_expiry_failed:${failed.error ?? "unknown"}`);
+  }
 
   const expiredPromotions = Number(results[0]?.meta?.changes ?? 0);
   const reconciledListings = Number(results[1]?.meta?.changes ?? 0);
