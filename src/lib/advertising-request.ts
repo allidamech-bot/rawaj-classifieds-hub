@@ -48,12 +48,7 @@ export interface CreateAdvertisingRequestInput {
 const ADVERTISING_REQUEST_MARKER = "[RAWAJ_AD_REQUEST_V1]";
 const ADVERTISING_INTENT_KEY = "rawaj.advertising-request-intent.v1";
 const ADVERTISING_INTENT_TTL_MS = 30 * 60 * 1000;
-const KINDS = new Set<AdvertisingRequestKind>([
-  "home",
-  "search_results",
-  "categories",
-  "campaign",
-]);
+const KINDS = new Set<AdvertisingRequestKind>(["home", "search_results", "categories", "campaign"]);
 const DEVICES = new Set<AdvertisingRequestDevice>(["both", "mobile", "desktop"]);
 
 export async function createAdvertisingRequest(
@@ -179,7 +174,7 @@ export function queueAdvertisingRequestIntent(listingId?: string | null): void {
   } catch {
     // The form remains reachable even when session storage is unavailable.
   }
-  window.location.assign("/promotion#advertise");
+  window.location.assign("/advertise");
 }
 
 export function consumeAdvertisingRequestIntent(): string | null {
@@ -207,7 +202,11 @@ function normalizeInput(
   if (!KINDS.has(input.kind) || !DEVICES.has(input.device)) {
     return validation("اختر نوع الإعلان والأجهزة المستهدفة.");
   }
-  if (!Number.isInteger(input.requestedDays) || input.requestedDays < 1 || input.requestedDays > 90) {
+  if (
+    !Number.isInteger(input.requestedDays) ||
+    input.requestedDays < 1 ||
+    input.requestedDays > 90
+  ) {
     return validation("اختر مدة بين يوم واحد و90 يوماً.");
   }
   const destinationUrl = cleanOptional(input.destinationUrl, 500);
