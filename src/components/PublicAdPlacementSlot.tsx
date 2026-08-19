@@ -48,7 +48,9 @@ function uniquePlacements(placements: PublicAdPlacement[]): PublicAdPlacement[] 
   });
 }
 
-function requestablePlacement(page: AdPlacementPage): "home" | "search_results" | "categories" | null {
+function requestablePlacement(
+  page: AdPlacementPage,
+): "home" | "search_results" | "categories" | null {
   if (page === "home" || page === "search_results" || page === "categories") return page;
   return null;
 }
@@ -222,7 +224,10 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
                 {text("مساحة إعلانية متاحة", "Advertising space available")}
               </strong>
               <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground sm:text-xs">
-                {text("أعلن هنا أو اطلب حملة من فريق رواج", "Advertise here or request a RAWAJ campaign")}
+                {text(
+                  "أعلن هنا أو اطلب حملة من فريق رواج",
+                  "Advertise here or request a RAWAJ campaign",
+                )}
               </span>
             </span>
           </span>
