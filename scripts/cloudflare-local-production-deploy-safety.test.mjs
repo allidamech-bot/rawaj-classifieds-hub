@@ -25,7 +25,7 @@ test("local Syria production operations are explicit and git-gated", () => {
 });
 
 test("existing workflow_dispatch approval remains supported", () => {
-  assert.match(guard, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
+  assert.match(guard, /DEPLOY_RAWAJ_SYRIA_WORKER_PRODUCTION/);
   assert.match(guard, /GITHUB_EVENT_NAME === "workflow_dispatch"/);
 });
 
