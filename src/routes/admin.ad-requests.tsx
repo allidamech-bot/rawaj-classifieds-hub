@@ -22,10 +22,7 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/admin/ad-requests")({
   head: () => ({
-    meta: [
-      { title: "طلبات الإعلان | رواج" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "طلبات الإعلان | رواج" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: AdminAdvertisingRequestsPage,
 });
@@ -177,15 +174,10 @@ function AdminAdvertisingRequestsPage() {
       ) : (
         <div className="grid gap-4">
           {requests.map((request) => (
-            <article
-              key={request.support.id}
-              className="rounded-2xl bg-card p-4 hairline sm:p-5"
-            >
+            <article key={request.support.id} className="rounded-2xl bg-card p-4 hairline sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-base font-black">
-                    {kindLabel(request.details.kind, text)}
-                  </h2>
+                  <h2 className="text-base font-black">{kindLabel(request.details.kind, text)}</h2>
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     {formatDate(request.support.createdAt, language)}
                   </p>
@@ -222,8 +214,7 @@ function AdminAdvertisingRequestsPage() {
                 <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
                   {request.details.destinationUrl ? (
                     <p>
-                      <strong>{text("رابط الوجهة", "Destination")}:</strong>{" "}
-                      <span className="break-all">{request.details.destinationUrl}</span>
+                      <strong>{text("رابط الوجهة", "Destination")}:</strong> <span className="break-all">{request.details.destinationUrl}</span>
                     </p>
                   ) : null}
                   {request.details.budgetNote ? (
@@ -341,10 +332,7 @@ function actionNotice(
       "Request resolved and customer response saved.",
     );
   }
-  return text(
-    "تم إغلاق الطلب وإرسال الرد للعميل.",
-    "Request closed and customer response saved.",
-  );
+  return text("تم إغلاق الطلب وإرسال الرد للعميل.", "Request closed and customer response saved.");
 }
 
 function Info({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -368,10 +356,7 @@ function State({ title }: { title: string }) {
   );
 }
 
-function kindLabel(
-  kind: AdvertisingRequestKind,
-  text: (ar: string, en: string) => string,
-): string {
+function kindLabel(kind: AdvertisingRequestKind, text: (ar: string, en: string) => string): string {
   if (kind === "home") return text("مساحة إعلانية · الرئيسية", "Ad placement · Home");
   if (kind === "search_results") {
     return text("مساحة إعلانية · نتائج البحث", "Ad placement · Search results");
