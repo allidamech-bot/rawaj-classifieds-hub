@@ -578,13 +578,7 @@ const NOTIFICATION_EVENT_TYPES = new Set([
   "support_created",
   "report_created",
 ]);
-const NOTIFICATION_ENTITY_TYPES = new Set([
-  "users",
-  "listings",
-  "feedback",
-  "support",
-  "reports",
-]);
+const NOTIFICATION_ENTITY_TYPES = new Set(["users", "listings", "feedback", "support", "reports"]);
 
 export async function ensureAdminNotification(
   env: AdminEnv,
@@ -669,10 +663,7 @@ async function adminListNotifications(request: Request, env: AdminEnv, cors: Hea
   const entityType = clean(url.searchParams.get("entityType"), 50);
   const limit = integerParam(request, 50, 1, 200);
 
-  const whereClause =
-    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType)
-      ? "WHERE an.entity_type = ?"
-      : null;
+  const whereClause = entityType && NOTIFICATION_ENTITY_TYPES.has(entityType) ? "WHERE an.entity_type = ?" : null;
   const statement = env.DB.prepare(
     `SELECT an.id, an.event_type, an.entity_type, an.entity_id, an.title, an.body,
             an.event_key, an.created_at,
@@ -746,11 +737,7 @@ async function adminCreateNotification(request: Request, env: AdminEnv, cors: He
   return json({ data: { eventKey } }, 201, cors);
 }
 
-async function adminMarkNotificationsReadByEntity(
-  request: Request,
-  env: AdminEnv,
-  cors: Headers,
-) {
+async function adminMarkNotificationsReadByEntity(request: Request, env: AdminEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
