@@ -473,7 +473,10 @@ function PromotionRequestPage() {
                   : text("إرسال طلب الترويج", "Send promotion request")}
               </button>
               {notice ? (
-                <p role="status" className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold"
+                >
                   {notice}
                 </p>
               ) : null}
@@ -496,7 +499,10 @@ function PromotionRequestPage() {
           ) : (
             <div className="mt-3 grid gap-2">
               {customRequests.map((request) => (
-                <article key={request.id} className="rounded-xl bg-muted-surface p-3 text-xs hairline">
+                <article
+                  key={request.id}
+                  className="rounded-xl bg-muted-surface p-3 text-xs hairline"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-black text-foreground">
