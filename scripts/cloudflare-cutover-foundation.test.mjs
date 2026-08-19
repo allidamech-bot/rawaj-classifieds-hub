@@ -76,7 +76,7 @@ test("production migration and deploy commands are separated and approval-gated"
     workerPackage.scripts["deploy:production"],
     /migrations apply|migrate:production/,
   );
-  assert.match(approvalGuard, /DEPLOY_RAWAJ_WORKER_PRODUCTION/);
+  assert.match(approvalGuard, /DEPLOY_RAWAJ_SYRIA_WORKER_PRODUCTION/);
   assert.match(approvalGuard, /workflow_dispatch/);
   assert.match(approvalGuard, /expectedCommitSha !== githubSha/);
 });
