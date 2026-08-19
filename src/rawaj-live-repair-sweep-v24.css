@@ -4,8 +4,9 @@
  */
 
 /* The active listing-studio step description remained at 4.26:1 because the
- * legacy studio rule owns the nested copy. Target the actual nested description
- * with stronger final-layer specificity and use full white on the dark active tile.
+ * legacy audit layer applies opacity: 0.72 to the nested small copy. The color
+ * was already white, so the real fix is to remove that transparency on the
+ * active step only.
  */
 .rawaj-listing-studio-v4
   .rawaj-studio-steps
@@ -13,6 +14,7 @@
   .rawaj-studio-steps__copy
   small {
   color: #fff !important;
+  opacity: 1 !important;
 }
 
 /* The Boost request-count pill landed at 4.47:1, just below WCAG AA. Keep the
