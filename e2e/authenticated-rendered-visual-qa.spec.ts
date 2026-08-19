@@ -3,16 +3,20 @@ import { expectRenderedLayout } from "./layout-audit";
 
 const authenticatedRoutes = [
   { name: "account", path: "/profile" },
+  { name: "my-listings", path: "/profile/listings" },
+  { name: "add-listing", path: "/add-listing" },
   { name: "chats", path: "/chats" },
   { name: "favorites", path: "/favorites" },
   { name: "saved-searches", path: "/saved-searches" },
   { name: "activity", path: "/activity" },
   { name: "notifications", path: "/notifications" },
-  { name: "my-listings", path: "/profile/listings" },
+  { name: "verification", path: "/verification" },
+  { name: "promotion", path: "/promotion" },
+  { name: "more", path: "/more" },
 ] as const;
 
 test.describe("authenticated rendered visual QA", () => {
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
 
   test("authenticated personal surfaces stay visually and structurally coherent", async ({
     page,
@@ -26,7 +30,7 @@ test.describe("authenticated rendered visual QA", () => {
 
     for (const route of authenticatedRoutes) {
       const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      expect(response?.status() ?? 200).toBeLessThan(500);
+      expect(response?.status() ?? 200).toBe(200);
       await waitForHydration(page);
       await expect(page.locator("main")).toBeVisible();
       await page.addStyleTag({

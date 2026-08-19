@@ -14,6 +14,9 @@
 @import "./rawaj-chromatic-premium-system-v19-specificity.css";
 @import "./rawaj-chromatic-premium-system-v20-state-consistency.css";
 @import "./rawaj-account-profile-media-v21.css";
+@import "./rawaj-live-repair-sweep-v22.css";
+@import "./rawaj-live-repair-sweep-v23.css";
+@import "./rawaj-live-repair-sweep-v24.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot

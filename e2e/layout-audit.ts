@@ -12,6 +12,7 @@ interface LayoutAuditReport {
   direction: string;
   language: string;
   mainVisible: boolean;
+  overflowingElements: string[];
   unnamedActions: string[];
   unlabeledFields: string[];
   undersizedButtons: string[];
@@ -175,6 +176,19 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         );
       }
 
+      const overflowingElements = Array.from(document.querySelectorAll("body *"))
+        .filter(visible)
+        .flatMap((element) => {
+          const rect = element.getBoundingClientRect();
+          const exceedsInlineViewport = rect.left < -2 || rect.right > viewportWidth + 2;
+          if (!exceedsInlineViewport) return [];
+          const style = window.getComputedStyle(element);
+          return [
+            `${describe(element)} [left=${rect.left.toFixed(1)}, right=${rect.right.toFixed(1)}, width=${rect.width.toFixed(1)}, position=${style.position}, overflowX=${style.overflowX}]`,
+          ];
+        })
+        .slice(0, 30);
+
       const unnamedActions = Array.from(document.querySelectorAll("button, a[href]"))
         .filter(visible)
         .filter((element) => !actionName(element))
@@ -320,6 +334,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         direction: root.dir,
         language: root.lang,
         mainVisible,
+        overflowingElements,
         unnamedActions,
         unlabeledFields,
         undersizedButtons,
@@ -335,7 +350,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
   expect(report.mainVisible, `${options.label}: main must be rendered`).toBe(true);
   expect(
     Math.max(report.documentWidth, report.bodyWidth),
-    `${options.label}: document must not overflow horizontally`,
+    `${options.label}: document must not overflow horizontally. Offenders: ${report.overflowingElements.join(" | ") || "none detected"}`,
   ).toBeLessThanOrEqual(report.viewportWidth + 2);
   expect(["rtl", "ltr"], `${options.label}: root direction must be explicit`).toContain(
     report.direction,

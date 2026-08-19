@@ -1,0 +1,37 @@
+/* RAWAJ live repair sweep V24.
+ * Contrast corrections discovered by the authenticated rendered WCAG audit.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+/* The active listing-studio step description remained at 4.26:1 because the
+ * legacy audit layer applies opacity: 0.72 to the nested small copy. Scope the
+ * final correction by the resolved route (not a legacy studio-version wrapper),
+ * then remove that transparency on the active step only.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  li[data-state="active"]
+  .rawaj-studio-steps__copy
+  small {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* The Boost request-count pill landed at 4.47:1, just below WCAG AA. Keep the
+ * muted pill surface but promote its tiny count copy to the primary text tone.
+ */
+.rawaj-app-shell[data-resolved-pathname="/promotion"] span.rounded-full.bg-muted.px-3 {
+  color: var(--rawaj-text-primary, #f4f1ed) !important;
+}
+
+/* The unread activity badge on More rendered white text on a bright destructive
+ * surface at 2.97:1. Preserve its destructive/red meaning while darkening the
+ * badge enough for small white count text to clear WCAG AA.
+ */
+.rawaj-more-v2__command .rawaj-color-card > span:first-child > span {
+  background: #9f1239 !important;
+  color: #fff !important;
+}

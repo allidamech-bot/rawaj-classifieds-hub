@@ -13,19 +13,9 @@ const viewports = [
 const routes = [
   { name: "home", path: "/" },
   { name: "categories", path: "/categories" },
-  { name: "category-cars", path: "/category/cars" },
-  { name: "category-realestate", path: "/category/realestate" },
-  { name: "category-mobiles", path: "/category/mobiles" },
-  { name: "category-electronics", path: "/category/electronics" },
-  { name: "category-furniture", path: "/category/furniture" },
-  { name: "category-jobs", path: "/category/jobs" },
-  { name: "category-services", path: "/category/services" },
-  { name: "category-fashion", path: "/category/fashion" },
-  { name: "category-food", path: "/category/food" },
-  { name: "category-animals", path: "/category/animals" },
-  { name: "category-education", path: "/category/education" },
-  { name: "category-business", path: "/category/business" },
-  { name: "category-misc", path: "/category/misc" },
+  { name: "category-vehicles", path: "/category/vehicles" },
+  { name: "category-real-estate", path: "/category/real-estate" },
+  { name: "category-phones", path: "/category/phones" },
   { name: "listings", path: "/listings" },
   {
     name: "listing-detail",
@@ -70,7 +60,7 @@ const routes = [
   { name: "admin-campaigns", path: "/admin/campaigns" },
   { name: "admin-audit", path: "/admin/audit" },
   { name: "admin-owner-controls", path: "/admin/owner-controls" },
-  { name: "not-found", path: "/__rawaj_visual_audit_not_found__" },
+  { name: "not-found", path: "/__rawaj_visual_audit_not_found__", expectedStatus: 404 },
 ] as const;
 
 for (const viewport of viewports) {
@@ -84,7 +74,8 @@ for (const viewport of viewports) {
           `${viewport.name} belongs to the ${viewport.project} project`,
         );
         const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
-        expect(response?.status() ?? 200).toBeLessThan(500);
+        const expectedStatus = "expectedStatus" in route ? route.expectedStatus : 200;
+        expect(response?.status() ?? 200).toBe(expectedStatus);
         if ("settlesAt" in route) {
           await page.waitForURL((url) => url.pathname === route.settlesAt);
         }

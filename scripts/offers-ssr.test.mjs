@@ -23,5 +23,6 @@ test("offers load errors retry the route loader in place with a single-flight gu
   assert.match(offers, /actionDisabled=\{retrying\}/);
   assert.match(offers, /disabled=\{actionDisabled\}/);
   assert.match(offers, /aria-busy=\{actionDisabled\}/);
+  assert.doesNotMatch(offers, /body=\{error\.message\}/);
   assert.doesNotMatch(offers, /window\.location\.reload\(\)/);
 });

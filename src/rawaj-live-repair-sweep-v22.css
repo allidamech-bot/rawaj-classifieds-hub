@@ -1,0 +1,224 @@
+/* RAWAJ live repair sweep V22.
+ * Final, narrowly-scoped corrections found during page-by-page rendered review.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+/* Listing studio: V3 left a logical -12vw inset on the decorative ::before layer,
+ * while V5 later positioned the same pseudo-element with a physical left/width.
+ * Because both rules target the same pseudo-element, the stale opposite inset kept
+ * contributing to document width. Reset both logical/physical insets explicitly;
+ * the glow remains centered and bounded to the viewport instead of widening it.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-listing-studio-v4::before {
+  inset-inline: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  width: min(76rem, 96vw) !important;
+  max-width: 96vw !important;
+  transform: translateX(-50%) !important;
+}
+
+/* The workflow has four steps, while an older base layer reserved three explicit
+ * columns. Own the final geometry so all four steps stay inside the workspace and
+ * mobile no longer clips the later steps.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li
+  > button,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li {
+  min-width: 0 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  > li
+  > button {
+  overflow: hidden !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy {
+  overflow: hidden !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps__copy
+  strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Signed-in QA exposed two low-contrast pieces that were still inheriting the
+ * subdued V5 token: the active step description and the zero-photo preview badge.
+ * Keep the hierarchy quiet, but lift both above WCAG AA on the dark surfaces.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-steps
+  li[data-state="active"]
+  .rawaj-studio-steps__copy
+  small {
+  color: var(--studio-v5-text-soft, #c7c7cd) !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-preview__heading
+  > span {
+  border: 1px solid rgba(104, 173, 255, 0.26) !important;
+  background: rgba(104, 173, 255, 0.14) !important;
+  color: var(--studio-v5-text, #f4f1ed) !important;
+}
+
+/* Listing detail: the legacy mobile media stage was tall enough that the fixed
+ * contact dock landed directly over the title/price summary in the first viewport.
+ * Keep the gallery substantial, but use a predictable 4:3 stage on phones and
+ * compact the dock so essential listing information remains readable.
+ */
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps {
+    gap: 0.2rem !important;
+    padding: 0.28rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps
+    > li
+    > button {
+    min-height: 3.4rem !important;
+    gap: 0.16rem !important;
+    padding: 0.34rem 0.2rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps__index {
+    width: 1.6rem !important;
+    height: 1.6rem !important;
+    flex-basis: 1.6rem !important;
+  }
+
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/add-listing"],
+      [data-resolved-pathname^="/profile/listings/"]
+    )
+    .rawaj-studio-steps__copy
+    strong {
+    font-size: max(0.6rem, 9.5px) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage {
+    min-height: 0 !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2__container {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+    padding: 0.45rem 0.6rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+    min-height: 3.45rem !important;
+    gap: 0.38rem !important;
+    padding: 0.34rem !important;
+    border-radius: 1rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"]
+    :is(.rawaj-contact-dock__primary, .rawaj-contact-dock__offer, .rawaj-contact-dock__secondary) {
+    min-height: 2.65rem !important;
+    padding-inline: 0.68rem !important;
+    font-size: max(0.62rem, 10px) !important;
+  }
+}
+
+@media (max-width: 22rem) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
+    padding-inline: 0.42rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock__inner {
+    gap: 0.3rem !important;
+    padding: 0.3rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"]
+    :is(.rawaj-contact-dock__primary, .rawaj-contact-dock__offer) {
+    padding-inline: 0.52rem !important;
+    font-size: max(0.59rem, 9.5px) !important;
+  }
+}
