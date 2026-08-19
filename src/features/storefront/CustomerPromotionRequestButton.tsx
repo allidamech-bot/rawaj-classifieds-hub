@@ -7,7 +7,8 @@ import { createMySupportRequest } from "@/lib/classifieds-api";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
-type AdvertisingTarget = "home" | "search_results" | "categories" | "listing_detail" | "offers" | "campaign";
+type AdvertisingTarget =
+  "home" | "search_results" | "categories" | "listing_detail" | "offers" | "campaign";
 
 interface AdvertisingTargetOption {
   id: AdvertisingTarget;
