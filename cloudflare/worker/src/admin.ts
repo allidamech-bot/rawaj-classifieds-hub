@@ -663,7 +663,8 @@ async function adminListNotifications(request: Request, env: AdminEnv, cors: Hea
   const entityType = clean(url.searchParams.get("entityType"), 50);
   const limit = integerParam(request, 50, 1, 200);
 
-  const whereClause = entityType && NOTIFICATION_ENTITY_TYPES.has(entityType) ? "WHERE an.entity_type = ?" : null;
+  const whereClause =
+    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType) ? "WHERE an.entity_type = ?" : null;
   const statement = env.DB.prepare(
     `SELECT an.id, an.event_type, an.entity_type, an.entity_id, an.title, an.body,
             an.event_key, an.created_at,
