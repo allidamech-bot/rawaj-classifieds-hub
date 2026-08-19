@@ -1,12 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  BadgeCheck,
-  CalendarDays,
-  Megaphone,
-  MonitorSmartphone,
-  Send,
-  Store,
-} from "lucide-react";
+import { BadgeCheck, CalendarDays, Megaphone, MonitorSmartphone, Send, Store } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -312,10 +305,7 @@ function AdvertisePage() {
           <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
             <StepTitle
               icon={<Store />}
-              title={text(
-                "اربط الطلب بإعلانك إن رغبت",
-                "Link one of your listings if useful",
-              )}
+              title={text("اربط الطلب بإعلانك إن رغبت", "Link one of your listings if useful")}
             />
             <label className="mt-3 block">
               <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
@@ -361,14 +351,10 @@ function AdvertisePage() {
               <Field label={text("الأجهزة", "Devices")}>
                 <select
                   value={device}
-                  onChange={(event) =>
-                    setDevice(event.target.value as AdvertisingRequestDevice)
-                  }
+                  onChange={(event) => setDevice(event.target.value as AdvertisingRequestDevice)}
                   className="input min-h-12 w-full"
                 >
-                  <option value="both">
-                    {text("الجوال وسطح المكتب", "Mobile and desktop")}
-                  </option>
+                  <option value="both">{text("الجوال وسطح المكتب", "Mobile and desktop")}</option>
                   <option value="mobile">{text("الجوال فقط", "Mobile only")}</option>
                   <option value="desktop">{text("سطح المكتب فقط", "Desktop only")}</option>
                 </select>
@@ -392,12 +378,7 @@ function AdvertisePage() {
                   className="input min-h-12 w-full"
                 />
               </Field>
-              <Field
-                label={text(
-                  "الميزانية التقريبية — اختياري",
-                  "Approximate budget — optional",
-                )}
-              >
+              <Field label={text("الميزانية التقريبية — اختياري", "Approximate budget — optional")}>
                 <input
                   value={budgetNote}
                   onChange={(event) => setBudgetNote(event.target.value)}
@@ -410,10 +391,7 @@ function AdvertisePage() {
                 />
               </Field>
               <Field
-                label={text(
-                  "ملاحظات أو هدف الحملة — اختياري",
-                  "Notes or campaign goal — optional",
-                )}
+                label={text("ملاحظات أو هدف الحملة — اختياري", "Notes or campaign goal — optional")}
                 wide
               >
                 <textarea
@@ -517,10 +495,7 @@ function RequestHistory({
       ) : requests.length ? (
         <div className="mt-3 grid gap-3">
           {requests.map((request) => (
-            <article
-              key={request.support.id}
-              className="rounded-xl bg-muted-surface p-3 hairline"
-            >
+            <article key={request.support.id} className="rounded-xl bg-muted-surface p-3 hairline">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <strong className="text-xs">{kindLabel(request.details.kind, text)}</strong>
                 <Status status={request.support.status} text={text} />
@@ -593,10 +568,7 @@ function StatePanel({
   );
 }
 
-function kindLabel(
-  kind: AdvertisingRequestKind,
-  text: (ar: string, en: string) => string,
-): string {
+function kindLabel(kind: AdvertisingRequestKind, text: (ar: string, en: string) => string): string {
   if (kind === "home") return text("مساحة الرئيسية", "Home placement");
   if (kind === "search_results") return text("مساحة نتائج البحث", "Search placement");
   if (kind === "categories") return text("مساحة الأقسام", "Categories placement");
