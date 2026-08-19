@@ -25,7 +25,9 @@ async function signIn(page: Page, returnTo: string): Promise<void> {
 test.describe("search + customer promotion repair", () => {
   test.setTimeout(120_000);
 
-  test("home search input stays transparent inside the dark RAWAJ search shell", async ({ page }) => {
+  test("home search input stays transparent inside the dark RAWAJ search shell", async ({
+    page,
+  }) => {
     const response = await page.goto("/", { waitUntil: "domcontentloaded" });
     expect(response?.status() ?? 200).toBe(200);
     await waitForHydration(page);
