@@ -1,0 +1,619 @@
+/* RAWAJ Advertising Request V25
+ * Customer ad/campaign request surfaces + final native search-field normalization.
+ * Shared byte-for-byte between Syria and Saudi.
+ */
+
+/* iOS/WebKit search controls can paint a pale native rectangle inside the dark
+ * RAWAJ search shell. Own the actual input and remove all native search chrome. */
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-header-search
+) input[type="search"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color-scheme: dark !important;
+}
+
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-header-search
+) input[type="search"]::-webkit-search-decoration,
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-header-search
+) input[type="search"]::-webkit-search-cancel-button,
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-header-search
+) input[type="search"]::-webkit-search-results-button,
+.rawaj-app-shell :is(
+  .rawaj-search-overlay__field,
+  .rawaj-signature-search,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-header-search
+) input[type="search"]::-webkit-search-results-decoration {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Empty/occupied ad slots expose a restrained monetization entry point. */
+.rawaj-ad-placement-request {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.45rem;
+  border: 1px dashed rgba(216, 174, 95, 0.24);
+  border-radius: 1rem;
+  padding: 0.65rem 0.8rem;
+  color: #d8d2cc;
+  background: linear-gradient(145deg, rgba(18, 23, 32, 0.92), rgba(10, 15, 22, 0.96));
+}
+
+.rawaj-ad-placement-request[data-empty="true"] {
+  min-height: 4.75rem;
+  margin-block: 0.5rem;
+}
+
+.rawaj-ad-placement-request__copy {
+  min-width: 0;
+}
+
+.rawaj-ad-placement-request__copy strong {
+  display: block;
+  color: #f7f3ed;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.rawaj-ad-placement-request__copy small {
+  display: block;
+  margin-top: 0.12rem;
+  color: #8e969f;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.rawaj-ad-placement-request > button,
+.rawaj-ad-request-launcher {
+  display: inline-flex;
+  min-height: 2.55rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid rgba(235, 189, 88, 0.42);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  color: #ffe1a0;
+  background: linear-gradient(145deg, rgba(92, 62, 17, 0.96), rgba(47, 35, 17, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 244, 209, 0.08), 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.rawaj-ad-placement-request > button svg,
+.rawaj-ad-request-launcher svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.rawaj-ad-request-launcher {
+  position: fixed;
+  z-index: 61;
+  inset-inline-end: 0.75rem;
+  bottom: calc(var(--rawaj-mobile-obstruction, 0px) + 5.45rem);
+  min-height: 2.9rem;
+  border-radius: 999px;
+  padding-inline: 0.9rem;
+}
+
+.rawaj-ad-request-backdrop {
+  position: fixed;
+  z-index: 95;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(2, 5, 9, 0.76);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.rawaj-ad-request-dialog {
+  width: 100%;
+  max-height: min(92dvh, 900px);
+  overflow-y: auto;
+  border: 1px solid rgba(216, 174, 95, 0.16);
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding: 1rem;
+  color: #f7f3ed;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(219, 73, 179, 0.08), transparent 31%),
+    radial-gradient(circle at 8% 5%, rgba(73, 133, 244, 0.08), transparent 32%),
+    linear-gradient(155deg, #171c26, #0d121a 72%);
+  box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.42);
+}
+
+.rawaj-ad-request-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(216, 174, 95, 0.11);
+}
+
+.rawaj-ad-request-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #efc76b;
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+
+.rawaj-ad-request-kicker svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.rawaj-ad-request-dialog__header h2 {
+  margin-top: 0.35rem;
+  color: #fffaf0;
+  font-size: clamp(1.05rem, 4vw, 1.35rem);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.rawaj-ad-request-dialog__header p {
+  max-width: 62ch;
+  margin-top: 0.28rem;
+  color: #a9b0b8;
+  font-size: 0.7rem;
+  line-height: 1.75;
+}
+
+.rawaj-ad-request-close {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(216, 174, 95, 0.12);
+  border-radius: 999px;
+  color: #d8d2cc;
+  background: #121821;
+}
+
+.rawaj-ad-request-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-ad-request-form {
+  display: grid;
+  gap: 0.9rem;
+  padding-top: 1rem;
+}
+
+.rawaj-ad-request-form :is(label, fieldset) {
+  min-width: 0;
+}
+
+.rawaj-ad-request-form :is(label > span, legend) {
+  display: block;
+  margin-bottom: 0.38rem;
+  color: #d8d2cc;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.rawaj-ad-request-form :is(input, select, textarea) {
+  width: 100%;
+  min-height: 2.8rem;
+  border: 1px solid rgba(216, 174, 95, 0.13) !important;
+  border-radius: 0.8rem;
+  padding: 0.65rem 0.75rem;
+  color: #f7f3ed !important;
+  background: #0e141d !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+  font-size: 0.73rem;
+}
+
+.rawaj-ad-request-form textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.rawaj-ad-request-form :is(input, select, textarea):focus {
+  outline: 2px solid rgba(216, 174, 95, 0.28);
+  outline-offset: 1px;
+}
+
+.rawaj-ad-request-kind-grid,
+.rawaj-ad-request-duration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rawaj-ad-request-kind-grid > button,
+.rawaj-ad-request-duration-grid > button {
+  min-width: 0;
+  min-height: 3.25rem;
+  border: 1px solid rgba(216, 174, 95, 0.1);
+  border-radius: 0.9rem;
+  padding: 0.65rem;
+  color: #bbb7b3;
+  background: #111720;
+  text-align: start;
+}
+
+.rawaj-ad-request-kind-grid > button[data-selected="true"],
+.rawaj-ad-request-duration-grid > button[data-selected="true"] {
+  border-color: rgba(235, 189, 88, 0.5);
+  color: #ffe1a0;
+  background: linear-gradient(145deg, rgba(84, 57, 18, 0.82), rgba(39, 31, 20, 0.96));
+}
+
+.rawaj-ad-request-kind-grid svg,
+.rawaj-ad-request-duration-grid svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.rawaj-ad-request-kind-grid strong,
+.rawaj-ad-request-kind-grid small {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.rawaj-ad-request-kind-grid strong {
+  font-size: 0.72rem;
+}
+
+.rawaj-ad-request-kind-grid small {
+  color: #8e969f;
+  font-size: 0.59rem;
+  line-height: 1.45;
+}
+
+.rawaj-ad-request-duration-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rawaj-ad-request-duration-grid > button {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.rawaj-ad-request-two-col {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rawaj-ad-request-primary {
+  display: inline-flex;
+  min-height: 2.9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(242, 198, 95, 0.55);
+  border-radius: 0.85rem;
+  padding: 0.65rem 1rem;
+  color: #1b1408 !important;
+  background: linear-gradient(135deg, #f4cf78, #d9a847) !important;
+  box-shadow: 0 10px 24px rgba(185, 126, 29, 0.18);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.rawaj-ad-request-primary:disabled {
+  opacity: 0.6;
+}
+
+.rawaj-ad-request-primary svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-ad-request-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  border: 1px solid rgba(234, 113, 104, 0.18);
+  border-radius: 0.8rem;
+  padding: 0.65rem 0.75rem;
+  color: #f2b2ad;
+  background: rgba(91, 32, 29, 0.18);
+  font-size: 0.68rem;
+  line-height: 1.6;
+}
+
+.rawaj-ad-request-notice[data-success="true"] {
+  border-color: rgba(112, 213, 177, 0.2);
+  color: #a9e3cf;
+  background: rgba(25, 82, 62, 0.18);
+}
+
+.rawaj-ad-request-notice svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.rawaj-ad-request-history {
+  display: grid;
+  gap: 0.4rem;
+  border-top: 1px solid rgba(216, 174, 95, 0.1);
+  padding-top: 0.8rem;
+}
+
+.rawaj-ad-request-history h3 {
+  color: #d8d2cc;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.rawaj-ad-request-history article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.6rem;
+  align-items: center;
+  border: 1px solid rgba(216, 174, 95, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  background: #10161f;
+}
+
+.rawaj-ad-request-history article strong {
+  font-size: 0.68rem;
+}
+
+.rawaj-ad-request-history article span {
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  color: #d8d2cc;
+  background: #1b222c;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.rawaj-ad-request-history article small {
+  grid-column: 1 / -1;
+  color: #7f8892;
+  font-size: 0.57rem;
+}
+
+.rawaj-ad-request-signin {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  padding: 2rem 0.5rem 1rem;
+  text-align: center;
+}
+
+.rawaj-ad-request-signin > svg {
+  width: 2rem;
+  height: 2rem;
+  color: #efc76b;
+}
+
+.rawaj-ad-request-signin h3 {
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.rawaj-ad-request-signin p {
+  max-width: 36rem;
+  color: #969fa8;
+  font-size: 0.68rem;
+  line-height: 1.7;
+}
+
+.rawaj-ad-request-signin .rawaj-ad-request-primary {
+  margin-top: 0.4rem;
+  min-width: 8rem;
+}
+
+/* Admin inbox is intentionally appended to the existing promotions workspace. */
+.rawaj-admin-ad-request-inbox {
+  width: min(100% - 2rem, 86rem);
+  margin: 1rem auto 2rem;
+  border: 1px solid rgba(216, 174, 95, 0.13);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  color: #f7f3ed;
+  background: linear-gradient(150deg, #171c25, #10161f);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+}
+
+.rawaj-admin-ad-request-inbox__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.rawaj-admin-ad-request-inbox__heading > div:first-child > span {
+  color: #efc76b;
+  font-size: 0.62rem;
+  font-weight: 850;
+}
+
+.rawaj-admin-ad-request-inbox__heading h2 {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.rawaj-admin-ad-request-inbox__heading p {
+  max-width: 55rem;
+  margin-top: 0.25rem;
+  color: #969fa8;
+  font-size: 0.68rem;
+  line-height: 1.65;
+}
+
+.rawaj-admin-ad-request-inbox__links,
+.rawaj-admin-ad-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.rawaj-admin-ad-request-inbox__links a,
+.rawaj-admin-ad-request-actions button {
+  min-height: 2.5rem;
+  border: 1px solid rgba(216, 174, 95, 0.14);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  color: #ddd8d3;
+  background: #111821;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.rawaj-admin-ad-request-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.rawaj-admin-ad-request-list > article {
+  border: 1px solid rgba(216, 174, 95, 0.09);
+  border-radius: 0.9rem;
+  padding: 0.8rem;
+  background: #0e141d;
+}
+
+.rawaj-admin-ad-request-list > article > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.rawaj-admin-ad-request-list strong {
+  font-size: 0.74rem;
+}
+
+.rawaj-admin-ad-request-list span[data-status] {
+  border-radius: 999px;
+  padding: 0.22rem 0.48rem;
+  color: #c8c4bf;
+  background: #1b222c;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.rawaj-admin-ad-request-list pre {
+  margin-top: 0.55rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  color: #a8b0b8;
+  font: inherit;
+  font-size: 0.64rem;
+  line-height: 1.6;
+}
+
+.rawaj-admin-ad-request-list small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #7f8892;
+  font-size: 0.58rem;
+}
+
+.rawaj-admin-ad-request-actions {
+  margin-top: 0.65rem;
+}
+
+.rawaj-admin-ad-request-actions button:last-child {
+  border-color: rgba(112, 213, 177, 0.2);
+  color: #a9e3cf;
+  background: rgba(25, 82, 62, 0.18);
+}
+
+.rawaj-admin-ad-request-error,
+.rawaj-admin-ad-request-empty {
+  margin-top: 0.8rem;
+  border-radius: 0.8rem;
+  padding: 0.7rem;
+  color: #b9b5b0;
+  background: #10161f;
+  font-size: 0.67rem;
+}
+
+.rawaj-admin-ad-request-error {
+  color: #f2b2ad;
+}
+
+@media (min-width: 40rem) {
+  .rawaj-ad-request-backdrop {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .rawaj-ad-request-dialog {
+    max-width: 46rem;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  .rawaj-ad-request-two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 39.99rem) {
+  .rawaj-ad-placement-request {
+    align-items: stretch;
+  }
+
+  .rawaj-ad-placement-request__copy {
+    align-self: center;
+  }
+
+  .rawaj-ad-placement-request > button {
+    min-width: 5.8rem;
+  }
+
+  .rawaj-ad-request-launcher {
+    inset-inline-end: 0.55rem;
+    bottom: calc(var(--rawaj-mobile-obstruction, 0px) + 5.15rem);
+  }
+}
