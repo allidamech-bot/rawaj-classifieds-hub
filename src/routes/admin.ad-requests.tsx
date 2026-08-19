@@ -214,13 +214,13 @@ function AdminAdvertisingRequestsPage() {
                 <div className="mt-4 rounded-xl bg-muted-surface p-3 text-xs leading-6 hairline">
                   {request.details.destinationUrl ? (
                     <p>
-                      <strong>{text("رابط الوجهة", "Destination")}:</strong> <span className="break-all">{request.details.destinationUrl}</span>
+                      <strong>{text("رابط الوجهة", "Destination")}:</strong>{" "}
+                      <span className="break-all">{request.details.destinationUrl}</span>
                     </p>
                   ) : null}
                   {request.details.budgetNote ? (
                     <p>
-                      <strong>{text("الميزانية", "Budget")}:</strong>{" "}
-                      {request.details.budgetNote}
+                      <strong>{text("الميزانية", "Budget")}:</strong> {request.details.budgetNote}
                     </p>
                   ) : null}
                   {request.details.customerNote ? (
