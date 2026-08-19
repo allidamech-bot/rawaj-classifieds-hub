@@ -5,10 +5,10 @@ import test from "node:test";
 const css = await readFile(new URL("../src/rawaj-live-repair-sweep-v24.css", import.meta.url), "utf8");
 const stability = await readFile(new URL("../src/stability-accessibility-fixes.css", import.meta.url), "utf8");
 
-test("active listing-studio step description uses a high-contrast final tone", () => {
+test("active listing-studio step description uses an opaque high-contrast final tone", () => {
   assert.match(
     css,
-    /rawaj-studio-steps[\s\S]*?li\[data-state="active"\][\s\S]*?rawaj-studio-steps__copy[\s\S]*?small[\s\S]*?color:\s*#fff\s*!important/,
+    /rawaj-studio-steps[\s\S]*?li\[data-state="active"\][\s\S]*?rawaj-studio-steps__copy[\s\S]*?small[\s\S]*?color:\s*#fff\s*!important[\s\S]*?opacity:\s*1\s*!important/,
   );
 });
 
