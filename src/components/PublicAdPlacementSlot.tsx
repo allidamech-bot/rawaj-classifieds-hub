@@ -1,3 +1,4 @@
+import { Megaphone } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
@@ -45,6 +46,11 @@ function uniquePlacements(placements: PublicAdPlacement[]): PublicAdPlacement[] 
     seen.add(identity);
     return true;
   });
+}
+
+function requestablePlacement(page: AdPlacementPage): "home" | "search_results" | "categories" | null {
+  if (page === "home" || page === "search_results" || page === "categories") return page;
+  return null;
 }
 
 export function PublicAdPlacementSlot({ placementPage }: Props) {
@@ -178,7 +184,9 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       .slice(0, maximum);
   }, [device, failedImageUrls, loaded, placementPage]);
 
-  if (!placementPage || !device || visiblePlacements.length === 0) return null;
+  if (!placementPage || !device) return null;
+  const loadedCurrentPlacement = loaded?.page === placementPage && loaded.device === device;
+  if (!loadedCurrentPlacement) return null;
 
   function markImageFailed(imageUrl: string) {
     setFailedImageUrls((current) => {
@@ -187,6 +195,43 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       next.add(imageUrl);
       return next;
     });
+  }
+
+  if (visiblePlacements.length === 0) {
+    const requestKind = requestablePlacement(placementPage);
+    if (!requestKind) return null;
+    return (
+      <aside
+        className="rawaj-ad-placement container-wide"
+        aria-label={text("مساحة إعلانية متاحة", "Advertising space available")}
+        data-placement-page={placementPage}
+        data-placement-device={device}
+        data-placement-loading="false"
+        data-placement-count="0"
+      >
+        <a
+          href={`/advertise?placement=${encodeURIComponent(requestKind)}`}
+          className="rawaj-ad-placement__request flex min-h-20 items-center justify-between gap-3 rounded-[1.25rem] border px-4 py-3 sm:min-h-24 sm:px-5"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-400/10 text-amber-400">
+              <Megaphone className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <strong className="block text-xs font-black sm:text-sm">
+                {text("مساحة إعلانية متاحة", "Advertising space available")}
+              </strong>
+              <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground sm:text-xs">
+                {text("أعلن هنا أو اطلب حملة من فريق رواج", "Advertise here or request a RAWAJ campaign")}
+              </span>
+            </span>
+          </span>
+          <span className="shrink-0 rounded-xl bg-amber-500 px-3 py-2 text-[10px] font-black text-[#20170a] sm:text-xs">
+            {text("اطلب الآن", "Request")}
+          </span>
+        </a>
+      </aside>
+    );
   }
 
   return (
