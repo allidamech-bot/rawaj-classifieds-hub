@@ -14,6 +14,9 @@ const [
   personalCss,
   storefrontCss,
   ownerStoreCss,
+  promotionRequest,
+  v25Css,
+  stabilityCss,
   packageJson,
 ] = await Promise.all([
   readFile(new URL("../src/routes/profile.tsx", import.meta.url), "utf8"),
@@ -27,6 +30,9 @@ const [
   readFile(new URL("../src/personal-space-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../src/seller-storefront-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/storefront/CustomerPromotionRequestButton.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-live-repair-sweep-v25.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/stability-accessibility-fixes.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
 ]);
 
@@ -47,6 +53,40 @@ test("owner and public storefronts receive distinct premium identity scopes", ()
   assert.match(storefrontCss, /--store-v3-coral/);
   assert.match(ownerStoreCss, /\.rawaj-owner-workspace-summary__completeness/);
   assert.match(ownerStoreCss, /\.rawaj-owner-listings-toolbar__advanced/);
+});
+
+test("customer paid promotion intake is exposed beside Boost for approved store listings", () => {
+  assert.match(ownerStore, /CustomerPromotionRequestButton/);
+  assert.match(
+    ownerStore,
+    /listing\.status === "approved"[\s\S]*?<CustomerPromotionRequestButton listing=\{listing\}/,
+  );
+  assert.match(promotionRequest, /createMySupportRequest/);
+  assert.match(promotionRequest, /relatedListingId:\s*listing\.id/);
+  assert.match(promotionRequest, /createPortal\(/);
+  for (const target of [
+    "home",
+    "search_results",
+    "categories",
+    "listing_detail",
+    "offers",
+    "campaign",
+  ]) {
+    assert.match(promotionRequest, new RegExp(`id: "${target}"`));
+  }
+  assert.doesNotMatch(
+    promotionRequest,
+    /ownerSaveAdPlacement|ownerSaveCampaign|createSearchBoostRequest/,
+  );
+});
+
+test("native search-field light surfaces are suppressed by the final dark repair layer", () => {
+  assert.match(v25Css, /input\[type="search"\]/);
+  assert.match(v25Css, /appearance:\s*none !important/);
+  assert.match(v25Css, /background:\s*transparent !important/);
+  assert.match(v25Css, /:-webkit-autofill/);
+  assert.match(v25Css, /::-webkit-search-cancel-button/);
+  assert.match(stabilityCss, /rawaj-live-repair-sweep-v25\.css/);
 });
 
 test("account collections use structural borders, clear actions, focus states, and restrained motion", () => {
