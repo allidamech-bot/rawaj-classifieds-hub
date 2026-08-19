@@ -1,3 +1,4 @@
+import { Megaphone } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { AdPlacementPage } from "@/lib/api/ad-placements";
@@ -8,6 +9,7 @@ import {
   type AdPlacementDevice,
   type PublicAdPlacement,
 } from "@/lib/api/public-ad-placements";
+import { openAdvertisingRequest } from "@/lib/advertising-request";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface Props {
@@ -178,7 +180,9 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       .slice(0, maximum);
   }, [device, failedImageUrls, loaded, placementPage]);
 
-  if (!placementPage || !device || visiblePlacements.length === 0) return null;
+  if (!placementPage || !device) return null;
+  const loadedCurrentPlacement = loaded?.page === placementPage && loaded.device === device;
+  if (!loadedCurrentPlacement) return null;
 
   function markImageFailed(imageUrl: string) {
     setFailedImageUrls((current) => {
@@ -189,6 +193,28 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
     });
   }
 
+  const requestControl = (
+    <div className="rawaj-ad-placement-request" data-empty={visiblePlacements.length === 0}>
+      <span className="rawaj-ad-placement-request__copy">
+        <strong>{text("مساحة إعلانية على رواج", "Advertise on RAWAJ")}</strong>
+        <small>
+          {text(
+            "اطلب هذه المساحة أو حملة كاملة، والإدارة تراجع المدة والتكلفة قبل التفعيل.",
+            "Request this placement or a full campaign; the team reviews duration and price before activation.",
+          )}
+        </small>
+      </span>
+      <button
+        type="button"
+        onClick={() => openAdvertisingRequest({ placementPage })}
+        aria-label={text("طلب إعلان في هذه المساحة", "Request advertising in this placement")}
+      >
+        <Megaphone aria-hidden="true" />
+        {text("أعلن هنا", "Advertise here")}
+      </button>
+    </div>
+  );
+
   return (
     <aside
       className="rawaj-ad-placement container-wide"
@@ -198,43 +224,46 @@ export function PublicAdPlacementSlot({ placementPage }: Props) {
       data-placement-loading="false"
       data-placement-count={visiblePlacements.length}
     >
-      <div className="rawaj-ad-placement__grid" data-count={visiblePlacements.length}>
-        {visiblePlacements.map((placement, index) => (
-          <a
-            key={`${placement.id}:${placement.imageUrl}:${device}`}
-            href={placement.destinationUrl}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className={AD_PLACEMENT_FRAME_CLASS}
-          >
-            <img
-              src={placement.imageUrl}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              draggable={false}
-              className="rawaj-ad-placement__backdrop"
-            />
-            <img
-              src={placement.imageUrl}
-              alt={text("إعلان ترويجي", "Promotional advertisement")}
-              loading={placementPage === "home" && index === 0 ? "eager" : "lazy"}
-              fetchPriority={placementPage === "home" && index === 0 ? "high" : "auto"}
-              decoding="async"
-              width={1600}
-              height={700}
-              draggable={false}
-              onError={() => markImageFailed(placement.imageUrl)}
-              className="rawaj-ad-placement__image"
-            />
-            <span className="rawaj-ad-placement__scrim" aria-hidden="true" />
-            <span className="rawaj-ad-placement__label absolute start-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
-              {text("إعلان", "Ad")}
-            </span>
-          </a>
-        ))}
-      </div>
+      {visiblePlacements.length ? (
+        <div className="rawaj-ad-placement__grid" data-count={visiblePlacements.length}>
+          {visiblePlacements.map((placement, index) => (
+            <a
+              key={`${placement.id}:${placement.imageUrl}:${device}`}
+              href={placement.destinationUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className={AD_PLACEMENT_FRAME_CLASS}
+            >
+              <img
+                src={placement.imageUrl}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                className="rawaj-ad-placement__backdrop"
+              />
+              <img
+                src={placement.imageUrl}
+                alt={text("إعلان ترويجي", "Promotional advertisement")}
+                loading={placementPage === "home" && index === 0 ? "eager" : "lazy"}
+                fetchPriority={placementPage === "home" && index === 0 ? "high" : "auto"}
+                decoding="async"
+                width={1600}
+                height={700}
+                draggable={false}
+                onError={() => markImageFailed(placement.imageUrl)}
+                className="rawaj-ad-placement__image"
+              />
+              <span className="rawaj-ad-placement__scrim" aria-hidden="true" />
+              <span className="rawaj-ad-placement__label absolute start-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold backdrop-blur-sm">
+                {text("إعلان", "Ad")}
+              </span>
+            </a>
+          ))}
+        </div>
+      ) : null}
+      {requestControl}
     </aside>
   );
 }
