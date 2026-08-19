@@ -143,10 +143,7 @@ function PromotionsPage() {
                 "تم اعتماد Search Boost وبدأت المدة المشتراة.",
                 "Search Boost approved; the purchased duration has started.",
               )
-            : text(
-                "تم رفض الطلب من دون تفعيل Boost.",
-                "Request rejected without activating Boost.",
-              )
+            : text("تم رفض الطلب من دون تفعيل Boost.", "Request rejected without activating Boost.")
           : status === "approved"
             ? text("تم اعتماد طلب الترويج.", "Promotion request approved.")
             : text("تم رفض طلب الترويج.", "Promotion request rejected."),
@@ -172,10 +169,7 @@ function PromotionsPage() {
           )}
         </p>
         {actionMessage ? (
-          <p
-            role="status"
-            className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold"
-          >
+          <p role="status" className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold">
             {actionMessage}
           </p>
         ) : null}
@@ -352,10 +346,7 @@ function PromotionsPage() {
 
                 <label className="mt-4 block">
                   <span className="text-xs font-bold text-muted-foreground">
-                    {text(
-                      "ملاحظة الإدارة / سبب الرفض",
-                      "Admin note / rejection reason",
-                    )}
+                    {text("ملاحظة الإدارة / سبب الرفض", "Admin note / rejection reason")}
                   </span>
                   <textarea
                     value={notes[request.id] ?? ""}
@@ -442,13 +433,7 @@ function InfoBlock({
   );
 }
 
-function SecureOpenLink({
-  url,
-  text,
-}: {
-  url: string;
-  text: (ar: string, en: string) => string;
-}) {
+function SecureOpenLink({ url, text }: { url: string; text: (ar: string, en: string) => string }) {
   return (
     <a
       href={url}
