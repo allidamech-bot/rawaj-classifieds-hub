@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, Megaphone, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { createMySupportRequest } from "@/lib/classifieds-api";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
@@ -155,6 +156,147 @@ export function CustomerPromotionRequestButton({
     }
   }
 
+  const dialog =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="rawaj-customer-promotion-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) close();
+            }}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`promotion-request-${listing.id}`}
+              className="rawaj-customer-promotion-dialog"
+            >
+              <header className="rawaj-customer-promotion-dialog__header">
+                <span className="rawaj-customer-promotion-dialog__icon" aria-hidden="true">
+                  <Megaphone />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p>{text("إعلانات رواج", "RAWAJ Ads")}</p>
+                  <h3 id={`promotion-request-${listing.id}`}>
+                    {text("اطلب مساحة إعلانية أو حملة", "Request an ad placement or campaign")}
+                  </h3>
+                  <span>
+                    {text(
+                      "أرسل طلبك أولاً. الإدارة تتواصل معك لتأكيد السعر والتصميم قبل أي تفعيل.",
+                      "Send the request first. The team will contact you to confirm price and creative before anything is activated.",
+                    )}
+                  </span>
+                </div>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={close}
+                  disabled={busy}
+                  className="rawaj-customer-promotion-dialog__close"
+                  aria-label={text("إغلاق", "Close")}
+                >
+                  <X />
+                </button>
+              </header>
+
+              {submitted ? (
+                <div className="rawaj-customer-promotion-success" role="status">
+                  <CheckCircle2 aria-hidden="true" />
+                  <h4>{text("تم إرسال طلب الترويج", "Promotion request sent")}</h4>
+                  <p>
+                    {text(
+                      "وصل الطلب للإدارة مرتبطاً بهذا الإعلان. تستطيع متابعة الرد من صفحة الدعم.",
+                      "The request reached the team and is linked to this listing. You can follow the response from Support.",
+                    )}
+                  </p>
+                  <div>
+                    <Link to="/support">{text("متابعة الطلب", "Track request")}</Link>
+                    <button type="button" onClick={close}>
+                      {text("تم", "Done")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rawaj-customer-promotion-dialog__body">
+                  <div className="rawaj-customer-promotion-listing">
+                    <span>{text("الإعلان المرتبط", "Linked listing")}</span>
+                    <strong>{listing.title}</strong>
+                  </div>
+
+                  <fieldset>
+                    <legend>{text("أين تريد الترويج؟", "Where do you want to advertise?")}</legend>
+                    <div className="rawaj-customer-promotion-targets">
+                      {TARGETS.map((option) => {
+                        const selected = option.id === target;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            data-selected={selected}
+                            onClick={() => setTarget(option.id)}
+                          >
+                            <strong>{text(option.ar, option.en)}</strong>
+                            <span>{text(option.hintAr, option.hintEn)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  <label className="rawaj-customer-promotion-field">
+                    <span>{text("المدة المطلوبة", "Requested duration")}</span>
+                    <select value={days} onChange={(event) => setDays(Number(event.target.value))}>
+                      {DURATION_OPTIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {value} {text("يوم", "days")}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="rawaj-customer-promotion-field">
+                    <span>{text("تفاصيل إضافية", "Additional details")}</span>
+                    <textarea
+                      value={brief}
+                      onChange={(event) => setBrief(event.target.value)}
+                      maxLength={600}
+                      rows={4}
+                      placeholder={text(
+                        "مثلاً: أريد استهداف قسم السيارات، أو لدي تصميم جاهز، أو أريد من رواج تجهيز حملة كاملة...",
+                        "For example: target the cars category, I already have a creative, or I want RAWAJ to prepare the full campaign...",
+                      )}
+                    />
+                    <small>{brief.length}/600</small>
+                  </label>
+
+                  {error ? (
+                    <p className="rawaj-customer-promotion-error" role="alert">
+                      {error}
+                    </p>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={() => void submit()}
+                    disabled={busy}
+                    className="rawaj-customer-promotion-submit"
+                  >
+                    <Megaphone aria-hidden="true" />
+                    {busy
+                      ? text("جارٍ إرسال الطلب…", "Sending request…")
+                      : text("إرسال طلب الترويج", "Send promotion request")}
+                  </button>
+                </div>
+              )}
+            </section>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <button
@@ -171,139 +313,7 @@ export function CustomerPromotionRequestButton({
         <Megaphone aria-hidden="true" />
         <span>{text("ترويج", "Promote")}</span>
       </button>
-
-      {open ? (
-        <div
-          className="rawaj-customer-promotion-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) close();
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`promotion-request-${listing.id}`}
-            className="rawaj-customer-promotion-dialog"
-          >
-            <header className="rawaj-customer-promotion-dialog__header">
-              <span className="rawaj-customer-promotion-dialog__icon" aria-hidden="true">
-                <Megaphone />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p>{text("إعلانات رواج", "RAWAJ Ads")}</p>
-                <h3 id={`promotion-request-${listing.id}`}>
-                  {text("اطلب مساحة إعلانية أو حملة", "Request an ad placement or campaign")}
-                </h3>
-                <span>
-                  {text(
-                    "أرسل طلبك أولاً. الإدارة تتواصل معك لتأكيد السعر والتصميم قبل أي تفعيل.",
-                    "Send the request first. The team will contact you to confirm price and creative before anything is activated.",
-                  )}
-                </span>
-              </div>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                onClick={close}
-                disabled={busy}
-                className="rawaj-customer-promotion-dialog__close"
-                aria-label={text("إغلاق", "Close")}
-              >
-                <X />
-              </button>
-            </header>
-
-            {submitted ? (
-              <div className="rawaj-customer-promotion-success" role="status">
-                <CheckCircle2 aria-hidden="true" />
-                <h4>{text("تم إرسال طلب الترويج", "Promotion request sent")}</h4>
-                <p>
-                  {text(
-                    "وصل الطلب للإدارة مرتبطاً بهذا الإعلان. تستطيع متابعة الرد من صفحة الدعم.",
-                    "The request reached the team and is linked to this listing. You can follow the response from Support.",
-                  )}
-                </p>
-                <div>
-                  <Link to="/support">{text("متابعة الطلب", "Track request")}</Link>
-                  <button type="button" onClick={close}>
-                    {text("تم", "Done")}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="rawaj-customer-promotion-dialog__body">
-                <div className="rawaj-customer-promotion-listing">
-                  <span>{text("الإعلان المرتبط", "Linked listing")}</span>
-                  <strong>{listing.title}</strong>
-                </div>
-
-                <fieldset>
-                  <legend>{text("أين تريد الترويج؟", "Where do you want to advertise?")}</legend>
-                  <div className="rawaj-customer-promotion-targets">
-                    {TARGETS.map((option) => {
-                      const selected = option.id === target;
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          data-selected={selected}
-                          onClick={() => setTarget(option.id)}
-                        >
-                          <strong>{text(option.ar, option.en)}</strong>
-                          <span>{text(option.hintAr, option.hintEn)}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-
-                <label className="rawaj-customer-promotion-field">
-                  <span>{text("المدة المطلوبة", "Requested duration")}</span>
-                  <select value={days} onChange={(event) => setDays(Number(event.target.value))}>
-                    {DURATION_OPTIONS.map((value) => (
-                      <option key={value} value={value}>
-                        {value} {text("يوم", "days")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="rawaj-customer-promotion-field">
-                  <span>{text("تفاصيل إضافية", "Additional details")}</span>
-                  <textarea
-                    value={brief}
-                    onChange={(event) => setBrief(event.target.value)}
-                    maxLength={600}
-                    rows={4}
-                    placeholder={text(
-                      "مثلاً: أريد استهداف قسم السيارات، أو لدي تصميم جاهز، أو أريد من رواج تجهيز حملة كاملة...",
-                      "For example: target the cars category, I already have a creative, or I want RAWAJ to prepare the full campaign...",
-                    )}
-                  />
-                  <small>{brief.length}/600</small>
-                </label>
-
-                {error ? <p className="rawaj-customer-promotion-error" role="alert">{error}</p> : null}
-
-                <button
-                  type="button"
-                  onClick={() => void submit()}
-                  disabled={busy}
-                  className="rawaj-customer-promotion-submit"
-                >
-                  <Megaphone aria-hidden="true" />
-                  {busy
-                    ? text("جارٍ إرسال الطلب…", "Sending request…")
-                    : text("إرسال طلب الترويج", "Send promotion request")}
-                </button>
-              </div>
-            )}
-          </section>
-        </div>
-      ) : null}
+      {dialog}
     </>
   );
 }
