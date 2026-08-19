@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const OWNER_FIXTURE_HEADER = "x-rawaj-e2e-owner-listing-lifecycle";
+
 async function waitForHydration(page: Page): Promise<void> {
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1, {
     timeout: 30_000,
@@ -32,7 +34,9 @@ test.describe("search + customer promotion repair", () => {
     expect(response?.status() ?? 200).toBe(200);
     await waitForHydration(page);
 
-    const search = page.locator('#rawaj-home-search[type="search"]');
+    const search = page.getByRole("searchbox", {
+      name: /^(ابحث في رواج|Search RAWAJ)$/,
+    });
     await expect(search).toBeVisible();
     const style = await search.evaluate((element) => {
       const computed = getComputedStyle(element);
@@ -51,11 +55,23 @@ test.describe("search + customer promotion repair", () => {
   test("approved My Store listing exposes paid promotion intake beside listing actions", async ({
     page,
   }) => {
-    await signIn(page, "/profile/listings");
+    await page.setExtraHTTPHeaders({ [OWNER_FIXTURE_HEADER]: "1" });
+    const resetResponse = await page.request.post("/__rawaj_e2e__/owner-listings/reset", {
+      headers: { "x-rawaj-e2e-reset": "1" },
+    });
+    expect(resetResponse.ok()).toBe(true);
+
+    await signIn(page, "/profile/listings?tab=approved");
     await waitForHydration(page);
 
-    const promote = page.locator('[data-tone="advertise"]').first();
-    await expect(promote).toBeVisible({ timeout: 30_000 });
+    const approvedCard = page
+      .locator("article.rawaj-owner-listing-card")
+      .filter({ hasText: "سيارة عائلية معتمدة" })
+      .first();
+    await expect(approvedCard).toBeVisible({ timeout: 30_000 });
+
+    const promote = approvedCard.locator('[data-tone="advertise"]');
+    await expect(promote).toBeVisible();
     await promote.click();
 
     const dialog = page.getByRole("dialog", {
