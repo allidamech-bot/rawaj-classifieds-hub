@@ -83,6 +83,12 @@ test("My Store presents explicit action priority and narrow-screen containment",
     css,
     /\.rawaj-owner-listing-card__signals\s*>\s*span\s*\{[\s\S]*?flex:\s*1 1 100%/,
   );
+  assert.match(
+    css,
+    /\.rawaj-owner-workspace-summary__actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4/,
+  );
+  assert.match(css, /\.rawaj-storefront-owner-tabs\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5/);
+  assert.match(css, /\.rawaj-owner-workspace-summary__bio\s*\{[\s\S]*?display:\s*none/);
 });
 
 test("owner destructive confirmations use focus-managed dialogs", () => {
