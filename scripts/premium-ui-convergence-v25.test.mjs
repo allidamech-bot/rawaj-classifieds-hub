@@ -91,6 +91,13 @@ test("My Store presents explicit action priority and narrow-screen containment",
   );
   assert.match(css, /\.rawaj-storefront-owner-tabs\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5/);
   assert.match(css, /\.rawaj-owner-workspace-summary__bio\s*\{[\s\S]*?display:\s*none/);
+  assert.match(ownerSummary, /data-complete=\{completeness === 100\}/);
+  assert.match(ownerSummary, /rawaj-owner-workspace-summary__complete-label/);
+  assert.doesNotMatch(ownerSummary, /owner-promotion-entry-fix\.css/);
+  assert.match(ownerRoute, /rawaj-owner-performance__kpis/);
+  assert.match(ownerRoute, /text\("إدارة", "Manage"\)/);
+  assert.match(ownerRoute, /text\("إعادة التفعيل", "Reactivate"\)/);
+  assert.match(css, /\.rawaj-owner-listings-toolbar__search[\s\S]*?input:-webkit-autofill/);
 });
 
 test("owner destructive confirmations use focus-managed dialogs", () => {

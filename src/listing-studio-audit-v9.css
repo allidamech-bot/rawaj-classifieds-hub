@@ -482,3 +482,457 @@
     transition: none !important;
   }
 }
+
+/* Focused listing-workflow refinement: compact task header and depth-aware taxonomy.
+ * This is the canonical route layer for /add-listing and owner edit routes.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"] {
+  min-height: 0 !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.35rem !important;
+  margin-bottom: 0.6rem !important;
+  padding: 0.8rem 1rem !important;
+  border-radius: 1rem !important;
+  background: linear-gradient(145deg, #303138, #292a30) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14) !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]::before,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]::after,
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  .rawaj-studio-hero__visual {
+  display: none !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  .rawaj-studio-hero__eyebrow {
+  min-height: 0 !important;
+  margin: 0 0 0.15rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 0.7rem !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  h1 {
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem) !important;
+  line-height: 1.4 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  .rawaj-studio-hero__description {
+  margin-top: 0.2rem !important;
+  font-size: 0.76rem !important;
+  line-height: 1.45 !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  .rawaj-studio-hero__status {
+  margin-top: 0.4rem !important;
+}
+
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  )
+  .rawaj-studio-hero[data-variant="compact"]
+  .rawaj-studio-hero__status
+  > * {
+  min-height: 1.75rem !important;
+  padding-inline: 0.5rem !important;
+  font-size: 0.64rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-trust-strip {
+  margin-bottom: 0.65rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-trust-strip > div {
+  min-height: 3rem !important;
+  padding: 0.5rem 0.62rem !important;
+  border-radius: 0.8rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps {
+  position: static !important;
+  gap: 0.25rem !important;
+  margin-bottom: 0.55rem !important;
+  padding: 0.3rem !important;
+  border-radius: 0.9rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps li > button {
+  min-height: 3rem !important;
+  gap: 0.35rem !important;
+  padding: 0.35rem 0.42rem !important;
+  border-radius: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps__index {
+  width: 1.7rem !important;
+  height: 1.7rem !important;
+  flex-basis: 1.7rem !important;
+  border-radius: 0.52rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] [data-listing-taxonomy-selector="true"] {
+  --taxonomy-line: rgba(255, 255, 255, 0.09);
+  --taxonomy-line-strong: rgba(104, 173, 255, 0.3);
+  --taxonomy-surface-root: rgba(255, 255, 255, 0.055);
+  --taxonomy-surface-branch: rgba(255, 255, 255, 0.035);
+  --taxonomy-surface-deep: rgba(20, 21, 26, 0.36);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  [data-listing-taxonomy-selector="true"]
+  > div:first-child {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  [data-listing-taxonomy-selector="true"]
+  input[type="search"] {
+  min-height: 3rem !important;
+  border: 1px solid var(--taxonomy-line) !important;
+  border-radius: 0.82rem !important;
+  background: rgba(20, 21, 26, 0.64) !important;
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.82rem !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  [data-listing-taxonomy-selector="true"]
+  input[type="search"]:focus-visible {
+  border-color: var(--taxonomy-line-strong) !important;
+  outline: 3px solid rgba(104, 173, 255, 0.1) !important;
+  outline-offset: 1px !important;
+}
+
+.rawaj-taxonomy-options,
+.rawaj-taxonomy-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-taxonomy-option {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.875rem !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid var(--taxonomy-line) !important;
+  border-radius: 0.82rem !important;
+  padding: 0.55rem 0.72rem !important;
+  color: var(--rawaj-text-primary) !important;
+  background: var(--taxonomy-surface-branch) !important;
+  text-align: start;
+  box-shadow: none !important;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-taxonomy-option[data-taxonomy-depth="0"] {
+  min-height: 3.5rem !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: var(--taxonomy-surface-root) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-taxonomy-option[data-taxonomy-depth="1"] {
+  min-height: 3rem !important;
+  background: var(--taxonomy-surface-branch) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-taxonomy-option[data-taxonomy-depth]:not([data-taxonomy-depth="0"]):not(
+    [data-taxonomy-depth="1"]
+  ) {
+  min-height: 2.875rem !important;
+  padding-block: 0.45rem !important;
+  background: var(--taxonomy-surface-deep) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-taxonomy-option[data-taxonomy-kind="leaf"] {
+  min-height: 2.75rem !important;
+  border-color: rgba(85, 216, 164, 0.16) !important;
+  background: rgba(85, 216, 164, 0.04) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-taxonomy-option[data-selected="true"] {
+  border-color: rgba(85, 216, 164, 0.32) !important;
+  background: rgba(85, 216, 164, 0.09) !important;
+}
+
+.rawaj-taxonomy-option__copy {
+  display: block;
+  min-width: 0;
+}
+
+.rawaj-taxonomy-option__title {
+  display: block;
+  overflow: hidden;
+  color: inherit !important;
+  font-size: 0.88rem;
+  font-weight: 780;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-taxonomy-option[data-taxonomy-depth="0"] .rawaj-taxonomy-option__title {
+  font-size: 0.95rem;
+  font-weight: 820;
+}
+
+.rawaj-taxonomy-option[data-taxonomy-depth="1"] .rawaj-taxonomy-option__title {
+  font-size: 0.9rem;
+}
+
+.rawaj-taxonomy-option__meta,
+.rawaj-taxonomy-option__path {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.12rem;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-taxonomy-option__icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-taxonomy-option[data-taxonomy-kind="leaf"] .rawaj-taxonomy-option__icon,
+.rawaj-taxonomy-option[data-taxonomy-kind="search-leaf"] .rawaj-taxonomy-option__icon {
+  color: var(--rawaj-success) !important;
+}
+
+.rawaj-taxonomy-breadcrumb {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.18rem;
+  overflow-x: auto;
+  padding: 0.32rem;
+  border: 1px solid var(--taxonomy-line);
+  border-radius: 0.78rem;
+  background: rgba(20, 21, 26, 0.38);
+  scrollbar-width: thin;
+}
+
+.rawaj-taxonomy-breadcrumb__segment {
+  display: inline-flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.rawaj-taxonomy-breadcrumb__segment button {
+  display: block;
+  max-width: 11rem;
+  min-height: 2.25rem !important;
+  overflow: hidden;
+  border-radius: 0.58rem;
+  padding-inline: 0.52rem;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-taxonomy-breadcrumb__segment button[data-current="true"] {
+  color: var(--rawaj-text-primary) !important;
+  background: rgba(104, 173, 255, 0.08);
+}
+
+.rawaj-taxonomy-breadcrumb__segment > svg {
+  width: 0.78rem;
+  height: 0.78rem;
+  flex: 0 0 0.78rem;
+  color: var(--rawaj-text-muted);
+}
+
+.rawaj-taxonomy-selection {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgba(85, 216, 164, 0.22) !important;
+  border-radius: 0.82rem;
+  padding: 0.6rem 0.72rem;
+  color: var(--rawaj-text-secondary) !important;
+  background: rgba(85, 216, 164, 0.065) !important;
+}
+
+.rawaj-taxonomy-selection__icon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 1.9rem;
+  place-items: center;
+  border-radius: 0.58rem;
+  color: #72e2b9 !important;
+  background: rgba(85, 216, 164, 0.13) !important;
+}
+
+.rawaj-taxonomy-selection__icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rawaj-taxonomy-selection p {
+  margin: 0;
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.rawaj-taxonomy-selection small {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.08rem;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-taxonomy-option:hover {
+    border-color: var(--taxonomy-line-strong) !important;
+    background: rgba(104, 173, 255, 0.065) !important;
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"]
+    .rawaj-studio-hero[data-variant="compact"] {
+    padding: 0.7rem 0.78rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"]
+    .rawaj-studio-hero[data-variant="compact"]
+    .rawaj-studio-hero__status {
+    display: none !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-trust-strip {
+    gap: 0.4rem !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.15rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-trust-strip > div {
+    min-width: 10rem !important;
+    min-height: 2.75rem !important;
+    flex: 0 0 10rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    overflow: hidden !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps > li {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: initial !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps li > button {
+    min-height: 3rem !important;
+    justify-content: center;
+    gap: 0.15rem !important;
+    padding-inline: 0.15rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps__copy strong {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: max(0.58rem, 9.5px) !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps__copy small {
+    display: none !important;
+  }
+
+  .rawaj-taxonomy-options,
+  .rawaj-taxonomy-results {
+    grid-template-columns: 1fr;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"]
+    .rawaj-taxonomy-option[data-taxonomy-depth="0"] {
+    min-height: 3.25rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"]
+    .rawaj-taxonomy-option:not([data-taxonomy-kind="search-leaf"])
+    .rawaj-taxonomy-option__meta {
+    display: none;
+  }
+
+  .rawaj-taxonomy-breadcrumb__segment button {
+    max-width: 8.5rem;
+  }
+}

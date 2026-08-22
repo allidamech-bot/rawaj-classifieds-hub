@@ -42,15 +42,21 @@ export function ListingStudioHero({
   description,
   status,
   actions,
+  compact = false,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   status?: ReactNode;
   actions?: ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <section className="rawaj-studio-hero" aria-labelledby="rawaj-studio-title">
+    <section
+      className="rawaj-studio-hero"
+      data-variant={compact ? "compact" : "default"}
+      aria-labelledby="rawaj-studio-title"
+    >
       <div className="rawaj-studio-hero__copy">
         <p className="rawaj-studio-hero__eyebrow">
           <Sparkles aria-hidden="true" />

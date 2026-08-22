@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:4173";
 const usesExternalServer = Boolean(process.env.E2E_BASE_URL);
 const usesLocalFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,9 +20,15 @@ export default defineConfig({
   use: {
     baseURL,
     locale: "ar-SY",
+    launchOptions: chromiumExecutablePath
+      ? {
+          executablePath: chromiumExecutablePath,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        }
+      : undefined,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    video: chromiumExecutablePath ? "off" : "retain-on-failure",
   },
   projects: [
     {

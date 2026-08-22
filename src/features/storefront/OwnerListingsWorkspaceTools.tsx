@@ -13,7 +13,7 @@ import {
   Square,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { ListingExpiryOption } from "@/lib/api/listing-expiry";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -82,6 +82,7 @@ export function OwnerWorkspaceInsights({
   onTabChange: (tab: "approved" | "needs_edit") => void;
 }) {
   const { text } = useUiPreferences();
+  const [expanded, setExpanded] = useState(false);
   const urgentExpiry = listings.filter((listing) => {
     if (listing.status !== "approved" || !listing.expiresAt) return false;
     const days = daysUntilExpiry(listing.expiresAt);
@@ -99,22 +100,11 @@ export function OwnerWorkspaceInsights({
     (listing) => listing.status === "approved" && !listing.primaryImageUrl,
   ).length;
 
-  if (
-    urgentExpiry === 0 &&
-    needsAction === 0 &&
-    unread === 0 &&
-    editableMissingImages === 0 &&
-    approvedMissingImages === 0
-  ) {
-    return null;
-  }
-
-  return (
-    <section
-      className="rawaj-owner-smart-insights"
-      aria-label={text("تنبيهات ذكية", "Smart alerts")}
-    >
-      {urgentExpiry > 0 ? (
+  const alerts: Array<{ key: string; content: ReactNode }> = [];
+  if (urgentExpiry > 0) {
+    alerts.push({
+      key: "urgent-expiry",
+      content: (
         <button type="button" data-tone="danger" onClick={() => onTabChange("approved")}>
           <Clock3 aria-hidden="true" />
           <span>
@@ -124,22 +114,37 @@ export function OwnerWorkspaceInsights({
             )}
           </span>
         </button>
-      ) : null}
-      {needsAction > 0 ? (
+      ),
+    });
+  }
+  if (needsAction > 0) {
+    alerts.push({
+      key: "needs-action",
+      content: (
         <button type="button" data-tone="warning" onClick={() => onTabChange("needs_edit")}>
           <FileWarning aria-hidden="true" />
           <span>
             {text(`${needsAction} إعلان يحتاج تدخلك`, `${needsAction} listing(s) need your action`)}
           </span>
         </button>
-      ) : null}
-      {unread > 0 ? (
+      ),
+    });
+  }
+  if (unread > 0) {
+    alerts.push({
+      key: "unread",
+      content: (
         <Link to="/chats" data-tone="info">
           <BellRing aria-hidden="true" />
           <span>{text(`${unread} رسالة غير مقروءة`, `${unread} unread message(s)`)}</span>
         </Link>
-      ) : null}
-      {editableMissingImages > 0 ? (
+      ),
+    });
+  }
+  if (editableMissingImages > 0) {
+    alerts.push({
+      key: "editable-no-image",
+      content: (
         <button type="button" data-tone="neutral" onClick={() => onTabChange("needs_edit")}>
           <ImageOff aria-hidden="true" />
           <span>
@@ -149,8 +154,13 @@ export function OwnerWorkspaceInsights({
             )}
           </span>
         </button>
-      ) : null}
-      {approvedMissingImages > 0 ? (
+      ),
+    });
+  }
+  if (approvedMissingImages > 0) {
+    alerts.push({
+      key: "approved-no-image",
+      content: (
         <button type="button" data-tone="neutral" onClick={() => onTabChange("approved")}>
           <ImageOff aria-hidden="true" />
           <span>
@@ -159,6 +169,36 @@ export function OwnerWorkspaceInsights({
               `${approvedMissingImages} live listing(s) without an image`,
             )}
           </span>
+        </button>
+      ),
+    });
+  }
+
+  if (alerts.length === 0) return null;
+
+  const visibleAlerts = expanded ? alerts : alerts.slice(0, 3);
+  const hiddenCount = alerts.length - visibleAlerts.length;
+
+  return (
+    <section
+      className="rawaj-owner-smart-insights"
+      aria-label={text("تنبيهات ذكية", "Smart alerts")}
+    >
+      {visibleAlerts.map((alert) => (
+        <div className="rawaj-owner-smart-insights__item" key={alert.key}>
+          {alert.content}
+        </div>
+      ))}
+      {hiddenCount > 0 || expanded ? (
+        <button
+          type="button"
+          className="rawaj-owner-smart-insights__more"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((current) => !current)}
+        >
+          {expanded
+            ? text("عرض الأقل", "Show less")
+            : text(`+${hiddenCount} تنبيهات`, `+${hiddenCount} more`)}
         </button>
       ) : null}
     </section>
@@ -203,6 +243,7 @@ export function OwnerListingsToolbar({
       <label className="rawaj-owner-listings-toolbar__search">
         <Search aria-hidden="true" />
         <input
+          type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder={text(

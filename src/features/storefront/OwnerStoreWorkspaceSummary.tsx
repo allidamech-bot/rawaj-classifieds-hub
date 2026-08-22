@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import "@/owner-promotion-entry-fix.css";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface OwnerStoreWorkspaceSummaryProps {
@@ -121,29 +120,39 @@ export function OwnerStoreWorkspaceSummary({
           </div>
         </div>
 
-        <div className="rawaj-owner-workspace-summary__completeness">
-          <div>
-            <span>{text("اكتمال واجهة المتجر", "Storefront completeness")}</span>
-            <strong>{completeness}%</strong>
-          </div>
-          <span
-            className="rawaj-owner-workspace-summary__progress"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={completeness}
-            aria-label={text("اكتمال واجهة المتجر", "Storefront completeness")}
-          >
-            <span style={{ inlineSize: `${completeness}%` }} />
-          </span>
-          <p>
-            {completeness === 100
-              ? text("هويتك العامة مكتملة.", "Your public identity is complete.")
-              : text(
+        <div
+          className="rawaj-owner-workspace-summary__completeness"
+          data-complete={completeness === 100}
+        >
+          {completeness === 100 ? (
+            <span className="rawaj-owner-workspace-summary__complete-label">
+              <CheckCircle2 aria-hidden="true" />
+              {text("ملف المتجر مكتمل", "Store profile complete")}
+            </span>
+          ) : (
+            <>
+              <div>
+                <span>{text("اكتمال واجهة المتجر", "Storefront completeness")}</span>
+                <strong>{completeness}%</strong>
+              </div>
+              <span
+                className="rawaj-owner-workspace-summary__progress"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={completeness}
+                aria-label={text("اكتمال واجهة المتجر", "Storefront completeness")}
+              >
+                <span style={{ inlineSize: `${completeness}%` }} />
+              </span>
+              <p>
+                {text(
                   "أكمل الهوية لتزيد ثقة الزوار بمتجرك.",
                   "Complete your identity to strengthen visitor trust.",
                 )}
-          </p>
+              </p>
+            </>
+          )}
         </div>
       </div>
 

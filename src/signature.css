@@ -93,6 +93,7 @@
 .rawaj-color-card::before {
   content: "";
   position: absolute;
+  pointer-events: none;
   inset-inline-end: -2.4rem;
   top: -2.4rem;
   width: 6.5rem;

@@ -128,6 +128,43 @@ test.describe("authenticated launch-critical journey", () => {
       ]),
     );
   });
+
+  test("searches a final taxonomy category and navigates back through its path", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const marker = "rawaj:e2e:storage-cleared";
+      if (window.sessionStorage.getItem(marker) === "1") return;
+      window.localStorage.clear();
+      window.sessionStorage.setItem(marker, "1");
+    });
+    await page.goto("/login?returnTo=/add-listing", { waitUntil: "domcontentloaded" });
+    await waitForHydration(page);
+    await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
+    await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
+    await page
+      .locator("form")
+      .getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ })
+      .click();
+
+    const selector = page.locator('[data-listing-taxonomy-selector="true"]');
+    await expect(selector).toBeVisible({ timeout: 30_000 });
+    await selector.getByRole("searchbox").fill("سيارات للإيجار");
+
+    const result = selector.locator('[data-taxonomy-kind="search-leaf"]').first();
+    await expect(result.locator(".rawaj-taxonomy-option__title")).toHaveText("سيارات للإيجار");
+    await expect(result.locator(".rawaj-taxonomy-option__path")).toContainText(
+      "السيارات والمركبات",
+    );
+    await result.click();
+
+    await expect(selector.getByText("تم اختيار التصنيف النهائي")).toBeVisible();
+    const breadcrumb = selector.getByRole("navigation", { name: "مسار التصنيف" });
+    await expect(breadcrumb.locator('[aria-current="step"]')).toHaveText("سيارات للإيجار");
+    await breadcrumb.getByRole("button", { name: "السيارات", exact: true }).click();
+    await expect(selector).toHaveAttribute("data-taxonomy-depth", "2");
+    await expect(breadcrumb.locator('[aria-current="step"]')).toHaveText("السيارات");
+  });
 });
 
 async function waitForHydration(page: Page): Promise<void> {
