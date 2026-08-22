@@ -1072,7 +1072,7 @@ function TabButton({
 }) {
   return (
     <button type="button" aria-pressed={active} onClick={onClick} data-active={active}>
-      {label} <span className="opacity-75">({count})</span>
+      {label} <span className="rawaj-owner-tab-count">({count})</span>
     </button>
   );
 }

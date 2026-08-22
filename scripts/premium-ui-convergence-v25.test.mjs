@@ -74,4 +74,5 @@ test("owner destructive confirmations use focus-managed dialogs", () => {
   assert.match(ownerRoute, /<DialogDescription/);
   assert.match(ownerRoute, /showCloseButton=\{false\}/);
   assert.doesNotMatch(ownerRoute, /role="dialog"/);
+  assert.doesNotMatch(ownerRoute, /opacity-75/);
 });
