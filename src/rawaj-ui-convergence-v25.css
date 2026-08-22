@@ -318,8 +318,15 @@ body
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   .rawaj-storefront-owner-tabs
   .rawaj-owner-tab-count {
+  display: inline-grid;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  place-items: center;
+  border-radius: 999px;
   color: #151d20 !important;
   background: #f3ead9 !important;
+  font-size: 0.6rem;
+  font-weight: 800;
   opacity: 1 !important;
 }
 
