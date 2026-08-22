@@ -304,7 +304,7 @@ function baseListing(
     districtAr: "المزة",
     contactName: "مالك رواج",
     contactOptions: { message: true, phone: false, whatsapp: true },
-    details: { _taxonomy_node_id: "taxonomy-vehicles" },
+    details: { _taxonomy_node_id: "taxonomy-cars-sale" },
     isFeatured: false,
     featuredUntil: null,
     reviewedBy: null,

@@ -36,6 +36,7 @@ export function ListingTaxonomySelector({
   const path = getTaxonomyPath(index, selected);
   const parentPath = selected?.isLeaf ? path.slice(0, -1) : path;
   const parent = parentPath[parentPath.length - 1];
+  const currentDepth = parentPath.length;
   const rawOptions = parent ? getTaxonomyChildren(index, parent.id) : getTaxonomyRootNodes(index);
   const options = rawOptions.filter((node) => getTaxonomyLeafDescendants(index, node).length > 0);
   const normalizedSearchTerm = searchTerm.trim();
@@ -63,6 +64,7 @@ export function ListingTaxonomySelector({
     <div
       className="space-y-4"
       data-listing-taxonomy-selector="true"
+      data-taxonomy-depth={currentDepth}
       aria-label={text("اختيار تصنيف الإعلان", "Choose listing category")}
     >
       <div className="relative">
@@ -113,24 +115,30 @@ export function ListingTaxonomySelector({
           </p>
 
           {searchResults.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2" role="list">
+            <div className="rawaj-taxonomy-results" role="list">
               {searchResults.map(({ node, path: resultPath }) => (
                 <button
                   key={node.id}
                   type="button"
                   role="listitem"
                   onClick={() => choose(node)}
-                  className="flex min-h-16 items-center justify-between gap-3 rounded-2xl border border-border/75 bg-card/85 p-3 text-start transition hover:border-primary/35 hover:bg-card active:scale-[0.99]"
+                  aria-pressed={node.id === selectedNodeId}
+                  data-selected={node.id === selectedNodeId}
+                  data-taxonomy-kind="search-leaf"
+                  className="rawaj-taxonomy-option"
                 >
-                  <span className="min-w-0">
-                    <span className="block text-sm font-bold">
+                  <span className="rawaj-taxonomy-option__copy">
+                    <span className="rawaj-taxonomy-option__title">
                       {taxonomyNodeName(node, language)}
                     </span>
-                    <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                    <span
+                      className="rawaj-taxonomy-option__path"
+                      title={taxonomyPathLabel(resultPath, language)}
+                    >
                       {taxonomyPathLabel(resultPath, language)}
                     </span>
                   </span>
-                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  <Check className="rawaj-taxonomy-option__icon" aria-hidden="true" />
                 </button>
               ))}
             </div>
@@ -146,41 +154,41 @@ export function ListingTaxonomySelector({
       ) : (
         <>
           {path.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-muted/35 p-3 text-xs">
+            <nav
+              className="rawaj-taxonomy-breadcrumb"
+              aria-label={text("مسار التصنيف", "Category path")}
+            >
               {path.map((node, indexInPath) => (
-                <button
-                  key={node.id}
-                  type="button"
-                  aria-current={node.id === selectedNodeId ? "step" : undefined}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 font-semibold hover:bg-background"
-                  onClick={() => choose(node)}
-                >
-                  {taxonomyNodeName(node, language)}
-                  {indexInPath < path.length - 1 && <DirectionIcon className="h-3.5 w-3.5" />}
-                </button>
+                <span className="rawaj-taxonomy-breadcrumb__segment" key={node.id}>
+                  <button
+                    type="button"
+                    aria-current={node.id === selectedNodeId ? "step" : undefined}
+                    data-current={indexInPath === path.length - 1}
+                    title={taxonomyNodeName(node, language)}
+                    onClick={() => choose(node)}
+                  >
+                    {taxonomyNodeName(node, language)}
+                  </button>
+                  {indexInPath < path.length - 1 ? <DirectionIcon aria-hidden="true" /> : null}
+                </span>
               ))}
-            </div>
+            </nav>
           )}
 
           {selected?.isLeaf ? (
-            <div
-              className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/8 p-4"
-              role="status"
-            >
-              <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-                <Check className="h-4 w-4" />
+            <div className="rawaj-taxonomy-selection" role="status">
+              <span className="rawaj-taxonomy-selection__icon">
+                <Check aria-hidden="true" />
               </span>
               <div>
-                <p className="text-sm font-bold">
-                  {text("تم اختيار التصنيف النهائي", "Final category selected")}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p>{text("تم اختيار التصنيف النهائي", "Final category selected")}</p>
+                <small title={taxonomyPathLabel(path, language)}>
                   {taxonomyPathLabel(path, language)}
-                </p>
+                </small>
               </div>
             </div>
           ) : (
-            <div className="grid gap-2 sm:grid-cols-2" role="list">
+            <div className="rawaj-taxonomy-options" role="list" aria-live="polite">
               {options.map((node) => {
                 const children = getTaxonomyChildren(index, node.id);
                 const finalCategoryCount = leafCount(node);
@@ -190,13 +198,15 @@ export function ListingTaxonomySelector({
                     type="button"
                     role="listitem"
                     onClick={() => choose(node)}
-                    className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-border/75 bg-card/85 p-3 text-start transition hover:border-primary/35 hover:bg-card active:scale-[0.99]"
+                    data-taxonomy-depth={currentDepth}
+                    data-taxonomy-kind={node.isLeaf ? "leaf" : "branch"}
+                    className="rawaj-taxonomy-option"
                   >
-                    <span>
-                      <span className="block text-sm font-bold">
+                    <span className="rawaj-taxonomy-option__copy">
+                      <span className="rawaj-taxonomy-option__title">
                         {taxonomyNodeName(node, language)}
                       </span>
-                      <span className="mt-1 block text-[11px] text-muted-foreground">
+                      <span className="rawaj-taxonomy-option__meta">
                         {node.isLeaf
                           ? text("اختيار نهائي", "Final selection")
                           : text(
@@ -206,9 +216,9 @@ export function ListingTaxonomySelector({
                       </span>
                     </span>
                     {node.isLeaf ? (
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="rawaj-taxonomy-option__icon" aria-hidden="true" />
                     ) : (
-                      <DirectionIcon className="h-4 w-4 text-muted-foreground" />
+                      <DirectionIcon className="rawaj-taxonomy-option__icon" aria-hidden="true" />
                     )}
                   </button>
                 );

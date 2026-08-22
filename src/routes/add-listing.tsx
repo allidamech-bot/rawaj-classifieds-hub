@@ -1734,29 +1734,16 @@ function AddListingPage() {
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
       <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <ListingStudioHero
-          eyebrow={text("استوديو الإعلان", "Listing studio")}
-          title={text(
-            "حوّل ما لديك إلى إعلان واضح وجاهز للبيع",
-            "Turn what you have into a clear, ready-to-sell listing",
-          )}
-          description={text(
-            "أضف المعلومات على أربع خطوات واضحة. نحفظ المسودة تلقائياً ونريك شكل الإعلان أثناء العمل.",
-            "Add the essentials in four clear steps. We save the draft automatically and preview the listing as you work.",
-          )}
+          compact
+          eyebrow={text("إضافة إعلان", "Post a listing")}
+          title={text("انشر إعلانك بخطوات واضحة", "Create your listing in clear steps")}
+          description={`${text("الخطوة", "Step")} ${step + 1} ${text("من", "of")} ${steps.length} — ${steps[step]}`}
           status={
             <>
-              <span>{text("4 خطوات واضحة", "4 clear steps")}</span>
               <span>{text("حفظ تلقائي للمسودة", "Automatic draft saving")}</span>
             </>
           }
-          actions={
-            <>
-              <Link to="/">{text("الرئيسية", "Home")}</Link>
-              <Link to="/listings">{text("تصفح الإعلانات", "Browse listings")}</Link>
-            </>
-          }
         />
-        <ListingStudioTrustStrip text={text} />
         {restorableLocalDraft ? (
           <section
             className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.15rem] border border-brand-orange/20 bg-brand-orange/8 p-4"
@@ -1830,6 +1817,7 @@ function AddListingPage() {
           }
           text={text}
         />
+        <ListingStudioTrustStrip text={text} />
 
         {loading ? (
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>

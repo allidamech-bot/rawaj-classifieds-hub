@@ -170,10 +170,23 @@ body
 
 /* My Store: identity and status first, actions second, detail on demand. */
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
+  --store-canvas: #0d1016;
+  --store-surface: #151922;
+  --store-surface-raised: #1a1e27;
+  --store-line: #343943;
+  --store-line-strong: #4a515d;
+  --store-ink: #f5f1e9;
+  --store-ink-soft: #c4c8cf;
+  --store-ink-muted: #8f96a1;
+  --rawaj-text-primary: var(--store-ink);
+  --rawaj-text-secondary: var(--store-ink-soft);
+  --rawaj-text-muted: var(--store-ink-muted);
   width: min(100%, 76rem) !important;
   max-width: 76rem !important;
   gap: clamp(0.75rem, 1.4vw, 1rem) !important;
   padding-inline: clamp(0.65rem, 2vw, 1rem) !important;
+  background: var(--store-canvas) !important;
+  color: var(--store-ink) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary {
@@ -218,13 +231,13 @@ body
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   .rawaj-owner-workspace-summary__actions
   a[data-priority="primary"] {
-  grid-column: span 3;
+  grid-column: span 4;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   .rawaj-owner-workspace-summary__actions
   a[data-priority="promotion"] {
-  grid-column: span 3;
+  grid-column: span 2;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -236,12 +249,67 @@ body
   box-shadow: none !important;
 }
 
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="boost"] {
+  border-color: rgba(232, 201, 133, 0.24) !important;
+  color: #f0d391 !important;
+  background: rgba(151, 105, 31, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__actions
+  a[data-tone="promotion"] {
+  border-color: rgba(225, 100, 180, 0.22) !important;
+  color: #f1b5dc !important;
+  background: rgba(149, 45, 118, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-workspace-summary__completeness[data-complete="true"] {
+  align-self: center;
+  border-inline-start: 0 !important;
+  padding-inline-start: 0 !important;
+}
+
+.rawaj-owner-workspace-summary__complete-label {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(86, 211, 173, 0.2);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  color: #a9ead2 !important;
+  background: rgba(86, 211, 173, 0.075);
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+}
+
+.rawaj-owner-workspace-summary__complete-label svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-smart-insights {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)) !important;
   gap: 0.5rem !important;
   overflow: visible !important;
   padding: 0 !important;
+}
+
+.rawaj-owner-smart-insights__item {
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-smart-insights__more {
+  min-height: var(--rawaj-control-height-sm) !important;
+  justify-content: center !important;
+  border-style: dashed !important;
+  color: var(--rawaj-text-muted) !important;
+  background: transparent !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -264,20 +332,94 @@ body
   box-shadow: none !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
-  [data-owner-performance-overview="true"]
-  > button {
-  min-height: 3.75rem !important;
-  padding: 0.75rem 0.9rem !important;
+.rawaj-owner-performance__header {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.55rem 0.75rem 0.35rem;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
-  [data-owner-performance-overview="true"]
-  > button
-  span
-  span:last-child {
-  font-size: 0.72rem !important;
-  line-height: 1.5 !important;
+.rawaj-owner-performance__title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rawaj-owner-performance__title strong,
+.rawaj-owner-performance__title small {
+  display: block;
+}
+
+.rawaj-owner-performance__title strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.78rem;
+}
+
+.rawaj-owner-performance__title small {
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.66rem;
+}
+
+.rawaj-owner-performance__header > button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 0.7rem;
+  padding-inline: 0.55rem;
+  color: var(--rawaj-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.rawaj-owner-performance__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0.35rem 0.55rem 0.6rem;
+}
+
+.rawaj-owner-performance__kpis > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  gap: 0.08rem 0.32rem;
+  border-inline-end: 1px solid var(--rawaj-border);
+  padding: 0.35rem 0.45rem;
+  text-align: start;
+}
+
+.rawaj-owner-performance__kpis > div:last-child {
+  border-inline-end: 0;
+}
+
+.rawaj-owner-performance__kpis span {
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--rawaj-text-pink);
+}
+
+.rawaj-owner-performance__kpis strong {
+  color: var(--rawaj-text-primary) !important;
+  font-size: 0.88rem;
+  line-height: 1.2;
+}
+
+.rawaj-owner-performance__kpis small {
+  overflow: hidden;
+  color: var(--rawaj-text-muted) !important;
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rawaj-owner-performance__details {
+  border-top: 1px solid var(--rawaj-border);
+  padding: 0.2rem 0.8rem 0.75rem;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-inventory {
@@ -349,6 +491,36 @@ body
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar__add {
   width: var(--rawaj-control-height-sm) !important;
   height: var(--rawaj-control-height-sm) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-listings-toolbar__search
+  input {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  color: var(--rawaj-text-primary);
+  background: transparent;
+  box-shadow: none;
+  caret-color: var(--rawaj-text-primary);
+  color-scheme: dark;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-listings-toolbar__search
+  input::placeholder {
+  color: var(--rawaj-text-muted);
+  opacity: 1;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-owner-listings-toolbar__search
+  input:-webkit-autofill {
+  -webkit-text-fill-color: var(--rawaj-text-primary) !important;
+  caret-color: var(--rawaj-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px #171b22 inset !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-grid {
@@ -513,7 +685,7 @@ body
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__actions {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 0.4rem !important;
   padding-top: 0.08rem !important;
 }
@@ -637,6 +809,13 @@ body [role="dialog"] {
     border-radius: 0.9rem !important;
   }
 
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+    .rawaj-owner-workspace-summary__name-row
+    h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.35 !important;
+  }
+
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__bio {
     display: none !important;
   }
@@ -647,6 +826,21 @@ body [role="dialog"] {
     border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
     gap: 0.35rem !important;
     padding: 0.5rem 0 0 !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+    .rawaj-owner-workspace-summary__completeness[data-complete="true"] {
+    border-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .rawaj-owner-workspace-summary__complete-label {
+    min-height: 2.15rem;
+    justify-content: flex-start;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    font-size: 0.68rem !important;
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -666,6 +860,8 @@ body [role="dialog"] {
     .rawaj-owner-workspace-summary__actions
     a[data-priority="primary"] {
     grid-column: 1 / -1 !important;
+    min-height: 3rem !important;
+    padding-block: 0.55rem !important;
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -680,10 +876,10 @@ body [role="dialog"] {
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
     .rawaj-owner-workspace-summary__actions
     a:not([data-priority="primary"]) {
-    min-height: 2.6rem !important;
+    min-height: 2.75rem !important;
     gap: 0.25rem !important;
     padding-inline: 0.3rem !important;
-    font-size: 0.64rem !important;
+    font-size: 0.75rem !important;
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -705,6 +901,44 @@ body [role="dialog"] {
     min-height: 3rem !important;
     align-items: flex-start !important;
     white-space: normal !important;
+  }
+
+  .rawaj-owner-performance__header {
+    min-height: 2.55rem;
+    padding: 0.45rem 0.55rem 0.25rem;
+  }
+
+  .rawaj-owner-performance__header > button {
+    min-height: 2.75rem;
+  }
+
+  .rawaj-owner-performance__title small {
+    display: none;
+  }
+
+  .rawaj-owner-performance__kpis {
+    padding: 0.25rem 0.3rem 0.5rem;
+  }
+
+  .rawaj-owner-performance__kpis > div {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0.1rem;
+    padding-inline: 0.25rem;
+    text-align: center;
+  }
+
+  .rawaj-owner-performance__kpis span {
+    display: none;
+  }
+
+  .rawaj-owner-performance__kpis strong {
+    font-size: 0.82rem;
+  }
+
+  .rawaj-owner-performance__kpis small {
+    width: 100%;
+    font-size: 0.58rem;
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-owner-tabs {

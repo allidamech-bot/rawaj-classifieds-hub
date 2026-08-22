@@ -817,60 +817,43 @@ function OwnerPerformanceOverview({
       icon: <BellRing className="h-4 w-4" />,
     },
   ];
-  const visibleMetrics = metrics.filter((metric) => metric.value > 0);
-
   return (
     <section
       data-owner-performance-overview="true"
       aria-label={text("ملخص أداء الإعلانات", "Listing performance summary")}
       className="rawaj-color-card rawaj-world-blue overflow-hidden rounded-[1.2rem]"
     >
-      <button
-        type="button"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((current) => !current)}
-        className="flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-start"
-      >
-        <span className="flex min-w-0 items-center gap-2">
+      <header className="rawaj-owner-performance__header">
+        <span className="rawaj-owner-performance__title">
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           <span>
-            <span className="block text-sm font-extrabold text-foreground">
-              {text("أداء إعلاناتك", "Your listing performance")}
-            </span>
-            <span className="block text-[10px] text-muted-foreground">
-              {text(
-                "ملخص سريع للتفاعل وحالة الإعلانات",
-                "A quick summary of engagement and listing health",
-              )}
-            </span>
+            <strong>{text("أداء إعلاناتك", "Your listing performance")}</strong>
+            <small>{text("ملخص سريع", "Quick snapshot")}</small>
           </span>
         </span>
-        <span className="flex shrink-0 items-center gap-2 text-xs font-bold text-primary">
-          {formatOwnerMetric(summary.recordedViews)}
-          <Eye className="h-3.5 w-3.5" />
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls="rawaj-owner-performance-details"
+          onClick={() => setExpanded((current) => !current)}
+        >
+          {text("التفاصيل", "Details")}
           <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </span>
-      </button>
+        </button>
+      </header>
+
+      <div className="rawaj-owner-performance__kpis">
+        {metrics.map((metric) => (
+          <div key={metric.key} data-owner-summary-metric={metric.key}>
+            <span>{metric.icon}</span>
+            <strong>{formatOwnerMetric(metric.value)}</strong>
+            <small>{metric.label}</small>
+          </div>
+        ))}
+      </div>
 
       {expanded ? (
-        <div className="border-t border-border/60 px-4 pb-4 pt-3">
-          <div className="grid grid-flow-col auto-cols-fr gap-2">
-            {visibleMetrics.map((metric) => (
-              <div
-                key={metric.key}
-                data-owner-summary-metric={metric.key}
-                className="rounded-xl bg-card/80 p-2 text-center hairline"
-              >
-                <div className="mx-auto flex w-fit items-center text-primary">{metric.icon}</div>
-                <p className="mt-1 text-base font-extrabold text-foreground">
-                  {formatOwnerMetric(metric.value)}
-                </p>
-                <p className="truncate text-[9px] font-semibold text-muted-foreground">
-                  {metric.label}
-                </p>
-              </div>
-            ))}
-          </div>
+        <div id="rawaj-owner-performance-details" className="rawaj-owner-performance__details">
           <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
           <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
             {text(
@@ -1488,42 +1471,78 @@ function StoreListingCard({
             </p>
           )}
           <div className="rawaj-owner-listing-card__actions">
-            {listing.status === "approved" ? (
-              <Link
-                to="/listings/$id"
-                params={{ id: listing.id }}
-                aria-label={text("عرض الإعلان", "View listing")}
-                title={text("عرض الإعلان", "View listing")}
-                data-tone="primary"
-              >
-                <Eye aria-hidden="true" />
-                <span>{text("عرض", "View")}</span>
-              </Link>
-            ) : null}
             {canEdit ? (
               <Link
                 to="/profile/listings/$id"
                 params={{ id: listing.id }}
                 aria-label={text("تعديل الإعلان", "Edit listing")}
                 title={text("تعديل الإعلان", "Edit listing")}
-                data-tone="edit"
+                data-tone="primary"
               >
                 <Pencil aria-hidden="true" />
-                <span>{text("تعديل", "Edit")}</span>
+                <span>
+                  {listing.status === "draft"
+                    ? text("متابعة", "Continue")
+                    : listing.status === "rejected"
+                      ? text("إصلاح", "Fix")
+                      : text("تعديل", "Edit")}
+                </span>
               </Link>
             ) : null}
-            <button
-              type="button"
-              aria-expanded={managementOpen}
-              aria-controls={`${listing.id}-management-panel`}
-              onClick={() => setManagementOpen((current) => !current)}
-              className="rawaj-owner-listing-card__manage"
-            >
-              {text("المزيد", "More")}
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
-              />
-            </button>
+            {listing.status === "approved" ? (
+              <button
+                type="button"
+                aria-expanded={managementOpen}
+                aria-controls={`${listing.id}-management-panel`}
+                aria-label={text("إدارة الإعلان", "Manage listing")}
+                title={text("إدارة الإعلان", "Manage listing")}
+                onClick={() => setManagementOpen((current) => !current)}
+                data-tone="primary"
+              >
+                <Pencil aria-hidden="true" />
+                {text("إدارة", "Manage")}
+              </button>
+            ) : null}
+            {canReactivate ? (
+              <button
+                type="button"
+                disabled={lifecycleBusy}
+                onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
+                data-tone="primary"
+              >
+                <Rocket aria-hidden="true" />
+                {text("إعادة التفعيل", "Reactivate")}
+              </button>
+            ) : null}
+            {listing.status === "approved" ? (
+              <Link
+                to="/listings/$id"
+                params={{ id: listing.id }}
+                aria-label={text("عرض الإعلان", "View listing")}
+                title={text("عرض الإعلان", "View listing")}
+                data-tone="view"
+              >
+                <Eye aria-hidden="true" />
+                <span>{text("عرض", "View")}</span>
+              </Link>
+            ) : null}
+            {listing.status !== "approved" ? (
+              <button
+                type="button"
+                aria-expanded={managementOpen}
+                aria-controls={`${listing.id}-management-panel`}
+                onClick={() => setManagementOpen((current) => !current)}
+                className="rawaj-owner-listing-card__manage"
+                data-tone={listing.status === "pending_review" ? "primary" : undefined}
+              >
+                {listing.status === "pending_review"
+                  ? text("التفاصيل", "Details")
+                  : text("المزيد", "More")}
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            ) : null}
           </div>
 
           {managementOpen ? (

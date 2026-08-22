@@ -64,6 +64,12 @@ test("taxonomy selector supports complete-tree browsing and final-category searc
   assert.match(taxonomySelector, /data-taxonomy-search-results="true"/);
   assert.match(taxonomySelector, /taxonomyPathLabel\(resultPath, language\)/);
   assert.match(taxonomySelector, /if \(node\.isLeaf\) setSearchTerm\(""\)/);
+  assert.match(taxonomySelector, /data-taxonomy-depth=\{currentDepth\}/);
+  assert.match(taxonomySelector, /data-taxonomy-kind=\{node\.isLeaf \? "leaf" : "branch"\}/);
+  assert.match(taxonomySelector, /className="rawaj-taxonomy-breadcrumb"/);
+  assert.match(taxonomySelector, /aria-current=\{node\.id === selectedNodeId \? "step"/);
+  assert.match(taxonomySelector, /className="rawaj-taxonomy-option__path"/);
+  assert.match(route, /<ListingStudioHero[\s\S]*?compact/);
 });
 
 test("listing photos reject unsupported formats and files beyond the Worker upload limit", () => {
@@ -112,6 +118,7 @@ test("mobile horizontal strips remain internal scroll containers", () => {
   assert.match(mobileOverflowFix, /overflow-x:\s*auto !important/);
   assert.match(mobileOverflowFix, /contain:\s*inline-size/);
   assert.match(mobileOverflowFix, /overscroll-behavior-inline:\s*contain/);
+  assert.doesNotMatch(mobileOverflowFix, /:is\(\.rawaj-studio-trust-strip, \.rawaj-studio-steps\)/);
 });
 
 test("live listing preview never upscales the source image", () => {

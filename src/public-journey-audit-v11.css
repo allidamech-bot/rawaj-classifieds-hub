@@ -321,7 +321,7 @@
 }
 
 /* Guest listing creation is a focused state, not an otherwise empty page. */
-.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide {
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide:not(.rawaj-listing-studio-v4) {
   min-height: calc(100svh - var(--rawaj-header-height, 4rem));
   padding-top: clamp(3.5rem, 11vh, 7rem) !important;
 }

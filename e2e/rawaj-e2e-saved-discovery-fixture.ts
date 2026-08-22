@@ -205,7 +205,7 @@ function favoriteRow(): Record<string, unknown> {
     district_ar: "المزة",
     contact_name: "بائع رواج",
     contact_options: { message: true, phone: false, whatsapp: false },
-    details: { _taxonomy_node_id: "taxonomy-vehicles" },
+    details: { _taxonomy_node_id: "taxonomy-cars-sale" },
     is_featured: true,
     featured_until: "2099-01-01T00:00:00.000Z",
     reviewed_by: null,
