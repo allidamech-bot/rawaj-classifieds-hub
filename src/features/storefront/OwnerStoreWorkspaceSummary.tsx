@@ -148,23 +148,23 @@ export function OwnerStoreWorkspaceSummary({
       </div>
 
       <div className="rawaj-owner-workspace-summary__actions">
-        <Link to="/add-listing" data-tone="primary">
+        <Link to="/add-listing" data-tone="primary" data-priority="primary">
           <Plus aria-hidden="true" />
           <span>{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/promotion" data-tone="boost">
+        <Link to="/promotion" data-tone="boost" data-priority="promotion">
           <Rocket aria-hidden="true" />
           <span>Boost</span>
         </Link>
-        <Link to="/promotion-request" data-tone="promotion">
+        <Link to="/promotion-request" data-tone="promotion" data-priority="promotion">
           <Megaphone aria-hidden="true" />
           <span>{text("طلب ترويج", "Promotion request")}</span>
         </Link>
-        <Link to="/seller/$id" params={{ id: sellerId }}>
+        <Link to="/seller/$id" params={{ id: sellerId }} data-priority="secondary">
           <Eye aria-hidden="true" />
           <span>{text("عرض المتجر", "View store")}</span>
         </Link>
-        <Link to="/profile">
+        <Link to="/profile" data-priority="secondary">
           <Pencil aria-hidden="true" />
           <span>{text("تعديل الهوية", "Edit identity")}</span>
         </Link>

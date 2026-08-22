@@ -169,7 +169,7 @@ function TermsPage() {
   return (
     <>
       <PageHeader title={text("شروط وسياسة الاستخدام", "Terms of Use")} />
-      <main className="container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
+      <main className="rawaj-legal-v3 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <section className="rounded-2xl bg-card p-5 hairline">
           <div className="flex items-start gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">

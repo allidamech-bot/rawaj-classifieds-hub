@@ -25,6 +25,14 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
 import {
   StorefrontIdentityHero,
@@ -1708,32 +1716,38 @@ function StoreListingCard({
         </div>
       </article>
 
-      {pendingLifecycleConfirmation && lifecycleConfirmationCopy && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={`${listing.id}-lifecycle-dialog-title`}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 p-4 backdrop-blur-sm"
+      {pendingLifecycleConfirmation && lifecycleConfirmationCopy ? (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            if (!open && !lifecycleBusy) {
+              setPendingLifecycleConfirmation(null);
+              setLifecycleError("");
+            }
+          }}
         >
-          <div className="rawaj-color-card rawaj-world-orange w-full max-w-sm rounded-[1.5rem] p-6">
-            <h3
-              id={`${listing.id}-lifecycle-dialog-title`}
-              className="text-base font-extrabold text-foreground"
-            >
-              {lifecycleConfirmationCopy.title}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {lifecycleConfirmationCopy.description}
-            </p>
+          <DialogContent
+            showCloseButton={false}
+            className="rawaj-color-card rawaj-world-orange max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
+          >
+            <DialogHeader>
+              <DialogTitle className="text-base font-extrabold text-foreground">
+                {lifecycleConfirmationCopy.title}
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-muted-foreground">
+                {lifecycleConfirmationCopy.description}
+              </DialogDescription>
+            </DialogHeader>
             {lifecycleError && (
               <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
                 {lifecycleError}
               </p>
             )}
-            <div className="mt-5 flex gap-3">
+            <DialogFooter className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 disabled={lifecycleBusy}
+                aria-busy={lifecycleBusy}
                 onClick={() => {
                   if (pendingLifecycleConfirmation.action === "reactivate") {
                     void handleReactivate();
@@ -1758,63 +1772,68 @@ function StoreListingCard({
               >
                 {text("إلغاء", "Cancel")}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
 
-      {showDeleteConfirm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-primary/45 p-4 backdrop-blur-sm"
+      <Dialog
+        open={showDeleteConfirm}
+        onOpenChange={(open) => {
+          if (!open && !deleting) {
+            setShowDeleteConfirm(false);
+            setDeleteError("");
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="rawaj-color-card rawaj-world-orange max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
+          dir="rtl"
         >
-          <div
-            className="rawaj-color-card rawaj-world-orange w-full max-w-sm rounded-[1.5rem] p-6"
-            dir="rtl"
-          >
-            <h3 id="delete-dialog-title" className="text-base font-extrabold text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-base font-extrabold text-foreground">
               {listing.status === "draft" ? "حذف المسودة؟" : "حذف الإعلان؟"}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-muted-foreground">
               {listing.status === "draft"
                 ? "سيتم حذف هذه المسودة نهائيًا. لا يمكن التراجع عن هذا الإجراء."
                 : "سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء."}
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && (
+            <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+              {deleteError}
             </p>
-            {deleteError && (
-              <p className="mt-3 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
-                {deleteError}
-              </p>
-            )}
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={() => void handleConfirmDelete()}
-                className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
-              >
-                {deleting
-                  ? "جارٍ الحذف…"
-                  : listing.status === "draft"
-                    ? "حذف المسودة"
-                    : "حذف الإعلان"}
-              </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setDeleteError("");
-                }}
-                className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+          <DialogFooter className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              disabled={deleting}
+              aria-busy={deleting}
+              onClick={() => void handleConfirmDelete()}
+              className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
+            >
+              {deleting
+                ? "جارٍ الحذف…"
+                : listing.status === "draft"
+                  ? "حذف المسودة"
+                  : "حذف الإعلان"}
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setDeleteError("");
+              }}
+              className="flex-1 rounded-xl bg-muted-surface px-4 py-2.5 text-xs font-bold hairline disabled:opacity-60"
+            >
+              إلغاء
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

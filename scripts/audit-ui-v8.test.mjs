@@ -69,17 +69,17 @@ const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.al
 
 test("audited component corrections load after legacy recovery layers", () => {
   const recoveryIndex = routeStyles.indexOf('import "../rawaj-page-by-page-recovery-v7b.css";');
-  const correctionIndex = routeStyles.indexOf('import "../rawaj-audit-corrections-v8.css";');
-  const homeIndex = routeStyles.indexOf('import "../rawaj-home-audit-v8.css";');
-  const categoriesIndex = routeStyles.indexOf('import "../rawaj-categories-discovery-v8.css";');
-  const ownerIndex = routeStyles.indexOf('import "../owner-listings-workspace-v9.css";');
-  const studioIndex = routeStyles.indexOf('import "../listing-studio-audit-v9.css";');
-  const personalIndex = routeStyles.indexOf('import "../personal-space-audit-v9.css";');
-  const adminWorkspaceIndex = routeStyles.indexOf('import "../admin-workspaces-v9.css";');
-  const adminIndex = routeStyles.indexOf('import "../admin-command-center-v9.css";');
-  const activityIndex = routeStyles.indexOf('import "../personal-activity-system-v10.css";');
-  const publicIndex = routeStyles.indexOf('import "../public-journey-audit-v11.css";');
-  const authIndex = routeStyles.indexOf('import "../auth-feedback-system-v12.css";');
+  const correctionIndex = routeStyles.indexOf("auditCorrectionsV8Css,");
+  const homeIndex = routeStyles.indexOf("homeAuditV8Css,");
+  const categoriesIndex = routeStyles.indexOf("categoriesDiscoveryV8Css,");
+  const ownerIndex = routeStyles.indexOf("ownerListingsWorkspaceV9Css,");
+  const studioIndex = routeStyles.indexOf("listingStudioAuditV9Css,");
+  const personalIndex = routeStyles.indexOf("personalSpaceAuditV9Css,");
+  const adminWorkspaceIndex = routeStyles.indexOf("adminWorkspacesV9Css,");
+  const adminIndex = routeStyles.indexOf("adminCommandCenterV9Css,");
+  const activityIndex = routeStyles.indexOf("personalActivitySystemV10Css,");
+  const publicIndex = routeStyles.indexOf("publicJourneyAuditV11Css,");
+  const authIndex = routeStyles.indexOf("authFeedbackSystemV12Css,");
 
   for (const index of [
     recoveryIndex,
@@ -108,6 +108,9 @@ test("audited component corrections load after legacy recovery layers", () => {
   assert.ok(activityIndex > adminIndex);
   assert.ok(publicIndex > activityIndex);
   assert.ok(authIndex > publicIndex);
+
+  assert.doesNotMatch(routeStyles, /import "\.\.\/rawaj-audit-corrections-v8\.css";/);
+  assert.doesNotMatch(routeStyles, /import "\.\.\/owner-listings-workspace-v9\.css";/);
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
