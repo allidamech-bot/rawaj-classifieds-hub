@@ -61,6 +61,8 @@ test("My Store presents explicit action priority and narrow-screen containment",
   assert.match(ownerSummary, /data-priority="primary"/);
   assert.match(ownerSummary, /data-priority="promotion"/);
   assert.match(ownerSummary, /data-priority="secondary"/);
+  assert.match(ownerSummary, /text\("ترويج", "Promote"\)/);
+  assert.doesNotMatch(ownerSummary, /text\("تعديل الهوية", "Edit identity"\)/);
   assert.match(ownerRoute, /<strong className="rawaj-owner-tab-count">/);
   assert.match(css, /data-resolved-pathname="\/profile\/listings"/);
   assert.match(css, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
