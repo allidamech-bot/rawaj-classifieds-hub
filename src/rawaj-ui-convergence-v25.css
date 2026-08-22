@@ -315,6 +315,14 @@ body
   font-size: 0.72rem !important;
 }
 
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-storefront-owner-tabs
+  .rawaj-owner-tab-count {
+  color: #151d20 !important;
+  background: #f3ead9 !important;
+  opacity: 1 !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listings-toolbar {
   gap: 0.5rem !important;
 }

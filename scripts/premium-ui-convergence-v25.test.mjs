@@ -65,6 +65,7 @@ test("My Store presents explicit action priority and narrow-screen containment",
   assert.match(css, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 359px\)/);
   assert.match(css, /overflow-x:\s*clip/);
+  assert.match(css, /\.rawaj-owner-tab-count[\s\S]*?color:\s*#151d20 !important/);
 });
 
 test("owner destructive confirmations use focus-managed dialogs", () => {
