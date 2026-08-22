@@ -940,34 +940,30 @@ function OwnerListingPerformance({ listing }: { listing: ClassifiedListing; lang
   const visibleMetrics = metrics.filter((metric) => metric.value > 0);
   const hasActivity = visibleMetrics.length > 0;
 
+  if (!hasActivity) return null;
+
   return (
     <div
       data-owner-listing-performance="true"
       className="flex items-center justify-between gap-2 rounded-xl bg-primary/[0.035] px-3 py-2 hairline"
     >
-      {hasActivity ? (
-        <div className="grid flex-1 grid-flow-col auto-cols-fr gap-1.5">
-          {visibleMetrics.map((metric) =>
-            metric.key === "unread" ? (
-              <Link key={metric.key} to="/chats" data-owner-metric={metric.key}>
-                {metric.icon}
-                <strong>{formatOwnerMetric(metric.value)}</strong>
-                <span>{metric.label}</span>
-              </Link>
-            ) : (
-              <div key={metric.key} data-owner-metric={metric.key}>
-                {metric.icon}
-                <strong>{formatOwnerMetric(metric.value)}</strong>
-                <span>{metric.label}</span>
-              </div>
-            ),
-          )}
-        </div>
-      ) : (
-        <p className="flex-1 text-[10px] font-semibold text-muted-foreground">
-          {text("لا يوجد تفاعل بعد", "No activity yet")}
-        </p>
-      )}
+      <div className="grid flex-1 grid-flow-col auto-cols-fr gap-1.5">
+        {visibleMetrics.map((metric) =>
+          metric.key === "unread" ? (
+            <Link key={metric.key} to="/chats" data-owner-metric={metric.key}>
+              {metric.icon}
+              <strong>{formatOwnerMetric(metric.value)}</strong>
+              <span>{metric.label}</span>
+            </Link>
+          ) : (
+            <div key={metric.key} data-owner-metric={metric.key}>
+              {metric.icon}
+              <strong>{formatOwnerMetric(metric.value)}</strong>
+              <span>{metric.label}</span>
+            </div>
+          ),
+        )}
+      </div>
     </div>
   );
 }
@@ -1354,90 +1350,104 @@ function StoreListingCard({
   return (
     <>
       <article className="rawaj-owner-listing-card rawaj-product-card group">
-        <div className="rawaj-product-media">
-          <span className="rawaj-status-ribbon" data-status={listing.status}>
-            {listingStatusLabel(listing.status, language)}
-          </span>
-          {selectable ? (
-            <button
-              type="button"
-              aria-pressed={selected}
-              aria-label={
-                selected
-                  ? text("إلغاء تحديد الإعلان", "Unselect listing")
-                  : text("تحديد الإعلان", "Select listing")
-              }
-              title={
-                selected
-                  ? text("إلغاء التحديد", "Unselect")
-                  : text("تحديد للإجراءات الجماعية", "Select for bulk actions")
-              }
-              onClick={() => onSelectionChange(listing.id, !selected)}
-              className="rawaj-owner-listing-select"
-              data-selected={selected}
-            >
-              {selected ? <CheckSquare aria-hidden="true" /> : <Square aria-hidden="true" />}
-            </button>
-          ) : null}
-          <ListingCardImage
-            src={listing.primaryImageUrl}
-            alt={listing.title}
-            placeholder={listing.categoryPlaceholder ?? "misc"}
-            placeholderAspect="wide"
-            loading="lazy"
-            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.025]"
-          />
+        <div className="rawaj-owner-listing-card__overview">
+          <div className="rawaj-product-media">
+            <span className="rawaj-status-ribbon" data-status={listing.status}>
+              {listingStatusLabel(listing.status, language)}
+            </span>
+            {selectable ? (
+              <button
+                type="button"
+                aria-pressed={selected}
+                aria-label={
+                  selected
+                    ? text("إلغاء تحديد الإعلان", "Unselect listing")
+                    : text("تحديد الإعلان", "Select listing")
+                }
+                title={
+                  selected
+                    ? text("إلغاء التحديد", "Unselect")
+                    : text("تحديد للإجراءات الجماعية", "Select for bulk actions")
+                }
+                onClick={() => onSelectionChange(listing.id, !selected)}
+                className="rawaj-owner-listing-select"
+                data-selected={selected}
+              >
+                {selected ? <CheckSquare aria-hidden="true" /> : <Square aria-hidden="true" />}
+              </button>
+            ) : null}
+            <ListingCardImage
+              src={listing.primaryImageUrl}
+              alt={listing.title}
+              placeholder={listing.categoryPlaceholder ?? "misc"}
+              placeholderAspect="wide"
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]"
+            />
+          </div>
+          <div className="rawaj-owner-listing-card__summary">
+            <h2>{listing.title}</h2>
+            <div className="rawaj-owner-listing-card__facts">
+              <strong>
+                {formatPriceLocalized(
+                  listing.price ?? 0,
+                  listing.priceType,
+                  language,
+                  listing.currency,
+                )}
+              </strong>
+              <span>
+                {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
+              </span>
+              <span>
+                <MapPin aria-hidden="true" />
+                {governorateName(
+                  listing.governorateId,
+                  listing.governorateNameAr ?? undefined,
+                  language,
+                )}
+              </span>
+            </div>
+          </div>
         </div>
         <div className="rawaj-owner-listing-card__content">
-          <h2>{listing.title}</h2>
-          <div className="rawaj-owner-listing-card__facts">
-            <strong>
-              {formatPriceLocalized(
-                listing.price ?? 0,
-                listing.priceType,
-                language,
-                listing.currency,
-              )}
-            </strong>
-            <span>
-              {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
-            </span>
-            <span>
-              <MapPin aria-hidden="true" />
-              {governorateName(
-                listing.governorateId,
-                listing.governorateNameAr ?? undefined,
-                language,
-              )}
-            </span>
-          </div>
-          <div className="rawaj-owner-listing-card__signals">
+          <div
+            className="rawaj-owner-listing-card__signals"
+            aria-label={text("حالة الإعلان", "Listing status")}
+          >
             {listing.status === "draft" ? (
               <span data-tone="draft">
                 <Pencil aria-hidden="true" />
-                {text("مسودة", "Draft")} · {formatSavedAt(listing.updatedAt, language)}
+                <strong>{text("مسودة", "Draft")}</strong>
+                <small>{formatSavedAt(listing.updatedAt, language)}</small>
               </span>
             ) : null}
             {listing.reservedAt ? (
               <span data-tone="warning">
                 <Clock3 aria-hidden="true" />
-                {text("محجوز حالياً", "Currently reserved")}
+                <strong>{text("محجوز حالياً", "Currently reserved")}</strong>
               </span>
             ) : listing.status === "approved" ? (
               <span data-tone={listing.renewedAt ? "success" : "neutral"}>
                 <CircleCheckBig aria-hidden="true" />
-                {listing.renewedAt
-                  ? `${text("التوفر مؤكّد", "Availability confirmed")} · ${formatSavedAt(listing.renewedAt, language)}`
-                  : text("بانتظار تأكيد التوفر", "Availability not confirmed")}
+                <strong>
+                  {listing.renewedAt
+                    ? text("التوفر مؤكّد", "Availability confirmed")
+                    : text("تأكيد التوفر مطلوب", "Confirm availability")}
+                </strong>
+                {listing.renewedAt ? (
+                  <small>{formatSavedAt(listing.renewedAt, language)}</small>
+                ) : null}
               </span>
             ) : null}
             {expiryInsight ? (
               <span data-tone={expiryInsight.tone}>
                 <Clock3 aria-hidden="true" />
-                {expiryInsight.title} · {expiryInsight.description}
-                {listing.expiresAt
-                  ? ` · ${text("التاريخ", "Date")}: ${formatSavedAt(listing.expiresAt, language)}`
-                  : ""}
+                <strong>{expiryInsight.title}</strong>
+                <small>
+                  {expiryInsight.description}
+                  {listing.expiresAt ? ` · ${formatSavedAt(listing.expiresAt, language)}` : ""}
+                </small>
               </span>
             ) : null}
           </div>
@@ -1478,56 +1488,30 @@ function StoreListingCard({
             </p>
           )}
           <div className="rawaj-owner-listing-card__actions">
-            <div>
-              {listing.status === "approved" ? (
-                <Link
-                  to="/listings/$id"
-                  params={{ id: listing.id }}
-                  aria-label={text("عرض الإعلان", "View listing")}
-                  title={text("عرض الإعلان", "View listing")}
-                  data-tone="primary"
-                >
-                  <Eye aria-hidden="true" />
-                  <span>{text("عرض", "View")}</span>
-                </Link>
-              ) : null}
-              {canShareCard ? (
-                <button
-                  type="button"
-                  onClick={() => queueListingSharePrompt(listing.id)}
-                  aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
-                  title={text("مشاركة بطاقة الإعلان", "Share listing card")}
-                  data-tone="share"
-                >
-                  <Share2 aria-hidden="true" />
-                  <span>{text("مشاركة", "Share")}</span>
-                </button>
-              ) : null}
-              {boostEligible ? (
-                <button
-                  type="button"
-                  onClick={() => queueSearchBoostIntent(listing.id)}
-                  data-tone="boost"
-                  aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
-                  title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
-                >
-                  <Rocket aria-hidden="true" />
-                  <span>Boost</span>
-                </button>
-              ) : null}
-              {canEdit ? (
-                <Link
-                  to="/profile/listings/$id"
-                  params={{ id: listing.id }}
-                  aria-label={text("تعديل الإعلان", "Edit listing")}
-                  title={text("تعديل الإعلان", "Edit listing")}
-                  data-tone="edit"
-                >
-                  <Pencil aria-hidden="true" />
-                  <span>{text("تعديل", "Edit")}</span>
-                </Link>
-              ) : null}
-            </div>
+            {listing.status === "approved" ? (
+              <Link
+                to="/listings/$id"
+                params={{ id: listing.id }}
+                aria-label={text("عرض الإعلان", "View listing")}
+                title={text("عرض الإعلان", "View listing")}
+                data-tone="primary"
+              >
+                <Eye aria-hidden="true" />
+                <span>{text("عرض", "View")}</span>
+              </Link>
+            ) : null}
+            {canEdit ? (
+              <Link
+                to="/profile/listings/$id"
+                params={{ id: listing.id }}
+                aria-label={text("تعديل الإعلان", "Edit listing")}
+                title={text("تعديل الإعلان", "Edit listing")}
+                data-tone="edit"
+              >
+                <Pencil aria-hidden="true" />
+                <span>{text("تعديل", "Edit")}</span>
+              </Link>
+            ) : null}
             <button
               type="button"
               aria-expanded={managementOpen}
@@ -1535,7 +1519,7 @@ function StoreListingCard({
               onClick={() => setManagementOpen((current) => !current)}
               className="rawaj-owner-listing-card__manage"
             >
-              {text("إدارة الإعلان", "Manage listing")}
+              {text("المزيد", "More")}
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
               />
@@ -1549,19 +1533,45 @@ function StoreListingCard({
               aria-label={text("إجراءات الإعلان", "Listing actions")}
               className="rawaj-owner-listing-management space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline"
             >
-              <button
-                type="button"
-                disabled={duplicating}
-                onClick={() => void onDuplicate(listing)}
-                aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
-                title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
-                className="rawaj-owner-listing-management__duplicate"
-              >
-                <Copy className={duplicating ? "animate-pulse" : ""} aria-hidden="true" />
-                {duplicating
-                  ? text("جارٍ إنشاء النسخة", "Creating copy")
-                  : text("نسخ كمسودة", "Duplicate as draft")}
-              </button>
+              <div className="rawaj-owner-listing-management__top-actions">
+                {canShareCard ? (
+                  <button
+                    type="button"
+                    onClick={() => queueListingSharePrompt(listing.id)}
+                    aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                    title={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                    data-tone="share"
+                  >
+                    <Share2 aria-hidden="true" />
+                    <span>{text("مشاركة", "Share")}</span>
+                  </button>
+                ) : null}
+                {boostEligible ? (
+                  <button
+                    type="button"
+                    onClick={() => queueSearchBoostIntent(listing.id)}
+                    data-tone="boost"
+                    aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                    title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                  >
+                    <Rocket aria-hidden="true" />
+                    <span>Boost</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={duplicating}
+                  onClick={() => void onDuplicate(listing)}
+                  aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
+                  title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
+                  className="rawaj-owner-listing-management__duplicate"
+                >
+                  <Copy className={duplicating ? "animate-pulse" : ""} aria-hidden="true" />
+                  {duplicating
+                    ? text("جارٍ إنشاء النسخة", "Creating copy")
+                    : text("نسخ كمسودة", "Duplicate as draft")}
+                </button>
+              </div>
               {canReducePrice ? (
                 <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
                   <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
