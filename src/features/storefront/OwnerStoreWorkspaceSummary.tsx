@@ -158,15 +158,15 @@ export function OwnerStoreWorkspaceSummary({
         </Link>
         <Link to="/promotion-request" data-tone="promotion" data-priority="promotion">
           <Megaphone aria-hidden="true" />
-          <span>{text("طلب ترويج", "Promotion request")}</span>
+          <span>{text("ترويج", "Promote")}</span>
         </Link>
         <Link to="/seller/$id" params={{ id: sellerId }} data-priority="secondary">
           <Eye aria-hidden="true" />
-          <span>{text("عرض المتجر", "View store")}</span>
+          <span>{text("عرض", "View")}</span>
         </Link>
         <Link to="/profile" data-priority="secondary">
           <Pencil aria-hidden="true" />
-          <span>{text("تعديل الهوية", "Edit identity")}</span>
+          <span>{text("تعديل", "Edit")}</span>
         </Link>
       </div>
     </section>

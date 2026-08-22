@@ -260,7 +260,7 @@ function ownerCard(page: Page, title: string): Locator {
 
 async function openListingManagement(card: Locator): Promise<void> {
   const manageButton = card.getByRole("button", {
-    name: /إدارة الإعلان|Manage listing/i,
+    name: /المزيد|More|إدارة الإعلان|Manage listing/i,
   });
   await expect(manageButton).toBeVisible({ timeout: 30_000 });
   if ((await manageButton.getAttribute("aria-expanded")) !== "true") {
