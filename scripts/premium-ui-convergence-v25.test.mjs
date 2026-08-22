@@ -67,6 +67,22 @@ test("My Store presents explicit action priority and narrow-screen containment",
   assert.match(css, /@media \(max-width: 359px\)/);
   assert.match(css, /overflow-x:\s*clip/);
   assert.match(css, /\.rawaj-owner-tab-count[\s\S]*?color:\s*#151d20 !important/);
+  assert.match(ownerRoute, /rawaj-owner-listing-card__overview/);
+  assert.match(ownerRoute, /rawaj-owner-listing-management__top-actions/);
+  assert.match(ownerRoute, /text\("المزيد", "More"\)/);
+  assert.doesNotMatch(ownerRoute, /text\("لا يوجد تفاعل بعد", "No activity yet"\)/);
+  assert.match(
+    css,
+    /\.rawaj-owner-listing-card__overview[\s\S]*?grid-template-columns:\s*clamp\(7\.25rem/,
+  );
+  assert.match(
+    css,
+    /\.rawaj-owner-listing-card[\s\S]*?\.rawaj-product-media[\s\S]*?aspect-ratio:\s*1 \/ 1/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.rawaj-owner-listing-card__signals\s*>\s*span\s*\{[\s\S]*?flex:\s*1 1 100%/,
+  );
 });
 
 test("owner destructive confirmations use focus-managed dialogs", () => {
