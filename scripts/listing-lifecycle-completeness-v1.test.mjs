@@ -20,8 +20,10 @@ test("approved owners can explicitly confirm listing availability", () => {
 test("closing and reactivation require an explicit confirmation dialog", () => {
   assert.match(ownerListings, /type LifecycleConfirmation =/);
   assert.match(ownerListings, /pendingLifecycleConfirmation/);
-  assert.match(ownerListings, /role="dialog"/);
-  assert.match(ownerListings, /aria-modal="true"/);
+  assert.match(ownerListings, /<Dialog/);
+  assert.match(ownerListings, /<DialogContent/);
+  assert.match(ownerListings, /<DialogTitle/);
+  assert.match(ownerListings, /<DialogDescription/);
   assert.match(ownerListings, /ownerLifecycleConfirmationCopy/);
 
   for (const status of ["sold", "rented", "unavailable"]) {
