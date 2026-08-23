@@ -1,0 +1,55 @@
+name: Syria Cloudflare Public Live Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/audit-syria-cloudflare-public-live.mjs"
+      - "scripts/assert-syria-cloudflare-audit-profile.mjs"
+      - ".github/workflows/syria-cloudflare-public-live-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: syria-cloudflare-public-live-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-read-only:
+    name: ${{ matrix.profile }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        profile:
+          - availability
+          - identity
+          - current-release
+          - controls
+          - cors-canonical
+          - cors-security
+          - cors-reject-saudi
+          - cors-reject-random
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run public GET and OPTIONS profile
+        run: node scripts/assert-syria-cloudflare-audit-profile.mjs "${{ matrix.profile }}"
+
+      - name: Upload sanitized public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: syria-cloudflare-public-${{ matrix.profile }}-${{ github.run_id }}
+          path: public/audits/syria-cloudflare-public-live.json
+          if-no-files-found: ignore
+          retention-days: 7
