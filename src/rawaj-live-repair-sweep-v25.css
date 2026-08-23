@@ -1,0 +1,132 @@
+/* RAWAJ live repair sweep V25.
+ * Final ownership for native search controls and the customer advertising entry points.
+ * Keep byte-for-byte identical in Syria + Saudi.
+ */
+
+/* Safari/iOS can paint a native light search decoration inside an otherwise dark
+ * field. The visual shell already owns the border/background, so the native input
+ * must stay transparent and decoration-free. */
+.rawaj-app-shell :is(
+  .rawaj-header-search,
+  .rawaj-signature-search,
+  .rawaj-search-overlay__field,
+  .rawaj-search-toolbar__search,
+  .rawaj-communication-search,
+  .rawaj-categories-v2__hero-search,
+  .rawaj-owner-listings-toolbar__search
+) input[type="search"],
+.rawaj-app-shell input[type="search"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  color-scheme: dark !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell input[type="search"]::-webkit-search-decoration,
+.rawaj-app-shell input[type="search"]::-webkit-search-cancel-button,
+.rawaj-app-shell input[type="search"]::-webkit-search-results-button,
+.rawaj-app-shell input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.rawaj-app-shell input[type="search"]:-webkit-autofill,
+.rawaj-app-shell input[type="search"]:-webkit-autofill:hover,
+.rawaj-app-shell input[type="search"]:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f7f3ed !important;
+  caret-color: #f7f3ed !important;
+  transition: background-color 9999s ease-out 0s !important;
+}
+
+/* Empty managed ad inventory is a useful customer acquisition surface rather than
+ * a dead gap. It remains visually subordinate to real paid creatives. */
+.rawaj-ad-placement__request {
+  border-color: rgba(216, 174, 95, 0.22) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(246, 194, 76, 0.08), transparent 42%),
+    linear-gradient(145deg, #131821, #0d1219) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 10px 28px rgba(0, 0, 0, 0.16) !important;
+}
+
+.rawaj-ad-placement__request:is(:hover, :focus-visible) {
+  border-color: rgba(246, 194, 76, 0.48) !important;
+  box-shadow: 0 0 0 3px rgba(246, 194, 76, 0.07), 0 12px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* My Store gets one persistent paid-advertising entry beside the existing listing
+ * tools, independent from the per-listing Search Boost action. */
+.rawaj-owner-listings-toolbar__advertise {
+  display: inline-flex !important;
+  min-height: 2.65rem !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.42rem !important;
+  border: 1px solid rgba(246, 194, 76, 0.38) !important;
+  border-radius: 0.85rem !important;
+  padding: 0.5rem 0.72rem !important;
+  color: #f5c95f !important;
+  background: linear-gradient(145deg, rgba(82, 58, 18, 0.68), rgba(34, 28, 18, 0.9)) !important;
+  font-size: 0.68rem !important;
+  font-weight: 850 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  box-shadow: inset 0 1px 0 rgba(255, 240, 190, 0.08) !important;
+}
+
+.rawaj-owner-listings-toolbar__advertise svg {
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+  flex: 0 0 auto !important;
+}
+
+.rawaj-owner-listings-toolbar__advertise:is(:hover, :focus-visible) {
+  border-color: rgba(255, 215, 112, 0.7) !important;
+  color: #ffe29a !important;
+  background: linear-gradient(145deg, rgba(101, 70, 18, 0.78), rgba(42, 32, 18, 0.94)) !important;
+}
+
+/* Advertising request selection and lifecycle statuses. */
+.rawaj-advertise-kind[data-selected="true"] {
+  border-color: rgba(246, 194, 76, 0.58) !important;
+  color: #fff6e2 !important;
+  background: linear-gradient(145deg, rgba(89, 62, 18, 0.58), rgba(27, 24, 20, 0.96)) !important;
+  box-shadow: 0 0 0 2px rgba(246, 194, 76, 0.08) !important;
+}
+
+.rawaj-advertise-status[data-status="new"] {
+  color: #9cc9ff !important;
+  background: rgba(72, 137, 232, 0.12) !important;
+}
+
+.rawaj-advertise-status[data-status="under_review"] {
+  color: #f5c95f !important;
+  background: rgba(246, 194, 76, 0.11) !important;
+}
+
+.rawaj-advertise-status[data-status="resolved"] {
+  color: #8ce0bd !important;
+  background: rgba(53, 189, 132, 0.11) !important;
+}
+
+.rawaj-advertise-status[data-status="rejected"] {
+  color: #ff9caa !important;
+  background: rgba(224, 75, 98, 0.11) !important;
+}
+
+@media (max-width: 39.99rem) {
+  .rawaj-owner-listings-toolbar__advertise {
+    min-height: 2.55rem !important;
+    padding-inline: 0.6rem !important;
+    font-size: 0.63rem !important;
+  }
+}

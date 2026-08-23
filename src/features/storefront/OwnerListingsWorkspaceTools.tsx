@@ -7,6 +7,7 @@ import {
   Clock3,
   FileWarning,
   ImageOff,
+  Megaphone,
   Plus,
   Search,
   SlidersHorizontal,
@@ -334,6 +335,16 @@ export function OwnerListingsToolbar({
         {text("المعروض", "Showing")} {shownCount} / {totalCount}
         {selectedCount > 0 ? ` · ${text("المحدد", "Selected")} ${selectedCount}` : ""}
       </span>
+
+      <Link
+        to="/advertise"
+        className="rawaj-owner-listings-toolbar__advertise"
+        aria-label={text("طلب مساحة إعلانية أو حملة", "Request ad space or campaign")}
+        title={text("اطلب مساحة إعلانية أو حملة لرواج", "Request RAWAJ ad space or a campaign")}
+      >
+        <Megaphone aria-hidden="true" />
+        <span>{text("إعلان مدفوع", "Advertise")}</span>
+      </Link>
 
       <Link
         to="/add-listing"

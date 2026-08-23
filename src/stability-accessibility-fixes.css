@@ -17,6 +17,7 @@
 @import "./rawaj-live-repair-sweep-v22.css";
 @import "./rawaj-live-repair-sweep-v23.css";
 @import "./rawaj-live-repair-sweep-v24.css";
+@import "./rawaj-live-repair-sweep-v25.css";
 
 /* Final stability accessibility corrections.
  * Loaded after route-specific styles so legacy light-theme declarations cannot

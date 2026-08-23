@@ -8,6 +8,7 @@ import {
   Megaphone,
   FileCheck,
   Flag,
+  Inbox,
   LayoutDashboard,
   ListChecks,
   Lock,
@@ -133,6 +134,13 @@ const tabs: Array<{
     labelEn: "Promotion requests",
     icon: Sparkles,
     permission: "canManagePromotions",
+  },
+  {
+    to: "/admin/ad-requests",
+    labelAr: "طلبات الإعلان",
+    labelEn: "Ad requests",
+    icon: Inbox,
+    permission: "canManageAdPlacements",
   },
   {
     to: "/admin/ad-placements",
