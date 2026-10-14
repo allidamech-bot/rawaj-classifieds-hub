@@ -100,13 +100,17 @@ jobs:
           "$zipalign" -p -f 4 "$source_apk" "$protected_dir/RAWAJ-aligned.apk"
 
           signed_apk="$output_dir/RAWAJ-Huawei-1.0.4-build5.apk"
+          # apksigner consumes password-file input on each read; use an environment
+          # variable instead, so both the PKCS12 store and private key can be read.
+          export RAWAJ_HUAWEI_KEY_PASS="$(cat "$key_pass_file")"
           "$apksigner" sign --ks "$key_store" \
             --ks-key-alias rawaj_huawei \
-            --ks-pass "file:$key_pass_file" \
-            --key-pass "file:$key_pass_file" \
+            --ks-pass env:RAWAJ_HUAWEI_KEY_PASS \
+            --key-pass env:RAWAJ_HUAWEI_KEY_PASS \
             --v2-signing-enabled true \
             --v3-signing-enabled true \
             --out "$signed_apk" "$protected_dir/RAWAJ-aligned.apk"
+          unset RAWAJ_HUAWEI_KEY_PASS
           "$apksigner" verify --verbose --print-certs "$signed_apk" > "$output_dir/signature-verification.txt"
           "$zipalign" -c -p 4 "$signed_apk"
 
