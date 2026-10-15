@@ -1,0 +1,151 @@
+name: Huawei Android Signed Candidate
+
+on:
+  push:
+    branches:
+      - "feature/huawei-signed-release-*"
+    paths:
+      - ".github/workflows/huawei-signed-apk.yml"
+      - ".github/huawei/signing-backup-public-cert.pem"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  signed-huawei-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install dependencies and validate types
+        run: |
+          npm ci
+          npm run typecheck
+
+      - name: Build web assets and Capacitor wrapper
+        run: |
+          npm run build
+          npx cap sync android
+
+      - name: Build original-source Android release
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest assembleRelease --stacktrace --console=plain
+
+      - name: Sign Android candidate and encrypt signing backup
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+
+          source_apk="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          output_dir="$GITHUB_WORKSPACE/huawei-release"
+          mkdir -p "$output_dir"
+          test -s "$source_apk"
+
+          find_sdk_tool() {
+            local found
+            found="$(command -v "$1" || true)"
+            if [ -z "$found" ]; then
+              found="$(find "$ANDROID_HOME" -type f -name "$1" -perm -u+x 2>/dev/null | sort -V | tail -n 1)"
+            fi
+            test -n "$found" || { echo "Missing SDK tool: $1" >&2; exit 1; }
+            printf '%s' "$found"
+          }
+
+          zipalign="$(find_sdk_tool zipalign)"
+          apksigner="$(find_sdk_tool apksigner)"
+          apkanalyzer="$(find_sdk_tool apkanalyzer)"
+
+          package="$("$apkanalyzer" manifest application-id "$source_apk" | tr -d '\r' | tail -n 1)"
+          version_code="$("$apkanalyzer" manifest version-code "$source_apk" | tr -d '\r' | tail -n 1)"
+          version_name="$("$apkanalyzer" manifest version-name "$source_apk" | tr -d '\r' | tail -n 1)"
+
+          test "$package" = "com.rawaj.marketplace"
+          test "$version_code" = "5"
+          test "$version_name" = "1.0.4"
+
+          protected_dir="$RUNNER_TEMP/rawaj-huawei-signing"
+          mkdir -p "$protected_dir"
+          key_pass_file="$protected_dir/key-password.txt"
+          key_store="$protected_dir/huawei-release-signing.p12"
+          openssl rand -hex 32 > "$key_pass_file"
+          password="$(cat "$key_pass_file")"
+
+          keytool -genkeypair -noprompt \
+            -alias rawaj_huawei \
+            -keyalg RSA -keysize 3072 -validity 10000 \
+            -storetype PKCS12 \
+            -keystore "$key_store" \
+            -storepass "$password" -keypass "$password" \
+            -dname "CN=RAWAJ Huawei Release, O=RAWAJ" > /dev/null
+          unset password
+
+          "$zipalign" -p -f 4 "$source_apk" "$protected_dir/RAWAJ-aligned.apk"
+
+          signed_apk="$output_dir/RAWAJ-Huawei-1.0.4-build5.apk"
+          # apksigner consumes password-file input on each read; use an environment
+          # variable instead, so both the PKCS12 store and private key can be read.
+          export RAWAJ_HUAWEI_KEY_PASS="$(cat "$key_pass_file")"
+          "$apksigner" sign --ks "$key_store" \
+            --ks-key-alias rawaj_huawei \
+            --ks-pass env:RAWAJ_HUAWEI_KEY_PASS \
+            --key-pass env:RAWAJ_HUAWEI_KEY_PASS \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out "$signed_apk" "$protected_dir/RAWAJ-aligned.apk"
+          unset RAWAJ_HUAWEI_KEY_PASS
+          "$apksigner" verify --verbose --print-certs "$signed_apk" > "$output_dir/signature-verification.txt"
+          "$zipalign" -c -p 4 "$signed_apk"
+
+          signed_package="$("$apkanalyzer" manifest application-id "$signed_apk" | tr -d '\r' | tail -n 1)"
+          test "$signed_package" = "$package"
+          "$apkanalyzer" manifest print "$signed_apk" > "$protected_dir/merged-manifest.xml"
+          if grep -Eiq "com[.]pairip|com[.]android[.]vending[.]CHECK_LICENSE" "$protected_dir/merged-manifest.xml"; then
+            echo "Google Play-specific protection is present in Huawei build" >&2
+            exit 1
+          fi
+
+          # A signing key is essential for later updates. Encrypt BOTH keystore
+          # and its password before uploading to a public repository's artifacts.
+          # The private decryption key is never sent to GitHub.
+          tar -C "$protected_dir" -czf - huawei-release-signing.p12 key-password.txt |
+            openssl cms -encrypt -binary -aes256 -outform DER \
+              -recip .github/huawei/signing-backup-public-cert.pem \
+              -out "$output_dir/RAWAJ-Huawei-signing-backup.ENCRYPTED.cms"
+          test -s "$output_dir/RAWAJ-Huawei-signing-backup.ENCRYPTED.cms"
+
+          {
+            printf 'Application ID: %s\nVersion: %s\nVersion code: %s\n' "$package" "$version_name" "$version_code"
+            printf 'Source commit: %s\n' "$GITHUB_SHA"
+            printf 'Certificate / signing:\n'
+            grep -E 'Verified using|Signer #1 certificate SHA-256 digest' "$output_dir/signature-verification.txt" || true
+            printf 'Signing backup: encrypted CMS, decrypt with offline RAWAJ Huawei private key\n'
+            printf 'Device testing: NOT PERFORMED. Google sign-in and FCM push on GMS-free Huawei devices are NOT VERIFIED.\n'
+          } > "$output_dir/README-VERIFY-BEFORE-RELEASE.txt"
+          (cd "$output_dir" && sha256sum RAWAJ-Huawei-1.0.4-build5.apk RAWAJ-Huawei-signing-backup.ENCRYPTED.cms > SHA256SUMS.txt)
+          rm -rf "$protected_dir"
+
+      - name: Upload APK and encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawaj-huawei-1.0.4-build5-signed
+          path: huawei-release/
+          if-no-files-found: error
+          retention-days: 14
