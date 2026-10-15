@@ -1,0 +1,61 @@
+name: Huawei AppGallery Direct Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      signed_artifact_run_id:
+        description: "Successful signed Huawei APK build run ID"
+        required: true
+        default: "38654844080"
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upload-huawei:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout upload script
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Require privately configured Huawei API credentials
+        env:
+          HUAWEI_API_CLIENT_ID: ${{ secrets.HUAWEI_API_CLIENT_ID }}
+          HUAWEI_API_CLIENT_SECRET: ${{ secrets.HUAWEI_API_CLIENT_SECRET }}
+          HUAWEI_APP_ID: ${{ secrets.HUAWEI_APP_ID }}
+        run: |
+          test -n "$HUAWEI_API_CLIENT_ID" || { echo "Missing HUAWEI_API_CLIENT_ID GitHub Actions secret"; exit 1; }
+          test -n "$HUAWEI_API_CLIENT_SECRET" || { echo "Missing HUAWEI_API_CLIENT_SECRET GitHub Actions secret"; exit 1; }
+          test -n "$HUAWEI_APP_ID" || { echo "Missing HUAWEI_APP_ID GitHub Actions secret"; exit 1; }
+
+      - name: Download signed APK from verified build
+        uses: actions/download-artifact@v4
+        with:
+          name: rawaj-huawei-1.0.4-build5-signed
+          path: huawei-signed-build
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.signed_artifact_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify downloaded APK against signed build hash
+        run: |
+          set -Eeuo pipefail
+          cd huawei-signed-build
+          test -s RAWAJ-Huawei-1.0.4-build5.apk
+          grep -F 'RAWAJ-Huawei-1.0.4-build5.apk' SHA256SUMS.txt | sha256sum -c -
+
+      - name: Upload the APK to Huawei draft (no submission)
+        env:
+          HUAWEI_API_CLIENT_ID: ${{ secrets.HUAWEI_API_CLIENT_ID }}
+          HUAWEI_API_CLIENT_SECRET: ${{ secrets.HUAWEI_API_CLIENT_SECRET }}
+          HUAWEI_APP_ID: ${{ secrets.HUAWEI_APP_ID }}
+          HUAWEI_APK_PATH: huawei-signed-build/RAWAJ-Huawei-1.0.4-build5.apk
+        run: node scripts/huawei-appgallery-upload.mjs
