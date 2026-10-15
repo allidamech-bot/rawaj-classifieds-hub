@@ -1,0 +1,42 @@
+name: Upload existing RAWAJ APK to Huawei Draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type UPLOAD to attach the existing signed 1.0.4 APK to Huawei (does NOT publish)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upload-huawei-draft:
+    if: ${{ inputs.confirmation == 'UPLOAD' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download existing signed and verified APK (no rebuild or re-signing)
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 38654844080
+          name: rawaj-huawei-1.0.4-build5-signed
+          path: rawaj-huawei-existing-release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify artifact checksum and signing evidence
+        working-directory: rawaj-huawei-existing-release
+        run: |
+          set -euo pipefail
+          sha256sum --check SHA256SUMS.txt
+          test -s RAWAJ-Huawei-1.0.4-build5.apk
+          grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true' signature-verification.txt
+          grep -q 'Verified using v3 scheme (APK Signature Scheme v3): true' signature-verification.txt
+      - name: Upload to Huawei draft only, without Submit
+        env:
+          HUAWEI_API_CLIENT_ID: ${{ secrets.HUAWEI_API_CLIENT_ID }}
+          HUAWEI_API_CLIENT_SECRET: ${{ secrets.HUAWEI_API_CLIENT_SECRET }}
+          HUAWEI_APP_ID: ${{ secrets.HUAWEI_APP_ID }}
+        run: python3 scripts/huawei_upload.py rawaj-huawei-existing-release/RAWAJ-Huawei-1.0.4-build5.apk
