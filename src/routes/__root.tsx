@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
+  type ErrorComponentProps,
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
@@ -94,7 +95,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   const { text } = useUiPreferences();
   useEffect(() => {
