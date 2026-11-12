@@ -133,7 +133,7 @@
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > span {
   background: rgba(104, 173, 255, 0.1) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > svg {
@@ -149,7 +149,7 @@
 .rawaj-auth-premium-v3 .rawaj-auth-card__header > span {
   border: 1px solid rgba(104, 173, 255, 0.16) !important;
   background: rgba(104, 173, 255, 0.08) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header p {
@@ -339,7 +339,7 @@
 .rawaj-account-hub-v3 .rawaj-account-quick-links > a > span {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-quick-links strong {
@@ -370,7 +370,7 @@
 .rawaj-account-hub-v3 .rawaj-account-section > header > span {
   border: 1px solid rgba(104, 173, 255, 0.15) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-section > header p {
@@ -552,7 +552,7 @@
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__metrics svg {
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__metrics span {
@@ -622,7 +622,7 @@
 .rawaj-communication-v2 .rawaj-notification-timeline__icon {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-communication-v2 .rawaj-notification-timeline__copy strong {
@@ -649,13 +649,13 @@
 .rawaj-communication-v2 .rawaj-communication-follow-up__grid > a > span {
   border: 1px solid rgba(104, 173, 255, 0.13) !important;
   background: rgba(104, 173, 255, 0.07) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out > span {
   border: 1px solid rgba(104, 173, 255, 0.15) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out h1 {
@@ -713,7 +713,7 @@
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 svg,
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
@@ -724,7 +724,7 @@
 .rawaj-messaging-v4 .rawaj-communication-search {
   border: 1px solid var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-search input {
@@ -762,7 +762,7 @@
 .rawaj-messaging-v4 .rawaj-participant-avatar {
   border-color: #303137 !important;
   background: linear-gradient(145deg, #393a42, #2b2c32) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 

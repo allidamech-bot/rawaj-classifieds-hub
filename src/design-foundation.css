@@ -1,26 +1,26 @@
 :root,
 .dark {
-  --rawaj-page-background: #242529;
-  --rawaj-card-background: #2d2f34;
-  --rawaj-elevated-background: #34363c;
-  --rawaj-subtle-background: #292b30;
-  --rawaj-brand-background: #33343a;
-  --rawaj-brand-muted-background: #2b2c31;
+  --rawaj-page-background: #171e1c;
+  --rawaj-card-background: #242e2a;
+  --rawaj-elevated-background: #2e3a35;
+  --rawaj-subtle-background: #1d2723;
+  --rawaj-brand-background: #293630;
+  --rawaj-brand-muted-background: #202c27;
   --rawaj-primary: #eee8e4;
   --rawaj-primary-deep: #f7f2ee;
-  --rawaj-accent-orange: #ff7054;
-  --rawaj-accent-pink: #dc3eb6;
-  --rawaj-accent-violet: #8c63f4;
-  --rawaj-accent-blue: #3f91ff;
+  --rawaj-accent-orange: #b89762;
+  --rawaj-accent-pink: #9bb2a6;
+  --rawaj-accent-violet: #799f91;
+  --rawaj-accent-blue: #628b80;
   --rawaj-accent-gold: #cda260;
-  --rawaj-text-primary: #f2efeb;
-  --rawaj-text-secondary: #c4beba;
-  --rawaj-text-muted: #9d9894;
-  --rawaj-text-inverse: #1d1e22;
+  --rawaj-text-primary: #f5f1e8;
+  --rawaj-text-secondary: #d0d6cc;
+  --rawaj-text-muted: #adbab0;
+  --rawaj-text-inverse: #16201b;
   --rawaj-border: rgba(255, 255, 255, 0.09);
   --rawaj-border-strong: rgba(255, 255, 255, 0.16);
-  --rawaj-border-brand: rgba(220, 62, 182, 0.34);
-  --rawaj-muted-surface: #303136;
+  --rawaj-border-brand: rgba(139, 170, 156, 0.34);
+  --rawaj-muted-surface: #29342f;
   --rawaj-success: #70d5b1;
   --rawaj-warning: #e3a04b;
   --rawaj-danger: #ea7168;
@@ -32,7 +32,7 @@
   --foreground: var(--rawaj-text-primary);
   --card: var(--rawaj-card-background);
   --card-foreground: var(--rawaj-text-primary);
-  --card-warm: #313238;
+  --card-warm: #2d352e;
   --muted-surface: var(--rawaj-muted-surface);
   --popover: var(--rawaj-elevated-background);
   --popover-foreground: var(--rawaj-text-primary);
@@ -42,7 +42,7 @@
   --secondary-foreground: var(--rawaj-text-primary);
   --muted: var(--rawaj-muted-surface);
   --muted-foreground: var(--rawaj-text-secondary);
-  --accent: var(--rawaj-accent-pink);
+  --accent: var(--rawaj-action-primary, #28564b);
   --accent-foreground: #ffffff;
   --gold: var(--rawaj-accent-gold);
   --gold-foreground: #201e1a;
@@ -56,7 +56,7 @@
   --warning: var(--rawaj-warning);
   --border: var(--rawaj-border);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: var(--rawaj-accent-pink);
+  --ring: var(--rawaj-link, #a9c8bb);
 
   --rawaj-orange: var(--rawaj-accent-orange);
   --rawaj-gold: var(--rawaj-accent-gold);
@@ -64,13 +64,13 @@
   --rawaj-ink-muted: var(--rawaj-text-secondary);
   --rawaj-surface-card: var(--rawaj-card-background);
   --rawaj-surface-sage: var(--rawaj-muted-surface);
-  --rawaj-surface-sage-strong: #37383e;
-  --rawaj-surface-warm: #342c30;
-  --rawaj-surface-gold: #363127;
+  --rawaj-surface-sage-strong: #36463d;
+  --rawaj-surface-warm: #332e24;
+  --rawaj-surface-gold: #373024;
   --rawaj-surface-elevated: var(--rawaj-elevated-background);
   --rawaj-ink-soft: var(--rawaj-text-secondary);
-  --rawaj-forest-deep: #242529;
-  --rawaj-forest: #303136;
+  --rawaj-forest-deep: var(--rawaj-page-background);
+  --rawaj-forest: var(--rawaj-muted-surface);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -155,8 +155,8 @@ body {
   min-height: 100dvh;
   color: var(--foreground);
   background:
-    radial-gradient(34rem 24rem at 102% -4%, rgba(63, 145, 255, 0.08), transparent 68%),
-    radial-gradient(28rem 20rem at -8% 14%, rgba(220, 62, 182, 0.07), transparent 66%),
+    radial-gradient(34rem 24rem at 102% -4%, rgba(98, 139, 128, 0.08), transparent 68%),
+    radial-gradient(28rem 20rem at -8% 14%, rgba(139, 170, 156, 0.07), transparent 66%),
     linear-gradient(180deg, #2d2e32 0%, var(--background) 28rem),
     var(--background);
   font-family: "Cairo", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;

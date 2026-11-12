@@ -340,7 +340,7 @@ main.listing-detail-mobile-bottom .fixed .rawaj-surface {
 .rawaj-pulse-page .rawaj-merchant-stage {
   border: 1px solid var(--rawaj-border);
   background:
-    radial-gradient(circle at 90% 0%, rgba(225, 100, 180, 0.08), transparent 18rem),
+    radial-gradient(circle at 90% 0%, rgba(169, 200, 187, 0.08), transparent 18rem),
     var(--rawaj-card-background);
   box-shadow: var(--rawaj-shadow-card);
 }

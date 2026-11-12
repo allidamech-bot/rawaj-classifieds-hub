@@ -8,8 +8,8 @@
   margin-top: clamp(1rem, 3vw, 2rem) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.11) !important;
   background:
-    radial-gradient(circle at 8% 120%, rgba(220, 62, 182, 0.15), transparent 22rem),
-    radial-gradient(circle at 92% 112%, rgba(63, 145, 255, 0.13), transparent 24rem),
+    radial-gradient(circle at 8% 120%, rgba(139, 170, 156, 0.15), transparent 22rem),
+    radial-gradient(circle at 92% 112%, rgba(98, 139, 128, 0.13), transparent 24rem),
     linear-gradient(155deg, #202127 0%, #1b1c21 56%, #18191e 100%) !important;
   color: #f7f1ea !important;
   box-shadow:
@@ -26,9 +26,9 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 112, 84, 0.72),
-    rgba(220, 62, 182, 0.7),
-    rgba(63, 145, 255, 0.68),
+    rgba(184, 151, 98, 0.72),
+    rgba(139, 170, 156, 0.7),
+    rgba(98, 139, 128, 0.68),
     transparent
   );
   pointer-events: none;
@@ -100,15 +100,15 @@
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(1) {
-  border-color: rgba(255, 112, 84, 0.28) !important;
+  border-color: rgba(184, 151, 98, 0.28) !important;
   color: #ffc4b8 !important;
-  background: rgba(255, 112, 84, 0.085) !important;
+  background: rgba(184, 151, 98, 0.085) !important;
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(2) {
-  border-color: rgba(63, 145, 255, 0.27) !important;
+  border-color: rgba(98, 139, 128, 0.27) !important;
   color: #b9d7ff !important;
-  background: rgba(63, 145, 255, 0.08) !important;
+  background: rgba(98, 139, 128, 0.08) !important;
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(3) {

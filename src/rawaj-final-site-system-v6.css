@@ -208,7 +208,7 @@
 .rawaj-detail-location > span {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-detail-v2__message {
@@ -295,7 +295,7 @@
   background:
     radial-gradient(circle at 38% 32%, rgba(104, 173, 255, 0.17), transparent 36%),
     linear-gradient(145deg, #393a42, #292a30) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
   box-shadow: 0 15px 34px rgba(0, 0, 0, 0.26) !important;
 }
 
@@ -305,7 +305,7 @@
 
 .rawaj-storefront-identity__meta svg,
 .rawaj-storefront-identity__metrics svg {
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-storefront-identity__bio {
@@ -424,7 +424,7 @@
 .rawaj-trust-hero__avatar {
   border-color: rgba(255, 255, 255, 0.14) !important;
   background: rgba(24, 25, 30, 0.32) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
   box-shadow: none !important;
 }
 
@@ -502,7 +502,7 @@
 .rawaj-support-timeline__icon {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-safety-guide[data-warning="true"] {

@@ -393,7 +393,7 @@
   border: 1px solid rgba(104, 173, 255, 0.16) !important;
   border-radius: 0.78rem !important;
   background: rgba(104, 173, 255, 0.08) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-section__heading h2 {
@@ -560,7 +560,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-section__body h4.text-primary {
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 /* Photo picker */
@@ -724,7 +724,7 @@
 .rawaj-listing-studio-v4 .rawaj-studio-completion__icon {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.08) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-completion[data-ready="true"] .rawaj-studio-completion__icon {
