@@ -4,28 +4,28 @@
    The visual hierarchy is intentionally ad-first and the color system supports content. */
 
 .rawaj-app-shell[data-resolved-pathname="/"] {
-  --rawaj-signature-bg: #26272b;
-  --rawaj-signature-bg-deep: #202126;
-  --rawaj-signature-surface: #2d2f34;
-  --rawaj-signature-surface-raised: #34363c;
-  --rawaj-signature-surface-soft: #292b30;
-  --rawaj-signature-text: #f2efeb;
-  --rawaj-signature-text-soft: #d7d2cd;
-  --rawaj-signature-muted: #aaa5a0;
-  --rawaj-signature-faint: #817d79;
+  --rawaj-signature-bg: var(--rawaj-page-background);
+  --rawaj-signature-bg-deep: var(--rawaj-page-background-deep);
+  --rawaj-signature-surface: var(--rawaj-card-background);
+  --rawaj-signature-surface-raised: var(--rawaj-elevated-background);
+  --rawaj-signature-surface-soft: var(--rawaj-subtle-background);
+  --rawaj-signature-text: var(--rawaj-text-primary);
+  --rawaj-signature-text-soft: var(--rawaj-text-secondary);
+  --rawaj-signature-muted: var(--rawaj-text-muted);
+  --rawaj-signature-faint: var(--rawaj-text-muted);
   --rawaj-signature-border: rgba(255, 255, 255, 0.09);
   --rawaj-signature-border-strong: rgba(255, 255, 255, 0.145);
-  --rawaj-signature-coral: #ff7054;
-  --rawaj-signature-pink: #dc3eb6;
-  --rawaj-signature-violet: #8c63f4;
-  --rawaj-signature-blue: #3f91ff;
-  --rawaj-signature-cyan: #69d9ec;
+  --rawaj-signature-coral: var(--rawaj-accent-coral);
+  --rawaj-signature-pink: var(--rawaj-accent-pink);
+  --rawaj-signature-violet: var(--rawaj-accent-violet);
+  --rawaj-signature-blue: var(--rawaj-accent-blue);
+  --rawaj-signature-cyan: var(--rawaj-accent-cyan);
   --rawaj-signature-success: #70d5b1;
   color: var(--rawaj-signature-text);
   background:
-    radial-gradient(circle at 88% 3%, rgba(86, 100, 148, 0.075), transparent 25rem),
-    radial-gradient(circle at 8% 42%, rgba(133, 65, 138, 0.035), transparent 26rem),
-    linear-gradient(180deg, #2f3034 0%, var(--rawaj-signature-bg) 38%, #232428 100%) !important;
+    radial-gradient(circle at 88% 3%, rgba(98, 139, 128, 0.075), transparent 25rem),
+    radial-gradient(circle at 8% 42%, rgba(139, 170, 156, 0.035), transparent 26rem),
+    linear-gradient(180deg, #242e2a 0%, var(--rawaj-signature-bg) 38%, #171e1c 100%) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
@@ -66,7 +66,7 @@
   z-index: 35;
   border: 0 !important;
   color: var(--rawaj-signature-text);
-  background: linear-gradient(180deg, rgba(43, 44, 48, 0.97), rgba(39, 40, 44, 0.91)) !important;
+  background: linear-gradient(180deg, rgba(36, 46, 42, 0.97), rgba(23, 30, 28, 0.91)) !important;
   box-shadow: 0 9px 24px rgba(7, 8, 11, 0.14) !important;
   backdrop-filter: blur(22px) saturate(110%);
   -webkit-backdrop-filter: blur(22px) saturate(110%);
@@ -181,8 +181,8 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-cta {
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink)) !important;
-  box-shadow: 0 10px 24px rgba(207, 55, 166, 0.2) !important;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 10px 24px rgba(62, 111, 91, 0.2) !important;
   font-family: "Cairo", sans-serif;
   font-weight: 600 !important;
 }
@@ -197,8 +197,8 @@
   border: 1px solid transparent;
   border-radius: 26px;
   background:
-    linear-gradient(155deg, rgba(9, 12, 39, 0.985), rgba(11, 12, 29, 0.985) 57%, rgba(18, 18, 26, 0.995)) padding-box,
-    linear-gradient(120deg, rgba(255, 112, 84, 0.42), rgba(220, 62, 182, 0.32), rgba(140, 99, 244, 0.32), rgba(63, 145, 255, 0.36)) border-box;
+    linear-gradient(155deg, rgba(29, 52, 44, 0.985), rgba(24, 42, 35, 0.985) 57%, rgba(19, 28, 24, 0.995)) padding-box,
+    linear-gradient(120deg, rgba(184, 151, 98, 0.42), rgba(139, 170, 156, 0.32), rgba(121, 159, 145, 0.32), rgba(98, 139, 128, 0.36)) border-box;
   box-shadow:
     0 24px 54px rgba(0, 0, 0, 0.29),
     inset 0 1px 0 rgba(255, 255, 255, 0.065);
@@ -211,8 +211,8 @@
   inset: 19% 0 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(13, 15, 25, 0.18), transparent 42%),
-    linear-gradient(180deg, rgba(10, 11, 19, 0.01), rgba(12, 13, 20, 0.73) 53%, rgba(12, 13, 19, 0.97) 100%);
+    radial-gradient(ellipse at 50% 40%, rgba(15, 26, 21, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(15, 26, 21, 0.01), rgba(17, 27, 23, 0.73) 53%, rgba(17, 27, 23, 0.97) 100%);
   pointer-events: none;
 }
 
@@ -230,10 +230,10 @@
   position: absolute;
   inset: -47% -17% 50%;
   background:
-    radial-gradient(circle at 21% 72%, rgba(255, 73, 115, 0.84), transparent 19%),
-    radial-gradient(circle at 46% 73%, rgba(127, 63, 255, 0.86), transparent 25%),
-    radial-gradient(circle at 73% 45%, rgba(27, 151, 255, 0.86), transparent 24%),
-    radial-gradient(circle at 90% 80%, rgba(255, 105, 55, 0.7), transparent 18%);
+    radial-gradient(circle at 21% 72%, rgba(114, 97, 64, 0.84), transparent 19%),
+    radial-gradient(circle at 46% 73%, rgba(56, 102, 85, 0.86), transparent 25%),
+    radial-gradient(circle at 73% 45%, rgba(64, 110, 93, 0.86), transparent 24%),
+    radial-gradient(circle at 90% 80%, rgba(110, 92, 61, 0.7), transparent 18%);
   filter: blur(23px) saturate(116%);
   opacity: 0.83;
   transform: rotate(-5deg) scale(1.1);
@@ -251,27 +251,27 @@
   width: 79%;
   height: 6.4rem;
   inset: 4.4rem auto auto -24%;
-  background: linear-gradient(90deg, #ff7736, #ff2e88 36%, #7840f4 72%, transparent);
+  background: linear-gradient(90deg, #806a48, #526b5e 36%, #31594e 72%, transparent);
   opacity: 0.72;
   transform: rotate(9deg);
-  box-shadow: 0 0 26px rgba(238, 55, 168, 0.43);
+  box-shadow: 0 0 26px rgba(85, 115, 98, 0.43);
 }
 
 .rawaj-signature-hero__aurora span[data-wave="two"] {
   width: 79%;
   height: 7rem;
   inset: 2.6rem -28% auto auto;
-  background: linear-gradient(90deg, transparent, #2635e7 18%, #16b6ff 50%, #8e55ff 78%, #ff4c8d);
+  background: linear-gradient(90deg, transparent, #254f46 18%, #487767 50%, #496d60 78%, #706146);
   opacity: 0.75;
   transform: rotate(-12deg);
-  box-shadow: 0 0 30px rgba(40, 138, 255, 0.44);
+  box-shadow: 0 0 30px rgba(68, 111, 95, 0.44);
 }
 
 .rawaj-signature-hero__aurora span[data-wave="three"] {
   width: 64%;
   height: 5.8rem;
   inset: 8.5rem -19% auto auto;
-  background: linear-gradient(110deg, #4434cb, #f33b9e 57%, #ff7b35 88%);
+  background: linear-gradient(110deg, #23483e, #496b5c 57%, #796746 88%);
   opacity: 0.55;
   transform: rotate(14deg);
 }
@@ -348,13 +348,13 @@
   padding-inline: 0.72rem;
   color: #ddd7d2;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(35, 36, 44, 0.7);
+  background: rgba(27, 39, 33, 0.7);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .rawaj-signature-location svg {
   width: 0.9rem;
-  color: #ff8b6d;
+  color: #dbc49d;
 }
 
 .rawaj-signature-location svg:last-child {
@@ -366,8 +366,8 @@
   padding-inline: 0.9rem;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.13);
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink));
-  box-shadow: 0 11px 25px rgba(210, 56, 170, 0.2);
+  background: var(--rawaj-gradient-action-short);
+  box-shadow: 0 11px 25px rgba(62, 111, 91, 0.2);
 }
 
 .rawaj-signature-hero__primary-action svg {
@@ -388,8 +388,8 @@
   border: 1px solid transparent;
   border-radius: 18px;
   background:
-    linear-gradient(145deg, rgba(39, 40, 47, 0.99), rgba(29, 30, 36, 0.99)) padding-box,
-    linear-gradient(112deg, rgba(255, 112, 84, 0.5), rgba(220, 62, 182, 0.42), rgba(140, 99, 244, 0.4), rgba(63, 145, 255, 0.44)) border-box;
+    linear-gradient(145deg, rgba(36, 46, 42, 0.99), rgba(24, 34, 30, 0.99)) padding-box,
+    linear-gradient(112deg, rgba(184, 151, 98, 0.5), rgba(139, 170, 156, 0.42), rgba(121, 159, 145, 0.4), rgba(98, 139, 128, 0.44)) border-box;
   box-shadow:
     0 18px 38px rgba(0, 0, 0, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -431,8 +431,8 @@
   border: 0;
   border-radius: 14px;
   color: #fff;
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink));
-  box-shadow: 0 9px 22px rgba(210, 56, 170, 0.18);
+  background: var(--rawaj-gradient-action-short);
+  box-shadow: 0 9px 22px rgba(62, 111, 91, 0.18);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
@@ -537,8 +537,8 @@
   border: 1px solid transparent;
   border-radius: 22px;
   background:
-    linear-gradient(155deg, #32343a, #292a2f 78%) padding-box,
-    linear-gradient(118deg, rgba(255, 112, 84, 0.54), rgba(220, 62, 182, 0.42), rgba(140, 99, 244, 0.38), rgba(63, 145, 255, 0.42)) border-box;
+    linear-gradient(155deg, #2e3a35, #202a26 78%) padding-box,
+    linear-gradient(118deg, rgba(184, 151, 98, 0.54), rgba(139, 170, 156, 0.42), rgba(121, 159, 145, 0.38), rgba(98, 139, 128, 0.42)) border-box;
   box-shadow:
     0 21px 48px rgba(0, 0, 0, 0.27),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -718,7 +718,7 @@
   padding: 0.4rem 0.42rem 0.4rem 0.58rem;
   border: 1px solid var(--rawaj-signature-border);
   border-radius: 18px;
-  background: linear-gradient(150deg, #313238, #2a2b30);
+  background: linear-gradient(150deg, #29342f, #1d2723);
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.19),
     inset 0 1px 0 rgba(255, 255, 255, 0.032);
@@ -731,7 +731,7 @@
   inset-inline-end: 58%;
   inset-block-start: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(220, 62, 182, 0.5), rgba(63, 145, 255, 0.42), transparent);
+  background: linear-gradient(90deg, transparent, rgba(139, 170, 156, 0.5), rgba(98, 139, 128, 0.42), transparent);
   opacity: 0.72;
 }
 
@@ -907,8 +907,8 @@
   border: 1px solid transparent !important;
   border-radius: 20px !important;
   background:
-    linear-gradient(#2b2c31, #2b2c31) padding-box,
-    linear-gradient(115deg, rgba(255, 112, 84, 0.36), rgba(220, 62, 182, 0.32), rgba(63, 145, 255, 0.32)) border-box !important;
+    linear-gradient(#242e2a, #242e2a) padding-box,
+    linear-gradient(115deg, rgba(184, 151, 98, 0.36), rgba(139, 170, 156, 0.32), rgba(98, 139, 128, 0.32)) border-box !important;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.23) !important;
 }
 
@@ -945,7 +945,7 @@
   border: 1px solid rgba(255, 255, 255, 0.075);
   border-radius: 17px;
   background:
-    radial-gradient(circle at 50% 0%, rgba(68, 136, 166, 0.07), transparent 55%),
+    radial-gradient(circle at 50% 0%, rgba(67, 117, 98, 0.07), transparent 55%),
     rgba(47, 48, 53, 0.76);
   box-shadow:
     0 11px 24px rgba(0, 0, 0, 0.15),
@@ -1079,11 +1079,11 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-create {
   color: #fff !important;
-  background: linear-gradient(145deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink), var(--rawaj-signature-violet)) !important;
+  background: var(--rawaj-gradient-action) !important;
   box-shadow:
     0 11px 24px rgba(208, 58, 168, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-  ring-color: #292a2f !important;
+  ring-color: #202a26 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-dock__label {

@@ -73,10 +73,10 @@
 
 .rawaj-categories-discovery__group[data-tone="promoted"] {
   padding: clamp(0.8rem, 2.5vw, 1.15rem);
-  border: 1px solid rgba(225, 100, 180, 0.15);
+  border: 1px solid rgba(169, 200, 187, 0.15);
   border-radius: 1.2rem;
   background:
-    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.075), transparent 28rem),
+    radial-gradient(circle at 100% 0%, rgba(169, 200, 187, 0.075), transparent 28rem),
     radial-gradient(circle at 0% 100%, rgba(255, 117, 89, 0.055), transparent 24rem),
     rgba(43, 44, 50, 0.7);
 }
@@ -117,9 +117,9 @@
 }
 
 .rawaj-categories-discovery__promoted-grid .rawaj-adaptive-card {
-  border-color: rgba(225, 100, 180, 0.17) !important;
+  border-color: rgba(169, 200, 187, 0.17) !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.055), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(169, 200, 187, 0.055), transparent 36%),
     linear-gradient(155deg, #333139, #2b2b31) !important;
 }
 
@@ -228,7 +228,7 @@
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 0.8rem;
-  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8);
+  background: linear-gradient(135deg, #6b5133, #28564b 58%, #315c50);
   color: #fff;
   padding-inline: 1rem;
   font-size: 0.78rem;

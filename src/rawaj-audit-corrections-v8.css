@@ -43,8 +43,8 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   margin-top: clamp(1rem, 3vw, 2.25rem) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   background:
-    radial-gradient(circle at 12% 100%, rgba(220, 62, 182, 0.08), transparent 24rem),
-    radial-gradient(circle at 88% 100%, rgba(63, 145, 255, 0.07), transparent 24rem),
+    radial-gradient(circle at 12% 100%, rgba(139, 170, 156, 0.08), transparent 24rem),
+    radial-gradient(circle at 88% 100%, rgba(98, 139, 128, 0.07), transparent 24rem),
     #202126 !important;
   color: var(--rawaj-text-primary) !important;
 }
@@ -177,12 +177,12 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 2) .category-tile {
   background: rgba(223, 73, 181, 0.1) !important;
-  color: #ef8bd3 !important;
+  color: #c6d7cf !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 3) .category-tile {
   background: rgba(104, 173, 255, 0.1) !important;
-  color: #8fc2ff !important;
+  color: #a9c8bb !important;
 }
 
 /* Keep the editorial accents, but avoid masonry gaps when a category level has
@@ -494,8 +494,8 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-admin-nav-rail > a[aria-current="page"] {
-  border-color: rgba(225, 100, 180, 0.3) !important;
-  background: rgba(225, 100, 180, 0.09) !important;
+  border-color: rgba(169, 200, 187, 0.3) !important;
+  background: rgba(169, 200, 187, 0.09) !important;
   color: var(--rawaj-text-primary) !important;
 }
 

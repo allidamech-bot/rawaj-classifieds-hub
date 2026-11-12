@@ -107,7 +107,7 @@
   ):focus-visible {
   border-color: var(--rawaj-border-active);
   outline: 0;
-  box-shadow: 0 0 0 3px rgba(225, 100, 180, 0.12);
+  box-shadow: 0 0 0 3px rgba(169, 200, 187, 0.12);
 }
 
 .rawaj-app-shell__content form :is(label, legend) {
@@ -260,7 +260,7 @@ body
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   .rawaj-owner-workspace-summary__actions
   a[data-tone="promotion"] {
-  border-color: rgba(225, 100, 180, 0.22) !important;
+  border-color: rgba(169, 200, 187, 0.22) !important;
   color: #f1b5dc !important;
   background: rgba(149, 45, 118, 0.15) !important;
 }

@@ -105,7 +105,7 @@
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-quick-filter-rail button[data-active="true"],
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__views button[aria-pressed="true"] {
   border-color: rgba(255, 255, 255, 0.13) !important;
-  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
+  background: linear-gradient(135deg, #6b5133, #28564b 58%, #315c50) !important;
   color: #ffffff !important;
 }
 
@@ -484,7 +484,7 @@
     [data-resolved-pathname^="/admin"]
   ) :is(.rawaj-button-primary, button[type="submit"]) {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
+  background: linear-gradient(135deg, #6b5133, #28564b 58%, #315c50) !important;
   color: #ffffff !important;
   box-shadow: 0 10px 24px rgba(155, 40, 111, 0.2) !important;
 }
