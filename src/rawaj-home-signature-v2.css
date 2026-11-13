@@ -150,25 +150,25 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action:hover,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account:hover,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button:hover {
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.065) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-divider) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav {
-  border: 1px solid rgba(255, 255, 255, 0.065) !important;
-  background: rgba(255, 255, 255, 0.026) !important;
+  border: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav-item {
-  color: rgba(242, 239, 235, 0.7) !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-family: "Cairo", sans-serif;
   font-weight: 500 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav-item[data-active="true"] {
-  color: var(--rawaj-signature-text) !important;
-  background: rgba(255, 255, 255, 0.056) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
+  box-shadow: inset 0 0 0 1px var(--rawaj-divider) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-cta {
