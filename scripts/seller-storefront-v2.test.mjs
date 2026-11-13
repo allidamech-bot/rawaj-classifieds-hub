@@ -23,6 +23,11 @@ const [root, routeStyles, shared, publicRoute, ownerRoute, css, qualityGate, bar
     readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   ]);
 
+const [approvedIdentity, approvedCss] = await Promise.all([
+  readFile(new URL("../src/features/storefront/MyStoreIdentity.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/features/storefront/my-store.css", import.meta.url), "utf8"),
+]);
+
 const sellerLoadError = {
   message: "Temporary seller profile read failure",
 };
@@ -59,14 +64,20 @@ test("storefront identity media falls back without blocking refreshed URLs", () 
   assert.doesNotMatch(shared, /useEffect/);
 });
 
-test("public seller uses adaptive cards and preserves review privacy contracts", () => {
-  assert.match(publicRoute, /rawaj-storefront-v2/);
-  assert.match(publicRoute, /<StorefrontIdentityHero/);
-  assert.match(publicRoute, /<AdaptiveListingCard/);
-  assert.doesNotMatch(publicRoute, /function SellerListingCard/);
+test("public seller uses the same approved visual identity as the owner but not owner privileges", () => {
+  assert.match(approvedIdentity, /mode\?: "owner" \| "public"/);
+  assert.match(approvedIdentity, /<SellerFollowButton/);
+  assert.match(approvedIdentity, /isPublic \? \(/);
+  assert.match(publicRoute, /<MyStoreIdentity/);
+  assert.match(publicRoute, /mode="public"/);
+  assert.match(publicRoute, /<PublicStoreListingCard/);
+  assert.match(publicRoute, /to="\/listings\/\$id"/);
+  assert.match(publicRoute, /seller\.listings\.map/);
+  assert.match(publicRoute, /seller\.inventoryStatus !== "ready"/);
   assert.match(publicRoute, /fetchSellerReviewEligibility/);
   assert.match(publicRoute, /createSellerReview/);
   assert.match(publicRoute, /buildSellerStructuredData/);
+  assert.doesNotMatch(publicRoute, /<OwnerListingsToolbar|deleteOwnerListing|closeOwnerListing/);
 });
 
 test("only genuine unavailable seller outcomes remain eligible for the 404 path", () => {
@@ -117,11 +128,11 @@ test("transient seller profile failures reach the retryable route error boundary
   assert.match(publicRoute, /إعادة المحاولة/);
 });
 
-test("owner store shares identity and preserves lifecycle operations", () => {
-  assert.match(ownerRoute, /rawaj-storefront-v2--owner/);
-  assert.match(ownerRoute, /<StorefrontIdentityHero/);
-  assert.match(ownerRoute, /rawaj-storefront-owner-tabs/);
-  assert.match(ownerRoute, /rawaj-storefront-owner-grid/);
+test("owner storefront preserves management actions and reuses approved identity", () => {
+  assert.match(ownerRoute, /<MyStoreIdentity/);
+  assert.match(ownerRoute, /onManage=\{\(\) => setToolsOpen\(true\)\}/);
+  assert.match(ownerRoute, /my-store-dialog/);
+  assert.match(ownerRoute, /<OwnerListingsToolbar/);
   assert.match(ownerRoute, /fetchCurrentUserListings/);
   assert.match(ownerRoute, /closeOwnerListing/);
   assert.match(ownerRoute, /reactivateOwnerListing/);
@@ -129,6 +140,9 @@ test("owner store shares identity and preserves lifecycle operations", () => {
   assert.match(ownerRoute, /setOwnerListingExpiry/);
   assert.match(ownerRoute, /setOwnerListingReserved/);
   assert.match(ownerRoute, /deleteOwnerListing/);
+  assert.match(approvedCss, /\.my-store-public-card/);
+  assert.match(approvedCss, /\.my-store-dialog\[role="dialog"\]/);
+  assert.match(approvedCss, /data-resolved-pathname\^="\/seller\/"/);
 });
 
 test("owner listings and public store metadata recover independently", () => {
