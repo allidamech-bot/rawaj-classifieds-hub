@@ -307,6 +307,8 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await page.getByRole("button", { name: "العربية", exact: true }).click();
   await expect(page.locator(".my-store-public-page")).toHaveAttribute("dir", "rtl");
   await expect(page.locator(".my-store-public-tabs > a").first()).toContainText("الإعلانات");
+  await page.locator(".my-store-topbar .my-store-nav summary").click();
+  await expect(page.locator(".my-store-topbar .my-store-nav")).not.toHaveAttribute("open", "");
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
     .toBe(true);
