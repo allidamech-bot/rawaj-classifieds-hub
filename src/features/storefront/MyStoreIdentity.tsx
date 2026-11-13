@@ -28,7 +28,7 @@ interface MyStoreIdentityProps {
   bio?: string | null;
   location?: string | null;
   verified?: boolean;
-  completeness: number;
+  completeness?: number;
   onManage?: () => void;
   approvedCount?: number | null;
   ratingAverage?: number | null;
@@ -46,7 +46,7 @@ export function MyStoreIdentity({
   bio,
   location,
   verified,
-  completeness,
+  completeness = 0,
   approvedCount = 0,
   ratingAverage,
   ratingCount = 0,
@@ -96,7 +96,9 @@ export function MyStoreIdentity({
             fillOpacity=".7"
           />
         </svg>
-        <span className="my-store-cover-title">{text("متجري", "My Store")}</span>
+        <span className="my-store-cover-title">
+          {isPublic ? text("المتجر", "Store") : text("متجري", "My Store")}
+        </span>
         <svg
           className="my-store-cover-wave"
           viewBox="0 0 1100 60"
