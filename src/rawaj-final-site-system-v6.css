@@ -683,10 +683,10 @@
     [data-resolved-pathname="/reset-password"],
     [data-resolved-pathname^="/admin"]
   ) main > section.rounded-2xl {
-  border: 1px solid var(--v6-line) !important;
-  background: rgba(48, 49, 55, 0.985) !important;
-  color: var(--v6-text-soft) !important;
-  box-shadow: var(--v6-shadow) !important;
+  border: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-surface) !important;
+  color: var(--rawaj-ink-primary) !important;
+  box-shadow: none !important;
 }
 
 /* Mobile closure */

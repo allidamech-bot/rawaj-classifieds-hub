@@ -355,7 +355,7 @@
   overflow: hidden !important;
   border: 1px solid var(--studio-v5-border) !important;
   border-radius: 1.22rem !important;
-  background: rgba(49, 50, 57, 0.985) !important;
+  background: var(--rawaj-surface) !important;
   padding: clamp(0.92rem, 2.6vw, 1.22rem) !important;
   color: var(--studio-v5-text) !important;
   box-shadow:
@@ -688,7 +688,7 @@
   overflow: hidden;
   border: 1px solid var(--studio-v5-border) !important;
   border-radius: 1.05rem !important;
-  background: rgba(49, 50, 57, 0.985) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--studio-v5-text-soft) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
@@ -697,7 +697,7 @@
 
 .rawaj-listing-studio-v4 .rawaj-studio-completion[data-ready="true"] {
   border-color: rgba(85, 216, 164, 0.19) !important;
-  background: rgba(49, 50, 57, 0.985) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-completion__icon {
@@ -732,7 +732,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-preview__body strong {
-  color: #ff907a !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-preview__body p svg {
@@ -818,7 +818,7 @@
 .rawaj-app-shell[data-resolved-pathname="/add-listing"] main:not(.rawaj-listing-studio-v4) .rawaj-surface,
 .rawaj-listing-studio-v4 > .rawaj-surface {
   border: 1px solid var(--studio-v5-border) !important;
-  background: rgba(49, 50, 57, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--studio-v5-text) !important;
   box-shadow: var(--studio-v5-shadow) !important;
 }

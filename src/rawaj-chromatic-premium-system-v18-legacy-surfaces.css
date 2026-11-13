@@ -91,7 +91,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
   border-color: rgba(216,174,95,.24) !important;
-  color: #f8ead0 !important;
+  color: var(--rawaj-brand-primary) !important;
   background: rgba(216,174,95,.1) !important;
 }
 

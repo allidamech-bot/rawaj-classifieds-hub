@@ -48,24 +48,24 @@ main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
   border-radius: var(--rawaj-radius-surface);
-  background: #102b46;
-  color: white;
+  background: var(--rawaj-surface);
+  color: var(--rawaj-ink-primary);
   box-shadow: var(--rawaj-shadow-soft);
 }
 
 main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .text-muted-foreground {
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--rawaj-ink-secondary);
 }
 
 main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .bg-muted-surface {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--rawaj-surface-subtle);
+  color: var(--rawaj-ink-primary);
+  border-color: var(--rawaj-divider);
 }
 
 main.container-wide.mobile-page-bottom.space-y-5 > section:first-child a[class*="bg-primary"] {
-  background: var(--color-brand-orange);
-  color: white;
+  background: var(--rawaj-action-primary);
+  color: var(--rawaj-action-primary-foreground);
 }
 
 main.container-wide.mobile-page-bottom.space-y-5 > section:not(:first-child) {
