@@ -143,6 +143,11 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       userId: "member", action: "set", restrictionType: "posting", reason: "under review",
     });
     assert.equal(restricted.status, 201);
+    const duplicate = await post("admin", "restrictions", {
+      userId: "member", action: "set", restrictionType: "posting", reason: "retry after lost response",
+    });
+    assert.equal(duplicate.status, 200);
+    assert.equal(duplicate.body.data, restricted.body.data);
     assert.equal(db.prepare("SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL").get().count, 1);
     assert.equal((await post("admin", "restrictions", {
       userId: "member", action: "lift", restrictionType: "posting", reason: "review complete",
