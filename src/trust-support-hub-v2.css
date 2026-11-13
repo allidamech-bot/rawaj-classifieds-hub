@@ -369,10 +369,10 @@
   border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
   border-radius: 0.88rem;
   outline: 0;
-  background: var(--rawaj-surface-warm);
+  background: var(--rawaj-surface);
   padding: 0.65rem 0.75rem;
   color: var(--color-foreground);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .rawaj-support-panel textarea {
@@ -390,12 +390,12 @@
 
 .rawaj-support-panel button[type="submit"] {
   min-height: 3rem;
-  border-radius: 0.88rem;
+  border-radius: 0.75rem;
   background: var(--rawaj-brand-primary);
   color: white;
-  font-size: 0.875rem;
-  font-weight: 900;
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 24%, transparent);
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .rawaj-support-panel button[type="submit"]:disabled {
@@ -688,102 +688,55 @@
   }
 }
 
-/* Premium UI phase 7: readable legal and policy surfaces. */
+/* Policy pages use one restrained reading rhythm rather than nested visual cards. */
 .rawaj-legal-v3,
 .rawaj-prohibited-v3 {
-  --legal-v3-green: #123f36;
-  --legal-v3-coral: #df693c;
-  --legal-v3-gold: #cda04c;
-  position: relative;
-  max-width: 64rem;
-  padding-bottom: 3rem;
+  min-inline-size: 0;
+  max-inline-size: 68rem;
+  margin-inline: auto;
+  padding-block-end: 48px;
+  color: var(--rawaj-ink-primary);
 }
-
-.rawaj-legal-v3::before,
-.rawaj-prohibited-v3::before {
-  content: "";
-  position: absolute;
-  inset: -0.5rem 0 auto;
-  z-index: -1;
-  height: 13rem;
-  border-radius: 2rem;
-  background: transparent;
-}
-
-.rawaj-legal-v3 > p:first-child {
-  border: 1px solid color-mix(in srgb, var(--legal-v3-gold) 22%, var(--color-border));
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--legal-v3-gold) 7%, #fffefa);
-  padding: 0.85rem 1rem;
-  color: color-mix(in srgb, var(--legal-v3-green) 74%, var(--color-muted-foreground));
-}
-
 .rawaj-legal-v3 > div > section {
   position: relative;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--legal-v3-green) 10%, var(--color-border)) !important;
-  border-radius: 1.25rem !important;
-  background: #fffefa !important;
-  padding: 1.25rem !important;
-  box-shadow: 0 14px 34px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: visible;
+  border: 0 !important;
+  border-block-end: 1px solid var(--rawaj-divider) !important;
+  border-radius: 0 !important;
+  background: var(--rawaj-canvas) !important;
+  padding: 20px 0 !important;
+  box-shadow: none !important;
 }
-
-.rawaj-legal-v3 > div > section::before {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 0.22rem;
-  background: var(--legal-v3-coral);
+.rawaj-legal-v3 > div > section::before { content: none; }
+.rawaj-legal-v3 > div > section h2 {
+  color: var(--rawaj-ink-primary) !important;
+  font-size: 18px;
+  line-height: 1.5;
 }
-
-.rawaj-legal-v3 h2 { color: var(--legal-v3-green) !important; }
-.rawaj-legal-v3 p { max-width: 76ch; }
-
-.rawaj-prohibited-v3 > div:first-child {
-  border-color: color-mix(in srgb, var(--color-destructive) 22%, var(--color-border)) !important;
-  border-radius: 1.3rem !important;
-  background: color-mix(in srgb, var(--color-destructive) 9%, #fffefa) !important;
-  box-shadow: 0 15px 36px rgba(120, 37, 26, 0.08);
+.rawaj-legal-v3 > div > section p {
+  max-inline-size: 75ch;
+  color: var(--rawaj-ink-secondary);
+  font-size: 15px;
+  line-height: 1.9;
 }
-
-.rawaj-prohibited-v3 > div.grid > div {
-  border-color: color-mix(in srgb, var(--color-destructive) 12%, var(--color-border)) !important;
-  border-radius: 1.1rem !important;
-  background: #fffefa !important;
-  box-shadow: 0 10px 26px rgba(16, 63, 53, 0.055);
+.rawaj-legal-v3 > section p { max-inline-size: 75ch; font-size: 15px; line-height: 1.8; }
+.rawaj-prohibited-v3 > div.grid > article {
+  border: 1px solid var(--rawaj-divider);
+  border-radius: 12px;
+  background: var(--rawaj-surface);
+  box-shadow: none;
 }
-
-.rawaj-prohibited-v3 > div.grid > div:hover {
-  border-color: color-mix(in srgb, var(--color-destructive) 28%, var(--color-border)) !important;
-  transform: translateY(-1px);
+.rawaj-prohibited-v3 > div.grid > article > span:last-child {
+  color: var(--rawaj-ink-primary);
+  font-size: 15px;
+  line-height: 1.75;
 }
-
-@media (max-width: 639px) {
-  :is(.rawaj-legal-v3, .rawaj-prohibited-v3) { padding-inline: 0.75rem !important; }
-  .rawaj-legal-v3 > div > section { padding: 1rem !important; }
+.rawaj-prohibited-v3 > section p { font-size: 15px; line-height: 1.8; }
+.rawaj-legal-v3 :is(a, button):focus-visible,
+.rawaj-prohibited-v3 :is(a, button):focus-visible {
+  outline: 2px solid var(--rawaj-brand-primary);
+  outline-offset: 2px;
 }
-
 @media (prefers-reduced-motion: reduce) {
-  :is(.rawaj-legal-v3, .rawaj-prohibited-v3) * { transition: none !important; }
-}
-
-.rawaj-support-v2 :is(.rawaj-support-panel, .rawaj-support-topics, .rawaj-support-faq),
-.rawaj-safety-v2 .rawaj-safety-guide {
-  border-color: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
-  background: #fffefa;
-  box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.rawaj-support-v2 :is(input, textarea, select):focus-visible {
-  border-color: color-mix(in srgb, var(--brand-orange) 55%, var(--color-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-orange) 14%, transparent);
-}
-
-.rawaj-support-v2 .rawaj-safety-actions a:last-child,
-.rawaj-safety-v2 .rawaj-safety-actions a:last-child {
-  border: 1px solid color-mix(in srgb, var(--brand-orange) 76%, #98381d);
-  background: #ee7a4c;
-  color: white;
-  box-shadow: 0 12px 25px rgba(201, 78, 35, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  .rawaj-legal-v3 *, .rawaj-prohibited-v3 * { transition-duration: 0.01ms; }
 }
