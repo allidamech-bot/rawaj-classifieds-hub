@@ -66,6 +66,7 @@ import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
 
 import storeWorkspaceCss from "../rawaj-store-workspace.css?url";
 import marketplaceControlsCss from "../rawaj-marketplace-controls.css?url";
+import storefrontMobileConsistencyCss from "../storefront-mobile-consistency-v1.css?url";
 import acceptanceContrastCss from "../rawaj-acceptance-contrast.css?url";
 
 export const routeStyleHrefs = {
@@ -128,6 +129,7 @@ export const auditedOverrideStyleHrefs = [
   uiConvergenceV25Css,
   storeWorkspaceCss,
   marketplaceControlsCss,
+  storefrontMobileConsistencyCss,
   acceptanceContrastCss,
 ] as const;
 

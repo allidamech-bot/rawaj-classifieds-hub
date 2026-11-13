@@ -258,3 +258,26 @@
   max-inline-size: 100%;
   overscroll-behavior-inline: contain;
 }
+
+/* The approved owner store uses an ivory canvas; the inherited empty-state
+ * component previously combined a dark inset surface with dark text (1.32:1).
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .rawaj-store-empty {
+  background: #fcfaf7 !important;
+  border-color: #dedbd5 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .rawaj-store-empty p {
+  color: #152322 !important;
+}
+
+/* Filter controls are real interactive text, not decorative muted labels. */
+.rawaj-app-shell .rawaj-search-toolbar__filter,
+.rawaj-app-shell .rawaj-search-filter {
+  background-color: var(--rawaj-action-primary, #28564b) !important;
+  color: #ffffff !important;
+}
+.rawaj-app-shell .rawaj-search-toolbar__filter span,
+.rawaj-app-shell .rawaj-search-filter span {
+  color: #ffffff !important;
+}

@@ -61,8 +61,7 @@ export function resolvePrimaryNavigationSection(pathname: string): PrimaryNaviga
   if (
     matchesPath(pathname, "/categories") ||
     matchesPath(pathname, "/category") ||
-    matchesPath(pathname, "/listings") ||
-    matchesPath(pathname, "/seller")
+    matchesPath(pathname, "/listings")
   ) {
     return "categories";
   }
