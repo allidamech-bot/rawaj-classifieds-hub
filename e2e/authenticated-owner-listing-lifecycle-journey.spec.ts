@@ -112,13 +112,12 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     );
     await expect(listingPerformance.locator('[data-owner-metric="unread"]')).toContainText("2");
 
-    await openListingManagement(page, approvedCard, APPROVED_TITLE);
     const markReservedButton = ownerDialog(page, APPROVED_TITLE).getByRole("button", {
       name: /وضع محجوز|Mark reserved/i,
     });
     await clickTwiceInSameTick(markReservedButton);
     await expect(
-      ownerCard(page, APPROVED_TITLE).getByRole("button", {
+      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
@@ -135,7 +134,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, APPROVED_TITLE).getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
     );
     await expect(
-      ownerCard(page, APPROVED_TITLE).getByRole("button", {
+      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
         name: /وضع محجوز|Mark reserved/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
@@ -242,7 +241,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
 
-    const deleteDialog = page.getByRole("dialog");
+    const deleteDialog = page.getByRole("dialog", {
+      name: /حذف المسودة|Delete draft/i,
+    }).last();
     await expect(deleteDialog).toBeVisible();
     await clickTwiceInSameTick(
       deleteDialog.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
