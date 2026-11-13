@@ -5,6 +5,19 @@
  * This file loads after the legacy foundations and is the source of truth for the dark system.
  */
 
+:root {
+  --rawaj-canvas: #ffffff;
+  --rawaj-surface: #ffffff;
+  --rawaj-surface-subtle: #f6f7f6;
+  --rawaj-brand-primary: #103f42;
+  --rawaj-brand-primary-hover: #0b3235;
+  --rawaj-ink-primary: #152322;
+  --rawaj-ink-secondary: #53615e;
+  --rawaj-divider: #e3e7e4;
+  --rawaj-control-border: #798783;
+  --rawaj-brand-gold: #bd984b;
+}
+
 :root,
 .dark {
   /* Canvas and surfaces */

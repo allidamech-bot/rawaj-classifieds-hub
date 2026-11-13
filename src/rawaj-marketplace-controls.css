@@ -71,6 +71,7 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel .rawaj-signature-search {
   position: relative !important;
   inset: auto !important;
+  transform: none !important;
   width: 100% !important;
   margin: 0 !important;
   direction: inherit;

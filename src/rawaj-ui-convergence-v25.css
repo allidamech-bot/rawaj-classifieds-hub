@@ -8,9 +8,9 @@
   --rawaj-control-height-sm: 2.75rem;
   --rawaj-control-height: 3rem;
   --rawaj-control-height-lg: 3.25rem;
-  --rawaj-radius-input: 0.9rem;
-  --rawaj-radius-button: 0.9rem;
-  --rawaj-radius-card: 1.1rem;
+  --rawaj-radius-input: 0.75rem;
+  --rawaj-radius-button: 0.75rem;
+  --rawaj-radius-card: 1rem;
   --rawaj-radius-surface: 1.25rem;
   --rawaj-card-padding: clamp(0.9rem, 2vw, 1.2rem);
   --rawaj-icon-sm: 1rem;
@@ -44,6 +44,10 @@
 /* Shared primitives: deterministic size, alignment and interaction feedback. */
 .rawaj-app-shell__content [data-ui="button"] {
   min-height: var(--rawaj-control-height);
+}
+
+.rawaj-app-shell__content [data-ui="button"][data-size="compact"] {
+  min-height: var(--rawaj-control-height-sm);
 }
 
 .rawaj-app-shell__content :is([data-ui="input"], [data-ui="textarea"], [data-ui="select-trigger"]) {

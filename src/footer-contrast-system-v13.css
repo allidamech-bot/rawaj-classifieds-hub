@@ -7,8 +7,8 @@
   overflow: hidden;
   margin-top: clamp(1rem, 3vw, 2rem) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.11) !important;
-  background: #202127 !important;
-  color: #f7f1ea !important;
+  background: var(--rawaj-canvas) !important;
+  color: var(--rawaj-ink-primary) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.045),
     0 -14px 34px rgba(0, 0, 0, 0.16) !important;
@@ -26,7 +26,7 @@
 
 .rawaj-site-footer .rawaj-brand-lockup,
 .rawaj-site-footer .rawaj-brand-lockup * {
-  color: #fffaf4 !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer .rawaj-brand-mark {
@@ -58,7 +58,7 @@
 
 .rawaj-site-footer__mobile-brand p {
   margin-top: 0.38rem !important;
-  color: #d8d1c9 !important;
+  color: var(--rawaj-ink-primary) !important;
   font-size: 0.76rem !important;
   font-weight: 600 !important;
   line-height: 1.65 !important;
@@ -80,7 +80,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 999px !important;
   padding-inline: 0.82rem !important;
-  color: #f8f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(255, 255, 255, 0.045) !important;
   font-size: 0.76rem !important;
   font-weight: 800 !important;
@@ -91,26 +91,26 @@
 
 .rawaj-site-footer__mobile nav a:nth-child(1) {
   border-color: rgba(184, 151, 98, 0.28) !important;
-  color: #ffc4b8 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(184, 151, 98, 0.085) !important;
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(2) {
   border-color: rgba(98, 139, 128, 0.27) !important;
-  color: #b9d7ff !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(98, 139, 128, 0.08) !important;
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(3) {
   border-color: rgba(227, 160, 75, 0.27) !important;
-  color: #f2d1a1 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(227, 160, 75, 0.075) !important;
 }
 
 .rawaj-site-footer__mobile nav a:hover,
 .rawaj-site-footer__mobile nav a:focus-visible {
   border-color: rgba(255, 255, 255, 0.28) !important;
-  color: #ffffff !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(255, 255, 255, 0.09) !important;
 }
 
@@ -119,7 +119,7 @@
   margin: 0 !important;
   padding-top: 0.72rem;
   border-top: 1px solid rgba(255, 255, 255, 0.075);
-  color: #aca69f !important;
+  color: var(--rawaj-ink-primary) !important;
   font-size: 0.72rem !important;
   font-weight: 650 !important;
   line-height: 1.5 !important;
@@ -127,22 +127,22 @@
 
 .rawaj-site-footer__desktop {
   display: none !important;
-  color: #f7f1ea !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer__desktop h2 {
-  color: #fffaf4 !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer__desktop p,
 .rawaj-site-footer__desktop li a,
 .rawaj-site-footer__desktop span {
-  color: #cfc8c0 !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer__desktop li a:hover,
 .rawaj-site-footer__desktop li a:focus-visible {
-  color: #ffffff !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer__desktop > div:last-child {
