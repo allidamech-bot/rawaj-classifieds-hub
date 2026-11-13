@@ -57,7 +57,9 @@ const report = {
 
 await mkdir(resolve(options.report).replace(/[\\/][^\\/]+$/, ""), { recursive: true });
 await writeFile(resolve(options.report), `${JSON.stringify(report, null, 2)}\n`, {
-  encoding: "utf8", mode: 0o600, flag: "wx",
+  encoding: "utf8",
+  mode: 0o600,
+  flag: "wx",
 });
 
 console.log(
@@ -71,7 +73,7 @@ console.log(
       excludedVirtualTables: backup.excludedVirtualTables,
       aggregateCounts: backup.aggregateCounts,
       manifestSha256: backup.manifestSha256,
-    schemaSha256: backup.schemaSha256,
+      schemaSha256: backup.schemaSha256,
     },
     null,
     2,
@@ -236,7 +238,9 @@ async function backupOrdinaryTables(schema) {
 async function writePrivateJson(path, value) {
   const contents = `${JSON.stringify(value, null, 2)}\n`;
   await writeFile(path, contents, {
-    encoding: "utf8", mode: 0o600, flag: "wx",
+    encoding: "utf8",
+    mode: 0o600,
+    flag: "wx",
   });
   return createHash("sha256").update(contents).digest("hex");
 }
@@ -417,7 +421,11 @@ async function assertSyriaProductionTarget() {
     ["D1 name", d1?.database_name, SYRIA_PRODUCTION_IDENTITY.database],
     ["D1 ID", d1?.database_id, SYRIA_PRODUCTION_IDENTITY.databaseId],
     ["R2 bucket", r2?.bucket_name, SYRIA_PRODUCTION_IDENTITY.bucket],
-    ["Firebase project", config.vars?.FIREBASE_PROJECT_ID, SYRIA_PRODUCTION_IDENTITY.firebaseProject],
+    [
+      "Firebase project",
+      config.vars?.FIREBASE_PROJECT_ID,
+      SYRIA_PRODUCTION_IDENTITY.firebaseProject,
+    ],
   ];
 
   for (const [label, actual, expected] of checks) {
