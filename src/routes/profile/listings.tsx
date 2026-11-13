@@ -863,7 +863,17 @@ function MyListingsPage() {
           )}
         </section>
         <Dialog open={toolsOpen} onOpenChange={setToolsOpen}>
-          <DialogContent className="my-store-dialog" dir={language === "ar" ? "rtl" : "ltr"}>
+          <DialogContent
+            className="my-store-dialog"
+            dir={language === "ar" ? "rtl" : "ltr"}
+            onCloseAutoFocus={(event) => {
+              if (!attentionQueue) return;
+              // Radix restores focus to the menu on close unless prevented.
+              // Moving to a status queue must instead focus its inventory heading.
+              event.preventDefault();
+              inventoryHeadingRef.current?.focus({ preventScroll: true });
+            }}
+          >
             <DialogHeader>
               <DialogTitle>{text("إدارة المتجر", "Manage store")}</DialogTitle>
               <DialogDescription>

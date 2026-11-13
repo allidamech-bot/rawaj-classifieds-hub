@@ -1,0 +1,10 @@
+/* Boost has two sub-AA descriptions on the dark card style.
+ * Route-scoped color corrections leave plan selection and submission untouched. */
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide p.text-amber-50\/80 {
+  color: #fff3d6 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"]
+  main.container-wide p.text-muted-foreground {
+  color: #d6dee0 !important;
+}

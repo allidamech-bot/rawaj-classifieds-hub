@@ -80,7 +80,7 @@ test("browser back and forward keep exactly one resolved page", async ({ page })
   await openHydrated(page, "/");
   const shell = page.locator(".rawaj-app-shell");
 
-  await page.locator(".rawaj-signature-location").click();
+  await page.locator(".rawaj-discovery-actions a[href^='/listings']").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);

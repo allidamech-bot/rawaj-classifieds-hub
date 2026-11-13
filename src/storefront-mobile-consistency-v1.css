@@ -158,3 +158,33 @@
     transition: none !important;
   }
 }
+
+/*
+ * Accessibility: the owner empty-state title inherits legacy light text even
+ * though the approved storefront has an ivory background. Keep the fix scoped
+ * to the owner route, without changing other branded surfaces.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .rawaj-store-empty > section.bg-card {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .rawaj-store-empty p.text-sm.font-bold {
+  color: #152322 !important;
+}
+
+/* Preserve the owner's approved unboxed cover title. The curved artwork
+ * is SVG/image content, so declare the same underlying petrol cover surface for
+ * accessible white text and for the browser contrast audit. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .my-store-cover {
+  background-color: #103f42 !important;
+}
+
+/* Posting wizard: the active coral step must keep readable white text.
+ * This overrides the inherited gold/washed-out strong color only while active. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__copy strong {
+  color: #fff !important;
+}
