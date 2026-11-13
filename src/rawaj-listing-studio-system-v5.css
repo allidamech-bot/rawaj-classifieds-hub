@@ -1,5 +1,5 @@
 /* RAWAJ Listing Studio System V5
- * Premium dark creation flow for add/edit listing experiences.
+ * Shared creation flow for add/edit listing experiences.
  * Presentation only: Firebase Auth, Cloudflare API, D1, R2, taxonomy,
  * autosave, uploads, validation, and submission behavior remain unchanged.
  */
@@ -594,7 +594,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-media-card img {
-  background: #25262b;
+  background: var(--rawaj-surface-subtle);
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-media-card .rawaj-icon-button {
@@ -721,7 +721,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-preview__media {
-  background: #2b2c32 !important;
+  background: var(--rawaj-surface) !important;
   color: #7eb7ff !important;
 }
 
