@@ -12,11 +12,6 @@ test.describe("authenticated launch-critical journey", () => {
   test("signs in, restores the session, creates a draft, uploads, and submits", async ({
     page,
   }) => {
-    const wizardProbes: string[] = [];
-    page.on("console", (message) => {
-      if (message.text().includes("[RAWAJ_WIZARD_PROBE]")) wizardProbes.push(message.text());
-      if (message.text().includes("[RAWAJ_NATIVE_CLICK]")) wizardProbes.push(message.text());
-    });
     const remoteWrites: string[] = [];
     const authorizedPrivateRequests: string[] = [];
 
@@ -72,22 +67,6 @@ test.describe("authenticated launch-critical journey", () => {
     const beforeContinueStep = await page
       .locator('.rawaj-studio-steps [data-state="active"]')
       .allTextContents();
-    await page.evaluate(() => {
-      document.addEventListener(
-        "click",
-        (event) => {
-          const target = event.target;
-          if (target instanceof Element) {
-            console.info(
-              "[RAWAJ_NATIVE_CLICK]",
-              target.tagName,
-              target.textContent?.trim().slice(0, 48),
-            );
-          }
-        },
-        { capture: true, once: true },
-      );
-    });
     await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
     const immediatelyAfterContinue = await page
       .locator('.rawaj-studio-steps [data-state="active"]')
@@ -106,7 +85,7 @@ test.describe("authenticated launch-critical journey", () => {
         .locator('.rawaj-studio-steps [data-state="active"]')
         .allTextContents();
       throw new Error(
-        `Could not reach listing photos. Before: ${beforeContinueStep.join(" | ") || "unknown"}. Immediately after: ${immediatelyAfterContinue.join(" | ") || "unknown"}. Immediate validation: ${immediateValidation.join(" | ") || "none"}. Final validation: ${validation.join(" | ") || "none"}. Final step: ${activeStep.join(" | ") || "unknown"}. URL: ${page.url()}. Probes: ${wizardProbes.join(" | ") || "none"}.`,
+        `Could not reach listing photos. Before: ${beforeContinueStep.join(" | ") || "unknown"}. Immediately after: ${immediatelyAfterContinue.join(" | ") || "unknown"}. Immediate validation: ${immediateValidation.join(" | ") || "none"}. Final validation: ${validation.join(" | ") || "none"}. Final step: ${activeStep.join(" | ") || "unknown"}. URL: ${page.url()}.`,
         { cause: error },
       );
     }

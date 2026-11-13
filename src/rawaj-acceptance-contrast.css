@@ -93,3 +93,12 @@
   color: #fff1e8 !important;
   opacity: 1 !important;
 }
+
+/* Explicit route/structure specificity protects this safety sentence from
+ * legacy message-card selectors while preserving geometry and type size.
+ */
+.rawaj-app-shell[data-resolved-pathname="/chats"]
+  .rawaj-communication-safety > div > p {
+  color: #fff !important;
+  opacity: 1 !important;
+}
