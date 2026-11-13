@@ -235,4 +235,16 @@
   .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
     width: 45%;
   }
+
+  /*
+   * The current HomeHero search is in normal flow inside .rawaj-home-search-panel.
+   * A legacy RTL centering transform from this media query shifted the
+   * search submit control offscreen on desktop, making pointer activation fail.
+   * Keep the transform only for the legacy absolute-positioned variant.
+   */
+  .rawaj-app-shell[data-resolved-pathname="/"]
+    .rawaj-home-search-panel
+    .rawaj-signature-search {
+    transform: none !important;
+  }
 }

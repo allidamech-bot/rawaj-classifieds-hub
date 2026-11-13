@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   BadgePercent,
@@ -89,6 +89,7 @@ import { useAuth } from "@/lib/use-auth";
 export const Route = createFileRoute("/profile/listings")({
   validateSearch: z.object({
     tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews"]).optional(),
+    queue: z.enum(["drafts", "edits", "expiry", "editable_no_image", "live_no_image"]).optional(),
   }),
   head: () => ({
     meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
@@ -111,6 +112,7 @@ interface LifecycleConfirmationCopy {
 
 function MyListingsPage() {
   const search = Route.useSearch();
+  const navigate = useNavigate();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [listings, setListings] = useState<ClassifiedListing[]>([]);
@@ -122,7 +124,9 @@ function MyListingsPage() {
   const [sellerHasLoaded, setSellerHasLoaded] = useState(false);
   const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);
   const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
-  const [attentionQueue, setAttentionQueue] = useState<OwnerAttentionQueue | null>(null);
+  const [attentionQueue, setAttentionQueue] = useState<OwnerAttentionQueue | null>(
+    search.queue ?? null,
+  );
   const inventoryHeadingRef = useRef<HTMLHeadingElement>(null);
   const [listingSearch, setListingSearch] = useState("");
   const [listingSort, setListingSort] = useState<OwnerListingSort>("updated_desc");
@@ -146,8 +150,8 @@ function MyListingsPage() {
 
   useEffect(() => {
     setActiveTab(search.tab ?? "approved");
-    setAttentionQueue(null);
-  }, [search.tab]);
+    setAttentionQueue(search.queue ?? null);
+  }, [search.tab, search.queue]);
 
   useEffect(() => {
     setVisibleCount(OWNER_LISTINGS_PAGE_SIZE);
@@ -460,6 +464,7 @@ function MyListingsPage() {
   function selectTab(tab: StoreTab) {
     setActiveTab(tab);
     setAttentionQueue(null);
+    void navigate({ to: "/profile/listings", search: { tab }, replace: true });
   }
 
   function openAttentionQueue(tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) {
@@ -467,6 +472,7 @@ function MyListingsPage() {
     setAttentionQueue(queue);
     setListingSearch("");
     inventoryHeadingRef.current?.focus();
+    void navigate({ to: "/profile/listings", search: { tab, queue }, replace: true });
   }
 
   if (auth.status !== "signedIn" || !profileId) {
@@ -662,7 +668,17 @@ function MyListingsPage() {
                       }[attentionQueue]
                     }
                   </strong>
-                  <button type="button" onClick={() => setAttentionQueue(null)}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttentionQueue(null);
+                      void navigate({
+                        to: "/profile/listings",
+                        search: { tab: activeTab },
+                        replace: true,
+                      });
+                    }}
+                  >
                     {text("إلغاء التصفية", "Clear filter")}
                   </button>
                 </div>
