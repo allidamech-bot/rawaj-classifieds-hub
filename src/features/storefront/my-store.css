@@ -835,3 +835,71 @@
   gap: 6px;
   padding: 8px;
 }
+
+/*
+ * Keep the owner storefront independent from legacy route and dark-surface
+ * rules. Visual QA on the actual route found charcoal backgrounds and
+ * low-contrast controls despite the intended ivory tokens above.
+ * These selectors are deliberately limited to /profile/listings.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-hero,
+  .my-store-identity-row,
+  .ms-owner-inventory,
+  .ms-owner-workspace-sticky
+) {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__overview,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-identity h1,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-meta,
+  .my-store-bio,
+  .my-store-stats dt,
+  .my-store-stats dd,
+  .ms-approved-tabs button,
+  .my-store-card-meta
+) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-tabs button[aria-pressed="true"] {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-store-card-price {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-filters > select,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-search,
+  .my-store-search-toggle,
+  .my-store-sort
+) {
+  background: #fcfaf7 !important;
+  border-color: #dedbd5 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-search input {
+  background: transparent !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-search input::placeholder {
+  color: #53615e !important;
+  opacity: 1;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-sort select {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-product-media {
+  background-color: #eeece6 !important;
+}
