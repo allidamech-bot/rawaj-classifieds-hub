@@ -141,7 +141,8 @@ async function sendRequest<T>(
         : {
             ok: false,
             error: payload?.error?.message ?? "تعذر إكمال العملية.",
-            code: payload?.error?.code ?? "unknown",
+            // Platform-level Cloudflare 1027/429 is HTML, not an API error envelope.
+            code: response.status === 429 ? "rate_limited" : (payload?.error?.code ?? "unknown"),
           };
     return { response, result };
   } catch {

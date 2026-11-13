@@ -34,6 +34,22 @@ test("global shell notice displays the exact owner-approved maintenance message"
   assert.match(notice, /rawaj:system-control-changed/);
 });
 
+test("system status checks protect free-tier Workers from idle and rate-limited polling", async () => {
+  const notice = await read("src/components/OfflineNotice.tsx");
+  assert.match(notice, /SYSTEM_STATUS_REFRESH_MS = 5 \* 60_000/);
+  assert.match(notice, /SYSTEM_STATUS_RATE_LIMIT_BACKOFF_MS = 30 \* 60_000/);
+  assert.match(notice, /document\.visibilityState !== "visible"/);
+  assert.match(notice, /navigator\.onLine === false/);
+  assert.match(notice, /requestInFlightRef\.current/);
+  assert.match(notice, /Date\.now\(\) < nextAllowedCheckAtRef\.current/);
+  assert.match(notice, /result\.code === "rate_limited"/);
+  assert.match(notice, /refreshSystemStatus\(true\)/);
+  assert.match(notice, /window\.addEventListener\("focus", refreshOnFocus\)/);
+  assert.match(notice, /window\.addEventListener\("rawaj:system-control-changed", refreshAfterOwnerChange\)/);
+  const cloudflareAuth = await read("src/lib/cloudflare-auth.ts");
+  assert.match(cloudflareAuth, /response\.status === 429 \? "rate_limited"/);
+});
+
 test("owner maintenance control explains its actual site-wide effect", async () => {
   const ownerControls = await read("src/routes/admin.owner-controls.tsx");
 
