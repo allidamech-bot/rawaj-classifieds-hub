@@ -168,3 +168,13 @@
   main.my-store .rawaj-store-empty p.text-sm.font-bold {
   color: #152322 !important;
 }
+
+/* A solid petrol label also guarantees readable white type over user covers;
+ * the curved SVG is painted independently of the CSS background audit. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .my-store-cover-title {
+  background-color: #103f42 !important;
+  color: #fff !important;
+  padding: 3px 9px;
+  border-radius: 8px;
+}
