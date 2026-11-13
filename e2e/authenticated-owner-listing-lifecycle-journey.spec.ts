@@ -255,7 +255,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0, { timeout: 30_000 });
     await expect.poll(() => draftDeletes).toBe(1);
 
-    await reloadCurrentPage(page);
+    // After reloading, use the drafts/needs-edit filter explicitly: the URL
+    // remains on pending review after the earlier queue shortcut.
+    await openOwnerTab(page, "needs_edit");
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
     await expect(page.getByText(/ما في إعلانات بهالحالة|No listings in this status/i)).toBeVisible({
       timeout: 30_000,
