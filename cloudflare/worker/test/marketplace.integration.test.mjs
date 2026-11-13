@@ -1868,7 +1868,7 @@ async function seedOfferConversation() {
   });
   assert.equal(created.response.status, 201);
   const listingId = created.payload.data.id;
-  const ownerRead = await api(`/v1/listings/${listingId}`, owner);
+  const ownerRead = await api(`/api/listings/${listingId}`, owner);
   assert.equal(ownerRead.response.status, 200);
   assert.equal(ownerRead.payload.data.listing.currency, "SYP");
 
