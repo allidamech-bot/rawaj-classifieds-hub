@@ -2,6 +2,15 @@
 
 Source inventory for the local redesign based on main edc31c8. Acceptance requires rendered evidence.
 
+## Active remediation in PR #857
+
+- The canonical light canvas is now applied to the application shell, browser theme color, contextual header, and footer at their existing ownership points; no new late-loaded override stylesheet was added.
+- Shared card, badge, menu, dialog, and data-table legacy dark values have been replaced with semantic surface/foreground tokens in the original shared component stylesheet.
+- The Categories acceptance contract now targets the new directory components rather than retired atlas classes.
+- These changes remain **unverified until CI and rendered visual acceptance pass**. Do not mark the affected rows Accepted based on source edits alone.
+- Other route families shown as Pending below have **not** been redesigned or accepted in this batch.
+
+
 | Route or state | Role | Family | Implementation source | Status | Visual evidence | Responsive | RTL/LTR | Accessibility | Functional regression | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `/activity` | Buyer / seller | Account | `src/routes/activity.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |

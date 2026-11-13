@@ -6,12 +6,10 @@
   position: relative;
   overflow: hidden;
   margin-top: clamp(1rem, 3vw, 2rem) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.11) !important;
+  border-top: 1px solid var(--rawaj-divider) !important;
   background: var(--rawaj-canvas) !important;
   color: var(--rawaj-ink-primary) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 -14px 34px rgba(0, 0, 0, 0.16) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-site-footer::before {
@@ -20,7 +18,7 @@
   inset-inline: 6%;
   top: 0;
   height: 1px;
-  background: rgba(184, 151, 98, 0.72);
+  background: var(--rawaj-divider);
   pointer-events: none;
 }
 
@@ -30,9 +28,9 @@
 }
 
 .rawaj-site-footer .rawaj-brand-mark {
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  background: rgba(255, 255, 255, 0.07) !important;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2) !important;
+  border-color: var(--rawaj-divider) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .rawaj-site-footer__mobile {
@@ -77,16 +75,16 @@
   min-height: 2.45rem !important;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 999px !important;
   padding-inline: 0.82rem !important;
   color: var(--rawaj-ink-primary) !important;
-  background: rgba(255, 255, 255, 0.045) !important;
+  background: var(--rawaj-surface) !important;
   font-size: 0.76rem !important;
   font-weight: 800 !important;
   line-height: 1;
   text-decoration: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-site-footer__mobile nav a:nth-child(1) {
@@ -109,16 +107,16 @@
 
 .rawaj-site-footer__mobile nav a:hover,
 .rawaj-site-footer__mobile nav a:focus-visible {
-  border-color: rgba(255, 255, 255, 0.28) !important;
+  border-color: var(--rawaj-border-active) !important;
   color: var(--rawaj-ink-primary) !important;
-  background: rgba(255, 255, 255, 0.09) !important;
+  background: var(--rawaj-surface-active) !important;
 }
 
 .rawaj-site-footer__mobile-copy {
   grid-area: copy;
   margin: 0 !important;
   padding-top: 0.72rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  border-top: 1px solid var(--rawaj-divider);
   color: var(--rawaj-ink-primary) !important;
   font-size: 0.72rem !important;
   font-weight: 650 !important;
@@ -146,7 +144,7 @@
 }
 
 .rawaj-site-footer__desktop > div:last-child {
-  border-color: rgba(255, 255, 255, 0.085) !important;
+  border-color: var(--rawaj-divider) !important;
 }
 
 @media (max-width: 1023.99px) {
