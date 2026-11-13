@@ -14,7 +14,7 @@ main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md::before {
   inset-inline: 0;
   top: 0;
   height: 0.25rem;
-  background: linear-gradient(90deg, var(--color-brand-orange), var(--color-gold));
+  background: var(--color-brand-orange);
 }
 
 main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md form {
@@ -48,7 +48,7 @@ main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
   border-radius: var(--rawaj-radius-surface);
-  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  background: #102b46;
   color: white;
   box-shadow: var(--rawaj-shadow-soft);
 }

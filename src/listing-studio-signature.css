@@ -33,12 +33,7 @@ main.container-wide:has(ol.rawaj-surface) > ol.rawaj-surface::after {
   inset-inline: 2rem;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--gold) 34%, transparent),
-    transparent
-  );
+  background: color-mix(in srgb, var(--gold) 34%, transparent);
   pointer-events: none;
 }
 
@@ -56,11 +51,7 @@ main.container-wide:has(ol.rawaj-surface) > ol.rawaj-surface li:not([aria-curren
 }
 
 main.container-wide:has(ol.rawaj-surface) > ol.rawaj-surface li[aria-current="step"] {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--primary) 8%, var(--card)),
-    color-mix(in srgb, var(--brand-orange) 8%, var(--card))
-  );
+  background: color-mix(in srgb, var(--primary) 8%, var(--card));
   color: var(--foreground);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 14%, var(--border));
   transform: translateY(-1px);
@@ -94,7 +85,7 @@ main.container-wide:has(ol.rawaj-surface) section.rawaj-surface::before {
   bottom: 1.25rem;
   width: 3px;
   border-radius: 999px;
-  background: linear-gradient(var(--brand-orange), var(--gold));
+  background: var(--brand-orange);
   opacity: 0.72;
 }
 
@@ -164,11 +155,7 @@ main.container-wide:has(ol.rawaj-surface) label.group.flex.cursor-pointer:hover 
 
 main.container-wide:has(ol.rawaj-surface) aside > .rawaj-surface:first-child {
   border-color: color-mix(in srgb, var(--border) 78%, transparent);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--primary) 5%, var(--card)),
-    var(--card) 62%
-  );
+  background: color-mix(in srgb, var(--primary) 5%, var(--card));
   color: var(--foreground);
   box-shadow: var(--rawaj-shadow-soft);
 }

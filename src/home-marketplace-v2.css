@@ -5,10 +5,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--rawaj-radius-feature);
-  background:
-    radial-gradient(24rem 18rem at 104% -8%, rgba(201, 149, 67, 0.32), transparent 68%),
-    radial-gradient(22rem 18rem at -8% 112%, rgba(244, 95, 56, 0.24), transparent 68%),
-    linear-gradient(135deg, #0b2d29 0%, #123f38 54%, #1a584b 100%);
+  background: #0b2d29;
   color: #fffdf7;
   box-shadow: 0 22px 56px rgba(11, 45, 41, 0.2);
 }
@@ -75,7 +72,7 @@
 }
 
 .rawaj-home-search-submit {
-  background: linear-gradient(145deg, #ff724d, var(--rawaj-orange));
+  background: #ff724d;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.28) inset,
     0 14px 30px rgba(244, 95, 56, 0.32);
@@ -123,21 +120,13 @@
 
 .rawaj-home-v2-categories {
   border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
-  background:
-    radial-gradient(18rem 12rem at 104% -10%, rgba(47, 122, 92, 0.1), transparent 70%),
-    linear-gradient(145deg, var(--rawaj-surface-sage), #f1f5f0);
+  background: var(--rawaj-surface-sage);
 }
 
 .rawaj-home-category-card {
   border: 1px solid
     color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 18%, var(--color-border));
-  background:
-    radial-gradient(
-      9rem 7rem at 108% -12%,
-      color-mix(in srgb, var(--category-accent, var(--rawaj-orange)) 14%, transparent),
-      transparent 72%
-    ),
-    var(--rawaj-surface-card);
+  background: var(--rawaj-surface-card);
   box-shadow: var(--rawaj-shadow-sm);
 }
 
@@ -155,13 +144,7 @@
 
 .rawaj-home-v2-listings {
   border: 1px solid color-mix(in srgb, var(--rawaj-home-tone) 14%, var(--color-border));
-  background:
-    radial-gradient(
-      20rem 13rem at 104% -10%,
-      color-mix(in srgb, var(--rawaj-home-tone) 10%, transparent),
-      transparent 70%
-    ),
-    var(--rawaj-home-surface);
+  background: var(--rawaj-home-surface);
 }
 
 .rawaj-home-tone-featured {
@@ -187,7 +170,7 @@
   bottom: 0.18rem;
   width: 0.22rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--rawaj-orange), var(--rawaj-gold));
+  background: var(--rawaj-orange);
 }
 
 .rawaj-home-section-action {
@@ -207,9 +190,7 @@
 .rawaj-home-trust-stage {
   border: 1px solid color-mix(in srgb, var(--color-emerald-trust) 22%, var(--color-border));
   border-radius: var(--rawaj-radius-feature);
-  background:
-    radial-gradient(17rem 11rem at 100% 0%, rgba(47, 122, 92, 0.12), transparent 70%),
-    linear-gradient(145deg, #e6f1e9, #f4f7f1);
+  background: #e6f1e9;
   box-shadow: var(--rawaj-shadow-sm);
 }
 
@@ -238,16 +219,14 @@
 .rawaj-listing-media {
   margin: 0.42rem 0.42rem 0;
   border-radius: 0.9rem;
-  background:
-    radial-gradient(circle at 84% 10%, rgba(201, 149, 67, 0.16), transparent 36%),
-    var(--rawaj-surface-sage);
+  background: var(--rawaj-surface-sage);
 }
 
 .rawaj-listing-media::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(8, 31, 27, 0.13));
+  background: rgba(0, 0, 0, 0.25);
   pointer-events: none;
 }
 

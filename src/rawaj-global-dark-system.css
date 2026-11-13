@@ -12,19 +12,12 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at 92% -4%, rgba(98, 139, 128, 0.08), transparent 27rem),
-    radial-gradient(circle at -8% 22%, rgba(139, 170, 156, 0.065), transparent 25rem),
-    linear-gradient(180deg, #242e2a 0%, var(--rawaj-page-background) 30rem),
-    var(--rawaj-page-background) !important;
+  background: var(--rawaj-page-background) !important;
 }
 
 .rawaj-app-shell {
   color: var(--rawaj-text-primary);
-  background:
-    radial-gradient(circle at 88% 2%, rgba(98, 139, 128, 0.07), transparent 24rem),
-    radial-gradient(circle at 7% 55%, rgba(139, 170, 156, 0.035), transparent 28rem),
-    linear-gradient(180deg, #242e2a 0%, var(--rawaj-page-background) 34rem, #171e1c 100%);
+  background: #242e2a;
   font-family: var(--font-sans);
 }
 
@@ -61,7 +54,7 @@ body {
   border: 0 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.065) !important;
   color: var(--rawaj-text-primary) !important;
-  background: linear-gradient(180deg, rgba(36, 46, 42, 0.985), rgba(23, 30, 28, 0.97)) !important;
+  background: rgba(36, 46, 42, 0.985) !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2) !important;
   backdrop-filter: blur(22px) saturate(112%);
   -webkit-backdrop-filter: blur(22px) saturate(112%);
@@ -74,27 +67,21 @@ body {
   inset-block: 0;
   width: 55%;
   pointer-events: none;
-  background:
-    radial-gradient(circle, rgba(184, 151, 98, 0.62) 0 0.75px, transparent 1.4px) 0 0 / 12px 12px,
-    radial-gradient(circle, rgba(139, 170, 156, 0.48) 0 0.82px, transparent 1.48px) 4px 5px / 16px 16px,
-    radial-gradient(circle, rgba(98, 139, 128, 0.34) 0 0.72px, transparent 1.38px) 8px 2px / 20px 20px,
-    radial-gradient(ellipse at 7% 50%, rgba(184, 151, 98, 0.17), transparent 43%),
-    radial-gradient(ellipse at 43% 50%, rgba(139, 170, 156, 0.14), transparent 50%),
-    radial-gradient(ellipse at 82% 53%, rgba(98, 139, 128, 0.1), transparent 48%);
+  background: transparent;
   opacity: 0.7;
 }
 
 html[dir="rtl"] .rawaj-app-header::before {
   left: 0;
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 html[dir="ltr"] .rawaj-app-header::before {
   right: 0;
   transform: scaleX(-1);
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.72) 67%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .rawaj-floating-header-shell {
@@ -130,11 +117,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-app-header .rawaj-brand-divider {
   width: 1px !important;
   height: 1rem !important;
-  background: linear-gradient(
-    var(--rawaj-accent-coral),
-    var(--rawaj-accent-pink),
-    var(--rawaj-accent-violet)
-  ) !important;
+  background: var(--rawaj-accent-coral) !important;
   opacity: 0.72;
 }
 
@@ -180,7 +163,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-header-cta {
   color: var(--rawaj-action-primary-foreground) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: var(--rawaj-gradient-action-short) !important;
+  background: var(--rawaj-action-primary) !important;
   box-shadow: 0 11px 26px rgba(155, 40, 111, 0.28) !important;
 }
 
@@ -197,9 +180,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 [data-ui="card"][data-variant="default"] {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(73, 103, 154, 0.045), transparent 38%),
-    linear-gradient(150deg, #29342f, #202a26);
+  background: #29342f;
   box-shadow: var(--shadow-soft);
 }
 
@@ -220,7 +201,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 
 [data-ui="card"][data-variant="elevated"] {
   border-color: var(--rawaj-border-strong);
-  background: linear-gradient(150deg, #34423a, #29342f);
+  background: #34423a;
   box-shadow: var(--shadow-raised);
 }
 
@@ -278,13 +259,13 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-app-shell [data-ui="button"][data-variant="default"],
 .rawaj-app-shell [data-ui="button"][data-variant="accent"] {
   color: var(--rawaj-action-primary-foreground) !important;
-  background: var(--rawaj-gradient-action-short) !important;
+  background: var(--rawaj-action-primary) !important;
   box-shadow: 0 10px 24px rgba(155, 40, 111, 0.26) !important;
 }
 
 .rawaj-app-shell [data-ui="button"][data-variant="brand"] {
   color: #fff !important;
-  background: linear-gradient(115deg, var(--rawaj-action-brand), var(--rawaj-action-blue)) !important;
+  background: var(--rawaj-action-primary) !important;
   box-shadow: 0 10px 24px rgba(80, 53, 143, 0.26) !important;
 }
 
@@ -321,7 +302,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 [data-ui="badge"][data-variant="accent"] {
   color: #f6cfe5;
   border-color: rgba(169, 200, 187, 0.28);
-  background: rgba(155, 40, 111, 0.2);
+  background: var(--rawaj-surface-selected);
 }
 
 [data-ui="badge"][data-variant="success"] {
@@ -348,7 +329,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 .rawaj-section-heading::before {
-  background: var(--rawaj-gradient-decoration) !important;
+  background: var(--rawaj-text-gold) !important;
 }
 
 /* Dialogs, sheets, menus, and popovers */
@@ -361,9 +342,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-app-shell [data-slot="sheet-content"] {
   color: var(--rawaj-text-primary) !important;
   border-color: var(--rawaj-border-strong) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(121, 159, 145, 0.07), transparent 36%),
-    linear-gradient(155deg, #34423a, #1d2723) !important;
+  background: #34423a !important;
   box-shadow: 0 28px 72px rgba(0, 0, 0, 0.52) !important;
 }
 
@@ -405,10 +384,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-app-shell [class*="image"] > div[aria-hidden="true"] {
   color: #f15b98;
   border-color: var(--rawaj-border) !important;
-  background:
-    radial-gradient(circle at 50% 43%, rgba(139, 170, 156, 0.1), transparent 30%),
-    radial-gradient(circle at 58% 58%, rgba(184, 151, 98, 0.07), transparent 36%),
-    linear-gradient(145deg, #242e2a, #171e1c) !important;
+  background: #242e2a !important;
 }
 
 /* Public ad placements */
@@ -419,10 +395,8 @@ html[dir="ltr"] .rawaj-app-header::before {
 
 .rawaj-app-shell aside[data-placement-page] > a,
 .rawaj-app-shell aside[data-placement-page] > div {
-  border-color: var(--rawaj-border) !important;
-  background:
-    linear-gradient(var(--rawaj-card-background), var(--rawaj-card-background)) padding-box,
-    var(--rawaj-gradient-border) border-box !important;
+  border-color: var(--rawaj-border-strong) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 /* Site footer */
@@ -432,10 +406,7 @@ html[dir="ltr"] .rawaj-app-header::before {
   overflow: hidden;
   color: var(--rawaj-text-primary) !important;
   border-top: 1px solid var(--rawaj-border) !important;
-  background:
-    radial-gradient(circle at 12% 100%, rgba(139, 170, 156, 0.075), transparent 30rem),
-    radial-gradient(circle at 82% 100%, rgba(98, 139, 128, 0.06), transparent 30rem),
-    #171e1c !important;
+  background: #171e1c !important;
 }
 
 .rawaj-site-footer::after {
@@ -445,13 +416,10 @@ html[dir="ltr"] .rawaj-app-header::before {
   inset: auto 0 0;
   height: 52%;
   pointer-events: none;
-  background:
-    radial-gradient(circle, rgba(184, 151, 98, 0.32) 0 0.7px, transparent 1.3px) 0 0 / 14px 14px,
-    radial-gradient(circle, rgba(139, 170, 156, 0.27) 0 0.78px, transparent 1.4px) 5px 3px / 18px 18px,
-    radial-gradient(circle, rgba(98, 139, 128, 0.21) 0 0.7px, transparent 1.34px) 1px 8px / 21px 21px;
+  background: transparent;
   opacity: 0.4;
-  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.68) 48%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.68) 48%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .rawaj-site-footer > * {
@@ -494,29 +462,29 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
-  color: #f0d5e3 !important;
+  color: var(--rawaj-text-primary) !important;
   background: var(--rawaj-surface-active) !important;
   box-shadow: inset 0 0 0 1px var(--rawaj-border) !important;
 }
 
 .rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
-  color: #f2ccdf !important;
-  background: rgba(155, 40, 111, 0.2) !important;
-  box-shadow: inset 0 0 0 1px rgba(226, 105, 181, 0.13) !important;
+  color: var(--rawaj-text-gold) !important;
+  background: var(--rawaj-surface-selected) !important;
+  box-shadow: inset 0 0 0 1px var(--rawaj-border) !important;
 }
 
 .rawaj-dock-create {
   color: #fff !important;
-  background: var(--rawaj-gradient-action) !important;
+  background: var(--rawaj-action-primary) !important;
   box-shadow:
-    0 12px 28px rgba(155, 40, 111, 0.38),
+    0 12px 28px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
 }
 
 .rawaj-bottom-dock__badge,
 .rawaj-notification-badge {
   color: #fff !important;
-  background: var(--rawaj-gradient-action-short) !important;
+  background: var(--rawaj-action-primary) !important;
   border-color: #292a2f !important;
 }
 

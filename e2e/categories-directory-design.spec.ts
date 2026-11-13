@@ -43,11 +43,11 @@ test("categories route loads its designed atlas instead of utility-only rows", a
   });
 
   expect(visualContract).not.toBeNull();
-  expect(visualContract?.heroBackground).toContain("linear-gradient");
+  expect(visualContract?.heroBackground).toBe("none");
   expect(visualContract?.heroRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.gridDisplay).toBe("grid");
   expect(visualContract?.gridColumns).not.toBe("none");
-  expect(visualContract?.cardBackground).toContain("radial-gradient");
+  expect(visualContract?.cardBackground).toBe("none");
   expect(visualContract?.cardRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.cardBorderStyle).toBe("solid");
   expect(visualContract?.iconBackground).not.toBe("rgba(0, 0, 0, 0)");

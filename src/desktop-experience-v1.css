@@ -9,10 +9,7 @@
   }
 
   body {
-    background:
-      radial-gradient(58rem 34rem at 100% -5%, color-mix(in srgb, var(--rawaj-gold) 11%, transparent), transparent 64%),
-      radial-gradient(48rem 32rem at 0% 2%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 64%),
-      var(--color-background);
+    background: var(--color-background);
   }
 
   .container-wide {

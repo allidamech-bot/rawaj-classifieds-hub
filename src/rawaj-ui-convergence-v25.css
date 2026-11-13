@@ -177,7 +177,7 @@ body
   --store-line-strong: #4a515d;
   --store-ink: #f5f1e9;
   --store-ink-soft: #c4c8cf;
-  --store-ink-muted: #8f96a1;
+  --store-ink-muted: #aeb9b4;
   --rawaj-text-primary: var(--store-ink);
   --rawaj-text-secondary: var(--store-ink-soft);
   --rawaj-text-muted: var(--store-ink-muted);
@@ -192,9 +192,7 @@ body
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary {
   border: 1px solid rgba(216, 174, 95, 0.18) !important;
   border-radius: 1.2rem !important;
-  background:
-    radial-gradient(circle at 92% 0%, rgba(232, 202, 141, 0.11), transparent 34%),
-    linear-gradient(145deg, #153d36, #122f2b 58%, #151d20) !important;
+  background: #153d36 !important;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
 }
 
@@ -1045,4 +1043,35 @@ body [role="dialog"] {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Keep long labels readable in narrow cards, forms, and dialogs. */
+.rawaj-app-shell__content :is(h1, h2, h3, label, legend),
+body :is([role="dialog"], [role="alertdialog"]) :is(h2, h3, label, legend) {
+  overflow-wrap: anywhere;
+}
+
+.rawaj-app-shell__content
+  :is([data-ui="input"], [data-ui="textarea"], [data-ui="select-trigger"]) {
+  max-inline-size: 100%;
+  color: var(--rawaj-text-primary);
+}
+
+.rawaj-app-shell__content :is(input, textarea)::placeholder {
+  color: var(--rawaj-text-muted) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3
+  :is(.rawaj-account-identity__copy > p, small, .text-xs.leading-6, .text-muted-foreground),
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > span {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+/* Keep the editor's instructional copy and active step readable on solid panels. */
+.rawaj-listing-studio-v4 {
+  --rawaj-accent-blue: var(--rawaj-text-blue);
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps__copy strong {
+  color: var(--rawaj-text-primary) !important;
 }

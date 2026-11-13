@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Grid3X3, Home, MessageCircle, Plus, User } from "lucide-react";
+import { LayoutGrid, Home, MessagesSquare, Plus, CircleUserRound } from "lucide-react";
 
 import {
   resolvePrimaryNavigationSection,
@@ -31,7 +31,7 @@ const coreItems: NavItem[] = [
     section: "categories",
     labelAr: "الأقسام",
     labelEn: "Categories",
-    icon: Grid3X3,
+    icon: LayoutGrid,
   },
   {
     to: "/add-listing",
@@ -46,7 +46,7 @@ const coreItems: NavItem[] = [
     section: "chats",
     labelAr: "المحادثات",
     labelEn: "Chats",
-    icon: MessageCircle,
+    icon: MessagesSquare,
   },
 ];
 
@@ -63,7 +63,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
       section: "account",
       labelAr: "حسابي",
       labelEn: "Account",
-      icon: User,
+      icon: CircleUserRound,
     },
   ];
 
@@ -128,7 +128,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 <Icon
                   aria-hidden="true"
                   className={item.primary ? "h-6 w-6" : "h-5 w-5"}
-                  strokeWidth={active || item.primary ? 2.2 : 1.8}
+                  strokeWidth={active || item.primary ? 2.1 : 1.75}
                 />
                 {badgeCount > 0 ? (
                   <span

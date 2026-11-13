@@ -22,7 +22,7 @@
   min-height: 2.75rem;
 }
 .rawaj-admin-v3 nav a[aria-current="page"] {
-  background: linear-gradient(135deg, #eef8f2, #fff1e8) !important;
+  background: #eef8f2 !important;
   color: #18352f !important;
   border-color: #dbe8e1 !important;
 }

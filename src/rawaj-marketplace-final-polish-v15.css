@@ -31,10 +31,7 @@
    ========================= */
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] {
-  background:
-    radial-gradient(circle at 88% 5%, rgba(214, 173, 96, 0.055), transparent 24rem),
-    radial-gradient(circle at 8% 24%, rgba(18, 63, 54, 0.14), transparent 30rem),
-    var(--r15-page) !important;
+  background: var(--r15-page) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
@@ -52,16 +49,14 @@
   overflow: hidden !important;
   border: 1px solid rgba(214, 173, 96, 0.2) !important;
   border-radius: 1.45rem !important;
-  background:
-    radial-gradient(circle at 92% 8%, rgba(229, 196, 126, 0.13), transparent 30%),
-    linear-gradient(145deg, #16483e 0%, var(--r15-forest) 48%, #182724 100%) !important;
+  background: #16483e !important;
   box-shadow: var(--r15-shadow) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__cover {
   height: 100% !important;
   opacity: 0.1 !important;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 62%, #000 100%) !important;
+  mask-image: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__topline {
@@ -95,7 +90,7 @@
   flex-basis: 4.45rem !important;
   border: 1px solid rgba(229, 196, 126, 0.35) !important;
   border-radius: 1.15rem !important;
-  background: linear-gradient(145deg, #ecd49f, #b8843a) !important;
+  background: #ecd49f !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24) !important;
 }
 
@@ -131,7 +126,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__progress > span {
-  background: linear-gradient(90deg, #b9873f, var(--r15-gold-2)) !important;
+  background: #b9873f !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions {
@@ -153,7 +148,7 @@
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary__actions a[data-tone="primary"] {
   border-color: rgba(246, 221, 164, 0.35) !important;
   color: var(--r15-ink) !important;
-  background: linear-gradient(135deg, var(--r15-gold-2), #c49448) !important;
+  background: var(--r15-gold-2) !important;
 }
 
 /* Alerts are dashboard chips, not white cards. */
@@ -375,7 +370,7 @@
   border: 1px solid rgba(229, 196, 126, 0.26) !important;
   border-radius: 0.8rem !important;
   color: var(--r15-ink) !important;
-  background: linear-gradient(135deg, var(--r15-gold-2), #c39142) !important;
+  background: var(--r15-gold-2) !important;
   box-shadow: none !important;
 }
 
@@ -635,9 +630,7 @@
 
 .rawaj-detail-v2 {
   color: var(--r15-text) !important;
-  background:
-    radial-gradient(circle at 88% 4%, rgba(214, 173, 96, 0.055), transparent 28rem),
-    var(--r15-page) !important;
+  background: var(--r15-page) !important;
 }
 
 .rawaj-detail-v2 .rawaj-detail-media__stage {
@@ -691,9 +684,7 @@
   border: 1px solid rgba(214, 173, 96, 0.18) !important;
   border-radius: 1.25rem !important;
   color: var(--r15-text) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(214, 173, 96, 0.1), transparent 34%),
-    linear-gradient(145deg, #15463c, #102e29 72%) !important;
+  background: #15463c !important;
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.17) !important;
 }
 
