@@ -122,7 +122,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
   display: inline !important;
-  color: #c8c2cd !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-family: "Cairo", system-ui, sans-serif !important;
   font-size: 0.66rem !important;
   font-weight: 600 !important;
