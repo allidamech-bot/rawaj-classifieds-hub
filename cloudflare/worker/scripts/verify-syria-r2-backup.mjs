@@ -41,10 +41,7 @@ export async function verifySyriaR2Recovery({
   });
   const d1Root = resolve(d1Directory);
   const d1ManifestBytes = await regularFile(resolve(d1Root, "manifest.json"));
-  expect(
-    sha256(d1ManifestBytes) === d1.manifestSha256,
-    "D1 manifest changed after verification",
-  );
+  expect(sha256(d1ManifestBytes) === d1.manifestSha256, "D1 manifest changed after verification");
   const d1Manifest = JSON.parse(d1ManifestBytes.toString("utf8"));
   const mediaRecord = d1Manifest.tables.find((entry) => entry.table === "media_assets");
   expect(mediaRecord, "verified D1 backup is missing media_assets");
@@ -64,10 +61,7 @@ export async function verifySyriaR2Recovery({
   await directory(blobs);
   const manifestBytes = await regularFile(resolve(root, "manifest.json"));
   const manifestHash = sha256(manifestBytes);
-  expect(
-    manifestHash === expectedR2ManifestSha256.toLowerCase(),
-    "R2 manifest checksum mismatch",
-  );
+  expect(manifestHash === expectedR2ManifestSha256.toLowerCase(), "R2 manifest checksum mismatch");
   const manifest = JSON.parse(manifestBytes.toString("utf8"));
   expect(manifest.schemaVersion === 1, "unsupported R2 manifest version");
   expect(manifest.bucket === "rawaj-listing-images-production", "wrong Syria R2 bucket");
@@ -83,20 +77,11 @@ export async function verifySyriaR2Recovery({
   const usedDigests = new Set();
   let totalBytes = 0;
   for (const item of manifest.objects) {
-    expect(
-      typeof item?.key === "string" && item.key.length > 0,
-      "invalid R2 object key",
-    );
+    expect(typeof item?.key === "string" && item.key.length > 0, "invalid R2 object key");
     expect(!byKey.has(item.key), "duplicate R2 object key");
     expect(isSha256(item.sha256), "invalid object SHA-256");
-    expect(
-      Number.isSafeInteger(item.byteSize) && item.byteSize >= 0,
-      "invalid object byte size",
-    );
-    expect(
-      typeof item.etag === "string" && item.etag.length > 0,
-      "missing R2 ETag metadata",
-    );
+    expect(Number.isSafeInteger(item.byteSize) && item.byteSize >= 0, "invalid object byte size");
+    expect(typeof item.etag === "string" && item.etag.length > 0, "missing R2 ETag metadata");
     expect(
       item.httpMetadata &&
         typeof item.httpMetadata.contentType === "string" &&
@@ -128,10 +113,7 @@ export async function verifySyriaR2Recovery({
   for (const asset of ready) {
     const item = byKey.get(asset.object_key);
     expect(item, "ready D1 media asset absent from the R2 snapshot");
-    expect(
-      Number(asset.byte_size) === item.byteSize,
-      "D1/R2 media byte-size mismatch",
-    );
+    expect(Number(asset.byte_size) === item.byteSize, "D1/R2 media byte-size mismatch");
     expect(
       isSha256(asset.checksum_sha256) &&
         asset.checksum_sha256.toLowerCase() === item.sha256.toLowerCase(),
@@ -145,10 +127,7 @@ export async function verifySyriaR2Recovery({
       expect(asset.etag === item.etag, "D1/R2 media ETag mismatch");
     }
     if (item.ownerId !== undefined) {
-      expect(
-        item.ownerId === asset.owner_id,
-        "D1/R2 media ownership mismatch",
-      );
+      expect(item.ownerId === asset.owner_id, "D1/R2 media ownership mismatch");
     }
   }
 
@@ -161,8 +140,7 @@ export async function verifySyriaR2Recovery({
     distinctBlobCount: usedDigests.size,
     totalBytes,
     readyMediaReferencesVerified: ready.length,
-    unreferencedObjectCount: [...byKey.keys()].filter((key) => !readyKeys.has(key))
-      .length,
+    unreferencedObjectCount: [...byKey.keys()].filter((key) => !readyKeys.has(key)).length,
     remoteWrites: false,
   };
 }
