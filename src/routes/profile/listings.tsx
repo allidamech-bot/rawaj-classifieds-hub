@@ -1,3 +1,5 @@
+import { OwnerStoreWorkspaceSummary } from "@/features/storefront/OwnerStoreWorkspaceSummary";
+import { fetchSellerFollowSummary } from "@/lib/api/retention-discovery";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -37,10 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
-import {
-  StorefrontIdentityHero,
-  StorefrontNotice,
-} from "@/features/storefront/StorefrontIdentityHero";
+import { StorefrontNotice } from "@/features/storefront/StorefrontIdentityHero";
 import {
   filterAndSortOwnerListings,
   filterOwnerPerformanceWindow,
@@ -88,7 +87,7 @@ import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/profile/listings")({
   validateSearch: z.object({
-    tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews"]).optional(),
+    tab: z.enum(["approved", "pending", "needs_edit", "closed", "reviews", "about"]).optional(),
   }),
   head: () => ({
     meta: [{ title: "إعلاناتي | رواج" }, { name: "robots", content: "noindex, nofollow" }],
@@ -96,7 +95,7 @@ export const Route = createFileRoute("/profile/listings")({
   component: MyListingsPage,
 });
 
-type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews";
+type StoreTab = "approved" | "pending" | "needs_edit" | "closed" | "reviews" | "about";
 
 const OWNER_LISTINGS_PAGE_SIZE = 12;
 
@@ -141,6 +140,20 @@ function MyListingsPage() {
   const sellerRequestIdRef = useRef(0);
   const boostRequestIdRef = useRef(0);
   const profileId = auth.profile?.id ?? null;
+  const [followers, setFollowers] = useState<{ id: string; count: number } | null>(null);
+  const [listingCategory, setListingCategory] = useState("");
+  useEffect(() => {
+    if (!profileId) return;
+    let active = true;
+    void fetchSellerFollowSummary(profileId)
+      .then((result) => {
+        if (active && result.ok) setFollowers({ id: profileId, count: result.data.followerCount });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [profileId]);
   const profileIdRef = useRef<string | null>(profileId);
   profileIdRef.current = profileId;
 
@@ -153,7 +166,7 @@ function MyListingsPage() {
     setVisibleCount(OWNER_LISTINGS_PAGE_SIZE);
     setSelectedListingIds(new Set());
     setBulkFeedback("");
-  }, [activeTab, attentionQueue, listingSearch, listingSort]);
+  }, [activeTab, attentionQueue, listingCategory, listingSearch, listingSort]);
 
   useEffect(() => {
     setSelectedListingIds((current) => {
@@ -323,17 +336,28 @@ function MyListingsPage() {
     () => summarizeOwnerListingPerformance(performanceListings),
     [performanceListings],
   );
-  const tabListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
+  const tabListings =
+    grouped[activeTab === "reviews" || activeTab === "about" ? "approved" : activeTab];
+  const categories = Array.from(
+    new Map(
+      tabListings.map((item) => [
+        item.categoryId,
+        categoryName(item.categoryId, item.categoryNameAr ?? undefined, language),
+      ]),
+    ),
+  );
   const filteredListings = useMemo(
     () =>
       filterAndSortOwnerListings(
-        attentionQueue
-          ? tabListings.filter((listing) => matchesOwnerAttentionQueue(listing, attentionQueue))
-          : tabListings,
+        tabListings.filter(
+          (item) =>
+            (!listingCategory || item.categoryId === listingCategory) &&
+            (!attentionQueue || matchesOwnerAttentionQueue(item, attentionQueue)),
+        ),
         listingSearch,
         listingSort,
       ),
-    [tabListings, attentionQueue, listingSearch, listingSort],
+    [tabListings, attentionQueue, listingCategory, listingSearch, listingSort],
   );
   const visibleListings = filteredListings.slice(0, visibleCount);
   const hasMoreListings = visibleCount < filteredListings.length;
@@ -459,11 +483,13 @@ function MyListingsPage() {
 
   function selectTab(tab: StoreTab) {
     setActiveTab(tab);
+    setListingCategory("");
     setAttentionQueue(null);
   }
 
   function openAttentionQueue(tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) {
     setActiveTab(tab);
+    setListingCategory("");
     setAttentionQueue(queue);
     setListingSearch("");
     inventoryHeadingRef.current?.focus();
@@ -550,9 +576,8 @@ function MyListingsPage() {
         to="/profile"
         backMode="history"
       />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center rawaj-store-workspace rawaj-shop-desk container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <StorefrontIdentityHero
-          mode="owner"
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center rawaj-store-workspace rawaj-shop-desk rawaj-approved-store container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+        <OwnerStoreWorkspaceSummary
           sellerId={profileId ?? ""}
           displayName={displayName}
           secondaryName={auth.profile?.businessName ? auth.profile?.displayName : null}
@@ -561,9 +586,9 @@ function MyListingsPage() {
           bio={auth.profile?.bio}
           location={auth.profile?.cityArea || auth.profile?.governorate}
           verified={sellerProfile?.verified ?? false}
-          joinedAt={sellerProfile?.joinedAt}
           ratingAverage={ratingAverage}
           ratingCount={ratingCount}
+          followerCount={followers?.id === profileId ? followers.count : null}
           approvedCount={grouped.approved.length}
           completeness={storeCompleteness}
         />
@@ -608,43 +633,65 @@ function MyListingsPage() {
             </header>
 
             <div className="rawaj-owner-workspace-sticky">
-              <div
-                className="rawaj-storefront-owner-tabs"
-                role="group"
-                aria-label={text("حالات الإعلانات", "Listing statuses")}
-                data-rawaj-segmented-control="true"
+              <nav
+                className="rawaj-approved-tabs"
+                aria-label={text("أقسام المتجر", "Store sections")}
               >
-                <TabButton
-                  active={activeTab === "approved"}
-                  label={text("نشطة", "Live")}
-                  count={grouped.approved.length}
+                <button
+                  type="button"
+                  aria-pressed={activeTab !== "reviews" && activeTab !== "about"}
                   onClick={() => selectTab("approved")}
-                />
-                <TabButton
-                  active={activeTab === "pending"}
-                  label={text("مراجعة", "Review")}
-                  count={grouped.pending.length}
-                  onClick={() => selectTab("pending")}
-                />
-                <TabButton
-                  active={activeTab === "needs_edit"}
-                  label={text("مسودات وتعديلات", "Drafts & edits")}
-                  count={grouped.needs_edit.length}
-                  onClick={() => selectTab("needs_edit")}
-                />
-                <TabButton
-                  active={activeTab === "closed"}
-                  label={text("مغلقة", "Closed")}
-                  count={grouped.closed.length}
-                  onClick={() => selectTab("closed")}
-                />
-                <TabButton
-                  active={activeTab === "reviews"}
-                  label={text("تقييمات", "Reviews")}
-                  count={ratingCount}
+                >
+                  {text("الإعلانات", "Listings")} ({grouped.approved.length})
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={activeTab === "about"}
+                  onClick={() => selectTab("about")}
+                >
+                  {text("النبذة", "About")}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={activeTab === "reviews"}
                   onClick={() => selectTab("reviews")}
-                />
-              </div>
+                >
+                  {text("التقييمات", "Reviews")} ({ratingCount})
+                </button>
+              </nav>
+              {activeTab !== "about" && activeTab !== "reviews" ? (
+                <div
+                  className="rawaj-storefront-owner-tabs"
+                  role="group"
+                  aria-label={text("حالات الإعلانات", "Listing statuses")}
+                  data-rawaj-segmented-control="true"
+                >
+                  <TabButton
+                    active={activeTab === "approved"}
+                    label={text("نشطة", "Live")}
+                    count={grouped.approved.length}
+                    onClick={() => selectTab("approved")}
+                  />
+                  <TabButton
+                    active={activeTab === "pending"}
+                    label={text("مراجعة", "Review")}
+                    count={grouped.pending.length}
+                    onClick={() => selectTab("pending")}
+                  />
+                  <TabButton
+                    active={activeTab === "needs_edit"}
+                    label={text("مسودات وتعديلات", "Drafts & edits")}
+                    count={grouped.needs_edit.length}
+                    onClick={() => selectTab("needs_edit")}
+                  />
+                  <TabButton
+                    active={activeTab === "closed"}
+                    label={text("مغلقة", "Closed")}
+                    count={grouped.closed.length}
+                    onClick={() => selectTab("closed")}
+                  />
+                </div>
+              ) : null}
 
               {attentionQueue ? (
                 <div className="rawaj-store-queue">
@@ -668,21 +715,35 @@ function MyListingsPage() {
                 </div>
               ) : null}
 
-              {activeTab !== "reviews" ? (
-                <OwnerListingsToolbar
-                  query={listingSearch}
-                  onQueryChange={setListingSearch}
-                  sort={listingSort}
-                  onSortChange={setListingSort}
-                  performanceWindow={performanceWindow}
-                  onPerformanceWindowChange={setPerformanceWindow}
-                  totalCount={filteredListings.length}
-                  shownCount={visibleListings.length}
-                  canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
-                  selectedCount={selectedApprovedListings.length}
-                  allVisibleSelected={allVisibleApprovedSelected}
-                  onToggleVisibleSelection={toggleVisibleApprovedSelection}
-                />
+              {activeTab !== "reviews" && activeTab !== "about" ? (
+                <div className="rawaj-approved-filters">
+                  <select
+                    aria-label={text("فئة الإعلانات", "Listing category")}
+                    value={listingCategory}
+                    onChange={(event) => setListingCategory(event.target.value)}
+                  >
+                    <option value="">{text("كل الفئات", "All Categories")}</option>
+                    {categories.map(([id, label]) => (
+                      <option key={id} value={id}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <OwnerListingsToolbar
+                    query={listingSearch}
+                    onQueryChange={setListingSearch}
+                    sort={listingSort}
+                    onSortChange={setListingSort}
+                    performanceWindow={performanceWindow}
+                    onPerformanceWindowChange={setPerformanceWindow}
+                    totalCount={filteredListings.length}
+                    shownCount={visibleListings.length}
+                    canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
+                    selectedCount={selectedApprovedListings.length}
+                    allVisibleSelected={allVisibleApprovedSelected}
+                    onToggleVisibleSelection={toggleVisibleApprovedSelection}
+                  />
+                </div>
               ) : null}
 
               {activeTab === "approved" ? (
@@ -725,7 +786,12 @@ function MyListingsPage() {
               />
             ) : null}
 
-            {!listingsHasLoaded && !listingsError ? (
+            {activeTab === "about" ? (
+              <Panel
+                title={text("عن المتجر", "About this store")}
+                body={auth.profile?.bio || text("لم تُضف نبذة بعد.", "No store description yet.")}
+              />
+            ) : !listingsHasLoaded && !listingsError ? (
               <Panel title={text("جارٍ تحميل إعلاناتك…", "Loading your listings…")} loading />
             ) : listingsError && !listingsHasLoaded ? (
               <Panel
@@ -784,9 +850,18 @@ function MyListingsPage() {
                             : text("ما في إعلانات بهالحالة", "No listings in this status")
                       }
                       actionLabel={
-                        listingSearch.trim() ? text("مسح البحث", "Clear search") : undefined
+                        listingSearch.trim() || listingCategory
+                          ? text("مسح الفلاتر", "Clear filters")
+                          : undefined
                       }
-                      onAction={listingSearch.trim() ? () => setListingSearch("") : undefined}
+                      onAction={
+                        listingSearch.trim() || listingCategory
+                          ? () => {
+                              setListingSearch("");
+                              setListingCategory("");
+                            }
+                          : undefined
+                      }
                     />
                     {listings.length === 0 && !listingSearch.trim() ? (
                       <Link to="/add-listing" className="rawaj-store-empty__action">

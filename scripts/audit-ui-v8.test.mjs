@@ -165,6 +165,8 @@ test("owner workspace uses a compact management summary and prioritizes drafts",
   assert.doesNotMatch(ownerWorkspace, /needsEditCount|pendingCount|closedCount/);
   assert.match(ownerRoute, /rawaj-shop-desk__rail[\s\S]*tone="draft"[\s\S]*rawaj-owner-inventory/);
   assert.match(ownerRoute, /rawaj-owner-inventory[\s\S]*rawaj-shop-desk__secondary/);
+  assert.match(ownerWorkspace, /rawaj-shop-header__cover/);
+  assert.match(ownerWorkspace, /rawaj-approved-stats/);
 });
 
 test("listing creation and draft editing use one compact semantic studio", () => {
