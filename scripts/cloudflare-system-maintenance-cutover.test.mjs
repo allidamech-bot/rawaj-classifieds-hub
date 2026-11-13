@@ -44,10 +44,10 @@ test("system status checks protect free-tier Workers from idle and rate-limited 
   assert.match(notice, /Date\.now\(\) < nextAllowedCheckAtRef\.current/);
   assert.match(notice, /result\.error\.code === "rate_limited"/);
   assert.match(notice, /refreshSystemStatus\(true\)/);
-  assert.match(notice, /window\\.addEventListener\\("focus", refreshOnFocus\\)/);
-  assert.match(notice, /window\\.addEventListener\\("rawaj:system-control-changed", refreshAfterOwnerChange\\)/);
+  assert.match(notice, /window\.addEventListener\("focus", refreshOnFocus\)/);
+  assert.match(notice, /window\.addEventListener\("rawaj:system-control-changed", refreshAfterOwnerChange\)/);
   const cloudflareAuth = await read("src/lib/cloudflare-auth.ts");
-  assert.match(cloudflareAuth, /response\\.status === 429 \\? "rate_limited"/);
+  assert.match(cloudflareAuth, /response\.status === 429 \? "rate_limited"/);
 });
 
 test("owner maintenance control explains its actual site-wide effect", async () => {
