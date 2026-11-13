@@ -13,10 +13,7 @@ const source = readFileSync(
 );
 const compiled = ts.transpileModule(source, {
   fileName: "admin-user-management.ts",
-  compilerOptions: {
-    target: ts.ScriptTarget.ES2022,
-    module: ts.ModuleKind.CommonJS,
-  },
+  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
 }).outputText;
 
 test("admin status, staff roles and restrictions enforce policy and preserve audit in isolated D1 SQL", async () => {
@@ -36,11 +33,7 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       );
     `);
     for (const id of ["owner", "admin", "member"]) {
-      db.prepare("INSERT INTO auth_users VALUES (?,?,?)").run(
-        id,
-        null,
-        "2026-01-01T00:00:00Z",
-      );
+      db.prepare("INSERT INTO auth_users VALUES (?,?,?)").run(id, null, "2026-01-01T00:00:00Z");
       db.prepare("INSERT INTO public_profiles VALUES (?,?,?)").run(
         id,
         "active",
@@ -73,11 +66,7 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
             const result = db.prepare(sql).run(...values);
             return { success: true, meta: { changes: Number(result.changes) } };
           } catch (error) {
-            return {
-              success: false,
-              error: String(error),
-              meta: { changes: 0 },
-            };
+            return { success: false, error: String(error), meta: { changes: 0 } };
           }
         },
       };
@@ -98,17 +87,14 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
             return results;
           } catch (error) {
             db.exec("ROLLBACK");
-            return results.length
-              ? results
-              : [{ success: false, error: String(error) }];
+            return results.length ? results : [{ success: false, error: String(error) }];
           }
         },
       },
     };
     const mockedAuth = {
       corsHeaders: () => new Headers(),
-      json: (body, status, headers) =>
-        new Response(JSON.stringify(body), { status, headers }),
+      json: (body, status, headers) => new Response(JSON.stringify(body), { status, headers }),
       readJson: async (request) => {
         try {
           return { ok: true, data: await request.json() };
@@ -117,10 +103,7 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
         }
       },
       requireMutationAuth: async (request) => {
-        const id = (request.headers.get("Authorization") ?? "").replace(
-          "Bearer ",
-          "",
-        );
+        const id = (request.headers.get("Authorization") ?? "").replace("Bearer ", "");
         const roles = db
           .prepare("SELECT role FROM user_roles WHERE user_id=?")
           .all(id)
@@ -150,17 +133,11 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
     });
     const handle = exports.handleAdminUserManagement;
     async function post(actor, operation, data) {
-      const request = new Request(
-        `https://test.example/v1/admin/users/${operation}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${actor}`,
-          },
-          body: JSON.stringify(data),
-        },
-      );
+      const request = new Request(`https://test.example/v1/admin/users/${operation}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${actor}` },
+        body: JSON.stringify(data),
+      });
       const response = await handle(request, env);
       return { status: response.status, body: await response.json() };
     }
@@ -245,9 +222,8 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       200,
     );
     assert.equal(
-      db
-        .prepare("SELECT account_status FROM public_profiles WHERE id='member'")
-        .get().account_status,
+      db.prepare("SELECT account_status FROM public_profiles WHERE id='member'").get()
+        .account_status,
       "frozen",
     );
     assert.equal(
@@ -276,11 +252,8 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
     assert.equal(duplicate.status, 200);
     assert.equal(duplicate.body.data, restricted.body.data);
     assert.equal(
-      db
-        .prepare(
-          "SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL",
-        )
-        .get().count,
+      db.prepare("SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL").get()
+        .count,
       1,
     );
     assert.equal(
@@ -295,11 +268,8 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       200,
     );
     assert.equal(
-      db
-        .prepare(
-          "SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL",
-        )
-        .get().count,
+      db.prepare("SELECT count(*) AS count FROM user_restrictions WHERE ends_at IS NULL").get()
+        .count,
       0,
     );
     assert.equal(
@@ -312,10 +282,7 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       ).status,
       200,
     );
-    assert.ok(
-      db.prepare("SELECT disabled_at FROM auth_users WHERE id='member'").get()
-        .disabled_at,
-    );
+    assert.ok(db.prepare("SELECT disabled_at FROM auth_users WHERE id='member'").get().disabled_at);
     assert.equal(
       (
         await post("owner", "status", {
@@ -327,8 +294,7 @@ test("admin status, staff roles and restrictions enforce policy and preserve aud
       200,
     );
     assert.equal(
-      db.prepare("SELECT disabled_at FROM auth_users WHERE id='member'").get()
-        .disabled_at,
+      db.prepare("SELECT disabled_at FROM auth_users WHERE id='member'").get().disabled_at,
       null,
     );
     const actions = db

@@ -1,10 +1,4 @@
-import {
-  corsHeaders,
-  json,
-  readJson,
-  requireMutationAuth,
-  type AuthEnv,
-} from "./auth";
+import { corsHeaders, json, readJson, requireMutationAuth, type AuthEnv } from "./auth";
 
 type Value = string | number | null;
 type Result = { success: boolean; meta?: { changes?: number }; error?: string };
@@ -30,22 +24,14 @@ type Target = {
 };
 
 const ACCOUNT_STATUSES = new Set(["active", "frozen", "disabled"]);
-const RESTRICTION_TYPES = new Set([
-  "posting",
-  "messaging",
-  "reviews",
-  "promotions",
-  "uploads",
-]);
+const RESTRICTION_TYPES = new Set(["posting", "messaging", "reviews", "promotions", "uploads"]);
 
 export async function handleAdminUserManagement(
   request: Request,
   env: AdminUserManagementEnv,
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
-  const path = pathname.startsWith("/api/")
-    ? "/v1/" + pathname.slice(5)
-    : pathname;
+  const path = pathname.startsWith("/api/") ? "/v1/" + pathname.slice(5) : pathname;
   const operation =
     path === "/v1/admin/users/status"
       ? "status"
@@ -56,8 +42,7 @@ export async function handleAdminUserManagement(
           : null;
   if (!operation) return null;
   const cors = corsHeaders(request, env as unknown as AuthEnv);
-  if (request.method === "OPTIONS")
-    return new Response(null, { status: 204, headers: cors });
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (request.method !== "POST") {
     return json(
       { error: { code: "method_not_allowed", message: "Method not allowed." } },
@@ -66,16 +51,10 @@ export async function handleAdminUserManagement(
     );
   }
 
-  const auth = await requireMutationAuth(
-    request,
-    env as unknown as AuthEnv,
-    cors,
-  );
+  const auth = await requireMutationAuth(request, env as unknown as AuthEnv, cors);
   if (auth instanceof Response) return auth;
-  if (!auth.roles.includes("owner") && !auth.roles.includes("admin"))
-    return denied(cors);
-  if (operation === "roles" && !auth.roles.includes("owner"))
-    return denied(cors);
+  if (!auth.roles.includes("owner") && !auth.roles.includes("admin")) return denied(cors);
+  if (operation === "roles" && !auth.roles.includes("owner")) return denied(cors);
 
   const parsed = await readJson(request);
   if (!parsed.ok) return json({ error: parsed.error }, parsed.status, cors);
@@ -92,31 +71,18 @@ export async function handleAdminUserManagement(
   )
     .bind(userId)
     .first<Target>();
-  if (!target)
-    return json(
-      { error: { code: "not_found", message: "User not found." } },
-      404,
-      cors,
-    );
-  if (target.is_owner || (!auth.roles.includes("owner") && target.is_staff))
-    return denied(cors);
+  if (!target) return json({ error: { code: "not_found", message: "User not found." } }, 404, cors);
+  if (target.is_owner || (!auth.roles.includes("owner") && target.is_staff)) return denied(cors);
 
   if (operation === "status") {
     const status = text(data.status, 32);
     const reason = text(data.reason, 1000);
-    if (
-      !status ||
-      !ACCOUNT_STATUSES.has(status) ||
-      !reason ||
-      reason.length < 3
-    ) {
+    if (!status || !ACCOUNT_STATUSES.has(status) || !reason || reason.length < 3) {
       return invalid(cors);
     }
     // Only the owner can permanently disable an account.
-    if (status === "disabled" && !auth.roles.includes("owner"))
-      return denied(cors);
-    if (target.account_status === status)
-      return json({ data: null }, 200, cors);
+    if (status === "disabled" && !auth.roles.includes("owner")) return denied(cors);
+    if (target.account_status === status) return json({ data: null }, 200, cors);
     const timestamp = new Date().toISOString();
     const results = await env.DB.batch([
       env.DB.prepare(
@@ -155,11 +121,7 @@ export async function handleAdminUserManagement(
       ),
     ]);
     if (results.some((result) => !result.success)) return failed(cors);
-    if (
-      changed(results[0]) !== 1 ||
-      changed(results[1]) !== 1 ||
-      changed(results[2]) !== 1
-    ) {
+    if (changed(results[0]) !== 1 || changed(results[1]) !== 1 || changed(results[2]) !== 1) {
       return stale(cors);
     }
     return json({ data: null }, 200, cors);
@@ -174,10 +136,8 @@ export async function handleAdminUserManagement(
     ) {
       return invalid(cors);
     }
-    if (action === "assign" && target.account_status !== "active")
-      return denied(cors);
-    const note =
-      text(action === "assign" ? data.note : data.reason, 1000) ?? "";
+    if (action === "assign" && target.account_status !== "active") return denied(cors);
+    const note = text(action === "assign" ? data.note : data.reason, 1000) ?? "";
     const exists = await env.DB.prepare(
       "SELECT role FROM user_roles WHERE user_id = ? AND role = ?",
     )
@@ -195,9 +155,10 @@ export async function handleAdminUserManagement(
               "SELECT 1 FROM public_profiles WHERE id = ? AND account_status = 'active') " +
               "AND NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = ? AND role = 'owner')",
           ).bind(userId, role, timestamp, userId, userId)
-        : env.DB.prepare(
-            "DELETE FROM user_roles WHERE user_id = ? AND role = ?",
-          ).bind(userId, role);
+        : env.DB.prepare("DELETE FROM user_roles WHERE user_id = ? AND role = ?").bind(
+            userId,
+            role,
+          );
     const results = await env.DB.batch([
       change,
       auditStatement(
@@ -213,8 +174,7 @@ export async function handleAdminUserManagement(
       ),
     ]);
     if (results.some((result) => !result.success)) return failed(cors);
-    if (changed(results[0]) !== 1 || changed(results[1]) !== 1)
-      return stale(cors);
+    if (changed(results[0]) !== 1 || changed(results[1]) !== 1) return stale(cors);
     return json({ data: null }, 200, cors);
   }
 
@@ -233,13 +193,11 @@ export async function handleAdminUserManagement(
   const timestamp = new Date().toISOString();
   const isActive = "starts_at <= ? AND (ends_at IS NULL OR ends_at > ?)";
   if (action === "set") {
-    const endsAtText =
-      data.endsAt == null || data.endsAt === "" ? null : text(data.endsAt, 60);
+    const endsAtText = data.endsAt == null || data.endsAt === "" ? null : text(data.endsAt, 60);
     const endsAtMs = endsAtText ? Date.parse(endsAtText) : null;
     if (
       (data.endsAt != null && data.endsAt !== "" && !endsAtText) ||
-      (endsAtText &&
-        (!Number.isFinite(endsAtMs) || Number(endsAtMs) <= Date.now()))
+      (endsAtText && (!Number.isFinite(endsAtMs) || Number(endsAtMs) <= Date.now()))
     ) {
       return invalid(cors);
     }
@@ -290,8 +248,7 @@ export async function handleAdminUserManagement(
       ),
     ]);
     if (results.some((result) => !result.success)) return failed(cors);
-    if (changed(results[0]) !== 1 || changed(results[1]) !== 1)
-      return stale(cors);
+    if (changed(results[0]) !== 1 || changed(results[1]) !== 1) return stale(cors);
     return json({ data: id }, 201, cors);
   }
 
@@ -349,11 +306,7 @@ function text(value: unknown, max: number): string | null {
 }
 
 function denied(cors: Headers): Response {
-  return json(
-    { error: { code: "permission_denied", message: "Permission denied." } },
-    403,
-    cors,
-  );
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
 }
 function invalid(cors: Headers): Response {
   return json(

@@ -35,10 +35,7 @@ test("legacy and canonical public responses use the same contact-data sanitizer"
   assert.match(privacy, /contactwhatsapp/);
   assert.match(privacy, /contactphone/);
   assert.match(privacy, /sanitizeValue\(item, depth \+ 1\)/);
-  assert.match(
-    legacy,
-    /sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/,
-  );
+  assert.match(legacy, /sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
   assert.match(legacy, /listing: ownerView/);
   assert.match(legacy, /publiclyAvailable/);
   assert.match(legacy, /l\.expires_at IS NULL OR l\.expires_at/);

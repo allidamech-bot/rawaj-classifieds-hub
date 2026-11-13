@@ -16,9 +16,7 @@ interface D1PreparedStatement {
 
 interface D1Database {
   prepare(query: string): D1PreparedStatement;
-  batch<T = Record<string, unknown>>(
-    statements: D1PreparedStatement[],
-  ): Promise<D1Result<T>[]>;
+  batch<T = Record<string, unknown>>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
 }
 
 interface R2ObjectBody {
@@ -101,16 +99,10 @@ export async function handlePublicCore(
       new RegExp(`^/${API_VERSION}/locations/([^/]+)/children$`),
     );
     if (locationChildrenMatch) {
-      return await locationChildren(
-        decodeURIComponent(locationChildrenMatch[1]),
-        env,
-        cors,
-      );
+      return await locationChildren(decodeURIComponent(locationChildrenMatch[1]), env, cors);
     }
 
-    const locationMatch = url.pathname.match(
-      new RegExp(`^/${API_VERSION}/locations/([^/]+)$`),
-    );
+    const locationMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/locations/([^/]+)$`));
     if (locationMatch) {
       return await locationDetail(
         decodeURIComponent(locationMatch[1]),
@@ -128,36 +120,21 @@ export async function handlePublicCore(
       return await listings(url, env, cors);
     }
 
-    const listingMatch = url.pathname.match(
-      new RegExp(`^/${API_VERSION}/listings/([^/]+)$`),
-    );
+    const listingMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/listings/([^/]+)$`));
     if (listingMatch) {
-      return await listingDetail(
-        decodeURIComponent(listingMatch[1]),
-        env,
-        cors,
-      );
+      return await listingDetail(decodeURIComponent(listingMatch[1]), env, cors);
     }
 
-    const mediaMatch = url.pathname.match(
-      new RegExp(`^/${API_VERSION}/media/assets/([^/]+)$`),
-    );
+    const mediaMatch = url.pathname.match(new RegExp(`^/${API_VERSION}/media/assets/([^/]+)$`));
     if (mediaMatch) {
-      return await mediaAsset(
-        request,
-        decodeURIComponent(mediaMatch[1]),
-        env,
-        cors,
-      );
+      return await mediaAsset(request, decodeURIComponent(mediaMatch[1]), env, cors);
     }
 
     return null;
   } catch (error) {
     console.error("rawaj_public_api_unhandled", error);
     return json(
-      {
-        error: { code: "internal_error", message: "Unexpected service error." },
-      },
+      { error: { code: "internal_error", message: "Unexpected service error." } },
       500,
       cors,
     );
@@ -168,11 +145,7 @@ export default {
   async fetch(request: Request, env: PublicCoreEnv): Promise<Response> {
     return (
       (await handlePublicCore(request, env)) ??
-      json(
-        { error: { code: "not_found", message: "Resource not found." } },
-        404,
-        new Headers(),
-      )
+      json({ error: { code: "not_found", message: "Resource not found." } }, 404, new Headers())
     );
   },
 };
@@ -183,9 +156,7 @@ function isPublicCorePath(pathname: string): boolean {
     pathname === `/${API_VERSION}/references` ||
     pathname === `/${API_VERSION}/locations/roots` ||
     pathname === `/${API_VERSION}/locations/search` ||
-    new RegExp(`^/${API_VERSION}/locations/[^/]+(?:/children)?$`).test(
-      pathname,
-    ) ||
+    new RegExp(`^/${API_VERSION}/locations/[^/]+(?:/children)?$`).test(pathname) ||
     pathname === `/${API_VERSION}/ad-placements` ||
     pathname === `/${API_VERSION}/listings` ||
     new RegExp(`^/${API_VERSION}/listings/[^/]+$`).test(pathname) ||
@@ -211,10 +182,7 @@ async function health(env: PublicCoreEnv, cors: Headers): Promise<Response> {
   );
 }
 
-async function references(
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function references(env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const results = await env.DB.batch([
     env.DB.prepare(
       `SELECT id, slug, name_ar, name_en, hint_ar, hint_en, placeholder,
@@ -247,10 +215,7 @@ async function references(
   ]);
 
   if (results.some((result) => !result.success)) {
-    return databaseFailure(
-      cors,
-      results.find((result) => !result.success)?.error,
-    );
+    return databaseFailure(cors, results.find((result) => !result.success)?.error);
   }
 
   return json(
@@ -272,14 +237,9 @@ const LOCATION_SELECT = `id, parent_id, country_code, node_type, name_ar, name_e
   official_code, external_source, external_id, latitude, longitude, sort_order, depth,
   is_active, search_aliases, legacy_governorate_id, legacy_district_ar`;
 
-async function locationRoots(
-  url: URL,
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function locationRoots(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const country = cleanText(url.searchParams.get("country"), 2) ?? "SY";
-  if (!/^[A-Z]{2}$/.test(country))
-    return validationFailure(cors, "Invalid country code.");
+  if (!/^[A-Z]{2}$/.test(country)) return validationFailure(cors, "Invalid country code.");
   const result = await env.DB.prepare(
     `SELECT ${LOCATION_SELECT} FROM location_nodes
       WHERE country_code = ? AND is_active = 1 AND parent_id IS NULL
@@ -288,12 +248,7 @@ async function locationRoots(
     .bind(country)
     .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
-  return json(
-    { data: (result.results ?? []).map(mapLocationNode) },
-    200,
-    cors,
-    cacheHeaders(env),
-  );
+  return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
 async function locationChildren(
@@ -301,8 +256,7 @@ async function locationChildren(
   env: PublicCoreEnv,
   cors: Headers,
 ): Promise<Response> {
-  if (!validId(parentId))
-    return validationFailure(cors, "Invalid location id.");
+  if (!validId(parentId)) return validationFailure(cors, "Invalid location id.");
   const result = await env.DB.prepare(
     `SELECT ${LOCATION_SELECT} FROM location_nodes
       WHERE parent_id = ? AND is_active = 1
@@ -311,12 +265,7 @@ async function locationChildren(
     .bind(parentId)
     .all<JsonRecord>();
   if (!result.success) return databaseFailure(cors, result.error);
-  return json(
-    { data: (result.results ?? []).map(mapLocationNode) },
-    200,
-    cors,
-    cacheHeaders(env),
-  );
+  return json({ data: (result.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
 async function locationDetail(
@@ -338,8 +287,7 @@ async function locationDetail(
       .bind(id)
       .all<{ id: string }>();
     if (!result.success) return databaseFailure(cors, result.error);
-    if (!(result.results ?? []).length)
-      return notFound(cors, "Location not found.");
+    if (!(result.results ?? []).length) return notFound(cors, "Location not found.");
     return json(
       { data: (result.results ?? []).map((row) => row.id) },
       200,
@@ -363,25 +311,14 @@ async function locationDetail(
     .bind(id)
     .all<JsonRecord>();
   if (!rows.success) return databaseFailure(cors, rows.error);
-  if (!(rows.results ?? []).length)
-    return notFound(cors, "Location not found.");
-  return json(
-    { data: (rows.results ?? []).map(mapLocationNode) },
-    200,
-    cors,
-    cacheHeaders(env),
-  );
+  if (!(rows.results ?? []).length) return notFound(cors, "Location not found.");
+  return json({ data: (rows.results ?? []).map(mapLocationNode) }, 200, cors, cacheHeaders(env));
 }
 
-async function locationSearch(
-  url: URL,
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function locationSearch(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const query = cleanText(url.searchParams.get("q"), 100);
   const limit = integerParam(url.searchParams.get("limit"), 12, 1, 20);
-  if (!query || query.length < 2)
-    return validationFailure(cors, "Search requires two characters.");
+  if (!query || query.length < 2) return validationFailure(cors, "Search requires two characters.");
   const storedQuery = toWindows1256Mojibake(query);
   const like = `%${storedQuery.replace(/[%_]/g, "\\$&")}%`;
   const normalized = normalizeArabicSearch(storedQuery);
@@ -419,20 +356,13 @@ async function locationSearch(
   );
 }
 
-async function adPlacements(
-  url: URL,
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function adPlacements(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const placementPage = cleanText(url.searchParams.get("page"), 80);
-  const device =
-    url.searchParams.get("device") === "mobile" ? "mobile" : "desktop";
+  const device = url.searchParams.get("device") === "mobile" ? "mobile" : "desktop";
 
   if (!placementPage) {
     return json(
-      {
-        error: { code: "validation_error", message: "Missing placement page." },
-      },
+      { error: { code: "validation_error", message: "Missing placement page." } },
       400,
       cors,
     );
@@ -469,11 +399,7 @@ async function adPlacements(
   );
 }
 
-async function listings(
-  url: URL,
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function listings(url: URL, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   const pageSize = integerParam(url.searchParams.get("pageSize"), 30, 1, 50);
   const filters = readListingFilters(url.searchParams);
   const cursor = decodeCursor(url.searchParams.get("cursor"));
@@ -502,9 +428,7 @@ async function listings(
     values.push(filters.priceMax);
   }
   if (filters.withPhotos) {
-    where.push(
-      "EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)",
-    );
+    where.push("EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)");
   }
   if (filters.taxonomyNodeIds.length > 0) {
     where.push(
@@ -585,17 +509,9 @@ async function listings(
   );
 }
 
-async function listingDetail(
-  id: string,
-  env: PublicCoreEnv,
-  cors: Headers,
-): Promise<Response> {
+async function listingDetail(id: string, env: PublicCoreEnv, cors: Headers): Promise<Response> {
   if (!id || id.length > 120) {
-    return json(
-      { error: { code: "validation_error", message: "Invalid listing id." } },
-      400,
-      cors,
-    );
+    return json({ error: { code: "validation_error", message: "Invalid listing id." } }, 400, cors);
   }
 
   const listingResult = await env.DB.prepare(
@@ -622,11 +538,7 @@ async function listingDetail(
     .first<JsonRecord>();
 
   if (!listingResult) {
-    return json(
-      { error: { code: "not_found", message: "Listing not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
   }
 
   const imageResult = await env.DB.prepare(
@@ -640,9 +552,7 @@ async function listingDetail(
 
   if (!imageResult.success) return databaseFailure(cors, imageResult.error);
 
-  const requestUrl = new URL(
-    `https://placeholder.invalid/${API_VERSION}/listings/${id}`,
-  );
+  const requestUrl = new URL(`https://placeholder.invalid/${API_VERSION}/listings/${id}`);
   const listing = mapListing(listingResult, requestUrl);
   const images = (imageResult.results ?? []).map((row) => ({
     id: stringValue(row.id),
@@ -664,11 +574,7 @@ async function mediaAsset(
   cors: Headers,
 ): Promise<Response> {
   if (!assetId || assetId.length > 160) {
-    return json(
-      { error: { code: "not_found", message: "Media not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
 
   const asset = await env.DB.prepare(
@@ -706,32 +612,18 @@ async function mediaAsset(
     .first<JsonRecord>();
 
   if (!asset) {
-    return json(
-      { error: { code: "not_found", message: "Media not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
 
   const object = await env.MEDIA.get(stringValue(asset.object_key));
   if (!object) {
-    console.error("rawaj_media_object_missing", {
-      assetId,
-      objectKey: asset.object_key,
-    });
-    return json(
-      { error: { code: "not_found", message: "Media not found." } },
-      404,
-      cors,
-    );
+    console.error("rawaj_media_object_missing", { assetId, objectKey: asset.object_key });
+    return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
 
   const headers = new Headers(cors);
   object.writeHttpMetadata(headers);
-  headers.set(
-    "Content-Type",
-    stringValue(asset.content_type, "application/octet-stream"),
-  );
+  headers.set("Content-Type", stringValue(asset.content_type, "application/octet-stream"));
   headers.set("ETag", object.httpEtag || stringValue(asset.etag));
   headers.set(
     "Cache-Control",
@@ -831,11 +723,7 @@ function mapLocationNode(row: JsonRecord): JsonRecord {
 }
 
 function validId(value: string): boolean {
-  return (
-    value.length > 0 &&
-    value.length <= 160 &&
-    /^[\p{L}\p{N}._:-]+$/u.test(value)
-  );
+  return value.length > 0 && value.length <= 160 && /^[\p{L}\p{N}._:-]+$/u.test(value);
 }
 
 function normalizeArabicSearch(value: string): string {
@@ -892,9 +780,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
     expiryDays: nullableNumber(row.expiry_days),
     createdAt: stringValue(row.created_at),
     updatedAt: stringValue(row.updated_at),
-    primaryImageUrl: primaryAssetId
-      ? mediaUrl(requestUrl, primaryAssetId)
-      : null,
+    primaryImageUrl: primaryAssetId ? mediaUrl(requestUrl, primaryAssetId) : null,
   };
 }
 
@@ -944,15 +830,12 @@ type ListingCursor = {
 };
 
 function readSort(value: string | null): ListingSort {
-  return value === "featured" || value === "cheapest" || value === "expensive"
-    ? value
-    : "latest";
+  return value === "featured" || value === "cheapest" || value === "expensive" ? value : "latest";
 }
 
 function listingOrder(sort: ListingSort): string {
   if (sort === "cheapest") return "l.price IS NULL ASC, l.price ASC, l.id ASC";
-  if (sort === "expensive")
-    return "l.price IS NULL ASC, l.price DESC, l.id ASC";
+  if (sort === "expensive") return "l.price IS NULL ASC, l.price DESC, l.id ASC";
   return "active_feature_rank DESC, l.created_at DESC, l.id DESC";
 }
 
@@ -969,13 +852,7 @@ function buildCursorClause(
     typeof cursor.isFeatured === "boolean"
   ) {
     const featured = cursor.isFeatured ? 1 : 0;
-    values.push(
-      featured,
-      featured,
-      cursor.createdAt,
-      cursor.createdAt,
-      cursor.id,
-    );
+    values.push(featured, featured, cursor.createdAt, cursor.createdAt, cursor.id);
     return `(
       ${ACTIVE_FEATURE_SQL} < ?
       OR (
@@ -985,10 +862,7 @@ function buildCursorClause(
     )`;
   }
 
-  if (
-    (sort === "cheapest" || sort === "expensive") &&
-    cursor.price !== undefined
-  ) {
+  if ((sort === "cheapest" || sort === "expensive") && cursor.price !== undefined) {
     if (cursor.price === null) {
       values.push(cursor.id);
       return "l.price IS NULL AND l.id > ?";
@@ -1005,15 +879,11 @@ function cursorFromRow(sort: ListingSort, row: JsonRecord): ListingCursor {
   return {
     sort,
     id: stringValue(row.id),
-    ...(sort === "latest" || sort === "featured"
-      ? { createdAt: stringValue(row.created_at) }
-      : {}),
+    ...(sort === "latest" || sort === "featured" ? { createdAt: stringValue(row.created_at) } : {}),
     ...(sort === "latest" || sort === "featured"
       ? { isFeatured: booleanValue(row.active_feature_rank) }
       : {}),
-    ...(sort === "cheapest" || sort === "expensive"
-      ? { price: nullableNumber(row.price) }
-      : {}),
+    ...(sort === "cheapest" || sort === "expensive" ? { price: nullableNumber(row.price) } : {}),
   };
 }
 
@@ -1030,14 +900,9 @@ function decodeCursor(value: string | null): ListingCursor | null {
     return {
       sort,
       id: parsed.id,
-      createdAt:
-        typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
-      price:
-        typeof parsed.price === "number" || parsed.price === null
-          ? parsed.price
-          : undefined,
-      isFeatured:
-        typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
+      createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
+      price: typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
+      isFeatured: typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
     };
   } catch {
     return null;
@@ -1060,8 +925,7 @@ function mediaUrl(url: URL, assetId: string): string {
 }
 
 function cacheHeaders(env: PublicCoreEnv, override?: number): Headers {
-  const seconds =
-    override ?? integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
+  const seconds = override ?? integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
   const headers = new Headers();
   headers.set(
     "Cache-Control",
@@ -1076,22 +940,13 @@ function cacheHeaders(env: PublicCoreEnv, override?: number): Headers {
 function databaseFailure(cors: Headers, detail?: string): Response {
   if (detail) console.error("rawaj_public_api_database_error", detail);
   return json(
-    {
-      error: {
-        code: "database_unavailable",
-        message: "Data service unavailable.",
-      },
-    },
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
     503,
     cors,
   );
 }
 
-function json(
-  payload: unknown,
-  status: number,
-  ...headerSets: Headers[]
-): Response {
+function json(payload: unknown, status: number, ...headerSets: Headers[]): Response {
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
     "X-Content-Type-Options": "nosniff",
@@ -1103,23 +958,16 @@ function json(
 }
 
 function stringValue(value: unknown, fallback = ""): string {
-  return typeof value === "string"
-    ? repairWindows1256Mojibake(value)
-    : fallback;
+  return typeof value === "string" ? repairWindows1256Mojibake(value) : fallback;
 }
 
 function nullableString(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0
-    ? repairWindows1256Mojibake(value)
-    : null;
+  return typeof value === "string" && value.length > 0 ? repairWindows1256Mojibake(value) : null;
 }
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -1130,9 +978,7 @@ function repairWindows1256Mojibake(value: string): string {
     if (byte === undefined) return value;
     bytes.push(byte);
   }
-  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(
-    Uint8Array.from(bytes),
-  );
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
   return repaired.includes("\uFFFD") ? value : repaired;
 }
 
@@ -1192,16 +1038,9 @@ function numericParam(value: string | null): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
-function integerParam(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
+function integerParam(value: string | null, fallback: number, min: number, max: number): number {
   const number = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(number)
-    ? Math.max(min, Math.min(max, number))
-    : fallback;
+  return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
 }
 
 function integerValue(value: string | undefined, fallback: number): number {
@@ -1213,10 +1052,7 @@ function base64UrlEncode(value: string): string {
   const bytes = new TextEncoder().encode(value);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function base64UrlDecode(value: string): string {
