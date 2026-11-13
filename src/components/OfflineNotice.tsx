@@ -1,5 +1,5 @@
 import { WifiOff, Wrench } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -8,16 +8,37 @@ interface PublicSystemStatus {
   emergencyReadOnly: boolean;
 }
 
-const SYSTEM_STATUS_REFRESH_MS = 60_000;
+// Low-traffic deployments must not poll Cloudflare on every idle browser tab.
+const SYSTEM_STATUS_REFRESH_MS = 5 * 60_000;
+const SYSTEM_STATUS_RATE_LIMIT_BACKOFF_MS = 30 * 60_000;
 
 export function OfflineNotice() {
   const { text } = useUiPreferences();
   const [online, setOnline] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const requestInFlightRef = useRef(false);
+  const nextAllowedCheckAtRef = useRef(0);
 
-  const refreshSystemStatus = useCallback(async () => {
-    const result = await cloudflareApiRequest<PublicSystemStatus>("/v1/system-status");
-    if (result.ok) setMaintenanceMode(result.data.maintenanceMode);
+  const refreshSystemStatus = useCallback(async (force = false) => {
+    if (typeof document === "undefined" || typeof navigator === "undefined") return;
+    if (navigator.onLine === false || requestInFlightRef.current) return;
+    if (!force && document.visibilityState !== "visible") return;
+    if (!force && Date.now() < nextAllowedCheckAtRef.current) return;
+
+    requestInFlightRef.current = true;
+    nextAllowedCheckAtRef.current = Date.now() + SYSTEM_STATUS_REFRESH_MS;
+
+    try {
+      const result = await cloudflareApiRequest<PublicSystemStatus>("/v1/system-status");
+      if (result.ok) {
+        setMaintenanceMode(result.data.maintenanceMode);
+      } else if (result.error.code === "rate_limited") {
+        // A Cloudflare 429 must not trigger more background pressure.
+        nextAllowedCheckAtRef.current = Date.now() + SYSTEM_STATUS_RATE_LIMIT_BACKOFF_MS;
+      }
+    } finally {
+      requestInFlightRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -35,7 +56,7 @@ export function OfflineNotice() {
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") void refreshSystemStatus();
     };
-    const refreshAfterOwnerChange = () => void refreshSystemStatus();
+    const refreshAfterOwnerChange = () => void refreshSystemStatus(true);
 
     void refreshSystemStatus();
     const interval = window.setInterval(() => void refreshSystemStatus(), SYSTEM_STATUS_REFRESH_MS);
