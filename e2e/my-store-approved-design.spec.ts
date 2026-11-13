@@ -62,6 +62,25 @@ test("approved store composition and owner interactions", async ({ page }, testI
   await expect(page.locator(".ms-owner-listing-card")).toHaveCount(4);
   await expect(page.locator(".my-store-cover img")).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
+
+  // A rendered-page regression guard: global legacy styles previously made
+  // the entire ivory storefront charcoal and left headings/prices unreadable.
+  for (const [selector, property, expected] of [
+    ["main.my-store", "backgroundColor", "rgb(252, 250, 247)"],
+    [".my-store-identity h1", "color", "rgb(16, 23, 22)"],
+    [".my-store-stats dd", "color", "rgb(21, 35, 34)"],
+    [".ms-owner-listing-card", "backgroundColor", "rgb(255, 253, 250)"],
+    [".ms-owner-listing-card__summary h3", "color", "rgb(16, 23, 22)"],
+    [".ms-store-card-price", "color", "rgb(16, 63, 66)"],
+    [".ms-approved-tabs button[aria-pressed='true']", "color", "rgb(16, 63, 66)"],
+  ] as const) {
+    await expect
+      .poll(() =>
+        page.locator(selector).first().evaluate((element, key) =>
+          getComputedStyle(element)[key as keyof CSSStyleDeclaration], property),
+      )
+      .toBe(expected);
+  }
   for (const width of [390, 768, 1440, 320, 430]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 1000 });
     await expect
