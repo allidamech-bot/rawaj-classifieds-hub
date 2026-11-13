@@ -902,3 +902,14 @@
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-product-media {
   background-color: #eeece6 !important;
 }
+
+/* Keep menu actions legible even when a global link/hover theme is active. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .my-store-owner-menu > div a,
+  .my-store-owner-menu > div button,
+  .my-store-nav nav a,
+  .my-store-nav nav button
+) {
+  color: #152322 !important;
+  background-color: transparent !important;
+}
