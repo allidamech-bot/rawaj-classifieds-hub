@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { Clock, MapPin, ShieldAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PageHeader } from "@/components/PageHeader";
@@ -24,7 +24,7 @@ import type {
   PublicSellerProfile,
   TaxonomyNode,
 } from "@/lib/classifieds-types";
-import { categoryName, formatPriceLocalized } from "@/lib/i18n";
+import { categoryName, formatListingPriceParts } from "@/lib/i18n";
 import { buildListingStructuredData } from "@/lib/listing-structured-data";
 import { queueListingSharePrompt } from "@/lib/listing-share-growth";
 import { buildBreadcrumbStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
@@ -69,6 +69,7 @@ function ListingDetailsPage() {
   const initialData = Route.useLoaderData();
   const initialListing = initialData.listing;
   const navigate = useNavigate();
+  const router = useRouter();
   const auth = useAuth();
   const { language, text } = useUiPreferences();
   const [listing, setListing] = useState<ClassifiedListing | null>(initialListing);
@@ -377,8 +378,8 @@ function ListingDetailsPage() {
   }
 
   function goBack() {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      window.history.back();
+    if (router.history.canGoBack()) {
+      router.history.back();
       return;
     }
     void navigate({ to: "/listings", search: listing ? { category: listing.categoryId } : {} });
@@ -506,9 +507,11 @@ function ListingDetailsPage() {
                 />
                 <div className="rawaj-detail-summary__badges">
                   {listing.isFeatured ? <Badge>{text("مميز", "Featured")}</Badge> : null}
-                  <span>{text("متاح", "Available")}</span>
+                  <span>
+                    {listing.reservedAt ? text("محجوز", "Reserved") : text("متاح", "Available")}
+                  </span>
                 </div>
-                <h1>{listing.title}</h1>
+                <h1 dir="auto">{listing.title}</h1>
                 <div className="rawaj-detail-summary__essentials">
                   <div className="rawaj-detail-summary__location">
                     <span aria-hidden="true">
@@ -652,12 +655,19 @@ function PriceDisplay({
   language: Language;
   text: (ar: string, en: string) => string;
 }) {
+  const { amount, note } = formatListingPriceParts(
+    listing.price,
+    listing.priceType,
+    language,
+    listing.currency,
+  );
   return (
     <div className="rawaj-detail-price">
       <span>{text("السعر", "Price")}</span>
       <strong>
-        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
+        <bdi>{amount}</bdi>
       </strong>
+      {note ? <small className="rawaj-buyer-price-note">{note}</small> : null}
     </div>
   );
 }

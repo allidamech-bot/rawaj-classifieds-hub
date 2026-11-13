@@ -59,7 +59,7 @@ export function ListingContactDock({
               className="rawaj-contact-dock__primary"
             >
               <MessageCircle aria-hidden="true" />
-              {messageBusy ? text("جارٍ الفتح", "Opening") : text("مراسلة", "Message")}
+              {messageBusy ? text("جارٍ الفتح", "Opening") : text("راسل البائع", "Message seller")}
             </button>
             <button
               type="button"
@@ -72,7 +72,7 @@ export function ListingContactDock({
               {messageBusy ? text("جارٍ الفتح", "Opening") : text("قدّم عرضًا", "Make an offer")}
             </button>
             {canCall && callHref ? (
-              <DockLink icon={Phone} href={callHref} label={text("اتصال", "Call")} />
+              <DockLink icon={Phone} href={callHref} label={text("اتصل بالبائع", "Call seller")} />
             ) : null}
             {canWhatsapp && whatsappUrl ? (
               <DockLink

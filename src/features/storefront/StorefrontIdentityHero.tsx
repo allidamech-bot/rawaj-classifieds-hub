@@ -253,7 +253,7 @@ export function StorefrontSectionHeader({
   count,
   action,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description?: string;
   count?: number;
@@ -262,7 +262,7 @@ export function StorefrontSectionHeader({
   return (
     <header className="rawaj-storefront-section-header">
       <div>
-        <p>{eyebrow}</p>
+        {eyebrow ? <p>{eyebrow}</p> : null}
         <h2>{title}</h2>
         {description ? <span>{description}</span> : null}
       </div>

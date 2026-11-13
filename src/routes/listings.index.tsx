@@ -1531,10 +1531,11 @@ function ListingsPage() {
               key={filter.key}
               type="button"
               onClick={filter.clear}
-              className="inline-flex items-center gap-1 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
+              aria-label={text(`إزالة فلتر ${filter.label}`, `Remove filter: ${filter.label}`)}
+              className="inline-flex min-h-11 items-center gap-1 rounded-full bg-muted-surface px-3 py-1.5 text-xs font-bold text-foreground hairline transition active:scale-[0.98]"
             >
               {filter.label}
-              <X className="h-3 w-3" />
+              <X aria-hidden="true" className="h-3 w-3" />
             </button>
           ))}
         </div>
