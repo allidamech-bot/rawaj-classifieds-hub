@@ -18,7 +18,7 @@
   overflow: hidden !important;
   border: 1px solid var(--rawaj-border-strong) !important;
   border-radius: 1.35rem !important;
-  background: #303138 !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 15px 34px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
@@ -28,7 +28,7 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__eyebrow {
   margin: 0 0 0.25rem !important;
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-gold) !important;
   font-size: 0.72rem !important;
   font-weight: 800 !important;
 }
@@ -60,7 +60,7 @@
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 999px !important;
   padding: 0.3rem 0.55rem !important;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   background: rgba(255, 255, 255, 0.025) !important;
   font-size: 0.65rem !important;
   font-weight: 700 !important;
@@ -137,7 +137,7 @@
   border: 1px solid transparent !important;
   border-radius: 0.8rem !important;
   padding: 0.45rem !important;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   background: transparent !important;
 }
 
@@ -226,7 +226,7 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-section__heading p {
   margin-top: 0.2rem !important;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   font-size: 0.7rem !important;
   line-height: 1.55 !important;
 }
@@ -265,7 +265,7 @@
   height: 2.35rem !important;
   place-items: center;
   border-radius: 0.75rem !important;
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-text-gold) !important;
   background: rgba(169, 200, 187, 0.09) !important;
 }
 
@@ -277,7 +277,7 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion p,
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion div > span {
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   font-size: 0.62rem !important;
   line-height: 1.45 !important;
 }
@@ -486,7 +486,7 @@
   margin-bottom: 0.6rem !important;
   padding: 0.8rem 1rem !important;
   border-radius: 1rem !important;
-  background: #303138 !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14) !important;
 }
 
@@ -727,7 +727,7 @@
   display: block;
   overflow: hidden;
   margin-top: 0.12rem;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   font-size: 0.7rem;
   font-weight: 600;
   line-height: 1.35;
@@ -739,7 +739,7 @@
   width: 1rem;
   height: 1rem;
   flex: 0 0 1rem;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-taxonomy-option[data-taxonomy-kind="leaf"] .rawaj-taxonomy-option__icon,
@@ -776,7 +776,7 @@
   overflow: hidden;
   border-radius: 0.58rem;
   padding-inline: 0.52rem;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   font-size: 0.72rem;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -834,7 +834,7 @@
   display: block;
   overflow: hidden;
   margin-top: 0.08rem;
-  color: var(--rawaj-text-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
   font-size: 0.68rem;
   text-overflow: ellipsis;
   white-space: nowrap;

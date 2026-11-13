@@ -5,16 +5,16 @@
  */
 
 .rawaj-listing-studio-v4 {
-  --studio-v5-panel: rgba(46, 47, 53, 0.97);
-  --studio-v5-panel-raised: rgba(52, 53, 60, 0.98);
+  --studio-v5-panel: var(--rawaj-card-background);
+  --studio-v5-panel-raised: var(--rawaj-elevated-background);
   --studio-v5-inset: rgba(27, 28, 33, 0.8);
   --studio-v5-border: rgba(255, 255, 255, 0.085);
   --studio-v5-border-strong: rgba(110, 177, 255, 0.25);
   --studio-v5-text: #f4f1ed;
   --studio-v5-text-soft: #c7c7cd;
-  --studio-v5-muted: #9697a0;
+  --studio-v5-muted: var(--rawaj-text-secondary);
   --studio-v5-orange: #ff7559;
-  --studio-v5-pink: #df49b5;
+  --studio-v5-pink: var(--rawaj-text-gold);
   --studio-v5-blue: #68adff;
   --studio-v5-success: #55d8a4;
   --studio-v5-danger: #ff7f87;
@@ -285,7 +285,7 @@
 
 .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__index {
   border-color: rgba(255, 255, 255, 0.15) !important;
-  background: #ff7458 !important;
+  background: var(--rawaj-action-primary) !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(218, 67, 160, 0.2) !important;
 }
@@ -744,7 +744,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-quality__track > span {
-  background: #ff7458 !important;
+  background: var(--rawaj-action-primary) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-quality li[data-done="true"] {
