@@ -319,7 +319,9 @@ function SupportPage() {
                       ? text("جار الإرسال", "Submitting")
                       : text("إرسال الطلب", "Submit request")}
                   </button>
-                  {notice && <p className="rawaj-support-notice">{notice}</p>}
+                  {notice && (
+                    <p className="rawaj-secondary-notice rawaj-support-notice">{notice}</p>
+                  )}
                 </form>
               ) : (
                 <p className="mt-2 text-xs leading-6 text-muted-foreground">
@@ -342,7 +344,7 @@ function SupportPage() {
                   )}
                 />
                 {requestsLoading && !requestsHasLoaded ? (
-                  <p className="rawaj-support-notice">
+                  <p className="rawaj-secondary-notice rawaj-support-notice">
                     {text("جارٍ تحميل طلبات الدعم", "Loading support requests")}
                   </p>
                 ) : requestsError && !requestsHasLoaded ? (
@@ -383,7 +385,7 @@ function SupportPage() {
               </div>
             </section>
 
-            <section className="rawaj-support-notice">
+            <section className="rawaj-secondary-notice rawaj-support-notice">
               <ShieldAlert className="me-1 inline h-4 w-4 text-warning" />
               {text(
                 "للبلاغات المرتبطة بإعلان معتمد، استخدم زر البلاغ داخل صفحة الإعلان حتى ترتبط المراجعة بالإعلان الصحيح.",
@@ -458,7 +460,7 @@ function SupportHistoryError({
   onRetry: () => void;
 }) {
   return (
-    <div className="rawaj-support-notice">
+    <div className="rawaj-secondary-notice rawaj-support-notice">
       <p>{message}</p>
       <button
         type="button"

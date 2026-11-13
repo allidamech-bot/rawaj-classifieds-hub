@@ -55,10 +55,7 @@ function OffersPage() {
                   {text("تخفيضات موثقة", "Recorded price drops")}
                 </span>
                 <h1 className="mt-3 max-w-xl text-[1.7rem] font-extrabold leading-[1.38] text-[#fffaf0] sm:text-[2.3rem]">
-                  {text(
-                    "السعر نزل فعلاً — وهنا يظهر.",
-                    "The price really dropped — it shows here.",
-                  )}
+                  {text("السعر نزل فعلاً — وهنا يظهر.", "The price really dropped — it shows here.")}
                 </h1>
                 <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
@@ -233,7 +230,7 @@ function OffersState({
   actionDisabled?: boolean;
 }) {
   return (
-    <section className="rawaj-offers-empty mt-5 overflow-hidden rounded-[1.5rem] p-6 text-center sm:p-8">
+    <section className="rawaj-offers-empty rawaj-secondary-state mt-5 overflow-hidden rounded-[1.5rem] text-center">
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white">
         <BadgePercent className="h-5 w-5" />
       </span>
@@ -247,7 +244,7 @@ function OffersState({
           onClick={onAction}
           disabled={actionDisabled}
           aria-busy={actionDisabled}
-          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+          className="rawaj-secondary-action mt-4 rounded-xl px-4 py-2 text-xs font-bold"
         >
           {actionLabel}
         </button>
