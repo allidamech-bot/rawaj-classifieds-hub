@@ -15,6 +15,10 @@ on:
       - "package.json"
       - "package-lock.json"
 
+concurrency:
+  group: rendered-visual-qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
