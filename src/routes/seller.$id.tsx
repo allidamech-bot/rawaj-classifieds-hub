@@ -103,8 +103,14 @@ function SellerPage() {
           </p>
         ) : null}
 
-        <section className="ms-owner-inventory my-store-public-inventory" aria-labelledby="storefront-listings-title">
-          <nav className="ms-approved-tabs my-store-public-tabs" aria-label={text("أقسام المتجر", "Store sections")}>
+        <section
+          className="ms-owner-inventory my-store-public-inventory"
+          aria-labelledby="storefront-listings-title"
+        >
+          <nav
+            className="ms-approved-tabs my-store-public-tabs"
+            aria-label={text("أقسام المتجر", "Store sections")}
+          >
             <a href="#storefront-listings" aria-current="page">
               {text("الإعلانات", "Listings")} ({seller.approvedListingCount ?? "—"})
             </a>
@@ -123,8 +129,8 @@ function SellerPage() {
             seller.approvedListingCount > seller.listings.length ? (
               <p className="my-store-public-note">
                 {text(
-                  "نعرض أحدث " + seller.listings.length + " من " + seller.approvedListingCount + " إعلاناً عاماً معتمداً.",
-                  "Showing " + seller.listings.length + " of " + seller.approvedListingCount + " approved public listings.",
+                  `نعرض أحدث ${seller.listings.length} من ${seller.approvedListingCount} إعلاناً عاماً معتمداً.`,
+                  `Showing ${seller.listings.length} of ${seller.approvedListingCount} approved public listings.`,
                 )}
               </p>
             ) : null}
@@ -159,7 +165,11 @@ function SellerPage() {
             )}
           </div>
 
-          <section id="seller-about" className="my-store-public-about" aria-label={text("نبذة عن المتجر", "About the store")}>
+          <section
+            id="seller-about"
+            className="my-store-public-about"
+            aria-label={text("نبذة عن المتجر", "About the store")}
+          >
             <h2>{text("عن المتجر", "About this store")}</h2>
             <p dir="auto">
               {seller.bio ||
@@ -215,19 +225,13 @@ function PublicStoreListingCard({ listing }: { listing: ClassifiedListing }) {
               listing.currency,
             )}
           </bdi>
-          {negotiableWithAmount ? (
-            <small>{text("قابل للتفاوض", "Negotiable")}</small>
-          ) : null}
+          {negotiableWithAmount ? <small>{text("قابل للتفاوض", "Negotiable")}</small> : null}
         </p>
       </div>
       <div className="my-store-card-meta">
         <span>
           <MapPin aria-hidden="true" />
-          {governorateName(
-            listing.governorateId,
-            listing.governorateNameAr,
-            language,
-          )}
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
         </span>
         {validDate ? (
           <span>
