@@ -242,7 +242,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0, { timeout: 30_000 });
     await expect.poll(() => draftDeletes).toBe(1);
 
-    await reloadCurrentPage(page);
+    // The temporary "Show drafts" queue does not change the URL; explicitly restore
+    // the drafts-and-edits route after navigation to verify the persisted deletion.
+    await openOwnerTab(page, "needs_edit");
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
     await expect(page.locator(".rawaj-store-empty")).toContainText(
       /ما في إعلانات بهالحالة|No listings in this status|متجرك جاهز لأول إعلان|Your store is ready for its first listing/i,
