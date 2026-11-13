@@ -88,6 +88,25 @@ test("approved store composition and owner interactions", async ({ page }, testI
   }
   for (const width of [390, 768, 1440, 320, 430]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 1000 });
+    if (width <= 430) {
+      await expect
+        .poll(() =>
+          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
+        )
+        .toBe("rgba(0, 0, 0, 0)");
+      await expect
+        .poll(() =>
+          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
+        )
+        .toBe("none");
+      await expect
+        .poll(() =>
+          page
+            .locator(".rawaj-bottom-nav-shell")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
+        )
+        .toBe("rgb(20, 59, 57)");
+    }
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
       .toBe(true);
@@ -98,6 +117,17 @@ test("approved store composition and owner interactions", async ({ page }, testI
     expect(columns).toBe(width >= 1024 ? 4 : width >= 640 ? 2 : 1);
   }
   await page.setViewportSize({ width: 390, height: 1000 });
+  await expect
+    .poll(() =>
+      page
+        .locator(".ms-approved-tabs > button[aria-pressed='true']")
+        .evaluate((el) => getComputedStyle(el).backgroundColor),
+    )
+    .toBe("rgba(0, 0, 0, 0)");
+  await page.screenshot({
+    path: testInfo.outputPath("owner-store-mobile-dock.png"),
+    fullPage: false,
+  });
   await page.getByRole("button", { name: "About", exact: true }).click();
   await expect(page.getByText("About this store", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /Reviews \(/ }).click();
@@ -173,6 +203,10 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     localStorage.setItem("rawaj-language", "en");
   });
   await page.goto("/seller/00000000-0000-4000-8000-000000000010");
+  // Wait for React hydration and the requested locale before clicking anchor tabs.
+  // Otherwise a click can hit SSR-only markup before its onClick handler exists.
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+  await expect(page.locator(".my-store-public .my-store-add")).toContainText("Browse listings");
   await expect(page.locator("main.my-store-public")).toBeVisible();
   await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
   await expect(page.locator(".my-store-identity h1")).toBeVisible();
@@ -199,8 +233,31 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
       .toBe("rgb(255, 253, 250)");
   }
   await expect(page.locator(".my-store-public-grid .my-store-public-card").first()).toBeVisible();
-  for (const width of [390, 430, 1440]) {
+  for (const width of [320, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 950 });
+    if (width < 1024) {
+      await expect
+        .poll(() =>
+          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
+        )
+        .toBe("rgba(0, 0, 0, 0)");
+      await expect
+        .poll(() =>
+          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
+        )
+        .toBe("none");
+      await expect
+        .poll(() =>
+          page
+            .locator(".rawaj-bottom-nav-shell")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
+        )
+        .toBe("rgb(20, 59, 57)");
+      await expect(page.locator(".rawaj-dock-item[data-section='categories']")).toHaveAttribute(
+        "data-active",
+        "false",
+      );
+    }
     await page.evaluate(() => document.fonts.ready);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
@@ -218,7 +275,47 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     });
   }
   await page.setViewportSize({ width: 390, height: 950 });
+  const firstTab = page.locator('.my-store-public-tabs > a[href="#storefront-listings"]');
+  await expect(firstTab).toHaveAttribute("aria-current", "location");
+  await expect
+    .poll(() => firstTab.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe("rgba(0, 0, 0, 0)");
+  await expect.poll(() => firstTab.evaluate((el) => getComputedStyle(el).boxShadow)).toBe("none");
+  await page.locator('.my-store-public-tabs a[href="#seller-about"]').click();
+  await expect(page.locator('.my-store-public-tabs a[href="#seller-about"]')).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
+  await firstTab.click();
+  await expect(firstTab).toHaveAttribute("aria-current", "location");
   await expect(page.locator(".my-store-public .my-store-public-follow")).toBeVisible();
+  await expect
+    .poll(() =>
+      page.locator(".my-store-public .my-store-actions").evaluate((row) => {
+        const browse = row.querySelector(".my-store-add")?.getBoundingClientRect();
+        const share = row.querySelector(":scope > button")?.getBoundingClientRect();
+        return browse && share ? Math.abs(browse.y - share.y) : Infinity;
+      }),
+    )
+    .toBeLessThan(8);
+  await page.locator(".my-store-public .my-store-actions").scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: testInfo.outputPath("buyer-store-mobile-dock.png"),
+    fullPage: false,
+  });
+  await page.locator(".my-store-topbar .my-store-nav summary").click();
+  await page.getByRole("button", { name: "العربية", exact: true }).click();
+  await expect(page.locator(".my-store-public-page")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator(".my-store-public-tabs > a").first()).toContainText("الإعلانات");
+  await page.locator(".my-store-topbar .my-store-nav summary").click();
+  await expect(page.locator(".my-store-topbar .my-store-nav")).not.toHaveAttribute("open", "");
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    .toBe(true);
+  await expect
+    .poll(() => firstTab.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe("rgba(0, 0, 0, 0)");
+  await page.screenshot({ path: testInfo.outputPath("buyer-store-390-rtl.png"), fullPage: true });
   await page.locator(".my-store-public-card").first().click();
   await expect(page).toHaveURL(/\/listings\//);
 });

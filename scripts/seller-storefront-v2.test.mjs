@@ -188,3 +188,23 @@ test("quality gate permanently runs storefront V2 with read-only permissions", (
   assert.match(qualityGate, /node --test scripts\/seller-storefront-v2\.test\.mjs/);
   assert.doesNotMatch(qualityGate, /contents: write/);
 });
+
+test("storefront mobile visual overrides are isolated to buyer and owner routes", async () => {
+  const [css, styles, navigation] = await Promise.all([
+    readFile(new URL("../src/storefront-mobile-consistency-v1.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(css, /data-resolved-pathname="\/profile\/listings"/);
+  assert.match(css, /data-resolved-pathname\^="\/seller\/"/);
+  assert.match(css, /\.rawaj-mobile-dock/);
+  assert.match(css, /backdrop-filter: none !important/);
+  assert.match(css, /\.my-store-public-tabs > a/);
+  assert.match(styles, /storefrontMobileConsistencyCss/);
+  assert.match(styles, /marketplaceControlsCss,\s*storefrontMobileConsistencyCss/);
+  const categoriesCase = navigation.slice(
+    navigation.indexOf("export function resolvePrimaryNavigationSection("),
+    navigation.indexOf("if (matchesPath(pathname, \"/add-listing\"))"),
+  );
+  assert.doesNotMatch(categoriesCase, /matchesPath\(pathname, "\/seller"\)/);
+});
