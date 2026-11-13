@@ -1,7 +1,7 @@
 .rawaj-listing-studio-v4 .rawaj-studio-hero {
-  border-color: #d7e6de;
-  background: linear-gradient(135deg, #fffaf1 0%, #eef8f2 56%, #fff0e7 100%);
-  color: #173b34;
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-text-primary);
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-hero :is(h1, p, span, a, button) {
@@ -9,7 +9,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-hero__description {
-  color: #526b62 !important;
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-listing-studio-v4 :is(
@@ -18,9 +18,9 @@
   .rawaj-studio-hero__actions a,
   .rawaj-studio-hero__actions button
 ) {
-  border-color: #d5e5dc;
-  background: rgb(255 255 255 / 78%);
-  color: #173b34 !important;
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-subtle-background);
+  color: var(--rawaj-text-primary) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar {

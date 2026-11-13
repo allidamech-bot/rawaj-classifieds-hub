@@ -33,10 +33,7 @@
   overflow: hidden;
   border: 1px solid var(--rawaj-discovery-line) !important;
   border-radius: 1.35rem !important;
-  background:
-    radial-gradient(circle at 88% -30%, rgba(77, 137, 255, 0.2), transparent 42%),
-    radial-gradient(circle at 18% 130%, rgba(224, 65, 180, 0.13), transparent 44%),
-    linear-gradient(145deg, rgba(47, 48, 55, 0.98), rgba(37, 38, 44, 0.98)) !important;
+  background: rgba(47, 48, 55, 0.98) !important;
   padding: 0.9rem !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -47,7 +44,7 @@
   inset: auto auto -5.5rem -4rem !important;
   width: 13rem;
   height: 9rem;
-  background: rgba(255, 111, 79, 0.08) !important;
+  background: rgba(184, 151, 98, 0.08) !important;
   filter: blur(32px) !important;
 }
 
@@ -90,8 +87,7 @@
 .rawaj-search-toolbar__heading > strong[data-loading="true"] {
   min-width: 5.5rem;
   color: transparent !important;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035)) !important;
+  background: rgba(255, 255, 255, 0.035) !important;
   background-size: 220% 100% !important;
   animation: rawaj-discovery-shimmer 1.25s linear infinite !important;
 }
@@ -154,7 +150,7 @@
   min-height: 3.25rem !important;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem !important;
-  background: linear-gradient(135deg, #f06b52, #d948a9) !important;
+  background: #f06b52 !important;
   color: #fff !important;
   box-shadow: 0 12px 26px rgba(218, 67, 160, 0.18) !important;
 }
@@ -317,7 +313,7 @@
 
 .rawaj-search-results-v1__sidebar {
   border: 1px solid var(--rawaj-discovery-line) !important;
-  background: linear-gradient(160deg, rgba(47, 48, 54, 0.96), rgba(39, 40, 46, 0.96)) !important;
+  background: rgba(47, 48, 54, 0.96) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
     0 18px 38px rgba(0, 0, 0, 0.16) !important;
@@ -372,7 +368,7 @@
 .rawaj-adaptive-card {
   border: 1px solid rgba(255, 255, 255, 0.075) !important;
   border-radius: 1.15rem !important;
-  background: linear-gradient(155deg, rgba(49, 50, 56, 0.98), rgba(39, 40, 46, 0.98)) !important;
+  background: rgba(49, 50, 56, 0.98) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
     0 12px 28px rgba(0, 0, 0, 0.16) !important;
@@ -394,9 +390,7 @@
 }
 
 .rawaj-adaptive-card__media {
-  background:
-    radial-gradient(circle at 42% 38%, rgba(223, 73, 181, 0.09), transparent 32%),
-    linear-gradient(145deg, #2b2c32, #222329) !important;
+  background: #2b2c32 !important;
 }
 
 .rawaj-listing-media--image {
@@ -406,10 +400,7 @@
 .rawaj-listing-media--placeholder {
   border: 0 !important;
   border-radius: 0 !important;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(100, 169, 255, 0.1), transparent 30%),
-    radial-gradient(circle at 58% 58%, rgba(223, 73, 181, 0.08), transparent 38%),
-    linear-gradient(145deg, #2b2d33, #212228) !important;
+  background: #2b2d33 !important;
 }
 
 .rawaj-adaptive-card__status {
@@ -420,7 +411,7 @@
 }
 
 .rawaj-adaptive-card__status[data-tone="featured"] {
-  background: linear-gradient(135deg, rgba(255, 115, 87, 0.94), rgba(218, 67, 160, 0.92)) !important;
+  background: rgba(255, 115, 87, 0.94) !important;
 }
 
 .rawaj-adaptive-card__status[data-tone="reserved"] {
@@ -546,15 +537,14 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 1.15rem !important;
-  background: linear-gradient(155deg, rgba(47, 48, 54, 0.96), rgba(39, 40, 46, 0.96)) !important;
+  background: rgba(47, 48, 54, 0.96) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
 }
 
 .rawaj-search-results-v1 .rawaj-listing-card-skeleton__media,
 .rawaj-search-results-v1 .rawaj-listing-card-skeleton__body > span,
 .rawaj-search-results-v1 .rawaj-listing-card-skeleton__facts > span {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025)) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
   background-size: 220% 100% !important;
   animation: rawaj-discovery-shimmer 1.25s linear infinite !important;
 }
@@ -585,9 +575,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.075) !important;
   border-radius: 1.35rem !important;
-  background:
-    radial-gradient(circle at 50% -20%, rgba(100, 169, 255, 0.12), transparent 42%),
-    linear-gradient(155deg, rgba(47, 48, 54, 0.96), rgba(38, 39, 45, 0.98)) !important;
+  background: rgba(47, 48, 54, 0.96) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
     0 16px 34px rgba(0, 0, 0, 0.16) !important;
@@ -627,7 +615,7 @@
 .rawaj-search-empty-state .rawaj-category-empty-actions [data-tone="primary"],
 .rawaj-search-results-v1 > .mt-6.rounded-2xl.bg-card .bg-primary {
   border-color: rgba(255, 255, 255, 0.12) !important;
-  background: linear-gradient(135deg, #f06b52, #d948a9) !important;
+  background: #f06b52 !important;
   color: #fff !important;
 }
 
@@ -663,7 +651,7 @@
 
 .rawaj-filter-sheet {
   border-color: rgba(255, 255, 255, 0.085) !important;
-  background: linear-gradient(180deg, #303137, #26272c) !important;
+  background: #303137 !important;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
   box-shadow: 0 -24px 62px rgba(0, 0, 0, 0.42) !important;
 }
@@ -768,7 +756,7 @@
 
 .rawaj-filter-sheet__footer button:last-child {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: linear-gradient(135deg, #f06b52, #d948a9) !important;
+  background: #f06b52 !important;
   color: #fff !important;
   box-shadow: 0 14px 30px rgba(218, 67, 160, 0.18) !important;
 }

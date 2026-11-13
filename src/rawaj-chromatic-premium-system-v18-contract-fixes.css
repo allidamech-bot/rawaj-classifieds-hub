@@ -101,7 +101,7 @@ button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-en
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   .rawaj-owner-workspace-summary__avatar {
   color: #fff7f1 !important;
-  background: linear-gradient(145deg, #4a253f 0%, #261b2d 56%, #19263a 100%) !important;
+  background: #4a253f !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
@@ -114,7 +114,7 @@ button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-en
   .rawaj-owner-workspace-summary__actions
   a[data-tone="primary"] {
   color: #fff !important;
-  background: linear-gradient(135deg, #b72f4d 0%, #992d70 52%, #5850b8 100%) !important;
+  background: #b72f4d !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]

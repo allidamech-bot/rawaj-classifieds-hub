@@ -111,6 +111,24 @@ export function formatPriceLocalized(
   }
 }
 
+export function formatListingPriceParts(
+  price: number | null | undefined,
+  type: PriceType | string,
+  language: Language,
+  currency?: "SYP" | "USD",
+) {
+  const hasNegotiableAmount = type === "negotiable" && Boolean(price);
+  return {
+    amount: formatPriceLocalized(
+      price ?? 0,
+      hasNegotiableAmount ? "fixed" : type,
+      language,
+      currency,
+    ),
+    note: hasNegotiableAmount ? localized(language, "قابل للتفاوض", "Negotiable") : null,
+  };
+}
+
 export function uiLabel(value: string | undefined, language: Language) {
   if (!value || language === "ar") return value ?? "";
   return uiLabels[value] ?? value;

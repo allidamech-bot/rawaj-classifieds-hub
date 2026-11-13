@@ -4,10 +4,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--rawaj-radius-surface);
-  background:
-    radial-gradient(circle at 88% 18%, rgba(217, 111, 50, 0.2), transparent 24rem),
-    radial-gradient(circle at 12% 112%, rgba(197, 154, 74, 0.16), transparent 28rem),
-    linear-gradient(140deg, #102b46 0%, #0d243b 62%, #143653 100%);
+  background: #102b46;
   box-shadow: var(--rawaj-shadow-overlay);
 }
 
@@ -17,7 +14,7 @@
   inset-inline: 8%;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(197, 154, 74, 0.72), transparent);
+  background: rgba(197, 154, 74, 0.72);
   pointer-events: none;
 }
 
@@ -83,15 +80,15 @@
   inset-inline: 0;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  background: var(--border);
 }
 
 .rawaj-home-tone-orange::before {
-  background: linear-gradient(90deg, transparent, rgba(217, 111, 50, 0.26), transparent);
+  background: rgba(217, 111, 50, 0.26);
 }
 
 .rawaj-home-tone-indigo::before {
-  background: linear-gradient(90deg, transparent, rgba(16, 43, 70, 0.2), transparent);
+  background: rgba(16, 43, 70, 0.2);
 }
 
 .rawaj-home-trust-stage {
@@ -99,9 +96,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--rawaj-radius-surface);
-  background:
-    radial-gradient(circle at 92% 24%, rgba(217, 111, 50, 0.14), transparent 18rem),
-    linear-gradient(140deg, #102b46 0%, #0d243b 68%, #143653 100%);
+  background: #102b46;
   box-shadow: var(--rawaj-shadow-soft);
 }
 
@@ -111,7 +106,7 @@
   inset-block: 0;
   inset-inline-end: 0;
   width: 22%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.025));
+  background: rgba(255, 255, 255, 0.025);
   pointer-events: none;
 }
 

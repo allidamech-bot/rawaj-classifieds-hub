@@ -138,9 +138,9 @@ test("retired light-theme tokens cannot override the final dark semantic palette
   assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
   assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-primary:\s*#18352f/);
   assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-secondary:\s*#536b63/);
-  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f2efeb/);
-  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#c9c3bf/);
-  assert.match(semanticTokens, /--rawaj-text-muted:\s*#aaa39f/);
+  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
+  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#d0d6cc/);
+  assert.match(semanticTokens, /--rawaj-text-muted:\s*#adbab0/);
 });
 
 test("footer renders one responsive variant and reserves the mobile dock", () => {
@@ -319,7 +319,7 @@ test("home advertisement inventory supports two unique records without cloning o
   assert.match(adSlot, /placementPage === "home" \? 2 : 1/);
   assert.match(adSlot, /visiblePlacements\.map/);
   assert.doesNotMatch(adSlot, /placement: result\.data\[0\]/);
-  assert.match(homeCorrections, /\.rawaj-signature-ad-placement[\s\S]*order: 30/);
+  assert.match(homeCorrections, /\.rawaj-signature-ad-placement:empty/);
 });
 
 test("categories directory continues into promoted and latest approved inventory", () => {

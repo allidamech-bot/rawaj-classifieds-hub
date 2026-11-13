@@ -3,13 +3,7 @@
 .rawaj-detail-v2 {
   min-height: 100dvh;
   overflow: clip;
-  background:
-    radial-gradient(
-      circle at 95% 18%,
-      color-mix(in srgb, var(--rawaj-gold) 8%, transparent),
-      transparent 28%
-    ),
-    linear-gradient(180deg, #0b2522 0, #0b2522 28rem, var(--rawaj-surface-page) 28rem);
+  background: #0b2522;
 }
 
 .rawaj-detail-v2__container {
@@ -89,9 +83,7 @@
 
 .rawaj-detail-media__skeleton {
   z-index: 1;
-  background:
-    linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.12) 42%, transparent 62%),
-    linear-gradient(145deg, #153b35, #0a2421);
+  background: rgba(255, 255, 255, 0.12);
   background-size:
     220% 100%,
     100% 100%;
@@ -109,9 +101,7 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(2, 15, 14, 0.56), transparent 24%),
-    linear-gradient(0deg, rgba(2, 15, 14, 0.72), transparent 30%);
+  background: rgba(2, 15, 14, 0.56);
 }
 
 .rawaj-detail-media__top-actions,
@@ -504,7 +494,7 @@
   width: 2.1rem;
   height: 0.2rem;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold));
+  background: var(--rawaj-orange);
 }
 .rawaj-detail-section__heading h2 {
   margin-top: 0.45rem;
@@ -755,13 +745,7 @@
 .rawaj-detail-safety {
   margin-top: 1rem;
   padding: 1rem;
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--rawaj-gold) 11%, transparent),
-      transparent 38%
-    ),
-    var(--rawaj-surface-sage);
+  background: var(--rawaj-surface-sage);
 }
 .rawaj-detail-safety__heading {
   display: flex;
@@ -923,12 +907,12 @@
 .rawaj-contact-dock__primary {
   min-width: 0;
   flex: 1;
-  background: linear-gradient(145deg, var(--color-primary), #1f6254);
+  background: var(--color-primary);
   color: white;
 }
 .rawaj-contact-dock__offer {
   flex: 0.8;
-  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  background: #ff7653;
   color: white;
 }
 .rawaj-contact-dock__secondary {

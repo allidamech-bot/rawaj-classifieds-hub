@@ -83,12 +83,7 @@ function SellerPage() {
           <section className="rawaj-storefront-v2__layout">
             <div className="rawaj-storefront-v2__main">
               <StorefrontSectionHeader
-                eyebrow={text("منتجات الواجهة", "Storefront products")}
-                title={text("المعروض الآن", "Available now")}
-                description={text(
-                  "إعلانات عامة معتمدة ومتاح تصفحها مباشرة.",
-                  "Approved public listings available to browse now.",
-                )}
+                title={text("إعلانات المتجر", "Store listings")}
                 count={seller.approvedListingCount ?? undefined}
               />
 
@@ -105,10 +100,7 @@ function SellerPage() {
 
               {seller.inventoryStatus !== "ready" ? (
                 <StorefrontNotice
-                  title={text(
-                    "تعذر تحميل الإعلانات مؤقتًا",
-                    "Listings are temporarily unavailable",
-                  )}
+                  title={text("تعذر تحميل الإعلانات مؤقتًا", "Listings are temporarily unavailable")}
                   description={text(
                     "تم الحفاظ على هوية البائع العامة. حاول تحميل الإعلانات مرة أخرى.",
                     "The public seller identity remains available. Try loading the listings again.",

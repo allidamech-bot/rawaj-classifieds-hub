@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
+  type ErrorComponentProps,
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
@@ -94,7 +95,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   const { text } = useUiPreferences();
   useEffect(() => {
@@ -133,7 +134,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#242529" },
+        { name: "theme-color", content: "#171e1c" },
         { name: "author", content: "RAWAJ" },
         { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
         { name: "rawaj-build-environment", content: rawajBuildInfo.environment },

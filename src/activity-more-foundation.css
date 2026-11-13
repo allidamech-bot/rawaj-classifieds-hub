@@ -5,9 +5,7 @@ main.container-wide:has([role="tablist"]) > section:first-child {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--primary) 16%, var(--border));
   border-radius: var(--rawaj-radius-surface);
-  background:
-    radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--brand-orange) 10%, transparent), transparent 34%),
-    var(--card);
+  background: var(--card);
   box-shadow: var(--rawaj-shadow-card);
 }
 

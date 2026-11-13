@@ -92,7 +92,7 @@ test("phase 4 establishes readable controls, compact sections, and responsive la
 });
 
 test("mobile recovery keeps the add-listing surface readable and non-overlapping", () => {
-  assert.match(recoveryCss, /background:\s*linear-gradient\(135deg, #fffaf1/);
+  assert.match(recoveryCss, /background:\s*var\(--rawaj-card-background\)\s*;/);
   assert.match(recoveryCss, /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(
     recoveryCss,

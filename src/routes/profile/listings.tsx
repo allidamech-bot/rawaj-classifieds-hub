@@ -12,6 +12,8 @@ import {
   Eye,
   Heart,
   MapPin,
+  Megaphone,
+  PackageOpen,
   MessageCircle,
   Pencil,
   Plus,
@@ -24,6 +26,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { FeedbackState } from "@/components/feedback/FeedbackState";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Dialog,
@@ -44,6 +47,8 @@ import {
   OwnerBulkActionBar,
   OwnerListingsToolbar,
   OwnerWorkspaceInsights,
+  matchesOwnerAttentionQueue,
+  type OwnerAttentionQueue,
   type OwnerListingSort,
   type OwnerPerformanceWindow,
 } from "@/features/storefront/OwnerListingsWorkspaceTools";
@@ -117,6 +122,8 @@ function MyListingsPage() {
   const [sellerHasLoaded, setSellerHasLoaded] = useState(false);
   const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);
   const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
+  const [attentionQueue, setAttentionQueue] = useState<OwnerAttentionQueue | null>(null);
+  const inventoryHeadingRef = useRef<HTMLHeadingElement>(null);
   const [listingSearch, setListingSearch] = useState("");
   const [listingSort, setListingSort] = useState<OwnerListingSort>("updated_desc");
   const [performanceWindow, setPerformanceWindow] = useState<OwnerPerformanceWindow>("all");
@@ -138,14 +145,15 @@ function MyListingsPage() {
   profileIdRef.current = profileId;
 
   useEffect(() => {
-    if (search.tab) setActiveTab(search.tab);
+    setActiveTab(search.tab ?? "approved");
+    setAttentionQueue(null);
   }, [search.tab]);
 
   useEffect(() => {
     setVisibleCount(OWNER_LISTINGS_PAGE_SIZE);
     setSelectedListingIds(new Set());
     setBulkFeedback("");
-  }, [activeTab, listingSearch, listingSort]);
+  }, [activeTab, attentionQueue, listingSearch, listingSort]);
 
   useEffect(() => {
     setSelectedListingIds((current) => {
@@ -317,8 +325,15 @@ function MyListingsPage() {
   );
   const tabListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
   const filteredListings = useMemo(
-    () => filterAndSortOwnerListings(tabListings, listingSearch, listingSort),
-    [tabListings, listingSearch, listingSort],
+    () =>
+      filterAndSortOwnerListings(
+        attentionQueue
+          ? tabListings.filter((listing) => matchesOwnerAttentionQueue(listing, attentionQueue))
+          : tabListings,
+        listingSearch,
+        listingSort,
+      ),
+    [tabListings, attentionQueue, listingSearch, listingSort],
   );
   const visibleListings = filteredListings.slice(0, visibleCount);
   const hasMoreListings = visibleCount < filteredListings.length;
@@ -442,18 +457,67 @@ function MyListingsPage() {
     setBulkBusy(false);
   }
 
-  if (auth.status !== "signedIn") {
+  function selectTab(tab: StoreTab) {
+    setActiveTab(tab);
+    setAttentionQueue(null);
+  }
+
+  function openAttentionQueue(tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) {
+    setActiveTab(tab);
+    setAttentionQueue(queue);
+    setListingSearch("");
+    inventoryHeadingRef.current?.focus();
+  }
+
+  if (auth.status !== "signedIn" || !profileId) {
+    const loading = auth.status === "loading";
+    const signedOut = auth.status === "signedOut";
+    const unavailable = auth.status === "authUnavailable";
+    const returnTo = search.tab ? `/profile/listings?tab=${search.tab}` : "/profile/listings";
     return (
       <>
-        <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
-        <main className="container-wide mobile-page-bottom pt-4">
-          <Panel
-            title={text("تسجيل الدخول مطلوب", "Login required")}
-            body={text(
-              "سجل الدخول لإدارة الإعلانات المرتبطة بحسابك وعرض متجرك العام بصورة منفصلة.",
-              "Log in to manage listings linked to your account and open your public store separately.",
-            )}
-          />
+        <PageHeader
+          title={text("متجري", "My store")}
+          titleIsPageHeading={false}
+          to="/profile"
+          backMode="history"
+        />
+        <main className="rawaj-store-workspace container-wide mobile-page-bottom pt-4">
+          <div aria-busy={loading}>
+            <FeedbackState
+              title={text("متجري", "My store")}
+              description={
+                loading
+                  ? text("جارٍ التحقق من الجلسة…", "Checking your session…")
+                  : signedOut
+                    ? text(
+                        "سجّل الدخول لإدارة متجرك وإعلاناتك.",
+                        "Sign in to manage your store and listings.",
+                      )
+                    : unavailable
+                      ? text("تسجيل الدخول غير متاح حالياً.", "Sign-in is currently unavailable.")
+                      : text(
+                          "تعذر تحميل بيانات حسابك. أعد المحاولة لفتح متجرك.",
+                          "Could not load your account. Try again to open your store.",
+                        )
+              }
+              action={
+                signedOut || unavailable ? (
+                  <Link to="/login" search={{ returnTo }} className="rawaj-store-empty__action">
+                    {text("تسجيل الدخول", "Sign in")}
+                  </Link>
+                ) : loading ? undefined : (
+                  <button
+                    type="button"
+                    onClick={() => void auth.refreshProfile()}
+                    className="rawaj-store-empty__action"
+                  >
+                    {text("إعادة المحاولة", "Try again")}
+                  </button>
+                )
+              }
+            />
+          </div>
         </main>
       </>
     );
@@ -480,8 +544,13 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <PageHeader
+        title={text("متجري", "My store")}
+        titleIsPageHeading={false}
+        to="/profile"
+        backMode="history"
+      />
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center rawaj-store-workspace rawaj-shop-desk container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <StorefrontIdentityHero
           mode="owner"
           sellerId={profileId ?? ""}
@@ -499,242 +568,300 @@ function MyListingsPage() {
           completeness={storeCompleteness}
         />
 
-        {latestDraft ? (
-          <StorefrontNotice
-            tone="draft"
-            title={text("لديك مسودة محفوظة", "You have a saved draft")}
-            description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
-              latestDraft.updatedAt,
-              language,
-            )}`}
-            action={
-              <>
-                <button type="button" onClick={() => setActiveTab("needs_edit")}>
-                  {text("عرض المسودات", "Show drafts")}
-                </button>
-                <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
-                  {text("متابعة المسودة", "Resume draft")}
-                </Link>
-              </>
-            }
-          />
-        ) : null}
-
-        <OwnerWorkspaceInsights listings={listings} onTabChange={(tab) => setActiveTab(tab)} />
-
-        <OwnerPerformanceOverview
-          summary={performanceSummary}
-          scopeNote={text(
-            performanceWindow === "all"
-              ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
-              : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
-            performanceWindow === "all"
-              ? "Metrics are lifetime totals for all tracked listings."
-              : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
-          )}
-        />
-
-        <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
-          <header className="rawaj-owner-inventory__header">
-            <div>
-              <p>{text("المخزون", "Inventory")}</p>
-              <h2 id="rawaj-owner-inventory-title">{text("إدارة الإعلانات", "Manage listings")}</h2>
-              <span>
-                {text(
-                  "اختر الحالة، ثم ابحث أو افتح الأدوات عند الحاجة.",
-                  "Choose a status, then search or open tools when needed.",
-                )}
-              </span>
-            </div>
-            <strong>{listings.length}</strong>
-          </header>
-
-          <div className="rawaj-owner-workspace-sticky">
-            <div
-              className="rawaj-storefront-owner-tabs"
-              role="group"
-              aria-label={text("حالات الإعلانات", "Listing statuses")}
-              data-rawaj-segmented-control="true"
-            >
-              <TabButton
-                active={activeTab === "approved"}
-                label={text("نشطة", "Live")}
-                count={grouped.approved.length}
-                onClick={() => setActiveTab("approved")}
-              />
-              <TabButton
-                active={activeTab === "pending"}
-                label={text("مراجعة", "Review")}
-                count={grouped.pending.length}
-                onClick={() => setActiveTab("pending")}
-              />
-              <TabButton
-                active={activeTab === "needs_edit"}
-                label={text("تعديل", "Edit")}
-                count={grouped.needs_edit.length}
-                onClick={() => setActiveTab("needs_edit")}
-              />
-              <TabButton
-                active={activeTab === "closed"}
-                label={text("مغلقة", "Closed")}
-                count={grouped.closed.length}
-                onClick={() => setActiveTab("closed")}
-              />
-              <TabButton
-                active={activeTab === "reviews"}
-                label={text("تقييمات", "Reviews")}
-                count={ratingCount}
-                onClick={() => setActiveTab("reviews")}
-              />
-            </div>
-
-            {activeTab !== "reviews" ? (
-              <OwnerListingsToolbar
-                query={listingSearch}
-                onQueryChange={setListingSearch}
-                sort={listingSort}
-                onSortChange={setListingSort}
-                performanceWindow={performanceWindow}
-                onPerformanceWindowChange={setPerformanceWindow}
-                totalCount={filteredListings.length}
-                shownCount={visibleListings.length}
-                canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
-                selectedCount={selectedApprovedListings.length}
-                allVisibleSelected={allVisibleApprovedSelected}
-                onToggleVisibleSelection={toggleVisibleApprovedSelection}
-              />
-            ) : null}
-
-            {activeTab === "approved" ? (
-              <OwnerBulkActionBar
-                selectedCount={selectedApprovedListings.length}
-                expiryOption={bulkExpiryOption}
-                busy={bulkBusy}
-                feedback={bulkFeedback}
-                onExpiryOptionChange={setBulkExpiryOption}
-                onRenew={() => void runBulkAction("renew")}
-                onConfirmAvailability={() => void runBulkAction("availability")}
-                onClear={() => {
-                  setSelectedListingIds(new Set());
-                  setBulkFeedback("");
-                }}
-              />
-            ) : null}
-          </div>
-
-          {workspaceMessage ? (
-            <p role="status" className="rawaj-owner-workspace-feedback">
-              {workspaceMessage}
-            </p>
-          ) : null}
-
-          {sellerError && activeTab !== "reviews" ? (
-            <StorefrontNotice
-              tone="neutral"
-              title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
-              description={sellerError.message}
-              action={
-                <button
-                  type="button"
-                  disabled={sellerLoading}
-                  onClick={() => void loadSellerProfile()}
-                >
-                  {text("إعادة المحاولة", "Try again")}
-                </button>
-              }
-            />
-          ) : null}
-
-          {listingsLoading && !listingsHasLoaded ? (
-            <Panel title={text("جاري تحميل واجهة المتجر", "Loading store")} />
-          ) : listingsError && !listingsHasLoaded ? (
-            <Panel
-              title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
-              body={listingsError.message}
-              actionLabel={text("إعادة المحاولة", "Try again")}
-              onAction={() => void loadListings()}
-              actionDisabled={listingsLoading}
-            />
-          ) : activeTab === "reviews" ? (
-            sellerLoading && !sellerHasLoaded ? (
-              <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
-            ) : sellerError && !sellerHasLoaded ? (
-              <Panel
-                title={text("تعذر تحميل التقييمات", "Could not load reviews")}
-                body={sellerError.message}
-                actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void loadSellerProfile()}
-                actionDisabled={sellerLoading}
-              />
-            ) : (
-              <ReviewsSection sellerProfile={sellerProfile} />
-            )
-          ) : (
-            <>
-              {listingsError ? (
-                <StorefrontNotice
-                  tone="neutral"
-                  title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                  description={listingsError.message}
-                  action={
+        <div className="rawaj-shop-desk__layout">
+          <aside
+            className="rawaj-shop-desk__rail"
+            hidden={!latestDraft && listings.length === 0}
+            aria-label={text("متابعة المتجر", "Store activity")}
+          >
+            {latestDraft ? (
+              <StorefrontNotice
+                tone="draft"
+                title={text("لديك مسودة محفوظة", "You have a saved draft")}
+                description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
+                  latestDraft.updatedAt,
+                  language,
+                )}`}
+                action={
+                  <>
                     <button
                       type="button"
-                      disabled={listingsLoading}
-                      onClick={() => void loadListings()}
+                      onClick={() => openAttentionQueue("needs_edit", "drafts")}
                     >
-                      {text("إعادة المحاولة", "Try again")}
+                      {text("عرض المسودات", "Show drafts")}
                     </button>
-                  }
+                    <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
+                      {text("متابعة المسودة", "Resume draft")}
+                    </Link>
+                  </>
+                }
+              />
+            ) : null}
+
+            <OwnerWorkspaceInsights listings={listings} onQueueOpen={openAttentionQueue} />
+          </aside>
+          <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
+            <header className="rawaj-owner-inventory__header">
+              <h2 id="rawaj-owner-inventory-title" ref={inventoryHeadingRef} tabIndex={-1}>
+                {text("إعلانات المتجر", "Store listings")}
+              </h2>
+            </header>
+
+            <div className="rawaj-owner-workspace-sticky">
+              <div
+                className="rawaj-storefront-owner-tabs"
+                role="group"
+                aria-label={text("حالات الإعلانات", "Listing statuses")}
+                data-rawaj-segmented-control="true"
+              >
+                <TabButton
+                  active={activeTab === "approved"}
+                  label={text("نشطة", "Live")}
+                  count={grouped.approved.length}
+                  onClick={() => selectTab("approved")}
+                />
+                <TabButton
+                  active={activeTab === "pending"}
+                  label={text("مراجعة", "Review")}
+                  count={grouped.pending.length}
+                  onClick={() => selectTab("pending")}
+                />
+                <TabButton
+                  active={activeTab === "needs_edit"}
+                  label={text("مسودات وتعديلات", "Drafts & edits")}
+                  count={grouped.needs_edit.length}
+                  onClick={() => selectTab("needs_edit")}
+                />
+                <TabButton
+                  active={activeTab === "closed"}
+                  label={text("مغلقة", "Closed")}
+                  count={grouped.closed.length}
+                  onClick={() => selectTab("closed")}
+                />
+                <TabButton
+                  active={activeTab === "reviews"}
+                  label={text("تقييمات", "Reviews")}
+                  count={ratingCount}
+                  onClick={() => selectTab("reviews")}
+                />
+              </div>
+
+              {attentionQueue ? (
+                <div className="rawaj-store-queue">
+                  <strong>
+                    {
+                      {
+                        drafts: text("المسودات", "Drafts"),
+                        edits: text("إعلانات تحتاج تعديلاً", "Listings needing edits"),
+                        expiry: text("تنتهي خلال 7 أيام", "Expiring within 7 days"),
+                        editable_no_image: text(
+                          "مسودات وتعديلات بلا صور",
+                          "Drafts and edits without images",
+                        ),
+                        live_no_image: text("إعلانات نشطة بلا صور", "Live listings without images"),
+                      }[attentionQueue]
+                    }
+                  </strong>
+                  <button type="button" onClick={() => setAttentionQueue(null)}>
+                    {text("إلغاء التصفية", "Clear filter")}
+                  </button>
+                </div>
+              ) : null}
+
+              {activeTab !== "reviews" ? (
+                <OwnerListingsToolbar
+                  query={listingSearch}
+                  onQueryChange={setListingSearch}
+                  sort={listingSort}
+                  onSortChange={setListingSort}
+                  performanceWindow={performanceWindow}
+                  onPerformanceWindowChange={setPerformanceWindow}
+                  totalCount={filteredListings.length}
+                  shownCount={visibleListings.length}
+                  canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
+                  selectedCount={selectedApprovedListings.length}
+                  allVisibleSelected={allVisibleApprovedSelected}
+                  onToggleVisibleSelection={toggleVisibleApprovedSelection}
                 />
               ) : null}
-              {filteredListings.length === 0 ? (
+
+              {activeTab === "approved" ? (
+                <OwnerBulkActionBar
+                  selectedCount={selectedApprovedListings.length}
+                  expiryOption={bulkExpiryOption}
+                  busy={bulkBusy}
+                  feedback={bulkFeedback}
+                  onExpiryOptionChange={setBulkExpiryOption}
+                  onRenew={() => void runBulkAction("renew")}
+                  onConfirmAvailability={() => void runBulkAction("availability")}
+                  onClear={() => {
+                    setSelectedListingIds(new Set());
+                    setBulkFeedback("");
+                  }}
+                />
+              ) : null}
+            </div>
+
+            {workspaceMessage ? (
+              <p role="status" className="rawaj-owner-workspace-feedback">
+                {workspaceMessage}
+              </p>
+            ) : null}
+
+            {sellerError && activeTab !== "reviews" ? (
+              <StorefrontNotice
+                tone="neutral"
+                title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
+                description={sellerError.message}
+                action={
+                  <button
+                    type="button"
+                    disabled={sellerLoading}
+                    onClick={() => void loadSellerProfile()}
+                  >
+                    {text("إعادة المحاولة", "Try again")}
+                  </button>
+                }
+              />
+            ) : null}
+
+            {!listingsHasLoaded && !listingsError ? (
+              <Panel title={text("جارٍ تحميل إعلاناتك…", "Loading your listings…")} loading />
+            ) : listingsError && !listingsHasLoaded ? (
+              <Panel
+                title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+                body={listingsError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadListings()}
+                actionDisabled={listingsLoading}
+              />
+            ) : activeTab === "reviews" ? (
+              sellerLoading && !sellerHasLoaded ? (
+                <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
+              ) : sellerError && !sellerHasLoaded ? (
                 <Panel
-                  title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
-                  body={text(
-                    "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
-                    "Listings appear here according to their current lifecycle status.",
-                  )}
+                  title={text("تعذر تحميل التقييمات", "Could not load reviews")}
+                  body={sellerError.message}
+                  actionLabel={text("إعادة المحاولة", "Try again")}
+                  onAction={() => void loadSellerProfile()}
+                  actionDisabled={sellerLoading}
                 />
               ) : (
-                <>
-                  <div className="rawaj-storefront-owner-grid">
-                    {visibleListings.map((listing) => (
-                      <StoreListingCard
-                        key={`${profileId ?? "signed-out"}:${listing.id}`}
-                        listing={listing}
-                        language={language}
-                        userId={profileId}
-                        selected={selectedListingIds.has(listing.id)}
-                        selectable={activeTab === "approved" && listing.status === "approved"}
-                        duplicating={duplicatingListingId === listing.id}
-                        boostEligible={
-                          boostEligibilityLoaded &&
-                          isListingEligibleForSearchBoost(listing, boostPromotions)
-                        }
-                        onSelectionChange={handleSelectionChange}
-                        onDuplicate={handleDuplicateListing}
-                        onDeleted={handleListingDeleted}
-                        onChanged={handleListingChanged}
-                      />
-                    ))}
-                  </div>
-                  {hasMoreListings ? (
-                    <button
-                      type="button"
-                      className="rawaj-owner-load-more"
-                      onClick={() =>
-                        setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)
+                <ReviewsSection sellerProfile={sellerProfile} />
+              )
+            ) : (
+              <>
+                {listingsError ? (
+                  <StorefrontNotice
+                    tone="neutral"
+                    title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
+                    description={listingsError.message}
+                    action={
+                      <button
+                        type="button"
+                        disabled={listingsLoading}
+                        onClick={() => void loadListings()}
+                      >
+                        {text("إعادة المحاولة", "Try again")}
+                      </button>
+                    }
+                  />
+                ) : null}
+                {filteredListings.length === 0 ? (
+                  <div className="rawaj-store-empty">
+                    <span className="rawaj-shop-empty-icon">
+                      <PackageOpen aria-hidden="true" />
+                    </span>
+                    <Panel
+                      title={
+                        listingSearch.trim()
+                          ? text("لا نتائج مطابقة", "No matching listings")
+                          : listings.length === 0
+                            ? text(
+                                "متجرك جاهز لأول إعلان",
+                                "Your store is ready for its first listing",
+                              )
+                            : text("ما في إعلانات بهالحالة", "No listings in this status")
                       }
-                    >
-                      {text("عرض المزيد", "Load more")} · {visibleListings.length}/
-                      {filteredListings.length}
-                    </button>
-                  ) : null}
-                </>
+                      actionLabel={
+                        listingSearch.trim() ? text("مسح البحث", "Clear search") : undefined
+                      }
+                      onAction={listingSearch.trim() ? () => setListingSearch("") : undefined}
+                    />
+                    {listings.length === 0 && !listingSearch.trim() ? (
+                      <Link to="/add-listing" className="rawaj-store-empty__action">
+                        <Plus aria-hidden="true" size={18} />
+                        {text("أضف أول إعلان", "Post your first listing")}
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : (
+                  <>
+                    <div className="rawaj-storefront-owner-grid">
+                      {visibleListings.map((listing) => (
+                        <StoreListingCard
+                          key={`${profileId ?? "signed-out"}:${listing.id}`}
+                          listing={listing}
+                          language={language}
+                          userId={profileId}
+                          selected={selectedListingIds.has(listing.id)}
+                          selectable={activeTab === "approved" && listing.status === "approved"}
+                          duplicating={duplicatingListingId === listing.id}
+                          boostEligible={
+                            boostEligibilityLoaded &&
+                            isListingEligibleForSearchBoost(listing, boostPromotions)
+                          }
+                          onSelectionChange={handleSelectionChange}
+                          onDuplicate={handleDuplicateListing}
+                          onDeleted={handleListingDeleted}
+                          onChanged={handleListingChanged}
+                        />
+                      ))}
+                    </div>
+                    {hasMoreListings ? (
+                      <button
+                        type="button"
+                        className="rawaj-owner-load-more"
+                        onClick={() =>
+                          setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)
+                        }
+                      >
+                        {text("عرض المزيد", "Load more")} · {visibleListings.length}/
+                        {filteredListings.length}
+                      </button>
+                    ) : null}
+                  </>
+                )}
+              </>
+            )}
+          </section>
+          <aside
+            className="rawaj-shop-desk__secondary"
+            aria-label={text("أدوات المتجر", "Store tools")}
+          >
+            <details className="rawaj-shop-tools">
+              <summary>
+                <Megaphone aria-hidden="true" />
+                {text("أدوات الترويج", "Promotion tools")}
+              </summary>
+              <div>
+                <Link to="/promotion">{text("تعزيز الظهور", "Boost visibility")}</Link>
+                <Link to="/promotion-request">{text("طلب ترويج", "Request promotion")}</Link>
+              </div>
+            </details>
+            <OwnerPerformanceOverview
+              summary={performanceSummary}
+              scopeNote={text(
+                performanceWindow === "all"
+                  ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
+                  : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
+                performanceWindow === "all"
+                  ? "Metrics are lifetime totals for all tracked listings."
+                  : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
               )}
-            </>
-          )}
-        </section>
+            />
+          </aside>
+        </div>
       </main>
     </>
   );
@@ -828,7 +955,6 @@ function OwnerPerformanceOverview({
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           <span>
             <strong>{text("أداء إعلاناتك", "Your listing performance")}</strong>
-            <small>{text("ملخص سريع", "Quick snapshot")}</small>
           </span>
         </span>
         <button
@@ -842,18 +968,17 @@ function OwnerPerformanceOverview({
         </button>
       </header>
 
-      <div className="rawaj-owner-performance__kpis">
-        {metrics.map((metric) => (
-          <div key={metric.key} data-owner-summary-metric={metric.key}>
-            <span>{metric.icon}</span>
-            <strong>{formatOwnerMetric(metric.value)}</strong>
-            <small>{metric.label}</small>
-          </div>
-        ))}
-      </div>
-
       {expanded ? (
         <div id="rawaj-owner-performance-details" className="rawaj-owner-performance__details">
+          <div className="rawaj-owner-performance__kpis">
+            {metrics.map((metric) => (
+              <div key={metric.key} data-owner-summary-metric={metric.key}>
+                <span>{metric.icon}</span>
+                <strong>{formatOwnerMetric(metric.value)}</strong>
+                <small>{metric.label}</small>
+              </div>
+            ))}
+          </div>
           <p className="mt-2 text-[9px] leading-4 text-muted-foreground">{scopeNote}</p>
           <p className="mt-1 text-[9px] leading-4 text-muted-foreground">
             {text(
@@ -1329,24 +1454,21 @@ function StoreListingCard({
     ? ownerLifecycleConfirmationCopy(pendingLifecycleConfirmation, text)
     : null;
   const expiryInsight = ownerListingExpiryInsight(listing, text);
+  const hasNegotiableAmount = listing.priceType === "negotiable" && Boolean(listing.price);
 
   return (
     <>
       <article className="rawaj-owner-listing-card rawaj-product-card group">
         <div className="rawaj-owner-listing-card__overview">
           <div className="rawaj-product-media">
-            <span className="rawaj-status-ribbon" data-status={listing.status}>
-              {listingStatusLabel(listing.status, language)}
-            </span>
             {selectable ? (
               <button
                 type="button"
                 aria-pressed={selected}
-                aria-label={
-                  selected
-                    ? text("إلغاء تحديد الإعلان", "Unselect listing")
-                    : text("تحديد الإعلان", "Select listing")
-                }
+                aria-label={text(
+                  `تحديد الإعلان: ${listing.title}`,
+                  `Select listing: ${listing.title}`,
+                )}
                 title={
                   selected
                     ? text("إلغاء التحديد", "Unselect")
@@ -1361,7 +1483,7 @@ function StoreListingCard({
             ) : null}
             <ListingCardImage
               src={listing.primaryImageUrl}
-              alt={listing.title}
+              alt=""
               placeholder={listing.categoryPlaceholder ?? "misc"}
               placeholderAspect="wide"
               loading="lazy"
@@ -1369,16 +1491,22 @@ function StoreListingCard({
             />
           </div>
           <div className="rawaj-owner-listing-card__summary">
-            <h2>{listing.title}</h2>
-            <div className="rawaj-owner-listing-card__facts">
-              <strong>
+            <h3 dir="auto">{listing.title}</h3>
+            <div className="rawaj-store-card-price">
+              <bdi>
                 {formatPriceLocalized(
                   listing.price ?? 0,
-                  listing.priceType,
+                  hasNegotiableAmount ? "fixed" : listing.priceType,
                   language,
                   listing.currency,
                 )}
-              </strong>
+              </bdi>
+              {hasNegotiableAmount ? <small>{text("قابل للتفاوض", "Negotiable")}</small> : null}
+            </div>
+            <span className="rawaj-store-card-status" data-status={listing.status}>
+              {listingStatusLabel(listing.status, language)}
+            </span>
+            <div className="rawaj-owner-listing-card__facts">
               <span>
                 {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
               </span>
@@ -1393,48 +1521,125 @@ function StoreListingCard({
             </div>
           </div>
         </div>
+        <div className="rawaj-owner-listing-card__actions">
+          {canEdit ? (
+            <Link
+              to="/profile/listings/$id"
+              params={{ id: listing.id }}
+              aria-label={text("تعديل الإعلان", "Edit listing")}
+              title={text("تعديل الإعلان", "Edit listing")}
+              data-tone="primary"
+            >
+              <Pencil aria-hidden="true" />
+              <span>
+                {listing.status === "draft"
+                  ? text("متابعة", "Continue")
+                  : listing.status === "rejected"
+                    ? text("إصلاح", "Fix")
+                    : text("تعديل", "Edit")}
+              </span>
+            </Link>
+          ) : null}
+          {listing.status === "approved" ? (
+            <button
+              type="button"
+              aria-expanded={managementOpen}
+              aria-controls={`${listing.id}-management-panel`}
+              aria-label={text("إدارة الإعلان", "Manage listing")}
+              title={text("إدارة الإعلان", "Manage listing")}
+              onClick={() => setManagementOpen((current) => !current)}
+              data-tone="primary"
+            >
+              <Pencil aria-hidden="true" />
+              {text("إدارة", "Manage")}
+            </button>
+          ) : null}
+          {canReactivate ? (
+            <button
+              type="button"
+              disabled={lifecycleBusy}
+              onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
+              data-tone="primary"
+            >
+              <Rocket aria-hidden="true" />
+              {text("إعادة التفعيل", "Reactivate")}
+            </button>
+          ) : null}
+          {listing.status === "approved" ? (
+            <Link
+              to="/listings/$id"
+              params={{ id: listing.id }}
+              aria-label={text("عرض الإعلان", "View listing")}
+              title={text("عرض الإعلان", "View listing")}
+              data-tone="view"
+            >
+              <Eye aria-hidden="true" />
+              <span>{text("عرض", "View")}</span>
+            </Link>
+          ) : null}
+          {listing.status !== "approved" ? (
+            <button
+              type="button"
+              aria-expanded={managementOpen}
+              aria-controls={`${listing.id}-management-panel`}
+              onClick={() => setManagementOpen((current) => !current)}
+              className="rawaj-owner-listing-card__manage"
+              data-tone={listing.status === "pending_review" ? "primary" : undefined}
+            >
+              {listing.status === "pending_review"
+                ? text("التفاصيل", "Details")
+                : text("المزيد", "More")}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          ) : null}
+        </div>
         <div className="rawaj-owner-listing-card__content">
-          <div
-            className="rawaj-owner-listing-card__signals"
-            aria-label={text("حالة الإعلان", "Listing status")}
-          >
-            {listing.status === "draft" ? (
-              <span data-tone="draft">
-                <Pencil aria-hidden="true" />
-                <strong>{text("مسودة", "Draft")}</strong>
-                <small>{formatSavedAt(listing.updatedAt, language)}</small>
-              </span>
-            ) : null}
-            {listing.reservedAt ? (
-              <span data-tone="warning">
-                <Clock3 aria-hidden="true" />
-                <strong>{text("محجوز حالياً", "Currently reserved")}</strong>
-              </span>
-            ) : listing.status === "approved" ? (
-              <span data-tone={listing.renewedAt ? "success" : "neutral"}>
-                <CircleCheckBig aria-hidden="true" />
-                <strong>
-                  {listing.renewedAt
-                    ? text("التوفر مؤكّد", "Availability confirmed")
-                    : text("تأكيد التوفر مطلوب", "Confirm availability")}
-                </strong>
-                {listing.renewedAt ? (
-                  <small>{formatSavedAt(listing.renewedAt, language)}</small>
-                ) : null}
-              </span>
-            ) : null}
-            {expiryInsight ? (
-              <span data-tone={expiryInsight.tone}>
-                <Clock3 aria-hidden="true" />
-                <strong>{expiryInsight.title}</strong>
-                <small>
-                  {expiryInsight.description}
-                  {listing.expiresAt ? ` · ${formatSavedAt(listing.expiresAt, language)}` : ""}
-                </small>
-              </span>
-            ) : null}
-          </div>
-          <OwnerListingPerformance listing={listing} language={language} />
+          <details className="rawaj-shop-listing-health">
+            <summary>{text("الحالة والأداء", "Status and performance")}</summary>
+            <div
+              className="rawaj-owner-listing-card__signals"
+              aria-label={text("حالة الإعلان", "Listing status")}
+            >
+              {listing.status === "draft" ? (
+                <span data-tone="draft">
+                  <Pencil aria-hidden="true" />
+                  <strong>{text("مسودة", "Draft")}</strong>
+                  <small>{formatSavedAt(listing.updatedAt, language)}</small>
+                </span>
+              ) : null}
+              {listing.reservedAt ? (
+                <span data-tone="warning">
+                  <Clock3 aria-hidden="true" />
+                  <strong>{text("محجوز حالياً", "Currently reserved")}</strong>
+                </span>
+              ) : listing.status === "approved" ? (
+                <span data-tone={listing.renewedAt ? "success" : "neutral"}>
+                  <CircleCheckBig aria-hidden="true" />
+                  <strong>
+                    {listing.renewedAt
+                      ? text("التوفر مؤكّد", "Availability confirmed")
+                      : text("تأكيد التوفر مطلوب", "Confirm availability")}
+                  </strong>
+                  {listing.renewedAt ? (
+                    <small>{formatSavedAt(listing.renewedAt, language)}</small>
+                  ) : null}
+                </span>
+              ) : null}
+              {expiryInsight ? (
+                <span data-tone={expiryInsight.tone}>
+                  <Clock3 aria-hidden="true" />
+                  <strong>{expiryInsight.title}</strong>
+                  <small>
+                    {expiryInsight.description}
+                    {listing.expiresAt ? ` · ${formatSavedAt(listing.expiresAt, language)}` : ""}
+                  </small>
+                </span>
+              ) : null}
+            </div>
+            <OwnerListingPerformance listing={listing} language={language} />
+          </details>
           {listing.status === "rejected" && (
             <div className="rounded-xl border border-destructive/20 bg-destructive/8 p-3">
               <p className="text-[11px] font-bold text-destructive">
@@ -1470,80 +1675,6 @@ function StoreListingCard({
               {reservationError}
             </p>
           )}
-          <div className="rawaj-owner-listing-card__actions">
-            {canEdit ? (
-              <Link
-                to="/profile/listings/$id"
-                params={{ id: listing.id }}
-                aria-label={text("تعديل الإعلان", "Edit listing")}
-                title={text("تعديل الإعلان", "Edit listing")}
-                data-tone="primary"
-              >
-                <Pencil aria-hidden="true" />
-                <span>
-                  {listing.status === "draft"
-                    ? text("متابعة", "Continue")
-                    : listing.status === "rejected"
-                      ? text("إصلاح", "Fix")
-                      : text("تعديل", "Edit")}
-                </span>
-              </Link>
-            ) : null}
-            {listing.status === "approved" ? (
-              <button
-                type="button"
-                aria-expanded={managementOpen}
-                aria-controls={`${listing.id}-management-panel`}
-                aria-label={text("إدارة الإعلان", "Manage listing")}
-                title={text("إدارة الإعلان", "Manage listing")}
-                onClick={() => setManagementOpen((current) => !current)}
-                data-tone="primary"
-              >
-                <Pencil aria-hidden="true" />
-                {text("إدارة", "Manage")}
-              </button>
-            ) : null}
-            {canReactivate ? (
-              <button
-                type="button"
-                disabled={lifecycleBusy}
-                onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
-                data-tone="primary"
-              >
-                <Rocket aria-hidden="true" />
-                {text("إعادة التفعيل", "Reactivate")}
-              </button>
-            ) : null}
-            {listing.status === "approved" ? (
-              <Link
-                to="/listings/$id"
-                params={{ id: listing.id }}
-                aria-label={text("عرض الإعلان", "View listing")}
-                title={text("عرض الإعلان", "View listing")}
-                data-tone="view"
-              >
-                <Eye aria-hidden="true" />
-                <span>{text("عرض", "View")}</span>
-              </Link>
-            ) : null}
-            {listing.status !== "approved" ? (
-              <button
-                type="button"
-                aria-expanded={managementOpen}
-                aria-controls={`${listing.id}-management-panel`}
-                onClick={() => setManagementOpen((current) => !current)}
-                className="rawaj-owner-listing-card__manage"
-                data-tone={listing.status === "pending_review" ? "primary" : undefined}
-              >
-                {listing.status === "pending_review"
-                  ? text("التفاصيل", "Details")
-                  : text("المزيد", "More")}
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-            ) : null}
-          </div>
 
           {managementOpen ? (
             <div
@@ -1843,11 +1974,7 @@ function StoreListingCard({
               onClick={() => void handleConfirmDelete()}
               className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
             >
-              {deleting
-                ? "جارٍ الحذف…"
-                : listing.status === "draft"
-                  ? "حذف المسودة"
-                  : "حذف الإعلان"}
+              {deleting ? "جارٍ الحذف…" : listing.status === "draft" ? "حذف المسودة" : "حذف الإعلان"}
             </button>
             <button
               type="button"
@@ -1953,15 +2080,20 @@ function Panel({
   actionLabel,
   onAction,
   actionDisabled,
+  loading = false,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
   actionDisabled?: boolean;
+  loading?: boolean;
 }) {
   return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
+    <section
+      className="rounded-2xl bg-card p-8 text-center hairline"
+      role={loading ? "status" : undefined}
+    >
       <p className="text-sm font-bold">{title}</p>
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
       {actionLabel && onAction ? (

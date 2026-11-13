@@ -73,12 +73,9 @@
 
 .rawaj-categories-discovery__group[data-tone="promoted"] {
   padding: clamp(0.8rem, 2.5vw, 1.15rem);
-  border: 1px solid rgba(225, 100, 180, 0.15);
+  border: 1px solid rgba(169, 200, 187, 0.15);
   border-radius: 1.2rem;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.075), transparent 28rem),
-    radial-gradient(circle at 0% 100%, rgba(255, 117, 89, 0.055), transparent 24rem),
-    rgba(43, 44, 50, 0.7);
+  background: rgba(43, 44, 50, 0.7);
 }
 
 .rawaj-categories-discovery__group-heading {
@@ -117,15 +114,13 @@
 }
 
 .rawaj-categories-discovery__promoted-grid .rawaj-adaptive-card {
-  border-color: rgba(225, 100, 180, 0.17) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.055), transparent 36%),
-    linear-gradient(155deg, #333139, #2b2b31) !important;
+  border-color: rgba(169, 200, 187, 0.17) !important;
+  background: #333139 !important;
 }
 
 .rawaj-categories-discovery__latest-grid .rawaj-adaptive-card {
   border-color: var(--rawaj-border) !important;
-  background: linear-gradient(155deg, #303137, #292a30) !important;
+  background: #303137 !important;
 }
 
 .rawaj-categories-discovery .rawaj-adaptive-card__title,
@@ -177,9 +172,7 @@
   min-height: 16rem;
   border: 1px solid var(--rawaj-border);
   border-radius: 1rem;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent),
-    linear-gradient(155deg, #303137, #292a30);
+  background: rgba(255, 255, 255, 0.035);
   background-size: 220% 100%, 100% 100%;
   animation: rawaj-categories-discovery-shimmer 1.5s ease-in-out infinite;
 }
@@ -196,7 +189,7 @@
   gap: 0.55rem;
   border: 1px solid var(--rawaj-border);
   border-radius: 1.15rem;
-  background: linear-gradient(155deg, #303137, #292a30);
+  background: #303137;
   color: var(--rawaj-text-secondary);
   padding: clamp(1.3rem, 4vw, 2rem);
   text-align: center;
@@ -228,7 +221,7 @@
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 0.8rem;
-  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8);
+  background: #6b5133;
   color: #fff;
   padding-inline: 1rem;
   font-size: 0.78rem;
@@ -237,9 +230,7 @@
 
 .rawaj-categories-discovery__error {
   border-color: rgba(255, 127, 135, 0.16);
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255, 127, 135, 0.07), transparent 32%),
-    linear-gradient(155deg, #343034, #2d2a2e);
+  background: #343034;
 }
 
 @media (min-width: 48rem) {

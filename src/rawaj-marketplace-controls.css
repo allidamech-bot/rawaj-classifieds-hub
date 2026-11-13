@@ -1,0 +1,165 @@
+/* Route changes should never change the identity of these global actions. */
+.rawaj-app-shell[data-resolved-pathname] .rawaj-mobile-dock .rawaj-dock-create,
+.rawaj-app-shell[data-resolved-pathname] :is(.rawaj-feedback-button, .rawaj-feedback-teaser) {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+  border-color: var(--rawaj-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname] .rawaj-mobile-dock .rawaj-dock-create:hover,
+.rawaj-app-shell[data-resolved-pathname] :is(.rawaj-feedback-button, .rawaj-feedback-teaser):hover {
+  background: var(--rawaj-action-primary-hover) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card {
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:hover {
+  border-color: var(--rawaj-border-active);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  .rawaj-category-directory-card
+  .category-tile {
+  color: var(--rawaj-text-gold) !important;
+  background: var(--rawaj-surface-selected) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__primary-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+  background: var(--rawaj-action-primary) !important;
+  color: var(--rawaj-action-primary-foreground) !important;
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-hero__description {
+  max-inline-size: 48ch;
+  text-wrap: pretty;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel.rawaj-signature-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.75rem;
+  min-height: 0 !important;
+  margin-block-end: 0 !important;
+  padding: clamp(0.85rem, 3vw, 1.5rem) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel.rawaj-signature-hero::before,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel.rawaj-signature-hero::after {
+  display: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"]
+  .rawaj-home-search-panel
+  .rawaj-signature-hero__content {
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel .rawaj-signature-search {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  margin: 0 !important;
+  direction: inherit;
+  background: var(--rawaj-surface-inset) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"]
+  .rawaj-home-search-panel
+  .rawaj-signature-search
+  input {
+  direction: revert;
+  font-size: 1rem !important;
+}
+
+.rawaj-discovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+}
+
+.rawaj-discovery-action,
+.rawaj-category-directory-search button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-block-size: 2.75rem;
+  padding-inline: 0.6rem;
+  border: 1px solid var(--rawaj-border);
+  border-radius: var(--rawaj-radius-button);
+  color: var(--rawaj-text-primary);
+  background: var(--rawaj-elevated-background);
+  font-size: 0.85rem;
+}
+
+.rawaj-discovery-action:hover,
+.rawaj-category-directory-search button:hover {
+  border-color: var(--rawaj-border-active);
+}
+
+.rawaj-discovery-action svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+}
+
+.rawaj-category-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-block-size: 3rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--rawaj-border);
+  border-radius: var(--rawaj-radius-button);
+  background: var(--rawaj-surface-inset);
+}
+
+.rawaj-category-directory-search:focus-within {
+  outline: 2px solid var(--rawaj-border-active);
+  outline-offset: 2px;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card .rawaj-adaptive-card__price,
+.rawaj-app-shell .rawaj-detail-price strong {
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-buyer-price-note {
+  display: block;
+  color: var(--rawaj-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"]
+  .rawaj-detail-v2
+  .rawaj-detail-media__stage[data-no-photo="true"] {
+  aspect-ratio: auto !important;
+  height: clamp(8rem, 23vw, 12rem) !important;
+  min-height: 0 !important;
+}
+
+.rawaj-detail-media__stage[data-no-photo="true"] .rawaj-detail-media__placeholder > span {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0.75rem;
+  z-index: 1;
+  color: var(--rawaj-text-primary);
+  text-align: center;
+  pointer-events: none;
+}

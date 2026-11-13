@@ -38,11 +38,7 @@
   border: 1px solid rgba(216, 174, 95, 0.15) !important;
   border-radius: 1.5rem !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.075), transparent 42%),
-    radial-gradient(circle at 0% 100%, rgba(219, 73, 179, 0.055), transparent 44%),
-    radial-gradient(circle at 52% -20%, rgba(216, 174, 95, 0.045), transparent 42%),
-    linear-gradient(150deg, #1b1f28 0%, #141820 62%, #11151c 100%) !important;
+  background: #1b1f28 !important;
   box-shadow:
     0 16px 38px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
@@ -147,9 +143,7 @@
   > section.text-center[class*="bg-card"]
   > span:first-child {
   border: 1px solid rgba(216, 174, 95, 0.18) !important;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.08), transparent 70%),
-    linear-gradient(145deg, #20242d, #141820) !important;
+  background: #20242d !important;
   box-shadow:
     0 9px 22px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
@@ -192,7 +186,7 @@
 .rawaj-feedback-state [data-ui="button"][data-variant="default"] {
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
-  background: linear-gradient(135deg, #c93457 0%, #bf2f7b 52%, #6f5de0 100%) !important;
+  background: #c93457 !important;
   box-shadow:
     0 11px 26px rgba(155, 40, 111, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
@@ -214,7 +208,7 @@
   > a:nth-of-type(2) {
   border: 1px solid rgba(216, 174, 95, 0.12) !important;
   color: #d8d2cc !important;
-  background: linear-gradient(145deg, #181d27, #10151d) !important;
+  background: #181d27 !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
