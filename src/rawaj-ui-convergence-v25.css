@@ -1061,11 +1061,8 @@ body :is([role="dialog"], [role="alertdialog"]) :is(h2, h3, label, legend) {
   color: var(--rawaj-text-muted) !important;
 }
 
-@media (max-width: 390px) {
-  .rawaj-bottom-dock__label {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    text-align: center;
-    line-height: 1.25;
-  }
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3
+  :is(.rawaj-account-identity__copy > p, small, .text-xs.leading-6, .text-muted-foreground),
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > span {
+  color: var(--rawaj-text-secondary) !important;
 }
