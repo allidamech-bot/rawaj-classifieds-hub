@@ -61,7 +61,9 @@
   display: none;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel .rawaj-signature-hero__content {
+.rawaj-app-shell[data-resolved-pathname="/"]
+  .rawaj-home-search-panel
+  .rawaj-signature-hero__content {
   padding: 0 !important;
   min-height: 0 !important;
 }
@@ -75,7 +77,10 @@
   background: var(--rawaj-surface-inset) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel .rawaj-signature-search input {
+.rawaj-app-shell[data-resolved-pathname="/"]
+  .rawaj-home-search-panel
+  .rawaj-signature-search
+  input {
   direction: revert;
   font-size: 1rem !important;
 }
@@ -125,4 +130,36 @@
 .rawaj-category-directory-search:focus-within {
   outline: 2px solid var(--rawaj-border-active);
   outline-offset: 2px;
+}
+
+.rawaj-app-shell .rawaj-adaptive-card .rawaj-adaptive-card__price,
+.rawaj-app-shell .rawaj-detail-price strong {
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-buyer-price-note {
+  display: block;
+  color: var(--rawaj-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/listings/"]
+  .rawaj-detail-v2
+  .rawaj-detail-media__stage[data-no-photo="true"] {
+  aspect-ratio: auto !important;
+  height: clamp(8rem, 23vw, 12rem) !important;
+  min-height: 0 !important;
+}
+
+.rawaj-detail-media__stage[data-no-photo="true"] .rawaj-detail-media__placeholder > span {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0.75rem;
+  z-index: 1;
+  color: var(--rawaj-text-primary);
+  text-align: center;
+  pointer-events: none;
 }
