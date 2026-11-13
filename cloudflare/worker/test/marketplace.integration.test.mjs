@@ -1561,6 +1561,49 @@ test("phase 1: owner-only roles and account freezing, restrictions, restore, aud
   assert.ok(audits.payload.data.some((row) => row.action === "user.role_assigned"));
 });
 
+test("phase 1: freezing an administrator removes GET access until restoration", async () => {
+  const freeze = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: admin.userId,
+      status: "frozen",
+      reason: "Isolated staff suspension acceptance test",
+    },
+  });
+  assert.equal(freeze.response.status, 200);
+
+  try {
+    const blockedRead = await api("/v1/admin/users", admin);
+    assert.equal(blockedRead.response.status, 403);
+    assert.equal(blockedRead.payload.error.code, "account_restricted");
+
+    const blockedWrite = await api("/v1/admin/users/status", {
+      ...admin,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        status: "frozen",
+        reason: "Should never be allowed",
+      },
+    });
+    assert.equal(blockedWrite.response.status, 403);
+  } finally {
+    const restore = await api("/v1/admin/users/status", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: admin.userId,
+        status: "active",
+        reason: "Isolated staff suspension test finished",
+      },
+    });
+    assert.equal(restore.response.status, 200);
+  }
+  const restoredRead = await api("/v1/admin/users", admin);
+  assert.equal(restoredRead.response.status, 200);
+});
+
 test("phase 1: concurrent duplicate image uploads cannot remove the winning R2 asset", async () => {
   const created = await api("/v1/listings", {
     ...owner,
