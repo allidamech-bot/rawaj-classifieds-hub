@@ -151,6 +151,17 @@ test("footer and personal-space corrections retain readable semantic contrast", 
   assert.match(corrections, /rawaj-account-section\[data-tone="muted"\]/);
 });
 
+const initialAppStyles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+
+test("initial CSS cannot restore an independent ivory or dark palette", () => {
+  const initialTokens = initialAppStyles.split("@layer base")[0];
+  assert.match(initialTokens, /--background:\\s*var\\(--rawaj-canvas,\\s*#ffffff\\)/);
+  assert.match(initialTokens, /--primary:\\s*var\\(--rawaj-brand-primary,\\s*#103f42\\)/);
+  assert.match(initialTokens, /color-scheme:\\s*light/);
+  assert.doesNotMatch(initialTokens, /\\.dark\\s*\\{/);
+  assert.doesNotMatch(initialTokens, /#f7f4ec|#11100d|#d96f32/i);
+});
+
 test("canonical light semantic tokens replace the retired dark theme", () => {
   assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
   assert.match(semanticTokens, /--rawaj-canvas:\s*#ffffff/);
