@@ -22,7 +22,7 @@
   --rawaj-signature-cyan: var(--rawaj-accent-cyan);
   --rawaj-signature-success: #70d5b1;
   color: var(--rawaj-signature-text);
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
@@ -823,7 +823,7 @@
   border: 1px solid transparent !important;
   border-radius: 20px !important;
   border-color: var(--rawaj-border-strong) !important;
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.23) !important;
 }
 
