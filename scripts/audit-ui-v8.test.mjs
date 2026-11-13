@@ -120,6 +120,7 @@ test("retired dark home and emergency recovery stylesheets are removed from the 
     "rawaj-page-by-page-recovery-v7b.css",
     "rawaj-home-approved.css",
     "rawaj-home-final.css",
+    "rawaj-chromatic-premium-system-v17-shell.css",
     "rawaj-discovery-system-v3.css",
   ]) {
     assert.equal(
