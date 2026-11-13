@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { FeedbackState } from "@/components/feedback/FeedbackState";
 import { PageHeader } from "@/components/PageHeader";
 import {
   Dialog,
@@ -44,6 +45,8 @@ import {
   OwnerBulkActionBar,
   OwnerListingsToolbar,
   OwnerWorkspaceInsights,
+  matchesOwnerAttentionQueue,
+  type OwnerAttentionQueue,
   type OwnerListingSort,
   type OwnerPerformanceWindow,
 } from "@/features/storefront/OwnerListingsWorkspaceTools";
@@ -117,6 +120,8 @@ function MyListingsPage() {
   const [sellerHasLoaded, setSellerHasLoaded] = useState(false);
   const [sellerError, setSellerError] = useState<ClassifiedsError | null>(null);
   const [activeTab, setActiveTab] = useState<StoreTab>(search.tab ?? "approved");
+  const [attentionQueue, setAttentionQueue] = useState<OwnerAttentionQueue | null>(null);
+  const inventoryHeadingRef = useRef<HTMLHeadingElement>(null);
   const [listingSearch, setListingSearch] = useState("");
   const [listingSort, setListingSort] = useState<OwnerListingSort>("updated_desc");
   const [performanceWindow, setPerformanceWindow] = useState<OwnerPerformanceWindow>("all");
@@ -138,14 +143,15 @@ function MyListingsPage() {
   profileIdRef.current = profileId;
 
   useEffect(() => {
-    if (search.tab) setActiveTab(search.tab);
+    setActiveTab(search.tab ?? "approved");
+    setAttentionQueue(null);
   }, [search.tab]);
 
   useEffect(() => {
     setVisibleCount(OWNER_LISTINGS_PAGE_SIZE);
     setSelectedListingIds(new Set());
     setBulkFeedback("");
-  }, [activeTab, listingSearch, listingSort]);
+  }, [activeTab, attentionQueue, listingSearch, listingSort]);
 
   useEffect(() => {
     setSelectedListingIds((current) => {
@@ -317,8 +323,15 @@ function MyListingsPage() {
   );
   const tabListings = grouped[activeTab === "reviews" ? "approved" : activeTab];
   const filteredListings = useMemo(
-    () => filterAndSortOwnerListings(tabListings, listingSearch, listingSort),
-    [tabListings, listingSearch, listingSort],
+    () =>
+      filterAndSortOwnerListings(
+        attentionQueue
+          ? tabListings.filter((listing) => matchesOwnerAttentionQueue(listing, attentionQueue))
+          : tabListings,
+        listingSearch,
+        listingSort,
+      ),
+    [tabListings, attentionQueue, listingSearch, listingSort],
   );
   const visibleListings = filteredListings.slice(0, visibleCount);
   const hasMoreListings = visibleCount < filteredListings.length;
@@ -442,7 +455,23 @@ function MyListingsPage() {
     setBulkBusy(false);
   }
 
-  if (auth.status !== "signedIn") {
+  function selectTab(tab: StoreTab) {
+    setActiveTab(tab);
+    setAttentionQueue(null);
+  }
+
+  function openAttentionQueue(tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) {
+    setActiveTab(tab);
+    setAttentionQueue(queue);
+    setListingSearch("");
+    inventoryHeadingRef.current?.focus();
+  }
+
+  if (auth.status !== "signedIn" || !profileId) {
+    const loading = auth.status === "loading";
+    const signedOut = auth.status === "signedOut";
+    const unavailable = auth.status === "authUnavailable";
+    const returnTo = search.tab ? `/profile/listings?tab=${search.tab}` : "/profile/listings";
     return (
       <>
         <PageHeader
@@ -451,14 +480,42 @@ function MyListingsPage() {
           to="/profile"
           backMode="history"
         />
-        <main className="container-wide mobile-page-bottom pt-4">
-          <Panel
-            title={text("تسجيل الدخول مطلوب", "Login required")}
-            body={text(
-              "سجل الدخول لإدارة الإعلانات المرتبطة بحسابك وعرض متجرك العام بصورة منفصلة.",
-              "Log in to manage listings linked to your account and open your public store separately.",
-            )}
-          />
+        <main className="rawaj-store-workspace container-wide mobile-page-bottom pt-4">
+          <div aria-busy={loading}>
+            <FeedbackState
+              title={text("متجري", "My store")}
+              description={
+                loading
+                  ? text("جارٍ التحقق من الجلسة…", "Checking your session…")
+                  : signedOut
+                    ? text(
+                        "سجّل الدخول لإدارة متجرك وإعلاناتك.",
+                        "Sign in to manage your store and listings.",
+                      )
+                    : unavailable
+                      ? text("تسجيل الدخول غير متاح حالياً.", "Sign-in is currently unavailable.")
+                      : text(
+                          "تعذر تحميل بيانات حسابك. أعد المحاولة لفتح متجرك.",
+                          "Could not load your account. Try again to open your store.",
+                        )
+              }
+              action={
+                signedOut || unavailable ? (
+                  <Link to="/login" search={{ returnTo }} className="rawaj-store-empty__action">
+                    {text("تسجيل الدخول", "Sign in")}
+                  </Link>
+                ) : loading ? undefined : (
+                  <button
+                    type="button"
+                    onClick={() => void auth.refreshProfile()}
+                    className="rawaj-store-empty__action"
+                  >
+                    {text("إعادة المحاولة", "Try again")}
+                  </button>
+                )
+              }
+            />
+          </div>
         </main>
       </>
     );
@@ -519,7 +576,7 @@ function MyListingsPage() {
             )}`}
             action={
               <>
-                <button type="button" onClick={() => setActiveTab("needs_edit")}>
+                <button type="button" onClick={() => openAttentionQueue("needs_edit", "drafts")}>
                   {text("عرض المسودات", "Show drafts")}
                 </button>
                 <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
@@ -530,11 +587,13 @@ function MyListingsPage() {
           />
         ) : null}
 
-        <OwnerWorkspaceInsights listings={listings} onTabChange={(tab) => setActiveTab(tab)} />
+        <OwnerWorkspaceInsights listings={listings} onQueueOpen={openAttentionQueue} />
 
         <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
           <header className="rawaj-owner-inventory__header">
-            <h2 id="rawaj-owner-inventory-title">{text("إعلانات المتجر", "Store listings")}</h2>
+            <h2 id="rawaj-owner-inventory-title" ref={inventoryHeadingRef} tabIndex={-1}>
+              {text("إعلانات المتجر", "Store listings")}
+            </h2>
           </header>
 
           <div className="rawaj-owner-workspace-sticky">
@@ -548,33 +607,55 @@ function MyListingsPage() {
                 active={activeTab === "approved"}
                 label={text("نشطة", "Live")}
                 count={grouped.approved.length}
-                onClick={() => setActiveTab("approved")}
+                onClick={() => selectTab("approved")}
               />
               <TabButton
                 active={activeTab === "pending"}
                 label={text("مراجعة", "Review")}
                 count={grouped.pending.length}
-                onClick={() => setActiveTab("pending")}
+                onClick={() => selectTab("pending")}
               />
               <TabButton
                 active={activeTab === "needs_edit"}
                 label={text("مسودات وتعديلات", "Drafts & edits")}
                 count={grouped.needs_edit.length}
-                onClick={() => setActiveTab("needs_edit")}
+                onClick={() => selectTab("needs_edit")}
               />
               <TabButton
                 active={activeTab === "closed"}
                 label={text("مغلقة", "Closed")}
                 count={grouped.closed.length}
-                onClick={() => setActiveTab("closed")}
+                onClick={() => selectTab("closed")}
               />
               <TabButton
                 active={activeTab === "reviews"}
                 label={text("تقييمات", "Reviews")}
                 count={ratingCount}
-                onClick={() => setActiveTab("reviews")}
+                onClick={() => selectTab("reviews")}
               />
             </div>
+
+            {attentionQueue ? (
+              <div className="rawaj-store-queue">
+                <strong>
+                  {
+                    {
+                      drafts: text("المسودات", "Drafts"),
+                      edits: text("إعلانات تحتاج تعديلاً", "Listings needing edits"),
+                      expiry: text("تنتهي خلال 7 أيام", "Expiring within 7 days"),
+                      editable_no_image: text(
+                        "مسودات وتعديلات بلا صور",
+                        "Drafts and edits without images",
+                      ),
+                      live_no_image: text("إعلانات نشطة بلا صور", "Live listings without images"),
+                    }[attentionQueue]
+                  }
+                </strong>
+                <button type="button" onClick={() => setAttentionQueue(null)}>
+                  {text("إلغاء التصفية", "Clear filter")}
+                </button>
+              </div>
+            ) : null}
 
             {activeTab !== "reviews" ? (
               <OwnerListingsToolbar
@@ -633,8 +714,8 @@ function MyListingsPage() {
             />
           ) : null}
 
-          {listingsLoading && !listingsHasLoaded ? (
-            <Panel title={text("جاري تحميل واجهة المتجر", "Loading store")} />
+          {!listingsHasLoaded && !listingsError ? (
+            <Panel title={text("جارٍ تحميل إعلاناتك…", "Loading your listings…")} loading />
           ) : listingsError && !listingsHasLoaded ? (
             <Panel
               title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
@@ -1345,24 +1426,21 @@ function StoreListingCard({
     ? ownerLifecycleConfirmationCopy(pendingLifecycleConfirmation, text)
     : null;
   const expiryInsight = ownerListingExpiryInsight(listing, text);
+  const hasNegotiableAmount = listing.priceType === "negotiable" && Boolean(listing.price);
 
   return (
     <>
       <article className="rawaj-owner-listing-card rawaj-product-card group">
         <div className="rawaj-owner-listing-card__overview">
           <div className="rawaj-product-media">
-            <span className="rawaj-status-ribbon" data-status={listing.status}>
-              {listingStatusLabel(listing.status, language)}
-            </span>
             {selectable ? (
               <button
                 type="button"
                 aria-pressed={selected}
-                aria-label={
-                  selected
-                    ? text("إلغاء تحديد الإعلان", "Unselect listing")
-                    : text("تحديد الإعلان", "Select listing")
-                }
+                aria-label={text(
+                  `تحديد الإعلان: ${listing.title}`,
+                  `Select listing: ${listing.title}`,
+                )}
                 title={
                   selected
                     ? text("إلغاء التحديد", "Unselect")
@@ -1377,7 +1455,7 @@ function StoreListingCard({
             ) : null}
             <ListingCardImage
               src={listing.primaryImageUrl}
-              alt={listing.title}
+              alt=""
               placeholder={listing.categoryPlaceholder ?? "misc"}
               placeholderAspect="wide"
               loading="lazy"
@@ -1386,15 +1464,21 @@ function StoreListingCard({
           </div>
           <div className="rawaj-owner-listing-card__summary">
             <h3 dir="auto">{listing.title}</h3>
-            <div className="rawaj-owner-listing-card__facts">
-              <strong>
+            <div className="rawaj-store-card-price">
+              <bdi>
                 {formatPriceLocalized(
                   listing.price ?? 0,
-                  listing.priceType,
+                  hasNegotiableAmount ? "fixed" : listing.priceType,
                   language,
                   listing.currency,
                 )}
-              </strong>
+              </bdi>
+              {hasNegotiableAmount ? <small>{text("قابل للتفاوض", "Negotiable")}</small> : null}
+            </div>
+            <span className="rawaj-store-card-status" data-status={listing.status}>
+              {listingStatusLabel(listing.status, language)}
+            </span>
+            <div className="rawaj-owner-listing-card__facts">
               <span>
                 {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
               </span>
@@ -1965,15 +2049,20 @@ function Panel({
   actionLabel,
   onAction,
   actionDisabled,
+  loading = false,
 }: {
   title: string;
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
   actionDisabled?: boolean;
+  loading?: boolean;
 }) {
   return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
+    <section
+      className="rounded-2xl bg-card p-8 text-center hairline"
+      role={loading ? "status" : undefined}
+    >
       <p className="text-sm font-bold">{title}</p>
       {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
       {actionLabel && onAction ? (

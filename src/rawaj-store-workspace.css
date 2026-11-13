@@ -70,7 +70,10 @@
   white-space: normal;
 }
 
-.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-workspace-summary__actions a[data-priority="primary"],
+.rawaj-app-shell
+  .rawaj-store-workspace
+  .rawaj-owner-workspace-summary__actions
+  a[data-priority="primary"],
 .rawaj-app-shell .rawaj-store-workspace .rawaj-store-empty__action {
   color: var(--rawaj-action-primary-foreground) !important;
   background: var(--rawaj-action-primary) !important;
@@ -180,11 +183,82 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .rawaj-app-shell .rawaj-store-workspace .rawaj-owner-workspace-summary__actions a[data-priority="primary"] {
+  .rawaj-app-shell
+    .rawaj-store-workspace
+    .rawaj-owner-workspace-summary__actions
+    a[data-priority="primary"] {
     flex: 1 0 100%;
   }
 
   .rawaj-store-growth {
     margin-inline-start: 0;
   }
+}
+
+.rawaj-store-queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding-inline: 0.75rem;
+  border-inline-start: 3px solid var(--store-line-strong);
+  color: var(--store-ink);
+  background: var(--store-surface-raised);
+}
+
+.rawaj-store-queue button {
+  min-block-size: 2.75rem;
+  color: var(--store-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.rawaj-store-card-price {
+  display: grid;
+  gap: 0.15rem;
+  color: var(--store-ink);
+}
+
+.rawaj-store-card-price bdi {
+  font-size: 1.05rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.rawaj-store-card-price small {
+  color: var(--store-ink-muted);
+}
+
+.rawaj-store-card-status {
+  justify-self: start;
+  align-self: flex-start;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  color: var(--store-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rawaj-store-card-status[data-status="approved"] {
+  color: #9bd6b7;
+}
+
+.rawaj-store-card-status:is([data-status="rejected"], [data-status="pending_review"]) {
+  color: #e8c690;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-listing-select {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-listing-card__summary h3 {
+  overflow-wrap: anywhere;
+}
+
+#rawaj-owner-inventory-title {
+  scroll-margin-block-start: 6rem;
 }
