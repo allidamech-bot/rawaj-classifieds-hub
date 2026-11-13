@@ -163,3 +163,43 @@
   text-align: center;
   pointer-events: none;
 }
+
+.rawaj-app-shell
+  .rawaj-listing-studio-v4
+  .rawaj-studio-steps
+  li[data-state]
+  .rawaj-studio-steps__copy
+  strong {
+  color: var(--rawaj-text-primary) !important;
+  opacity: 1;
+}
+
+.rawaj-app-shell
+  .rawaj-listing-studio-v4
+  .rawaj-studio-steps
+  li[data-state="active"]
+  .rawaj-studio-steps__copy
+  strong {
+  color: var(--rawaj-text-gold) !important;
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps button:disabled {
+  opacity: 1 !important;
+}
+
+.rawaj-listing-studio-v4 .rawaj-studio-submit-feedback {
+  padding: 0.85rem;
+  border: 1px solid var(--rawaj-border-strong);
+  border-inline-start: 3px solid var(--rawaj-text-gold);
+  border-radius: var(--rawaj-radius-button);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-text-primary);
+}
+
+@media (max-width: 48rem) {
+  .rawaj-app-shell
+    .rawaj-listing-studio-v4:has(:is(input, textarea):focus)
+    .rawaj-studio-action-bar {
+    position: static !important;
+  }
+}

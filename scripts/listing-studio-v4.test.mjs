@@ -46,7 +46,7 @@ test("phase 4 listing studio layer is route-scoped and loaded last", () => {
 test("phase 4 keeps publishing behavior untouched while improving form semantics", () => {
   assert.match(route, /submitOwnerListingForReview\(/);
   assert.match(route, /progressLabel=\{text\(/);
-  assert.match(route, /role="status" aria-live="polite"/);
+  assert.match(route, /role=\{submissionConfirmed \? "status" : "alert"\}/);
   assert.match(studio, /aria-label=\{progressLabel\}/);
   assert.doesNotMatch(
     css,
