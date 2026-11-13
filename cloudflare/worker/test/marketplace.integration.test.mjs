@@ -684,9 +684,10 @@ test("owner can read admin users", async () => {
   assert.ok(Array.isArray(result.payload.data));
 });
 
-test("admin cannot read admin users", async () => {
+test("admin can inspect users but cannot assign roles", async () => {
   const result = await api("/v1/admin/users", admin);
-  assert.equal(result.response.status, 403);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
 });
 
 test("owner can read admin audit logs", async () => {
@@ -1348,6 +1349,159 @@ test("moderator can extend_expiry on others' listings", async () => {
   assert.equal(moderate.response.status, 200);
   assert.equal(moderate.payload.data.previousStatus, "pending_review");
   assert.equal(moderate.payload.data.nextStatus, "pending_review");
+});
+
+
+test("phase 1: legacy public listing paths redact contact fields without hiding owner data", async () => {
+  const pending = await createListing(owner, {
+    title: "Privacy acceptance listing",
+    details: {
+      color: "blue",
+      phone: "private-test-only",
+      nested: { contact_whatsapp: "private-test-only", model: "visible" },
+    },
+  });
+  assert.equal(pending.response.status, 200);
+  const id = pending.payload.data.id;
+  const approval = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: { listingId: id, action: "approve", expectedUpdatedAt: pending.payload.data.updatedAt },
+  });
+  assert.equal(approval.response.status, 200);
+
+  const legacy = await api(`/api/listings/${id}`);
+  const canonical = await api(`/v1/listings/${id}`);
+  const privateOwner = await api(`/api/listings/${id}`, owner);
+  const legacyList = await api("/api/listings?pageSize=50");
+  assert.equal(legacy.response.status, 200);
+  assert.equal(canonical.response.status, 200);
+  assert.equal(privateOwner.response.status, 200);
+  assert.equal(legacy.payload.data.listing.details.phone, undefined);
+  assert.equal(legacy.payload.data.listing.details.nested.contact_whatsapp, undefined);
+  assert.equal(canonical.payload.data.details.phone, undefined);
+  assert.equal(privateOwner.payload.data.listing.details.phone, "private-test-only");
+  const publicRow = legacyList.payload.data.items.find((item) => item.id === id);
+  assert.ok(publicRow);
+  assert.equal(JSON.parse(publicRow.details).phone, undefined);
+  assert.equal(JSON.parse(publicRow.details).nested.contact_whatsapp, undefined);
+});
+
+test("phase 1: owner-only roles and account freezing, restrictions, restore, audit", async () => {
+  const member = await signup("phase1-member");
+  const forbiddenRole = await api("/v1/admin/users/roles", {
+    ...admin,
+    method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "assign" },
+  });
+  assert.equal(forbiddenRole.response.status, 403);
+  const selfFreeze = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: owner.userId, status: "frozen", reason: "not allowed" },
+  });
+  assert.equal(selfFreeze.response.status, 403);
+
+  const frozen = await api("/v1/admin/users/status", {
+    ...admin, method: "POST",
+    body: { userId: member.userId, status: "frozen", reason: "Temporary moderation hold" },
+  });
+  assert.equal(frozen.response.status, 200);
+  const blocked = await api("/v1/listings", {
+    ...member, method: "POST", body: listingInput(),
+  });
+  assert.equal(blocked.response.status, 403);
+  assert.equal(blocked.payload.error.code, "account_restricted");
+
+  const unfrozen = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: member.userId, status: "active", reason: "Review complete" },
+  });
+  assert.equal(unfrozen.response.status, 200);
+
+  const restricted = await api("/v1/admin/users/restrictions", {
+    ...admin, method: "POST",
+    body: {
+      userId: member.userId, restrictionType: "posting",
+      action: "set", reason: "Posting under review",
+    },
+  });
+  assert.equal(restricted.response.status, 201);
+  assert.ok(typeof restricted.payload.data === "string");
+  const underRestriction = await api("/v1/listings", {
+    ...member, method: "POST", body: listingInput(),
+  });
+  assert.equal(underRestriction.response.status, 403);
+  const users = await api("/v1/admin/users", admin);
+  assert.equal(users.response.status, 200);
+  assert.ok(users.payload.data.find((user) => user.id === member.userId)
+    .activeRestrictions.includes("posting"));
+
+  const lifted = await api("/v1/admin/users/restrictions", {
+    ...admin, method: "POST",
+    body: {
+      userId: member.userId, restrictionType: "posting",
+      action: "lift", reason: "Restriction cleared",
+    },
+  });
+  assert.equal(lifted.response.status, 200);
+  const posting = await api("/v1/listings", {
+    ...member, method: "POST", body: listingInput(),
+  });
+  assert.equal(posting.response.status, 201);
+
+  const granted = await api("/v1/admin/users/roles", {
+    ...owner, method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "assign" },
+  });
+  assert.equal(granted.response.status, 200);
+  const revoked = await api("/v1/admin/users/roles", {
+    ...owner, method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "remove" },
+  });
+  assert.equal(revoked.response.status, 200);
+
+  const ban = await signup("phase1-ban");
+  assert.equal((await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: ban.userId, status: "disabled", reason: "Security review" },
+  })).response.status, 200);
+  assert.equal((await api("/api/profile", ban)).response.status, 401);
+  assert.equal((await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: ban.userId, status: "active", reason: "Restored after review" },
+  })).response.status, 200);
+  assert.equal((await api("/api/profile", ban)).response.status, 200);
+
+  const audits = await api("/v1/admin/audit?limit=100", owner);
+  assert.equal(audits.response.status, 200);
+  assert.ok(audits.payload.data.some((row) => row.action === "user.status_changed"));
+  assert.ok(audits.payload.data.some((row) => row.action === "user.role_assigned"));
+});
+
+test("phase 1: concurrent duplicate image uploads cannot remove the winning R2 asset", async () => {
+  const created = await api("/v1/listings", {
+    ...owner, method: "POST", body: listingInput(),
+  });
+  assert.equal(created.response.status, 201);
+  const id = created.payload.data.id;
+  const png = new Uint8Array([
+    137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
+    0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0
+  ]);
+  const attempts = await Promise.all([
+    upload(owner, png, "image/png", id),
+    upload(owner, png, "image/png", id),
+  ]);
+  assert.ok(attempts.some((attempt) => attempt.response.status === 201));
+  const images = await api(`/v1/listings/${id}/images`, owner);
+  assert.equal(images.response.status, 200);
+  assert.ok(images.payload.data.length > 0);
+  for (const image of images.payload.data) {
+    const stored = await fetch(`${baseUrl}/v1/account/media/assets/${image.mediaAssetId}`, {
+      headers: headers(owner),
+    });
+    assert.equal(stored.status, 200, "Database media must resolve to a stored R2 object");
+  }
 });
 
 async function createListing(session, overrides = {}) {
