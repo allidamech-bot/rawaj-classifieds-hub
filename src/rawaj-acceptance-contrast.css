@@ -165,3 +165,14 @@
   color: #fffaf0 !important;
   opacity: 1 !important;
 }
+
+/* The legacy personal-space sheet has important selectors specific to each
+ * notification panel. Outrank those selectors on the actual routed main,
+ * instead of depending on inherited muted tokens (still measured 4.46:1).
+ */
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  main.rawaj-communication-v2.rawaj-account-activity-v3
+  :is(.rawaj-notification-panel, .rawaj-notification-preferences, .rawaj-communication-follow-up)
+  :is(p, small) {
+  color: #f0f4ee !important;
+}
