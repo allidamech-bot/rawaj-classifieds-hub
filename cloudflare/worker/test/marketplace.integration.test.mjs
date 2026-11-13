@@ -1784,7 +1784,8 @@ test("price-offer history GET is read-only even during emergency freeze", async 
       body: { amount: 450, requestId: crypto.randomUUID() },
     });
     assert.equal(blocked.response.status, 503);
-    assert.equal(blocked.payload.error.code, "emergency_read_only");
+    assert.equal(blocked.payload.error.code, "system_control_active");
+    assert.equal(blocked.payload.error.control, "emergency_read_only");
   } finally {
     executeSql(`
       UPDATE system_controls SET enabled = 0 WHERE key = 'emergency_read_only';
