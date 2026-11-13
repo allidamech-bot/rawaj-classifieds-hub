@@ -31,8 +31,9 @@ test("prohibited policy listing retains legible white cards", async ({ page }) =
   const item = page.locator(".rawaj-prohibited-v3 > div.grid > article").first();
   await expect(item).toBeVisible();
   await expect(item).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  const fontSize = await item.locator("span").last().evaluate((element) =>
-    Number.parseFloat(getComputedStyle(element).fontSize),
-  );
+  const fontSize = await item
+    .locator("span")
+    .last()
+    .evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize));
   expect(fontSize).toBeGreaterThanOrEqual(15);
 });

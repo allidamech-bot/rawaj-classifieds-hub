@@ -47,20 +47,20 @@ Source inventory for the local redesign based on main edc31c8. Acceptance requir
 | `/more` | Buyer / seller | Account | `src/routes/more.tsx` | Local workspace migrated | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/notifications` | Buyer / seller | Account | `src/routes/notifications.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/offers` | Public | Marketplace | `src/routes/offers.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
-| `/privacy` | Public | Trust | `src/routes/privacy.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
+| `/privacy` | Public | Trust | `src/routes/privacy.tsx` | Legal reading layout rebuilt; acceptance pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/profile/listings` | Seller | Seller | `src/routes/profile/listings.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/profile/listings_/$id` | Seller | Seller | `src/routes/profile/listings_.$id.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/profile` | Buyer / seller | Account | `src/routes/profile.tsx` | Local identity and shortcut migration | Pending | Pending | Pending | Pending | Pending | Unverified |
-| `/prohibited` | Public | Trust | `src/routes/prohibited.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
+| `/prohibited` | Public | Trust | `src/routes/prohibited.tsx` | Prohibited policy layout rebuilt; acceptance pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/promotion-request` | Seller | Seller | `src/routes/promotion-request.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/promotion` | Seller | Seller | `src/routes/promotion.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/reset-password` | Buyer / seller | Account | `src/routes/reset-password.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
-| `/safety` | Public | Trust | `src/routes/safety.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
+| `/safety` | Public | Trust | `src/routes/safety.tsx` | Shared safety layout rebuilt; acceptance pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/saved-searches` | Buyer / seller | Account | `src/routes/saved-searches.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/seller/$id` | Public | Marketplace | `src/routes/seller.$id.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
-| `/support` | Public | Trust | `src/routes/support.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
+| `/support` | Public | Trust | `src/routes/support.tsx` | Shared support layout rebuilt; acceptance pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/syria/$slug` | Public | Marketplace | `src/routes/syria.$slug.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
-| `/terms` | Public | Trust | `src/routes/terms.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
+| `/terms` | Public | Trust | `src/routes/terms.tsx` | Legal reading layout rebuilt; acceptance pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `/verification` | Seller | Seller | `src/routes/verification.tsx` | Pending | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `Shared mobile dock` | Public / signed-in | Shell | `BottomDock` | Local migration | Pending | Pending | Pending | Pending | Pending | Unverified |
 | `My Store management at 480, 500, 520px` | Owner | Seller | `MyStoreIdentity / Dialog` | Browser test authored, unrun | Pending | Pending | Pending | Pending | Pending | Unverified |
