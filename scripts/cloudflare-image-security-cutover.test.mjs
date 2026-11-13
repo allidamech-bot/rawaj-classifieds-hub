@@ -24,7 +24,7 @@ test("marketplace image uploads remain size and MIME constrained", () => {
 
 test("deep image inspection executes only after upload rate limiting", () => {
   const limiterIndex = security.indexOf("await decision.binding.limit({ key })");
-  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\(/;
+  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\(/);
   assert.ok(limiterIndex >= 0);
   assert.ok(inspectionIndex > limiterIndex);
   assert.match(security, /request\s*\.clone\(\)\s*\.formData\(\)/);
@@ -76,7 +76,7 @@ test("malformed or unsanitizable images fail before marketplace storage", () => 
   assert.match(security, /invalid_image_structure/);
   assert.match(security, /Image dimensions or structure are not supported/);
   assert.match(security, /Image could not be sanitized safely/);
-  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\(/;
-  const adminIndex = security.search(/await\s+enforceAdminSecurityPerimeter\s*\(/;
+  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\(/);
+  const adminIndex = security.search(/await\s+enforceAdminSecurityPerimeter\s*\(/);
   assert.ok(inspectionIndex >= 0 && adminIndex > inspectionIndex);
 });
