@@ -128,11 +128,16 @@ export async function handleClientErrorTelemetry(
   if (!origin || corsHeadersForOrigin(origin, env).get("Access-Control-Allow-Origin") !== origin) {
     return reject(403, "origin_not_allowed");
   }
-  if (request.headers.get("Content-Type")?.split(";")[0]?.trim().toLowerCase() !== "application/json") {
+  if (
+    request.headers.get("Content-Type")?.split(";")[0]?.trim().toLowerCase() !== "application/json"
+  ) {
     return reject(415, "unsupported_media_type");
   }
   const length = Number(request.headers.get("Content-Length"));
-  if (request.headers.has("Content-Length") && (!Number.isFinite(length) || length > MAX_BODY_BYTES)) {
+  if (
+    request.headers.has("Content-Length") &&
+    (!Number.isFinite(length) || length > MAX_BODY_BYTES)
+  ) {
     return reject(413, "payload_too_large");
   }
   const body = await readBoundedJson(request);
