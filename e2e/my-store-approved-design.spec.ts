@@ -161,7 +161,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await page.addInitScript(() => {
     localStorage.setItem("rawaj-language", "en");
   });
-  await page.goto("/seller/90fc1187-0357-46da-9c19-d984536df794");
+  await page.goto("/seller/00000000-0000-4000-8000-000000000010");
   await expect(page.locator("main.my-store-public")).toBeVisible();
   await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
   await expect(page.locator(".my-store-identity h1")).toBeVisible();
