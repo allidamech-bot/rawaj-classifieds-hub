@@ -123,20 +123,20 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: #2b2c31 !important;
-  color: #f2efeb !important;
+  border-color: var(--rawaj-control-border) !important;
+  background: var(--rawaj-surface) !important;
+  color: var(--rawaj-ink-primary) !important;
   box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.38) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet :is(h2, h3, strong, label) {
-  color: #f2efeb !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet :is(input, textarea, select) {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #f2efeb !important;
+  border-color: var(--rawaj-control-border) !important;
+  background: var(--rawaj-surface-subtle) !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 /* 5. Listing detail */

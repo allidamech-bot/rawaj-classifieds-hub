@@ -474,6 +474,7 @@
 .rawaj-filter-category-grid button {
   display: flex;
   min-width: 0;
+  min-block-size: 44px;
   align-items: center;
   gap: 0.55rem;
   border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
@@ -485,9 +486,9 @@
 }
 
 .rawaj-filter-category-grid button[data-selected="true"] {
-  border-color: color-mix(in srgb, var(--rawaj-orange) 45%, var(--color-border));
-  background: color-mix(in srgb, var(--rawaj-orange) 9%, var(--rawaj-surface-card));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rawaj-orange) 12%, transparent);
+  border-color: color-mix(in srgb, var(--rawaj-brand-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--rawaj-brand-primary) 9%, var(--rawaj-surface-card));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rawaj-brand-primary) 12%, transparent);
 }
 
 .rawaj-filter-category-grid button > span {
@@ -502,7 +503,7 @@
 }
 
 .rawaj-filter-category-grid button[data-selected="true"] > span {
-  background: var(--rawaj-orange);
+  background: var(--rawaj-brand-primary);
   color: white;
 }
 
@@ -512,11 +513,11 @@
 }
 
 .rawaj-filter-category-grid strong {
-  overflow: hidden;
-  font-size: 0.65rem;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
   font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
 }
 
 /* Categories atlas */
@@ -607,12 +608,6 @@
   justify-content: center;
   gap: 0.5rem;
   margin-top: 1rem;
-}
-
-@media (min-width: 390px) {
-  .rawaj-filter-category-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (min-width: 640px) {
