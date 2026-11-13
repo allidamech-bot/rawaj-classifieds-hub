@@ -1,0 +1,26 @@
+/* AA contrast adjustments for two specific, measured visible-text failures.
+ * This stylesheet is the final audited override: avoid changing legacy palettes
+ * globally or relaxing the rendered WCAG contrast assertions.
+ */
+
+/* Active publishing step: white copy on the existing dark RAWAJ action green
+ * is above 8:1. Override both row and button to avoid translucent stacking
+ * against differently colored older step backgrounds.
+ */
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"],
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] > button {
+  background: var(--rawaj-action-primary, #28564b) !important;
+  color: #fff !important;
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__copy strong {
+  color: #fff !important;
+}
+
+/* The featured marker was measured at 4.42:1 against the gold badge.
+ * A slightly darker foreground preserves the badge identity while
+ * clearing the 4.5:1 small-text requirement.
+ */
+.rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
+  color: #13251e !important;
+}

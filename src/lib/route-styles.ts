@@ -66,6 +66,7 @@ import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
 
 import storeWorkspaceCss from "../rawaj-store-workspace.css?url";
 import marketplaceControlsCss from "../rawaj-marketplace-controls.css?url";
+import aaContrastFixesCss from "../rawaj-aa-contrast-fixes.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -127,6 +128,7 @@ export const auditedOverrideStyleHrefs = [
   uiConvergenceV25Css,
   storeWorkspaceCss,
   marketplaceControlsCss,
+  aaContrastFixesCss,
 ] as const;
 
 export interface RouteStyleScope {
