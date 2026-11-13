@@ -9,40 +9,40 @@
   --foreground: var(--rawaj-text-primary) !important;
   --card: var(--rawaj-card-background) !important;
   --card-foreground: var(--rawaj-text-primary) !important;
-  --card-warm: #2d352e !important;
+  --card-warm: var(--rawaj-surface-subtle) !important;
   --muted-surface: var(--rawaj-muted-surface) !important;
   --popover: var(--rawaj-elevated-background) !important;
   --popover-foreground: var(--rawaj-text-primary) !important;
-  --primary: #28564b !important;
+  --primary: var(--rawaj-brand-primary) !important;
   --primary-foreground: #ffffff !important;
   --secondary: var(--rawaj-muted-surface) !important;
   --secondary-foreground: var(--rawaj-text-primary) !important;
   --muted: var(--rawaj-muted-surface) !important;
   --muted-foreground: var(--rawaj-text-muted) !important;
-  --accent: #28564b !important;
+  --accent: var(--rawaj-brand-primary) !important;
   --accent-foreground: #ffffff !important;
-  --border: rgba(255, 255, 255, 0.09) !important;
-  --input: rgba(255, 255, 255, 0.15) !important;
-  --ring: #a9c8bb !important;
+  --border: var(--rawaj-divider) !important;
+  --input: var(--rawaj-control-border) !important;
+  --ring: var(--rawaj-brand-primary) !important;
   --color-background: var(--rawaj-page-background) !important;
   --color-foreground: var(--rawaj-text-primary) !important;
   --color-card: var(--rawaj-card-background) !important;
   --color-card-foreground: var(--rawaj-text-primary) !important;
-  --color-card-warm: #2d352e !important;
+  --color-card-warm: var(--rawaj-surface-subtle) !important;
   --color-muted-surface: var(--rawaj-muted-surface) !important;
   --color-popover: var(--rawaj-elevated-background) !important;
   --color-popover-foreground: var(--rawaj-text-primary) !important;
-  --color-primary: #28564b !important;
+  --color-primary: var(--rawaj-brand-primary) !important;
   --color-primary-foreground: #ffffff !important;
   --color-secondary: var(--rawaj-muted-surface) !important;
   --color-secondary-foreground: var(--rawaj-text-primary) !important;
   --color-muted: var(--rawaj-muted-surface) !important;
   --color-muted-foreground: var(--rawaj-text-muted) !important;
-  --color-accent: #28564b !important;
+  --color-accent: var(--rawaj-brand-primary) !important;
   --color-accent-foreground: #ffffff !important;
-  --color-border: rgba(255, 255, 255, 0.09) !important;
-  --color-input: rgba(255, 255, 255, 0.15) !important;
-  --color-ring: #a9c8bb !important;
+  --color-border: var(--rawaj-divider) !important;
+  --color-input: var(--rawaj-control-border) !important;
+  --color-ring: var(--rawaj-brand-primary) !important;
   color: var(--rawaj-text-primary) !important;
   background: var(--rawaj-page-background) !important;
 }
@@ -64,7 +64,7 @@
 }
 
 .rawaj-app-shell .bg-primary {
-  background-color: #28564b !important;
+  background-color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-app-shell .bg-card,

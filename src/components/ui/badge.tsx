@@ -8,8 +8,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "border-[var(--rawaj-border)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)]",
+        default: "border-[var(--rawaj-border)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)]",
         secondary:
           "border-[var(--rawaj-border)] bg-[var(--rawaj-surface-active)] text-[var(--rawaj-text-primary)]",
         accent:

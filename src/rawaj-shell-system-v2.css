@@ -85,7 +85,7 @@
   height: var(--rawaj-touch-target);
   min-width: var(--rawaj-touch-target);
   min-height: var(--rawaj-touch-target);
-  border: 1px solid rgba(255, 255, 255, 0.095) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: var(--rawaj-radius-button) !important;
   color: var(--rawaj-text-secondary) !important;
   background: var(--rawaj-surface-subtle) !important;
