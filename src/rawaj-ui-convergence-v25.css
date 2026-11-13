@@ -1066,3 +1066,12 @@ body :is([role="dialog"], [role="alertdialog"]) :is(h2, h3, label, legend) {
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > span {
   color: var(--rawaj-text-secondary) !important;
 }
+
+/* Keep the editor's instructional copy and active step readable on solid panels. */
+.rawaj-listing-studio-v4 {
+  --rawaj-accent-blue: var(--rawaj-text-blue);
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps__copy strong {
+  color: var(--rawaj-text-primary) !important;
+}
