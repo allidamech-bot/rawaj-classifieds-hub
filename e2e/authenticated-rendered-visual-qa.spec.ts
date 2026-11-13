@@ -55,9 +55,7 @@ test.describe("authenticated rendered visual QA", () => {
           animations: "disabled",
         });
       } catch (error) {
-        failures.push(
-          `${route.name}: ${error instanceof Error ? error.message : String(error)}`,
-        );
+        failures.push(`${route.name}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     expect(failures, "Every authenticated route must pass its visual/accessibility audit").toEqual(
