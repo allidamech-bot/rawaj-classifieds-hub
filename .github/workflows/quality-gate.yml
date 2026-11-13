@@ -74,6 +74,9 @@ jobs:
       - name: Rehearse pinned Syria D1 snapshot recovery in isolated SQLite
         run: node --test scripts/syria-d1-isolated-restore.test.mjs
 
+      - name: Check offline Syria R2 media and D1 ownership integrity
+        run: node --test scripts/syria-r2-media-recovery.test.mjs
+
       - name: Validate pinned manual release candidate gates
         run: node --test scripts/release-candidate-gating.test.mjs
 

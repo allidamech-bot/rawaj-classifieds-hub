@@ -93,3 +93,39 @@ restored by CI.** Completion of recovery acceptance additionally requires a real
 in an isolated environment, validated API/search behavior and separate R2 media restore
 checks. No command above communicates with or writes to production D1/R2; do not place
 real backup files, manifest pins, or private reports in the repository.
+
+## Offline R2 media validation against D1 (no remote access)
+
+A separately exported R2 backup may be checked only after preserving original keys,
+ETags, HTTP metadata and custom metadata. Store it **outside this repository** with
+the following content-addressed layout (same SHA-256 blob may serve multiple keys):
+
+- `manifest.json`: `schemaVersion: 1`, pinned Syria `bucket`, `worker`,
+  `databaseId`, `firebaseProject`, and `objects`.
+- Each object entry: `key`, lowercase `sha256`, `byteSize`, original `etag`,
+  `httpMetadata` (including `contentType`), optional `customMetadata` and
+  optional `ownerId` when established independently from D1.
+- Each exact payload: `objects/<sha256>`. This keeps arbitrary R2 keys as
+  manifest data, never as filesystem traversal paths.
+
+Run only after **independently** recording both manifest SHA-256 pins:
+
+```sh
+node cloudflare/worker/scripts/verify-syria-r2-backup.mjs \\
+  --r2-dir=/private/syria-r2-backup \\
+  --r2-sha256=<independently-recorded-r2-manifest-sha256> \\
+  --d1-dir=/private/syria-d1-backup \\
+  --d1-sha256=<independently-recorded-d1-manifest-sha256>
+```
+
+The verifier checks each payload's cryptographic digest and length, duplicates,
+unexpected blob files, Syria-specific resource identity, and that every
+`media_assets.status = 'ready'` D1 record has a matching R2 key, content checksum,
+content type, ETag and byte size. If the manifest provides `ownerId`, it must
+match D1's `owner_id`. **ETags are compared as opaque metadata, never used as
+an MD5 or SHA-256 substitute.**
+
+**Boundary:** this verifier does not export anything from R2 or prove a real R2
+backup exists. Its CI tests use synthetic local media only. A separate
+read-only production inventory/download, isolated upload-and-retrieve rehearsal,
+and app-level image access acceptance are required before claiming recovery ready.
