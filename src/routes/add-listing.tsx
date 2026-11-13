@@ -960,7 +960,25 @@ function AddListingPage() {
 
   function goNext() {
     const nextStep = Math.min(steps.length - 1, step + 1);
-    if (!validateCurrentStep(nextStep === 3 ? 3 : step)) return;
+    const validationStep = nextStep === 3 ? 3 : step;
+    const valid = validateCurrentStep(validationStep);
+    // Dev-only diagnostic, removed before merging. No user input values logged.
+    if (import.meta.env.DEV) {
+      console.info(
+        "[RAWAJ_WIZARD_PROBE]",
+        JSON.stringify({
+          step,
+          nextStep,
+          valid,
+          categoryReady: Boolean(categoryId),
+          taxonomyLeaf: Boolean(selectedTaxonomyNode?.isLeaf),
+          taxonomyNodesCount: taxonomyNodes.length,
+          titleLength: title.trim().length,
+          url: window.location.pathname,
+        }),
+      );
+    }
+    if (!valid) return;
     setStepErrors([]);
     setFieldErrors({});
     // Keep React state updaters pure: updating progress from inside the step

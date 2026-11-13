@@ -12,6 +12,10 @@ test.describe("authenticated launch-critical journey", () => {
   test("signs in, restores the session, creates a draft, uploads, and submits", async ({
     page,
   }) => {
+    const wizardProbes: string[] = [];
+    page.on("console", (message) => {
+      if (message.text().includes("[RAWAJ_WIZARD_PROBE]")) wizardProbes.push(message.text());
+    });
     const remoteWrites: string[] = [];
     const authorizedPrivateRequests: string[] = [];
 
@@ -85,7 +89,7 @@ test.describe("authenticated launch-critical journey", () => {
         .locator('.rawaj-studio-steps [data-state="active"]')
         .allTextContents();
       throw new Error(
-        `Could not reach listing photos. Before: ${beforeContinueStep.join(" | ") || "unknown"}. Immediately after: ${immediatelyAfterContinue.join(" | ") || "unknown"}. Immediate validation: ${immediateValidation.join(" | ") || "none"}. Final validation: ${validation.join(" | ") || "none"}. Final step: ${activeStep.join(" | ") || "unknown"}.`,
+        `Could not reach listing photos. Before: ${beforeContinueStep.join(" | ") || "unknown"}. Immediately after: ${immediatelyAfterContinue.join(" | ") || "unknown"}. Immediate validation: ${immediateValidation.join(" | ") || "none"}. Final validation: ${validation.join(" | ") || "none"}. Final step: ${activeStep.join(" | ") || "unknown"}. URL: ${page.url()}. Probes: ${wizardProbes.join(" | ") || "none"}.`,
         { cause: error },
       );
     }
