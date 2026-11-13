@@ -1474,6 +1474,44 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
   assert.equal(favoriteDetails.nested.whatsapp, undefined);
   assert.equal(favoriteDetails.color, "green");
 
+  // Exercise the real public nearby endpoint against isolated D1 location fixtures.
+  executeSql(`
+    INSERT OR IGNORE INTO location_nodes
+      (id, node_type, name_ar, slug, latitude, longitude, created_at, updated_at)
+    VALUES
+      ('phase1-privacy-location', 'neighborhood', 'Privacy Test Node',
+       'phase1-privacy-location', 34.73, 36.72,
+       '2026-11-13T00:00:00.000Z', '2026-11-13T00:00:00.000Z');
+    UPDATE listings SET location_node_id = 'phase1-privacy-location'
+      WHERE id = '${id}' AND owner_id = '${owner.userId}';
+  `);
+  const nearby = await api(
+    "/v1/listings/nearby?latitude=34.73&longitude=36.72&radiusKm=5&limit=100",
+  );
+  assert.equal(nearby.response.status, 200);
+  const nearbyListing = nearby.payload.data.find((item) => item.listing.id === id)?.listing;
+  assert.ok(nearbyListing, "The nearby public read must include the isolated fixture");
+  assert.equal(nearbyListing.details.email, undefined);
+  assert.equal(nearbyListing.details["contact.phone"], undefined);
+  assert.equal(nearbyListing.details.nested["contact.email"], undefined);
+  assert.equal(nearbyListing.details.nested.model, "visible-model");
+
+  // A real lifecycle price reduction makes this same listing visible on the public offers route.
+  const reduced = await api(`/v1/listings/${id}/lifecycle`, {
+    ...owner,
+    method: "PATCH",
+    body: { action: "reduce_price", newPrice: 80 },
+  });
+  assert.equal(reduced.response.status, 200);
+  const offers = await api("/v1/offers/price-drops?limit=50");
+  assert.equal(offers.response.status, 200);
+  const offerListing = offers.payload.data.find((item) => item.listing.id === id)?.listing;
+  assert.ok(offerListing, "The public price-drop read must include the isolated fixture");
+  assert.equal(offerListing.details.email, undefined);
+  assert.equal(offerListing.details["contact.phone"], undefined);
+  assert.equal(offerListing.details.nested["contact.email"], undefined);
+  assert.equal(offerListing.details.nested.model, "visible-model");
+
   const ownerView = await api(`/api/listings/${id}`, owner);
   assert.equal(ownerView.response.status, 200);
   assert.equal(ownerView.payload.data.listing.details.email, "secret-test-only@example.invalid");
