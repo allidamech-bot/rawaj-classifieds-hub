@@ -44,7 +44,7 @@
   --color-input: rgba(255, 255, 255, 0.15) !important;
   --color-ring: #a9c8bb !important;
   color: var(--rawaj-text-primary) !important;
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
 }
 
 .rawaj-app-shell .text-primary {
