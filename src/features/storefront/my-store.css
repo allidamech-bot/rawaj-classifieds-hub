@@ -1604,3 +1604,22 @@
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-safety .text-primary-foreground\/72 {
   color: #53615e !important;
 }
+
+/* Public stores without an uploaded cover still need an intentional petrol hero. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] {
+  background: linear-gradient(125deg, #103f42 0%, #215451 60%, #446461 100%) !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] .my-store-cover-placeholder {
+  color: #cfb476 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+  border-color: #e7e2d9 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about h2 {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about p {
+  color: #384442 !important;
+}
