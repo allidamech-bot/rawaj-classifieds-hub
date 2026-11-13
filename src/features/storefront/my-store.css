@@ -1520,3 +1520,46 @@
     padding-bottom: calc(7rem + var(--safe-bottom)) !important;
   }
 }
+
+/*
+ * The app's legacy dark-theme canvas rules have higher specificity than the
+ * public .my-store class; isolate the buyer route exactly as the owner route.
+ */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public :is(
+  .my-store-hero,
+  .ms-owner-inventory,
+  .my-store-public-section,
+  .ms-approved-tabs
+) {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-identity h1,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public :is(
+  .my-store-meta,
+  .my-store-bio,
+  .my-store-stats dt,
+  .my-store-stats dd,
+  .my-store-card-meta
+) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card .ms-owner-listing-card__summary {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card .ms-store-card-price {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a {
+  color: #152322 !important;
+  background-color: transparent !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a[aria-current="page"] {
+  color: #103f42 !important;
+}
