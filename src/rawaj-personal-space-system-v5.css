@@ -395,7 +395,8 @@
 }
 
 .rawaj-account-hub-v3 :is(button, a).bg-primary,
-.rawaj-account-hub-v3 button[type="submit"] {
+.rawaj-account-hub-v3 button[type="submit"],
+.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 .rawaj-account-section__body button.bg-primary[type="submit"] {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   background: var(--rawaj-action-primary) !important;
   color: var(--rawaj-action-primary-foreground) !important;

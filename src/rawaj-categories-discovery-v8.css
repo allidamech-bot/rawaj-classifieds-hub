@@ -23,7 +23,7 @@
 
 .rawaj-categories-discovery__header > div > span {
   display: block;
-  color: var(--rawaj-accent-coral);
+  color: var(--rawaj-brand-primary);
   font-size: 0.75rem;
   font-weight: 800;
   line-height: 1.5;

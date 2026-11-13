@@ -142,8 +142,8 @@
 
 .rawaj-app-shell .rawaj-adaptive-card__category {
   border: 1px solid rgba(219,73,179,.12) !important;
-  color: #d889bd !important;
-  background: rgba(219,73,179,.055) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 .rawaj-app-shell .rawaj-adaptive-card__title {

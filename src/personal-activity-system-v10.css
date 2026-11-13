@@ -534,8 +534,8 @@
   border-inline-start: 1px solid var(--rawaj-border) !important;
   border-radius: 0.72rem !important;
   padding: 0.45rem 0.6rem !important;
-  color: #c9defd !important;
-  background: rgba(98, 139, 128, 0.055) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
   font-size: 0.59rem !important;
   font-weight: 800 !important;
   box-shadow: none !important;

@@ -513,7 +513,7 @@ function LoginPage() {
                     <div className="w-full border-t border-border/80" />
                   </div>
                   <div className="relative flex justify-center font-semibold text-muted-foreground">
-                    <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
+                    <span className="rounded-full px-3 py-1 text-[var(--rawaj-ink-secondary)]">{text("أو", "Or")}</span>
                   </div>
                 </div>
 

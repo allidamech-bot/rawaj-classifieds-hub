@@ -1,6 +1,6 @@
 .rawaj-app-shell[data-resolved-pathname="/promotion"]
   main.container-wide p.text-amber-50\/80 {
-  color: #fff3d6 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/promotion"]
   main.container-wide p.text-muted-foreground {
