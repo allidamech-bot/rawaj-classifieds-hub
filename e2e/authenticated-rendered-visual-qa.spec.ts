@@ -28,28 +28,41 @@ test.describe("authenticated rendered visual QA", () => {
     await signIn(page, "/profile");
     await expect(page).toHaveURL(/\/profile(?:[/?#]|$)/, { timeout: 30_000 });
 
+    // Audit every authenticated route in one run and report all real defects.
+    // Do not skip/soften assertions: aggregate failures only after the sweep,
+    // so each CI run provides actionable evidence for every affected page.
+    const failures: string[] = [];
     for (const route of authenticatedRoutes) {
-      const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      expect(response?.status() ?? 200).toBe(200);
-      await waitForHydration(page);
-      await expect(page.locator("main")).toBeVisible();
-      await page.addStyleTag({
-        content: 'aside[data-placement-loading="true"]{display:none!important}',
-      });
-      await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
-      await page.waitForTimeout(75);
+      try {
+        const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
+        expect(response?.status() ?? 200).toBe(200);
+        await waitForHydration(page);
+        await expect(page.locator("main")).toBeVisible();
+        await page.addStyleTag({
+          content: 'aside[data-placement-loading="true"]{display:none!important}',
+        });
+        await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
+        await page.waitForTimeout(75);
 
-      await expectRenderedLayout(page, {
-        label: `authenticated:${testInfo.project.name}:${route.name}`,
-        mobile,
-      });
+        await expectRenderedLayout(page, {
+          label: `authenticated:${testInfo.project.name}:${route.name}`,
+          mobile,
+        });
 
-      await page.screenshot({
-        path: testInfo.outputPath(`authenticated-${route.name}.png`),
-        fullPage: true,
-        animations: "disabled",
-      });
+        await page.screenshot({
+          path: testInfo.outputPath(`authenticated-${route.name}.png`),
+          fullPage: true,
+          animations: "disabled",
+        });
+      } catch (error) {
+        failures.push(
+          `${route.name}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
+    expect(failures, "Every authenticated route must pass its visual/accessibility audit").toEqual(
+      [],
+    );
   });
 });
 
