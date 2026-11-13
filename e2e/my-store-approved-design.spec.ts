@@ -187,9 +187,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   for (const selector of [".my-store-public-reviews", ".my-store-public-safety"]) {
     await expect
       .poll(() =>
-        page
-          .locator(selector)
-          .evaluate((element) => getComputedStyle(element).backgroundColor),
+        page.locator(selector).evaluate((element) => getComputedStyle(element).backgroundColor),
       )
       .toBe("rgb(255, 253, 250)");
   }
