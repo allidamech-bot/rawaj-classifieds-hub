@@ -76,28 +76,16 @@ test("owner-only operations are enforced for the most sensitive workspaces", () 
   assert.match(campaigns, /roles\.includes\("owner"\)|hasOwnerRole/);
   assert.match(taxonomyReview, /roles\.includes\("owner"\)/);
   assert.match(dataQuality, /roles\.includes\("owner"\)/);
-  assert.match(
-    adminUserManagement,
-    /operation === "roles" && !auth\.roles\.includes\("owner"\)/,
-  );
+  assert.match(adminUserManagement, /operation === "roles" && !auth\.roles\.includes\("owner"\)/);
 });
 
 test("administrative mutations produce audit records", () => {
   for (const source of auditedModules) {
     assert.match(source, /INSERT INTO audit_logs/);
   }
-  assert.match(
-    governanceMigration,
-    /CREATE TABLE(?: IF NOT EXISTS)? safety_cases/,
-  );
-  assert.match(
-    governanceMigration,
-    /CREATE TABLE(?: IF NOT EXISTS)? taxonomy_mapping_queue/,
-  );
-  assert.match(
-    governanceMigration,
-    /CREATE TABLE(?: IF NOT EXISTS)? listing_data_quality_issues/,
-  );
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? safety_cases/);
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? taxonomy_mapping_queue/);
+  assert.match(governanceMigration, /CREATE TABLE(?: IF NOT EXISTS)? listing_data_quality_issues/);
 });
 
 test("verification documents remain private and admin-scoped", () => {
