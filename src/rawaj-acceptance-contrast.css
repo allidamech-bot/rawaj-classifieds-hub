@@ -49,7 +49,7 @@
 }
 
 /* Offer-hero supporting copy was translucent and measured 4.46:1. */
-.rawaj-app-shell[data-resolved-pathname="/offers"] p.text-\\[\\#fffaf0\\]\\/72 {
+.rawaj-app-shell[data-resolved-pathname="/offers"] p[class*="text-[#fffaf0]/72"] {
   color: #fffaf0 !important;
   opacity: 0.9 !important;
 }
