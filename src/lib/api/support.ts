@@ -3,6 +3,7 @@ import type {
   ClassifiedsResult,
   CreateSupportRequestPayload,
   SupportRequest,
+  SupportRequestStatus,
   SupportRequestType,
 } from "@/lib/classifieds-types";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
@@ -12,6 +13,15 @@ import {
   normalizeModerationText,
 } from "@/lib/moderation-contract";
 import { getTurnstileToken } from "@/lib/turnstile-client";
+
+export type SupportPriority = "low" | "normal" | "high" | "urgent";
+
+export interface AdminSupportRequest extends SupportRequest {
+  email: string | null;
+  priority: SupportPriority;
+  assignedTo: string | null;
+  adminNote: string | null;
+}
 
 export async function createMySupportRequest(
   payload: CreateSupportRequestPayload,
@@ -45,6 +55,61 @@ export async function fetchMySupportRequest(
   );
   if (!result.ok && result.code === "not_found") return { ok: true, data: null };
   return fromApi(result);
+}
+
+export async function adminFetchSupportRequests(
+  canModerate: boolean,
+): Promise<ClassifiedsResult<AdminSupportRequest[]>> {
+  if (!canModerate) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة الطلبات متاحة للإدارة فقط." },
+    };
+  }
+  return fromApi(
+    await cloudflareApiRequest<AdminSupportRequest[]>("/v1/admin/support-requests?limit=200"),
+  );
+}
+
+export async function adminUpdateSupportRequest(
+  canModerate: boolean,
+  payload: {
+    requestId: string;
+    status: SupportRequestStatus;
+    expectedUpdatedAt: string;
+    publicResponse?: string | null;
+    adminNote?: string | null;
+    priority?: SupportPriority;
+  },
+): Promise<ClassifiedsResult<AdminSupportRequest>> {
+  if (!canModerate) {
+    return {
+      ok: false,
+      error: { code: "permission_denied", message: "مراجعة الطلبات متاحة للإدارة فقط." },
+    };
+  }
+  const requestId = payload.requestId.trim();
+  if (!requestId || !payload.expectedUpdatedAt) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "تعذر تحديد الطلب أو نسخته الحالية." },
+    };
+  }
+  return fromApi(
+    await cloudflareApiRequest<AdminSupportRequest>(
+      `/v1/admin/support-requests/${encodeURIComponent(requestId)}`,
+      {
+        method: "PATCH",
+        body: {
+          status: payload.status,
+          expectedUpdatedAt: payload.expectedUpdatedAt,
+          publicResponse: payload.publicResponse?.trim() || null,
+          adminNote: payload.adminNote?.trim() || null,
+          priority: payload.priority ?? "normal",
+        },
+      },
+    ),
+  );
 }
 
 const ACCOUNT_DELETION_SUBJECT = "طلب حذف حساب رواج";
