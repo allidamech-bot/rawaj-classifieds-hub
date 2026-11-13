@@ -60,7 +60,9 @@ function SellerPage() {
   const router = useRouter();
   const retrySections = () => void router.invalidate();
   const [followerCount, setFollowerCount] = useState<number | null>(null);
-  const [currentSection, setCurrentSection] = useState<"listings" | "about" | "reviews">("listings");
+  const [currentSection, setCurrentSection] = useState<"listings" | "about" | "reviews">(
+    "listings",
+  );
 
   useEffect(() => {
     let active = true;
