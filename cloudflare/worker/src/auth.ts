@@ -55,16 +55,12 @@ type VerifiedIdentity = {
 
 const MAX_BODY_BYTES = 16_384;
 const encoder = new TextEncoder();
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DEFAULT_FIREBASE_JWKS_URL =
   "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 const remoteKeySets = new Map<string, JWTVerifyGetKey>();
 
-export async function authenticate(
-  request: Request,
-  env: AuthEnv,
-): Promise<Authenticated | null> {
+export async function authenticate(request: Request, env: AuthEnv): Promise<Authenticated | null> {
   const token = bearerToken(request);
   if (!token) return null;
 
@@ -82,9 +78,7 @@ export async function authenticate(
     .first<JsonRecord>();
   if (!user || user.disabled_at) return null;
 
-  const rolesResult = await env.DB.prepare(
-    "SELECT role FROM user_roles WHERE user_id = ?",
-  )
+  const rolesResult = await env.DB.prepare("SELECT role FROM user_roles WHERE user_id = ?")
     .bind(userId)
     .all<{ role: string }>();
   if (!rolesResult.success) throw new Error("role_lookup_failed");
@@ -93,13 +87,9 @@ export async function authenticate(
     userId,
     sessionId: identity.sessionId,
     email: typeof user.email === "string" ? user.email : identity.email,
-    displayName:
-      typeof user.display_name === "string" ? user.display_name : null,
+    displayName: typeof user.display_name === "string" ? user.display_name : null,
     roles: (rolesResult.results ?? []).map((item) => item.role),
-    accountStatus:
-      typeof user.account_status === "string"
-        ? user.account_status
-        : "disabled",
+    accountStatus: typeof user.account_status === "string" ? user.account_status : "disabled",
   };
 }
 
@@ -172,19 +162,14 @@ function restrictedActionTypes(path: string, method: string): string[] {
   if (upper === "GET" || upper === "HEAD") return result;
   if (
     (path === "/v1/listings" && upper === "POST") ||
-    (/^\/v1\/listings\/[^/]+$/.test(path) &&
-      ["PATCH", "PUT", "DELETE"].includes(upper)) ||
-    /^\/v1\/listings\/[^/]+\/(?:lifecycle|attributes|taxonomy|images)$/.test(
-      path,
-    ) ||
+    (/^\/v1\/listings\/[^/]+$/.test(path) && ["PATCH", "PUT", "DELETE"].includes(upper)) ||
+    /^\/v1\/listings\/[^/]+\/(?:lifecycle|attributes|taxonomy|images)$/.test(path) ||
     /^\/v1\/listing-images\/[^/]+$/.test(path)
   )
     result.push("posting");
   if (
     (path === "/v1/conversations" && upper === "POST") ||
-    /^\/v1\/conversations\/[^/]+\/(?:messages|attachments|offers)$/.test(
-      path,
-    ) ||
+    /^\/v1\/conversations\/[^/]+\/(?:messages|attachments|offers)$/.test(path) ||
     /^\/v1\/offers\/[^/]+$/.test(path)
   )
     result.push("messaging");
@@ -193,13 +178,11 @@ function restrictedActionTypes(path: string, method: string): string[] {
     /^\/v1\/reviews\/[^/]+\/response$/.test(path)
   )
     result.push("reviews");
-  if (/^\/v1\/account\/(?:promotions|search-boosts)(?:\/|$)/.test(path))
-    result.push("promotions");
+  if (/^\/v1\/account\/(?:promotions|search-boosts)(?:\/|$)/.test(path)) result.push("promotions");
   if (
     (upper === "POST" && path === "/v1/profile/media") ||
     (upper === "POST" && /^\/v1\/listings\/[^/]+\/images$/.test(path)) ||
-    (upper === "POST" &&
-      /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)) ||
+    (upper === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)) ||
     (upper === "POST" && path === "/v1/account/verifications")
   )
     result.push("uploads");
@@ -239,10 +222,7 @@ async function blockedMutationControl(
   }
 
   if (!result.success) {
-    console.error(
-      "rawaj_system_control_lookup_failed",
-      result.error ?? "unknown_error",
-    );
+    console.error("rawaj_system_control_lookup_failed", result.error ?? "unknown_error");
     return {
       key: "emergency_read_only",
       reason: "تعذر التحقق من حالة النظام بأمان.",
@@ -250,24 +230,20 @@ async function blockedMutationControl(
   }
 
   const active = new Map<MutationControlKey, string>();
-  for (const row of result.results ?? [])
-    active.set(row.key, cleanControlReason(row.reason));
+  for (const row of result.results ?? []) active.set(row.key, cleanControlReason(row.reason));
   for (const key of ["emergency_read_only", "maintenance_mode"] as const) {
     if (active.has(key)) return { key, reason: active.get(key) ?? "" };
   }
 
   const scoped = scopedMutationControl(request);
-  return scoped && active.has(scoped)
-    ? { key: scoped, reason: active.get(scoped) ?? "" }
-    : null;
+  return scoped && active.has(scoped) ? { key: scoped, reason: active.get(scoped) ?? "" } : null;
 }
 
 function scopedMutationControl(request: Request): MutationControlKey | null {
   const method = request.method.toUpperCase();
   const path = normalizeApiPath(new URL(request.url).pathname);
 
-  if (method === "POST" && path === "/v1/listings")
-    return "freeze_new_listings";
+  if (method === "POST" && path === "/v1/listings") return "freeze_new_listings";
   if (
     method === "POST" &&
     (path === "/v1/conversations" ||
@@ -275,10 +251,8 @@ function scopedMutationControl(request: Request): MutationControlKey | null {
   ) {
     return "freeze_new_messages";
   }
-  if (method === "POST" && path === "/v1/account/promotions")
-    return "freeze_promotions";
-  if (method === "POST" && path === "/v1/account/verifications")
-    return "freeze_verifications";
+  if (method === "POST" && path === "/v1/account/promotions") return "freeze_promotions";
+  if (method === "POST" && path === "/v1/account/verifications") return "freeze_verifications";
   return null;
 }
 
@@ -301,10 +275,7 @@ function cleanControlReason(value: unknown): string {
   return typeof value === "string" ? value.trim().slice(0, 1000) : "";
 }
 
-function systemControlResponse(
-  control: ActiveMutationControl,
-  cors: Headers,
-): Response {
+function systemControlResponse(control: ActiveMutationControl, cors: Headers): Response {
   const headers = new Headers(cors);
   headers.set("Retry-After", "60");
   const messages: Record<MutationControlKey, string> = {
@@ -331,35 +302,24 @@ function systemControlResponse(
 
 export async function verifyFirebaseIdToken(
   token: string,
-  env: Pick<
-    AuthEnv,
-    "FIREBASE_PROJECT_ID" | "FIREBASE_AUTH_TEST_JWKS" | "FIREBASE_JWKS_URL"
-  >,
+  env: Pick<AuthEnv, "FIREBASE_PROJECT_ID" | "FIREBASE_AUTH_TEST_JWKS" | "FIREBASE_JWKS_URL">,
 ): Promise<VerifiedIdentity | null> {
   const projectId = env.FIREBASE_PROJECT_ID?.trim();
   if (!projectId) throw new Error("firebase_project_id_missing");
   const issuer = `https://securetoken.google.com/${projectId}`;
 
   try {
-    const { payload } = await jwtVerify(
-      token,
-      verificationKeySet(env, issuer),
-      {
-        issuer,
-        audience: projectId,
-        algorithms: ["RS256"],
-        requiredClaims: ["exp", "iat", "iss", "aud", "sub"],
-      },
-    );
-    if (typeof payload.sub !== "string" || !validFirebaseUid(payload.sub))
-      return null;
-    const email =
-      typeof payload.email === "string" ? normalizeEmail(payload.email) : "";
+    const { payload } = await jwtVerify(token, verificationKeySet(env, issuer), {
+      issuer,
+      audience: projectId,
+      algorithms: ["RS256"],
+      requiredClaims: ["exp", "iat", "iss", "aud", "sub"],
+    });
+    if (typeof payload.sub !== "string" || !validFirebaseUid(payload.sub)) return null;
+    const email = typeof payload.email === "string" ? normalizeEmail(payload.email) : "";
     if (!email || !validEmail(email)) return null;
-    const issuedAt =
-      typeof payload.iat === "number" ? String(payload.iat) : "unknown";
-    const tokenId =
-      typeof payload.jti === "string" && payload.jti ? payload.jti : issuedAt;
+    const issuedAt = typeof payload.iat === "number" ? String(payload.iat) : "unknown";
+    const tokenId = typeof payload.jti === "string" && payload.jti ? payload.jti : issuedAt;
     return {
       subject: payload.sub,
       sessionId: `${payload.sub}:${tokenId}`,
@@ -392,23 +352,15 @@ async function ensureApplicationIdentity(
           WHERE id = ?
             AND (display_name IS NULL OR trim(display_name) = '' OR display_name = ?)`,
       )
-        .bind(
-          identity.displayName,
-          new Date().toISOString(),
-          linked.id,
-          defaultDisplayName,
-        )
+        .bind(identity.displayName, new Date().toISOString(), linked.id, defaultDisplayName)
         .run();
-      if (!synchronized.success)
-        throw new Error("identity_profile_sync_failed");
+      if (!synchronized.success) throw new Error("identity_profile_sync_failed");
     }
     return linked.id;
   }
 
   const existingSameId = UUID_PATTERN.test(identity.subject)
-    ? await env.DB.prepare(
-        "SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?",
-      )
+    ? await env.DB.prepare("SELECT id, auth_provider, auth_user_id FROM auth_users WHERE id = ?")
         .bind(identity.subject)
         .first<{
           id: string;
@@ -430,13 +382,7 @@ async function ensureApplicationIdentity(
               email_normalized = ?, updated_at = ?
         WHERE id = ?`,
     )
-      .bind(
-        identity.subject,
-        identity.email,
-        identity.email,
-        now,
-        identity.subject,
-      )
+      .bind(identity.subject, identity.email, identity.email, now, identity.subject)
       .run();
     if (!result.success) throw new Error("identity_link_failed");
     return identity.subject;
@@ -446,8 +392,7 @@ async function ensureApplicationIdentity(
   const applicationUserId = UUID_PATTERN.test(identity.subject)
     ? identity.subject
     : crypto.randomUUID();
-  const displayName =
-    identity.displayName ?? identity.email.split("@")[0].slice(0, 100);
+  const displayName = identity.displayName ?? identity.email.split("@")[0].slice(0, 100);
   const results = await env.DB.batch([
     env.DB.prepare(
       `INSERT OR IGNORE INTO public_profiles
@@ -459,21 +404,12 @@ async function ensureApplicationIdentity(
         (id, email, email_normalized, email_confirmed_at, created_at, updated_at,
          auth_provider, auth_user_id)
        VALUES (?, ?, ?, ?, ?, ?, 'firebase', ?)`,
-    ).bind(
-      applicationUserId,
-      identity.email,
-      identity.email,
-      now,
-      now,
-      now,
-      identity.subject,
-    ),
+    ).bind(applicationUserId, identity.email, identity.email, now, now, now, identity.subject),
     env.DB.prepare(
       `INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, 'user', ?)`,
     ).bind(applicationUserId, now),
   ]);
-  if (results.some((result) => !result.success))
-    throw new Error("identity_create_failed");
+  if (results.some((result) => !result.success)) throw new Error("identity_create_failed");
 
   const created = await env.DB.prepare(
     `SELECT id FROM auth_users
@@ -538,23 +474,13 @@ function validFirebaseUid(value: string): boolean {
 
 function safeFirebaseDisplayName(payload: JsonRecord): string | null {
   const value = payload.name;
-  return typeof value === "string" && value.trim()
-    ? value.trim().slice(0, 100)
-    : null;
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, 100) : null;
 }
 
 export async function readJson(
   request: Request,
-): Promise<
-  | { ok: true; data: JsonRecord }
-  | { ok: false; status: number; error: JsonRecord }
-> {
-  if (
-    !request.headers
-      .get("Content-Type")
-      ?.toLowerCase()
-      .startsWith("application/json")
-  ) {
+): Promise<{ ok: true; data: JsonRecord } | { ok: false; status: number; error: JsonRecord }> {
+  if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("application/json")) {
     return {
       ok: false,
       status: 415,
@@ -574,11 +500,9 @@ export async function readJson(
   }
   try {
     const text = await request.text();
-    if (encoder.encode(text).byteLength > MAX_BODY_BYTES)
-      throw new Error("large");
+    if (encoder.encode(text).byteLength > MAX_BODY_BYTES) throw new Error("large");
     const value = JSON.parse(text);
-    if (!value || typeof value !== "object" || Array.isArray(value))
-      throw new Error("shape");
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("shape");
     return { ok: true, data: value as JsonRecord };
   } catch {
     return {
@@ -601,11 +525,7 @@ export function corsHeaders(request: Request, env: AuthEnv): Headers {
   return corsHeadersForRequest(request, env);
 }
 
-export function json(
-  payload: unknown,
-  status: number,
-  headers: Headers,
-): Response {
+export function json(payload: unknown, status: number, headers: Headers): Response {
   const output = new Headers(headers);
   output.set("Content-Type", "application/json; charset=utf-8");
   output.set("X-Content-Type-Options", "nosniff");
