@@ -11,11 +11,11 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-hero__copy h1 {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-hero__copy > p:not(.rawaj-discovery-kicker) {
-  color: #b8b3b1 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-discovery-kicker {
@@ -26,8 +26,8 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-search-overlay,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar {
   border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background: rgba(25,29,38,.97) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 17px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.035) !important;
   backdrop-filter: blur(16px) saturate(120%) !important;
 }
@@ -43,8 +43,8 @@
   .rawaj-search-toolbar__views
 ) {
   border-color: rgba(216,174,95,.12) !important;
-  color: #d8d2cc !important;
-  background: #0f131a !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-canvas) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.02) !important;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .rawaj-app-shell :is(.rawaj-search-overlay__field, .rawaj-search-toolbar__search) input {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
   background: transparent !important;
 }
 
@@ -75,8 +75,8 @@
 /* Category worlds */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world {
   border-color: rgba(216,174,95,.11) !important;
-  color: #f7f3ed !important;
-  background: #191d26 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 
@@ -102,7 +102,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world__copy strong {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-category-world__copy small {
   color: #9da3ab !important;
@@ -113,7 +113,7 @@
   overflow: hidden;
   border: 1px solid rgba(216,174,95,.17) !important;
   color: #fff !important;
-  background: #0d1117 !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 22px 52px rgba(0,0,0,.32), 0 0 0 1px rgba(216,174,95,.02) !important;
 }
 
@@ -139,8 +139,8 @@
 }
 .rawaj-app-shell .rawaj-featured-card__facts span {
   border: 1px solid rgba(216,174,95,.11) !important;
-  color: #d8d2cc !important;
-  background: rgba(15,19,26,.58) !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   backdrop-filter: blur(10px) !important;
 }
 .rawaj-app-shell .rawaj-featured-card__location {
@@ -150,7 +150,7 @@
   color: #67b7cf !important;
 }
 .rawaj-app-shell .rawaj-featured-card__open {
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
 }
 .rawaj-app-shell .rawaj-featured-card__action > :is(button, a) {
   border-color: rgba(216,174,95,.15) !important;
@@ -162,18 +162,18 @@
 
 /* Results page */
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__heading h1 {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__heading > strong {
   border-color: rgba(216,174,95,.16) !important;
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
   background: rgba(216,174,95,.055) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1__sidebar {
   border-color: rgba(216,174,95,.12) !important;
-  color: #d8d2cc !important;
-  background: #181c25 !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 

@@ -1,6 +1,6 @@
 /* Premium account command center — scoped to /more only. */
 .rawaj-app-shell[data-resolved-pathname="/more"] {
-  background: #10131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
@@ -10,7 +10,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
   border-color: rgba(216, 174, 95, 0.2) !important;
-  background: #171a23 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     0 18px 42px rgba(0, 0, 0, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
@@ -26,7 +26,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(svg, b) {
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header {
@@ -35,19 +35,19 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header p {
-  color: #e7b95e !important;
+  color: var(--rawaj-gold-ink) !important;
   letter-spacing: 0.02em !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header h2 {
   margin-top: 0.22rem !important;
-  color: #f7f3eb !important;
+  color: var(--rawaj-ink-primary) !important;
   font-size: 1.18rem !important;
   line-height: 1.45 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header span {
-  color: #8e969f !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card {
@@ -55,7 +55,7 @@
   overflow: hidden;
   min-height: 7rem !important;
   border-color: rgba(216, 174, 95, 0.22) !important;
-  background: #1c1d27 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     0 16px 34px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
@@ -71,7 +71,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:nth-child(2) {
-  color: #f8f4ed !important;
+  color: var(--rawaj-ink-primary) !important;
   font-size: 1rem !important;
   font-weight: 900 !important;
 }
@@ -86,7 +86,7 @@
   min-height: 7.35rem !important;
   border-color: rgba(255, 255, 255, 0.085) !important;
   border-radius: 1.05rem !important;
-  background: #191d25 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
@@ -94,17 +94,17 @@
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-plum {
   border-color: rgba(175, 78, 145, 0.22) !important;
-  background: #211a26 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-gold {
   border-color: rgba(216, 174, 95, 0.23) !important;
-  background: #211f1a !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-world-emerald {
   border-color: rgba(92, 178, 144, 0.22) !important;
-  background: #17231f !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card > svg,
@@ -120,8 +120,8 @@
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a[data-boost-shortcut="true"] {
   isolation: isolate;
   border-color: rgba(217, 164, 65, 0.78) !important;
-  color: #f4eee3 !important;
-  background: #1a1c21 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     0 14px 30px rgba(0, 0, 0, 0.24),
     0 0 0 1px rgba(217, 164, 65, 0.06),
@@ -146,7 +146,7 @@
   place-items: center !important;
   border: 1px solid rgba(217, 164, 65, 0.55) !important;
   border-radius: 0.85rem !important;
-  background: #17191e !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
@@ -165,7 +165,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__hint {
-  color: #e6e6e6 !important;
+  color: var(--rawaj-ink-primary) !important;
   font-weight: 650 !important;
 }
 
@@ -234,7 +234,7 @@
   margin: 0 !important;
   border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
   padding: 0.78rem 1rem 0.68rem !important;
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
   background: rgba(216, 174, 95, 0.025) !important;
   font-size: 0.72rem !important;
   font-weight: 850 !important;

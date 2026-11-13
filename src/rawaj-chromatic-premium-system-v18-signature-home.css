@@ -4,14 +4,14 @@
  */
 
 .rawaj-app-shell[data-resolved-pathname="/"] {
-  --rawaj-signature-bg: #0d1118 !important;
+  --rawaj-signature-bg: var(--rawaj-surface-subtle) !important;
   --rawaj-signature-bg-deep: #090d13 !important;
-  --rawaj-signature-surface: #171b24 !important;
+  --rawaj-signature-surface: var(--rawaj-surface) !important;
   --rawaj-signature-surface-raised: #1c2029 !important;
   --rawaj-signature-surface-soft: #11161e !important;
-  --rawaj-signature-text: #f7f3ed !important;
-  --rawaj-signature-text-soft: #c8c2be !important;
-  --rawaj-signature-muted: #9299a2 !important;
+  --rawaj-signature-text: var(--rawaj-ink-primary) !important;
+  --rawaj-signature-text-soft: var(--rawaj-ink-secondary) !important;
+  --rawaj-signature-muted: var(--rawaj-ink-secondary) !important;
   --rawaj-signature-faint: #717986 !important;
   --rawaj-signature-border: rgba(216,174,95,.12) !important;
   --rawaj-signature-border-strong: rgba(216,174,95,.2) !important;
@@ -21,7 +21,7 @@
   --rawaj-signature-blue: #4a8cff !important;
   --rawaj-signature-cyan: #67b7cf !important;
   --rawaj-signature-success: #5cb290 !important;
-  background: #0f131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
@@ -36,8 +36,8 @@
   .rawaj-app-header .order-3 > .relative > button
 ) {
   border-color: rgba(216,174,95,.11) !important;
-  color: #d8d2cc !important;
-  background: rgba(29,32,42,.92) !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
@@ -51,51 +51,51 @@
 /* Trust row */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row {
   border-color: rgba(216,174,95,.1) !important;
-  color: #b8b3b1 !important;
-  background: rgba(23,27,36,.76) !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row span {
-  color: #b8b3b1 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row svg {
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
 }
 
 /* Section headers */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header h2,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header > div:first-child > span {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header p,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header small {
-  color: #9299a2 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header > div:last-child a {
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
 }
 
 /* Exact lead listing shown in the user's screenshot */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card {
   border: 1px solid transparent !important;
   border-color: var(--rawaj-border-strong) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 21px 48px rgba(0,0,0,.31), inset 0 1px 0 rgba(255,255,255,.035) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media {
   border-color: rgba(216,174,95,.12) !important;
-  background: #0d1117 !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 15px 34px rgba(0,0,0,.42) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-favorite {
   border-color: rgba(216,174,95,.16) !important;
-  color: #f7f3ed !important;
-  background: rgba(15,19,26,.78) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 8px 20px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 
@@ -108,8 +108,8 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-no-image {
   border-color: rgba(216,174,95,.12) !important;
-  color: #b8b3b1 !important;
-  background: rgba(15,19,26,.84) !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__body {
@@ -121,7 +121,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card h3 {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__body > strong {
@@ -143,26 +143,26 @@
 /* Supporting featured cards */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card {
   border-color: rgba(216,174,95,.11) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.028) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__media {
   border-color: rgba(216,174,95,.09) !important;
-  background: #0d1117 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__body > span {
   color: #d889bd !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__body > strong {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__body > b {
   color: #f1d7df !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__body > small {
-  color: #9299a2 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-support-card__body > small svg {
   color: #67b7cf !important;
@@ -174,13 +174,13 @@
 /* Latest listing rows */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card {
   border-color: rgba(216,174,95,.09) !important;
-  background: #171b24 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 11px 26px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.022) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__media {
   border-color: rgba(216,174,95,.08) !important;
-  background: #0d1117 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__body > span {
   color: #a185a0 !important;
@@ -192,12 +192,12 @@
   color: #efd4df !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__body > small {
-  color: #9299a2 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest-card__favorite {
   border-color: rgba(216,174,95,.1) !important;
-  color: #c8c2be !important;
-  background: rgba(15,19,26,.78) !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 /* Real ad placement */
@@ -216,7 +216,7 @@
 /* Category rail */
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip {
   border-color: rgba(216,174,95,.09) !important;
-  background: #171b24 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 11px 25px rgba(0,0,0,.19), inset 0 1px 0 rgba(255,255,255,.022) !important;
 }
 
@@ -227,7 +227,7 @@
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip:nth-child(4n + 2) > span {
   border-color: rgba(216,174,95,.28) !important;
-  color: #e8ca8d !important;
+  color: var(--rawaj-gold-ink) !important;
   background: rgba(216,174,95,.07) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip:nth-child(4n + 3) > span {
@@ -248,8 +248,8 @@
 /* Empty/load surfaces */
 .rawaj-app-shell[data-resolved-pathname="/"] :is(.rawaj-signature-home__empty, .rawaj-signature-home__load-state) {
   border-color: rgba(216,174,95,.11) !important;
-  color: #b8b3b1 !important;
-  background: #171b24 !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* Bottom dock: match approved /more reference even on home-specific CSS. */

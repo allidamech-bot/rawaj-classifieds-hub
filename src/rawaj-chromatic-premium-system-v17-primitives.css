@@ -159,7 +159,7 @@
 .rawaj-app-shell [data-slot="calendar"] {
   border-color: rgba(216,174,95,.18) !important;
   color: #eee8df !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 18px 42px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.045) !important;
 }
 
@@ -209,7 +209,7 @@
 .rawaj-app-shell [data-slot="command"] {
   border-color: rgba(216,174,95,.18) !important;
   color: #eee8df !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell [data-slot="command-item"][data-selected="true"] {
@@ -226,8 +226,8 @@
 
 .rawaj-app-shell :is([data-slot="sidebar"], [data-sidebar="sidebar"]) {
   border-color: rgba(216,174,95,.11) !important;
-  color: #d8d2cc !important;
-  background: #151922 !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell :is([data-slot="sidebar-menu-button"], [data-sidebar="menu-button"])[data-active="true"] {

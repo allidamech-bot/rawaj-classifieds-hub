@@ -17,13 +17,13 @@
   .rawaj-account-section
 ) {
   border-color: rgba(216,174,95,.15) !important;
-  color: #f7f3ed !important;
-  background: #1b1f28 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 15px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
-  background: #1d202a !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > a.rawaj-world-orange {
@@ -37,12 +37,12 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a {
-  background: #171b24 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity {
-  background: #1c2029 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
@@ -50,13 +50,13 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
-  border-color: #151922 !important;
+  border-color: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-quick-links a {
   border: 1px solid rgba(216,174,95,.11) !important;
-  color: #c8c2be !important;
-  background: #181c25 !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 
@@ -72,8 +72,8 @@
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > :is(section, article, div.text-center) {
   border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background: #1a1e27 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
@@ -81,12 +81,12 @@
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/notifications"]
 ) .rawaj-communication-hero {
-  background: #1c2029 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
   border-color: rgba(216,174,95,.12) !important;
-  background: #10141b !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
@@ -98,14 +98,14 @@
 .rawaj-app-shell[data-resolved-pathname="/notifications"] :is(.rawaj-notification-timeline, .rawaj-notification-card),
 .rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-activity-feed > a, .rawaj-activity-feed > article) {
   border-color: rgba(255,255,255,.07) !important;
-  color: #f7f3ed !important;
-  background: #181c25 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
   .rawaj-account-collection-v3 [class*="bg-card"] {
   border-color: rgba(216,174,95,.12) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -116,8 +116,8 @@
   [data-resolved-pathname^="/profile/listings/"]
 ) :is(.rawaj-studio-hero, .rawaj-studio-section, .rawaj-studio-completion, .rawaj-studio-preview-card) {
   border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background: #1c1b26 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 14px 32px rgba(0,0,0,.21), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
@@ -125,7 +125,7 @@
   [data-resolved-pathname="/add-listing"],
   [data-resolved-pathname^="/profile/listings/"]
 ) .rawaj-studio-hero {
-  background: #1d202a !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell:is(
@@ -133,7 +133,7 @@
   [data-resolved-pathname^="/profile/listings/"]
 ) .rawaj-studio-steps {
   border-color: rgba(216,174,95,.12) !important;
-  background: #10141b !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 10px 24px rgba(0,0,0,.2) !important;
 }
 
@@ -150,8 +150,8 @@
   [data-resolved-pathname^="/profile/listings/"]
 ) :is(input, textarea, select, .input) {
   border-color: rgba(216,174,95,.13) !important;
-  color: #f7f3ed !important;
-  background: #0f131a !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell:is(
@@ -170,11 +170,11 @@
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
 ) {
-  --auth-v12-surface: #151922 !important;
-  --auth-v12-surface-soft: #10141b !important;
+  --auth-v12-surface: var(--rawaj-surface-subtle) !important;
+  --auth-v12-surface-soft: var(--rawaj-surface-subtle) !important;
   --auth-v12-border: rgba(216,174,95,.13) !important;
   --auth-v12-border-active: rgba(216,174,95,.46) !important;
-  --auth-v12-copy: #c8c2be !important;
+  --auth-v12-copy: var(--rawaj-ink-secondary) !important;
   --auth-v12-muted: #858d98 !important;
 }
 
@@ -183,32 +183,32 @@
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
 ) .rawaj-app-shell__page {
-  background: #10131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] :is(.rawaj-auth-layout, .rawaj-auth-card),
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card,
 .rawaj-app-shell[data-resolved-pathname="/auth/callback"] :is(.rawaj-auth-callback-card, .rawaj-auth-card) {
   border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background: #1a1e27 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 18px 42px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside {
   border-color: rgba(216,174,95,.1) !important;
-  background: #1d202a !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-divider span {
-  background: #151922 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"])
   :is(input, textarea, .input) {
   border-color: rgba(216,174,95,.13) !important;
-  color: #f7f3ed !important;
-  background: #0f131a !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"])
@@ -222,7 +222,7 @@
 /* -------------------------------------------------------------------------- */
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2,
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2 {
-  background: #0f131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
@@ -233,7 +233,7 @@
   .rawaj-detail-safety
 ) {
   border-color: rgba(216,174,95,.14) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
@@ -249,7 +249,7 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity {
   border-color: rgba(216,174,95,.14) !important;
-  background: #1d202a !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 18px 44px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035) !important;
 }
 
@@ -266,8 +266,8 @@
   [data-resolved-pathname="/promotion"]
 ) :is(.rawaj-trust-hero, .rawaj-trust-card, .rawaj-trust-link-card, .rawaj-trust-section, .rawaj-support-card) {
   border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background: #18201f !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
@@ -292,31 +292,31 @@
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-card,
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-panel {
   border-color: rgba(216,174,95,.12) !important;
-  color: #f7f3ed !important;
-  background: #191d26 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child[class*="rounded-2xl"] {
   border-color: rgba(216,174,95,.16) !important;
-  background: #1c2029 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(table, [role="table"]) {
   border-color: rgba(216,174,95,.11) !important;
-  color: #c8c2be !important;
-  background: #171b24 !important;
+  color: var(--rawaj-ink-secondary) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 th {
-  color: #f7f3ed !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(216,174,95,.035) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input) {
   border-color: rgba(216,174,95,.13) !important;
-  color: #f7f3ed !important;
-  background: #0f131a !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input):focus-visible {
@@ -326,7 +326,7 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-access-notice {
   border-color: rgba(216,174,95,.2) !important;
-  background: #211e18 !important;
+  background: var(--rawaj-warning-surface-light) !important;
 }
 
 /* Generic route-local inset surfaces that still carried neutral grey. */
