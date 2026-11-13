@@ -61,7 +61,9 @@ test.describe("premium listing workflow responsiveness", () => {
       await page.waitForTimeout(75);
       await expectNoPageOverflow(page, `profile-listings:${viewport.width}`);
       await expect(
-        ownerWorkspace.locator('.rawaj-owner-workspace-summary__actions [data-priority="primary"]'),
+        ownerWorkspace.locator(".rawaj-shop-header").getByRole("link", {
+          name: /إضافة إعلان|Post listing/i,
+        }),
       ).toBeVisible();
       await expect(ownerWorkspace.locator('input[type="search"]')).toBeVisible();
     }
