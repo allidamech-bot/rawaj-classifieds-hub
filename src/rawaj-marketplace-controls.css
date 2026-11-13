@@ -74,6 +74,8 @@
   width: 100% !important;
   margin: 0 !important;
   direction: inherit;
+  /* Override the obsolete desktop RTL centering transform: the form is now in normal flow. */
+  transform: none !important;
   background: var(--rawaj-surface-inset) !important;
 }
 

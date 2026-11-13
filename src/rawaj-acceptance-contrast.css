@@ -1,0 +1,23 @@
+/* Narrow, measured WCAG AA corrections for RAWAJ acceptance.
+ * Do not relax text-contrast assertions or recolor unrelated components.
+ * Loaded after legacy route styles in auditedOverrideStyleHrefs.
+ */
+
+/* The active publishing step previously measured 4.06:1. */
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"],
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] > button {
+  background: var(--rawaj-action-primary, #28564b) !important;
+  color: #fff !important;
+}
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__copy strong {
+  color: #fff !important;
+}
+
+/* Featured badge: the existing #d93a68 background with white measured 4.42:1.
+ * Darken its background slightly; changing the copy to dark would LOWER contrast.
+ * #d03662 on white measures approximately 4.79:1 before any overlay compositing.
+ */
+.rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
+  background: #d03662 !important;
+  color: #fff !important;
+}

@@ -45,8 +45,8 @@ test("draft creation is idempotent in D1", async () => {
 
 test("draft image metadata is not exposed without owner authorization", async () => {
   const source = await read("cloudflare/worker/src/marketplace-private.ts");
-  assert.match(source, /listing\.status !== "approved" && listing\.owner_id !== auth\?\.userId/);
-  assert.match(source, /listing\.status === "approved" \? "\/v1\/media\/assets"/);
+  assert.match(source, /if \(!row \|\| \(!ownerView && !publiclyAvailable\)\)/);
+  assert.match(source, /row\.status === "approved"[\s\S]*?\/v1\/media\/assets/);
 });
 
 test("listing attributes use authenticated Cloudflare endpoints only", async () => {

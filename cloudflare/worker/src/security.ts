@@ -1,3 +1,4 @@
+import { verifyFirebaseIdToken } from "./auth";
 import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
 import { inspectUploadedImage, stripImagePrivacyMetadata } from "./image-security";
 import { logSecurityEvent } from "./security-observability";
@@ -64,7 +65,7 @@ export async function enforceRequestSecurity(
   }
 
   const decision = classifyRequest(path, request.method, env);
-  const actor = await actorKey(request);
+  const actor = await actorKey(request, env);
   const key = `${decision.className}:${decision.scope}:${actor}`;
   const { success } = await decision.binding.limit({ key });
   if (!success) {
@@ -136,7 +137,13 @@ async function inspectMarketplaceImageRequest(
       reason: "invalid_multipart",
     });
     return securityJson(
-      { error: { code: "invalid_upload", message: "Image upload request is invalid.", requestId } },
+      {
+        error: {
+          code: "invalid_upload",
+          message: "Image upload request is invalid.",
+          requestId,
+        },
+      },
       400,
     );
   }
@@ -154,7 +161,13 @@ async function inspectMarketplaceImageRequest(
       reason: "file_size_invalid",
     });
     return securityJson(
-      { error: { code: "payload_too_large", message: "Image file is too large.", requestId } },
+      {
+        error: {
+          code: "payload_too_large",
+          message: "Image file is too large.",
+          requestId,
+        },
+      },
       413,
     );
   }
@@ -289,22 +302,42 @@ function classifyRequest(path: string, method: string, env: SecurityEnv): LimitD
   const upperMethod = method.toUpperCase();
 
   if (/^\/v1\/admin(?:\/|$)/.test(path)) {
-    return { className: "admin", binding: env.RATE_LIMIT_ADMIN, scope: normalizedScope(path) };
+    return {
+      className: "admin",
+      binding: env.RATE_LIMIT_ADMIN,
+      scope: normalizedScope(path),
+    };
   }
 
   if (isMarketplaceImageUpload(path, upperMethod) || isChatAttachmentUpload(path, upperMethod)) {
-    return { className: "upload", binding: env.RATE_LIMIT_UPLOAD, scope: normalizedScope(path) };
+    return {
+      className: "upload",
+      binding: env.RATE_LIMIT_UPLOAD,
+      scope: normalizedScope(path),
+    };
   }
 
   if (isAbuseProneMutation(path, upperMethod)) {
-    return { className: "abuse", binding: env.RATE_LIMIT_ABUSE, scope: normalizedScope(path) };
+    return {
+      className: "abuse",
+      binding: env.RATE_LIMIT_ABUSE,
+      scope: normalizedScope(path),
+    };
   }
 
   if (!["GET", "HEAD"].includes(upperMethod)) {
-    return { className: "write", binding: env.RATE_LIMIT_WRITE, scope: normalizedScope(path) };
+    return {
+      className: "write",
+      binding: env.RATE_LIMIT_WRITE,
+      scope: normalizedScope(path),
+    };
   }
 
-  return { className: "public", binding: env.RATE_LIMIT_PUBLIC, scope: normalizedScope(path) };
+  return {
+    className: "public",
+    binding: env.RATE_LIMIT_PUBLIC,
+    scope: normalizedScope(path),
+  };
 }
 
 function protectedTurnstileAction(path: string, method: string): string | null {
@@ -349,22 +382,22 @@ function normalizedScope(path: string): string {
     .slice(0, 180);
 }
 
-async function actorKey(request: Request): Promise<string> {
+async function actorKey(request: Request, env: SecurityEnv): Promise<string> {
+  // Bind authenticated quotas to a VERIFIED Firebase subject, not to bearer
+  // text (which is attacker controlled and changes on token refresh).
   const authorization = request.headers.get("Authorization") ?? "";
   const bearer = /^Bearer\s+([^\s]+)$/i.exec(authorization)?.[1];
-  if (bearer) {
-    return `auth:${(await sha256Hex(bearer)).slice(0, 32)}`;
+  if (bearer && bearer.length <= 4096) {
+    const identity = await verifyFirebaseIdToken(bearer, env);
+    if (identity) return `auth:${identity.subject}`;
   }
 
+  // Malformed and invalid credentials never generate fresh limiter buckets.
+  // Cloudflare supplies this header at the Worker edge; do not trust a client
+  // provided X-Forwarded-For value as a substitute.
   const ip = request.headers.get("CF-Connecting-IP")?.trim();
   if (ip) return `ip:${ip.slice(0, 64)}`;
-
   return "anonymous";
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function readContentLength(request: Request): number | null {

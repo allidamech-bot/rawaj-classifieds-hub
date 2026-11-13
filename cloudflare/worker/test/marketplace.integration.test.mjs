@@ -158,7 +158,11 @@ test("listing creation security, reads, filtering, ownership, and deletion", asy
     400,
   );
 
-  const created = await api("/v1/listings", { ...owner, method: "POST", body: input });
+  const created = await api("/v1/listings", {
+    ...owner,
+    method: "POST",
+    body: input,
+  });
   assert.equal(created.response.status, 201);
   assert.equal(created.payload.data.status, "draft");
   listingId = created.payload.data.id;
@@ -321,7 +325,12 @@ test("Search Boost receipt stays private and approval activates the exact purcha
   receipt.set(
     "file",
     new File(
-      [new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0])],
+      [
+        new Uint8Array([
+          137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8,
+          2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+        ]),
+      ],
       "boost-receipt.png",
       { type: "image/png" },
     ),
@@ -339,9 +348,7 @@ test("Search Boost receipt stays private and approval activates the exact purcha
   assert.equal(pendingRequest.proofContentType, "image/png");
   assert.ok(pendingRequest.proofPath);
   assert.equal(
-    (
-      await api(`/v1/admin/promotion-receipts/${pendingRequest.proofPath}`, other)
-    ).response.status,
+    (await api(`/v1/admin/promotion-receipts/${pendingRequest.proofPath}`, other)).response.status,
     403,
   );
   const adminReceipt = await fetch(
@@ -374,7 +381,9 @@ test("Search Boost receipt stays private and approval activates the exact purcha
 });
 
 test("Search Boost rejection requires a reason and never activates the listing", async () => {
-  const pendingListing = await createListing(owner, { title: "Rejected Search Boost listing" });
+  const pendingListing = await createListing(owner, {
+    title: "Rejected Search Boost listing",
+  });
   const approvedListing = await api("/v1/admin/listings/moderate", {
     ...moderator,
     method: "POST",
@@ -424,7 +433,10 @@ test("Search Boost rejection requires a reason and never activates the listing",
 });
 
 test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
-  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]);
+  const png = new Uint8Array([
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+  ]);
   assert.equal((await upload(other, png, "image/png")).response.status, 403);
   assert.equal(
     (await upload(owner, new TextEncoder().encode("bad"), "text/plain")).response.status,
@@ -468,7 +480,9 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
 
   const uploadedImages = [];
   for (let index = 0; index < 12; index += 1) {
-    const variant = new Uint8Array(png); variant[19] = index + 2; const result = await upload(owner, variant, "image/png");
+    const variant = new Uint8Array(png);
+    variant[19] = index + 2;
+    const result = await upload(owner, variant, "image/png");
     assert.equal(result.response.status, 201);
     uploadedImages.push(result.payload.data);
   }
@@ -527,7 +541,9 @@ async function upload(session, bytes, type, targetListingId = listingId) {
   form.set("file", new File([bytes], "upload.bin", { type }));
   const response = await fetch(`${baseUrl}/v1/listings/${targetListingId}/images`, {
     method: "POST",
-    headers: headers(session, { "CF-Connecting-IP": `198.51.100.${++uploadIpCounter}` }),
+    headers: headers(session, {
+      "CF-Connecting-IP": `198.51.100.${++uploadIpCounter}`,
+    }),
     body: form,
   });
   return { response, payload: await response.json() };
@@ -684,9 +700,10 @@ test("owner can read admin users", async () => {
   assert.ok(Array.isArray(result.payload.data));
 });
 
-test("admin cannot read admin users", async () => {
+test("admin can inspect users but cannot assign roles", async () => {
   const result = await api("/v1/admin/users", admin);
-  assert.equal(result.response.status, 403);
+  assert.equal(result.response.status, 200);
+  assert.ok(Array.isArray(result.payload.data));
 });
 
 test("owner can read admin audit logs", async () => {
@@ -1229,11 +1246,11 @@ test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
   assert.equal(moderate.payload.error?.code, "stale_review", "Expected stale_review error code");
 
   const allListings = await api("/v1/admin/listings", moderator);
-assert.equal(allListings.response.status, 200);
-const checkListing = allListings.payload.data.find((item) => item.id === listingId);
-assert.ok(checkListing, "Listing should still exist");
-assert.equal(checkListing.status, originalStatus, "Listing status should not change");
-assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
+  assert.equal(allListings.response.status, 200);
+  const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+  assert.ok(checkListing, "Listing should still exist");
+  assert.equal(checkListing.status, originalStatus, "Listing status should not change");
+  assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
 
   const audit = await api("/v1/admin/audit", owner);
   const modLog = audit.payload.data.find(
@@ -1269,11 +1286,15 @@ test("audit INSERT failure rolls back transaction", async () => {
   );
 
   const allListings = await api("/v1/admin/listings", moderator);
-assert.equal(allListings.response.status, 200);
-const checkListing = allListings.payload.data.find((item) => item.id === listingId);
-assert.ok(checkListing, "Listing should still exist after rollback");
-assert.equal(checkListing.status, originalStatus, "Listing status should be rolled back");
-assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should be rolled back");
+  assert.equal(allListings.response.status, 200);
+  const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+  assert.ok(checkListing, "Listing should still exist after rollback");
+  assert.equal(checkListing.status, originalStatus, "Listing status should be rolled back");
+  assert.equal(
+    checkListing.updatedAt,
+    originalUpdatedAt,
+    "Listing updatedAt should be rolled back",
+  );
 
   const audit = await api("/v1/admin/audit", owner);
   const auditFailLog = audit.payload.data.find(
@@ -1350,6 +1371,379 @@ test("moderator can extend_expiry on others' listings", async () => {
   assert.equal(moderate.payload.data.nextStatus, "pending_review");
 });
 
+test("phase 1: legacy public listing paths redact contact fields without hiding owner data", async () => {
+  const pending = await createListing(owner, {
+    title: "Privacy acceptance listing",
+    details: {
+      color: "blue",
+      phone: "private-test-only",
+      nested: { contact_whatsapp: "private-test-only", model: "visible" },
+    },
+  });
+  assert.equal(pending.response.status, 200);
+  const id = pending.payload.data.id;
+  const approval = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: {
+      listingId: id,
+      action: "approve",
+      expectedUpdatedAt: pending.payload.data.updatedAt,
+    },
+  });
+  assert.equal(approval.response.status, 200);
+
+  const legacy = await api(`/api/listings/${id}`);
+  const canonical = await api(`/v1/listings/${id}`);
+  const privateOwner = await api(`/api/listings/${id}`, owner);
+  const legacyList = await api("/api/listings?pageSize=50");
+  assert.equal(legacy.response.status, 200);
+  assert.equal(canonical.response.status, 200);
+  assert.equal(privateOwner.response.status, 200);
+  assert.equal(legacy.payload.data.listing.details.phone, undefined);
+  assert.equal(legacy.payload.data.listing.details.nested.contact_whatsapp, undefined);
+  assert.equal(canonical.payload.data.listing.details.phone, undefined);
+  assert.equal(privateOwner.payload.data.listing.details.phone, "private-test-only");
+  const publicRow = legacyList.payload.data.items.find((item) => item.id === id);
+  assert.ok(publicRow);
+  assert.equal(JSON.parse(publicRow.details).phone, undefined);
+  assert.equal(JSON.parse(publicRow.details).nested.contact_whatsapp, undefined);
+});
+
+test("phase 1: auxiliary listing surfaces redact private fields for other users", async () => {
+  const pending = await createListing(owner, {
+    title: "Privacy auxiliary listing",
+    details: {
+      color: "green",
+      email: "secret-test-only@example.invalid",
+      "contact.phone": "secret-dotted-phone",
+      nested: {
+        whatsapp: "secret-test-only",
+        "contact.email": "secret-dotted-email",
+        model: "visible-model",
+      },
+    },
+  });
+  assert.equal(pending.response.status, 200);
+  const id = pending.payload.data.id;
+  const approval = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: { listingId: id, action: "approve", expectedUpdatedAt: pending.payload.data.updatedAt },
+  });
+  assert.equal(approval.response.status, 200);
+
+  const seller = await api(`/v1/sellers/${owner.userId}`);
+  assert.equal(seller.response.status, 200);
+  const sellerListing = seller.payload.data.listings.find((item) => item.id === id);
+  assert.ok(sellerListing);
+  assert.equal(sellerListing.details.email, undefined);
+  assert.equal(sellerListing.details["contact.phone"], undefined);
+  assert.equal(sellerListing.details.nested["contact.email"], undefined);
+  assert.equal(sellerListing.details.nested.whatsapp, undefined);
+  assert.equal(sellerListing.details.nested.model, "visible-model");
+
+  const markedRecent = await api(`/v1/listings/${id}/recent-view`, {
+    ...other,
+    method: "POST",
+  });
+  assert.equal(markedRecent.response.status, 200);
+  const recents = await api("/v1/account/recent-views", other);
+  assert.equal(recents.response.status, 200);
+  const recentListing = recents.payload.data.find((item) => item.listingId === id)?.listing;
+  assert.ok(recentListing);
+  assert.equal(recentListing.details.email, undefined);
+  assert.equal(recentListing.details["contact.phone"], undefined);
+  assert.equal(recentListing.details.nested["contact.email"], undefined);
+  assert.equal(recentListing.details.nested.whatsapp, undefined);
+  assert.equal(recentListing.details.color, "green");
+
+  const markedFavorite = await api(`/v1/listings/${id}/favorite`, {
+    ...other,
+    method: "POST",
+  });
+  assert.equal(markedFavorite.response.status, 200);
+  const favorites = await api("/v1/account/favorites", other);
+  assert.equal(favorites.response.status, 200);
+  const favorite = favorites.payload.data.find((item) => item.listing_id === id);
+  assert.ok(favorite);
+  const favoriteDetails = JSON.parse(favorite.details);
+  assert.equal(favoriteDetails.email, undefined);
+  assert.equal(favoriteDetails["contact.phone"], undefined);
+  assert.equal(favoriteDetails.nested["contact.email"], undefined);
+  assert.equal(favoriteDetails.nested.whatsapp, undefined);
+  assert.equal(favoriteDetails.color, "green");
+
+  // Exercise the real public nearby endpoint against isolated D1 location fixtures.
+  executeSql(`
+    INSERT OR IGNORE INTO location_nodes
+      (id, node_type, name_ar, slug, latitude, longitude, created_at, updated_at)
+    VALUES
+      ('phase1-privacy-location', 'neighborhood', 'Privacy Test Node',
+       'phase1-privacy-location', 34.73, 36.72,
+       '2026-11-13T00:00:00.000Z', '2026-11-13T00:00:00.000Z');
+    UPDATE listings SET location_node_id = 'phase1-privacy-location'
+      WHERE id = '${id}' AND owner_id = '${owner.userId}';
+  `);
+  const nearby = await api(
+    "/v1/listings/nearby?latitude=34.73&longitude=36.72&radiusKm=5&limit=100",
+  );
+  assert.equal(nearby.response.status, 200);
+  const nearbyListing = nearby.payload.data.find((item) => item.listing.id === id)?.listing;
+  assert.ok(nearbyListing, "The nearby public read must include the isolated fixture");
+  assert.equal(nearbyListing.details.email, undefined);
+  assert.equal(nearbyListing.details["contact.phone"], undefined);
+  assert.equal(nearbyListing.details.nested["contact.email"], undefined);
+  assert.equal(nearbyListing.details.nested.model, "visible-model");
+
+  // A real lifecycle price reduction makes this same listing visible on the public offers route.
+  const reduced = await api(`/v1/listings/${id}/lifecycle`, {
+    ...owner,
+    method: "PATCH",
+    body: { action: "reduce_price", newPrice: 80 },
+  });
+  assert.equal(reduced.response.status, 200);
+  const offers = await api("/v1/offers/price-drops?limit=50");
+  assert.equal(offers.response.status, 200);
+  const offerListing = offers.payload.data.find((item) => item.listing.id === id)?.listing;
+  assert.ok(offerListing, "The public price-drop read must include the isolated fixture");
+  assert.equal(offerListing.details.email, undefined);
+  assert.equal(offerListing.details["contact.phone"], undefined);
+  assert.equal(offerListing.details.nested["contact.email"], undefined);
+  assert.equal(offerListing.details.nested.model, "visible-model");
+
+  const ownerView = await api(`/api/listings/${id}`, owner);
+  assert.equal(ownerView.response.status, 200);
+  assert.equal(ownerView.payload.data.listing.details.email, "secret-test-only@example.invalid");
+  assert.equal(ownerView.payload.data.listing.details["contact.phone"], "secret-dotted-phone");
+  assert.equal(
+    ownerView.payload.data.listing.details.nested["contact.email"],
+    "secret-dotted-email",
+  );
+});
+
+test("phase 1: owner-only roles and account freezing, restrictions, restore, audit", async () => {
+  const member = await signup("phase1-member");
+  const forbiddenRole = await api("/v1/admin/users/roles", {
+    ...admin,
+    method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "assign" },
+  });
+  assert.equal(forbiddenRole.response.status, 403);
+  const selfFreeze = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: { userId: owner.userId, status: "frozen", reason: "not allowed" },
+  });
+  assert.equal(selfFreeze.response.status, 403);
+
+  const frozen = await api("/v1/admin/users/status", {
+    ...admin,
+    method: "POST",
+    body: {
+      userId: member.userId,
+      status: "frozen",
+      reason: "Temporary moderation hold",
+    },
+  });
+  assert.equal(frozen.response.status, 200);
+  const blocked = await api("/v1/listings", {
+    ...member,
+    method: "POST",
+    body: listingInput(),
+  });
+  assert.equal(blocked.response.status, 403);
+  assert.equal(blocked.payload.error.code, "account_restricted");
+
+  const unfrozen = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: member.userId,
+      status: "active",
+      reason: "Review complete",
+    },
+  });
+  assert.equal(unfrozen.response.status, 200);
+
+  const restricted = await api("/v1/admin/users/restrictions", {
+    ...admin,
+    method: "POST",
+    body: {
+      userId: member.userId,
+      restrictionType: "posting",
+      action: "set",
+      reason: "Posting under review",
+    },
+  });
+  assert.equal(restricted.response.status, 201);
+  assert.ok(typeof restricted.payload.data === "string");
+  const repeatedRestriction = await api("/v1/admin/users/restrictions", {
+    ...admin,
+    method: "POST",
+    body: {
+      userId: member.userId,
+      restrictionType: "posting",
+      action: "set",
+      reason: "Retry request",
+    },
+  });
+  assert.equal(repeatedRestriction.response.status, 200);
+  assert.equal(repeatedRestriction.payload.data, restricted.payload.data);
+  const underRestriction = await api("/v1/listings", {
+    ...member,
+    method: "POST",
+    body: listingInput(),
+  });
+  assert.equal(underRestriction.response.status, 403);
+  const users = await api("/v1/admin/users", admin);
+  assert.equal(users.response.status, 200);
+  assert.ok(
+    users.payload.data
+      .find((user) => user.id === member.userId)
+      .activeRestrictions.includes("posting"),
+  );
+
+  const lifted = await api("/v1/admin/users/restrictions", {
+    ...admin,
+    method: "POST",
+    body: {
+      userId: member.userId,
+      restrictionType: "posting",
+      action: "lift",
+      reason: "Restriction cleared",
+    },
+  });
+  assert.equal(lifted.response.status, 200);
+  const posting = await api("/v1/listings", {
+    ...member,
+    method: "POST",
+    body: listingInput(),
+  });
+  assert.equal(posting.response.status, 201);
+
+  const granted = await api("/v1/admin/users/roles", {
+    ...owner,
+    method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "assign" },
+  });
+  assert.equal(granted.response.status, 200);
+  const revoked = await api("/v1/admin/users/roles", {
+    ...owner,
+    method: "POST",
+    body: { userId: member.userId, role: "moderator", action: "remove" },
+  });
+  assert.equal(revoked.response.status, 200);
+
+  const ban = await signup("phase1-ban");
+  assert.equal(
+    (
+      await api("/v1/admin/users/status", {
+        ...owner,
+        method: "POST",
+        body: {
+          userId: ban.userId,
+          status: "disabled",
+          reason: "Security review",
+        },
+      })
+    ).response.status,
+    200,
+  );
+  assert.equal((await api("/api/profile", ban)).response.status, 401);
+  assert.equal(
+    (
+      await api("/v1/admin/users/status", {
+        ...owner,
+        method: "POST",
+        body: {
+          userId: ban.userId,
+          status: "active",
+          reason: "Restored after review",
+        },
+      })
+    ).response.status,
+    200,
+  );
+  assert.equal((await api("/api/profile", ban)).response.status, 200);
+
+  const audits = await api("/v1/admin/audit?limit=100", owner);
+  assert.equal(audits.response.status, 200);
+  assert.ok(audits.payload.data.some((row) => row.action === "user.status_changed"));
+  assert.ok(audits.payload.data.some((row) => row.action === "user.role_assigned"));
+});
+
+test("phase 1: freezing an administrator removes GET access until restoration", async () => {
+  const freeze = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: admin.userId,
+      status: "frozen",
+      reason: "Isolated staff suspension acceptance test",
+    },
+  });
+  assert.equal(freeze.response.status, 200);
+
+  try {
+    const blockedRead = await api("/v1/admin/users", admin);
+    assert.equal(blockedRead.response.status, 403);
+    assert.equal(blockedRead.payload.error.code, "account_restricted");
+
+    const blockedWrite = await api("/v1/admin/users/status", {
+      ...admin,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        status: "frozen",
+        reason: "Should never be allowed",
+      },
+    });
+    assert.equal(blockedWrite.response.status, 403);
+  } finally {
+    const restore = await api("/v1/admin/users/status", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: admin.userId,
+        status: "active",
+        reason: "Isolated staff suspension test finished",
+      },
+    });
+    assert.equal(restore.response.status, 200);
+  }
+  const restoredRead = await api("/v1/admin/users", admin);
+  assert.equal(restoredRead.response.status, 200);
+});
+
+test("phase 1: concurrent duplicate image uploads cannot remove the winning R2 asset", async () => {
+  const created = await api("/v1/listings", {
+    ...owner,
+    method: "POST",
+    body: listingInput(),
+  });
+  assert.equal(created.response.status, 201);
+  const id = created.payload.data.id;
+  const png = new Uint8Array([
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+  ]);
+  const attempts = await Promise.all([
+    upload(owner, png, "image/png", id),
+    upload(owner, png, "image/png", id),
+  ]);
+  assert.ok(attempts.some((attempt) => attempt.response.status === 201));
+  const images = await api(`/v1/listings/${id}/images`, owner);
+  assert.equal(images.response.status, 200);
+  assert.ok(images.payload.data.length > 0);
+  for (const image of images.payload.data) {
+    const stored = await fetch(`${baseUrl}/v1/account/media/assets/${image.mediaAssetId}`, {
+      headers: headers(owner),
+    });
+    assert.equal(stored.status, 200, "Database media must resolve to a stored R2 object");
+  }
+});
+
 async function createListing(session, overrides = {}) {
   const body = {
     categoryId: "test-category",
@@ -1380,7 +1774,10 @@ async function createListing(session, overrides = {}) {
   assert.equal(taxonomy.response.status, 200);
   const image = await upload(
     session,
-    new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]),
+    new Uint8Array([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+    ]),
     "image/png",
     createdListingId,
   );
@@ -1395,4 +1792,3 @@ async function createListing(session, overrides = {}) {
     },
   });
 }
-
