@@ -24,7 +24,7 @@ test("marketplace image uploads remain size and MIME constrained", () => {
 
 test("deep image inspection executes only after upload rate limiting", () => {
   const limiterIndex = security.indexOf("await decision.binding.limit({ key })");
-  const inspectionIndex = security.indexOf("await inspectMarketplaceImageRequest(request, requestId, path)");
+  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\()/;
   assert.ok(limiterIndex >= 0);
   assert.ok(inspectionIndex > limiterIndex);
   assert.match(security, /request\s*\.clone\(\)\s*\.formData\(\)/);
@@ -50,8 +50,8 @@ test("privacy-bearing metadata is removed losslessly before marketplace handlers
   assert.match(security, /image_privacy_metadata_stripped/);
   assert.match(security, /metadata_sanitization_failed/);
   assert.match(security, /rebuildImageUploadRequest/);
-  assert.match(security, /const sanitizedBuffer = sanitizedBytes\.buffer\.slice/);
-  assert.match(security, /new File\(\[sanitizedBuffer\]/);
+  assert.match(security, /const\s+sanitizedBuffer\s*=\s*sanitizedBytes\.buffer\.slice\s*\(/);
+  assert.match(security, /new File\(\s*\[sanitizedBuffer\]/);
   assert.match(security, /form\.forEach\(\(value, key\)/);
   assert.doesNotMatch(security, /EXIF payload|GPS|metadataValue|metadataContent/);
 });
@@ -76,7 +76,7 @@ test("malformed or unsanitizable images fail before marketplace storage", () => 
   assert.match(security, /invalid_image_structure/);
   assert.match(security, /Image dimensions or structure are not supported/);
   assert.match(security, /Image could not be sanitized safely/);
-  const inspectionIndex = security.indexOf("await inspectMarketplaceImageRequest(request, requestId, path)");
-  const adminIndex = security.indexOf("await enforceAdminSecurityPerimeter(request, env, requestId, path)");
+  const inspectionIndex = security.search(/await\s+inspectMarketplaceImageRequest\s*\()/;
+  const adminIndex = security.search(/await\s+enforceAdminSecurityPerimeter\s*\()/;
   assert.ok(inspectionIndex >= 0 && adminIndex > inspectionIndex);
 });
