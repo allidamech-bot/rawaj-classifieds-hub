@@ -60,16 +60,14 @@
   overflow: hidden;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.55rem !important;
-  background: rgba(48, 49, 56, 0.99) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 26px 66px rgba(0, 0, 0, 0.26) !important;
+  background: var(--rawaj-surface) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside {
   isolation: isolate;
   background: var(--rawaj-surface) !important;
-  color: #fff !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside::before {
@@ -102,12 +100,12 @@
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy > p {
-  color: #ff9b86 !important;
+  color: var(--rawaj-brand-primary) !important;
   letter-spacing: 0 !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy h1 {
-  color: #fff !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
   font-size: clamp(1.8rem, 4vw, 2.8rem) !important;
   line-height: 1.28 !important;
@@ -115,22 +113,22 @@
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy > span,
 .rawaj-auth-premium-v3 .rawaj-auth-aside__trust {
-  color: rgba(255, 255, 255, 0.66) !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li {
-  border-color: rgba(255, 255, 255, 0.095) !important;
-  background: rgba(24, 25, 30, 0.24) !important;
+  border-color: var(--rawaj-divider) !important;
+  background: var(--rawaj-surface-subtle) !important;
   backdrop-filter: blur(12px);
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > span {
-  background: rgba(104, 173, 255, 0.1) !important;
-  color: #a9c8bb !important;
+  background: var(--rawaj-selected-surface) !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > svg {
-  color: #69dfb2 !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card {
@@ -144,7 +142,7 @@
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header p {
-  color: #ff927b !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header h2 {
