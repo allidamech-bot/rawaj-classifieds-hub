@@ -127,11 +127,15 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
+      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+        name: /إلغاء الحجز|Clear reservation/i,
+      }),
     ).toBeVisible({ timeout: 30_000 });
 
     await clickTwiceInSameTick(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
+      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+        name: /إلغاء الحجز|Clear reservation/i,
+      }),
     );
     await expect(
       ownerDialog(page, APPROVED_TITLE).getByRole("button", {
@@ -151,7 +155,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(dropPriceButton).toBeEnabled({ timeout: 30_000 });
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    await ownerDialog(page, APPROVED_TITLE).getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i).selectOption("90");
+    await ownerDialog(page, APPROVED_TITLE)
+      .getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i)
+      .selectOption("90");
     const applyExpiryButton = ownerDialog(page, APPROVED_TITLE).getByRole("button", {
       name: /تطبيق|Apply/i,
     });
@@ -162,9 +168,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
-    await expect(ownerDialog(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i)).toHaveValue(REDUCED_PRICE, {
-      timeout: 30_000,
-    });
+    await expect(
+      ownerDialog(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i),
+    ).toHaveValue(REDUCED_PRICE, { timeout: 30_000 });
     await expect(
       ownerDialog(page, APPROVED_TITLE).getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i),
     ).toHaveValue("90");
@@ -241,9 +247,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
 
-    const deleteDialog = page.getByRole("dialog", {
-      name: /حذف المسودة|Delete draft/i,
-    }).last();
+    const deleteDialog = page
+      .getByRole("dialog", { name: /حذف المسودة|Delete draft/i })
+      .last();
     await expect(deleteDialog).toBeVisible();
     await clickTwiceInSameTick(
       deleteDialog.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
