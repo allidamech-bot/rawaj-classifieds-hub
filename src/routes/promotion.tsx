@@ -269,14 +269,14 @@ function PromotionPage() {
     <>
       <PageHeader title="Boost" to="/more" backMode="history" />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4" dir={language === "ar" ? "rtl" : "ltr"}>
-        <section className="overflow-hidden rounded-2xl bg-[#241b0d] p-5 text-[#fff8e8] shadow-soft sm:p-6">
+        <section className="overflow-hidden rounded-2xl border border-[var(--rawaj-divider)] bg-[var(--rawaj-surface)] p-5 text-[var(--rawaj-ink-primary)] sm:p-6">
           <div className="flex items-start gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-400 text-[#241b0d]">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[var(--rawaj-selected-surface)] text-[var(--rawaj-brand-primary)]">
               <Rocket className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0">
               <h1 className="text-xl font-black sm:text-2xl">Search Boost</h1>
-              <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50/80">
+              <p className="mt-1 max-w-2xl text-sm leading-7 text-[var(--rawaj-ink-secondary)]">
                 {text(
                   "ارفع إعلانك في النتائج العادية ذات الصلة فقط. Boost لا يتجاوز البحث أو القسم أو الفلاتر.",
                   "Move your listing up in relevant normal results. Boost never bypasses search, category, or filters.",
