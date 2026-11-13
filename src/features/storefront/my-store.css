@@ -1563,3 +1563,44 @@
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a[aria-current="page"] {
   color: #103f42 !important;
 }
+
+/* Public reviews and safety no longer inherit the legacy charcoal cards. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details > :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: block;
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+  border: 1px solid #e7e2d9 !important;
+  box-shadow: 0 4px 14px rgba(16, 63, 66, 0.05) !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) :is(h2, h3, strong, p, label, small) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) .text-muted-foreground {
+  color: #53615e !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-reviews [class*="bg-white/"] {
+  background-color: #f1eeea !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-reviews :is(
+  a.bg-primary,
+  button.bg-primary
+) {
+  background-color: #103f42 !important;
+  color: #fff !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-safety .text-primary-foreground\/72 {
+  color: #53615e !important;
+}
