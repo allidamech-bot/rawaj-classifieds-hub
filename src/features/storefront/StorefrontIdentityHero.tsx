@@ -84,7 +84,6 @@ export function StorefrontIdentityHero({
         location={location}
         verified={verified}
         completeness={completeness}
-        approvedCount={approvedCount ?? 0}
       />
     );
   }
