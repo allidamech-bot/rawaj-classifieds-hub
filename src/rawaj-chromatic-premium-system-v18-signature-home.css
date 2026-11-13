@@ -26,8 +26,8 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
   border-bottom: 1px solid rgba(216,174,95,.095) !important;
-  background: rgba(20,23,31,.97) !important;
-  box-shadow: 0 10px 28px rgba(0,0,0,.28) !important;
+  background: var(--rawaj-canvas) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] :is(
@@ -44,8 +44,8 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account[data-active="true"],
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action[data-active="true"] {
   border-color: rgba(216,174,95,.28) !important;
-  color: #f8ead0 !important;
-  background: #201d1a !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 /* Trust row */
@@ -261,7 +261,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
   border: 1px solid rgba(216,174,95,.2) !important;
-  color: #f8ead0 !important;
+  color: var(--rawaj-brand-primary) !important;
   background: rgba(44,37,31,.82) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
 }
