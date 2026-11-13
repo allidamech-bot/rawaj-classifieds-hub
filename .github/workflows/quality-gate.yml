@@ -65,6 +65,9 @@ jobs:
       - name: Verify runtime backend boundary
         run: npm run test:runtime-boundary
 
+      - name: Ensure browser CI never proxies to Syria production Worker
+        run: node --test scripts/ci-syria-worker-network-isolation.test.mjs
+
       - name: Validate and replay D1 migrations
         run: npm run test:d1-migrations
 
