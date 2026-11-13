@@ -247,9 +247,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
 
-    const deleteDialog = page
-      .getByRole("dialog", { name: /حذف المسودة|Delete draft/i })
-      .last();
+    const deleteDialog = page.getByRole("dialog", { name: /حذف المسودة|Delete draft/i }).last();
     await expect(deleteDialog).toBeVisible();
     await clickTwiceInSameTick(
       deleteDialog.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
