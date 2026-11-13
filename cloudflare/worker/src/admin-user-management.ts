@@ -161,6 +161,11 @@ export async function handleAdminUserManagement(
       return invalid(cors);
     }
     const endsAt = endsAtMs ? new Date(endsAtMs).toISOString() : null;
+    const existing = await env.DB.prepare(
+      "SELECT id FROM user_restrictions WHERE user_id = ? AND restriction_type = ? " +
+      "AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1",
+    ).bind(userId, restrictionType, timestamp, timestamp).first<{ id: string }>();
+    if (existing) return json({ data: existing.id }, 200, cors);
     const id = crypto.randomUUID();
     const results = await env.DB.batch([
       env.DB.prepare(
