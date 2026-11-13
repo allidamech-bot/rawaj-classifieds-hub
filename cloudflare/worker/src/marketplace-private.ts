@@ -75,16 +75,9 @@ export async function handleMarketplacePrivate(
   if (path === "/v1/profile/media" && request.method === "POST") {
     return uploadProfileMedia(request, env, cors);
   }
-  const profileMediaMatch = path.match(
-    /^\/v1\/profile\/media\/(avatar|cover)$/,
-  );
+  const profileMediaMatch = path.match(/^\/v1\/profile\/media\/(avatar|cover)$/);
   if (profileMediaMatch && request.method === "DELETE") {
-    return removeProfileMedia(
-      request,
-      env,
-      cors,
-      profileMediaMatch[1] as "avatar" | "cover",
-    );
+    return removeProfileMedia(request, env, cors, profileMediaMatch[1] as "avatar" | "cover");
   }
   if (path === "/v1/account/listings" && request.method === "GET") {
     return ownerListings(request, env, cors);
@@ -92,44 +85,18 @@ export async function handleMarketplacePrivate(
   if (path === "/v1/listings" && request.method === "POST") {
     return createListing(request, env, cors);
   }
-  if (
-    path === "/v1/listings" &&
-    request.method === "GET" &&
-    url.pathname.startsWith("/api/")
-  ) {
+  if (path === "/v1/listings" && request.method === "GET" && url.pathname.startsWith("/api/")) {
     return publicListings(url, env, cors);
   }
   const listingMatch = path.match(/^\/v1\/listings\/([^/]+)$/);
-  if (
-    listingMatch &&
-    request.method === "GET" &&
-    url.pathname.startsWith("/api/")
-  ) {
-    return listingDetail(
-      request,
-      env,
-      cors,
-      decodeURIComponent(listingMatch[1]),
-    );
+  if (listingMatch && request.method === "GET" && url.pathname.startsWith("/api/")) {
+    return listingDetail(request, env, cors, decodeURIComponent(listingMatch[1]));
   }
-  if (
-    listingMatch &&
-    (request.method === "PATCH" || request.method === "PUT")
-  ) {
-    return updateListing(
-      request,
-      env,
-      cors,
-      decodeURIComponent(listingMatch[1]),
-    );
+  if (listingMatch && (request.method === "PATCH" || request.method === "PUT")) {
+    return updateListing(request, env, cors, decodeURIComponent(listingMatch[1]));
   }
   if (listingMatch && request.method === "DELETE") {
-    return deleteListing(
-      request,
-      env,
-      cors,
-      decodeURIComponent(listingMatch[1]),
-    );
+    return deleteListing(request, env, cors, decodeURIComponent(listingMatch[1]));
   }
   const imagesMatch = path.match(/^\/v1\/listings\/([^/]+)\/images$/);
   if (imagesMatch && request.method === "POST") {
@@ -139,27 +106,15 @@ export async function handleMarketplacePrivate(
     return listImages(request, env, cors, decodeURIComponent(imagesMatch[1]));
   }
   if (imagesMatch && request.method === "PATCH") {
-    return reorderImages(
-      request,
-      env,
-      cors,
-      decodeURIComponent(imagesMatch[1]),
-    );
+    return reorderImages(request, env, cors, decodeURIComponent(imagesMatch[1]));
   }
   const imageMatch = path.match(/^\/v1\/listing-images\/([^/]+)$/);
   if (imageMatch && request.method === "DELETE") {
     return deleteImage(request, env, cors, decodeURIComponent(imageMatch[1]));
   }
-  const privateMediaMatch = path.match(
-    /^\/v1\/account\/media\/assets\/([^/]+)$/,
-  );
+  const privateMediaMatch = path.match(/^\/v1\/account\/media\/assets\/([^/]+)$/);
   if (privateMediaMatch && request.method === "GET") {
-    return privateMedia(
-      request,
-      env,
-      cors,
-      decodeURIComponent(privateMediaMatch[1]),
-    );
+    return privateMedia(request, env, cors, decodeURIComponent(privateMediaMatch[1]));
   }
   return relevant(path) && url.pathname.startsWith("/api/")
     ? json(
@@ -173,16 +128,10 @@ export async function handleMarketplacePrivate(
 }
 
 function relevant(path: string) {
-  return /^\/v1\/(profile|account\/(?:listings|media)|listings|listing-images)\b/.test(
-    path,
-  );
+  return /^\/v1\/(profile|account\/(?:listings|media)|listings|listing-images)\b/.test(path);
 }
 
-async function getProfile(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function getProfile(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const row = await env.DB.prepare(
@@ -195,18 +144,10 @@ async function getProfile(
     .first<Row>();
   return row
     ? json({ data: { ...mapProfile(row), roles: auth.roles } }, 200, cors)
-    : json(
-        { error: { code: "not_found", message: "Profile not found." } },
-        404,
-        cors,
-      );
+    : json({ error: { code: "not_found", message: "Profile not found." } }, 404, cors);
 }
 
-async function updateProfile(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function updateProfile(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const body = await readJson(request);
@@ -237,19 +178,10 @@ async function updateProfile(
   return result.success ? getProfile(request, env, cors) : databaseError(cors);
 }
 
-async function uploadProfileMedia(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  if (
-    !request.headers
-      .get("Content-Type")
-      ?.toLowerCase()
-      .startsWith("multipart/form-data")
-  ) {
+  if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
     return json(
       {
         error: {
@@ -268,19 +200,14 @@ async function uploadProfileMedia(
   if ((kind !== "avatar" && kind !== "cover") || !(file instanceof File)) {
     return validation(cors, "Profile media kind and image are required.");
   }
-  if (
-    !IMAGE_TYPES.has(file.type) ||
-    file.size <= 0 ||
-    file.size > MAX_IMAGE_BYTES
-  ) {
+  if (!IMAGE_TYPES.has(file.type) || file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
     return validation(cors, "Unsupported image type or size.");
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (!matchesImageSignature(bytes, file.type))
     return validation(cors, "Image content is invalid.");
 
-  const profileColumn =
-    kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
+  const profileColumn = kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
   const previous = await env.DB.prepare(
     `SELECT p.${profileColumn} AS asset_id, m.object_key
        FROM public_profiles p
@@ -291,8 +218,7 @@ async function uploadProfileMedia(
     .first<Row>();
 
   const assetId = crypto.randomUUID();
-  const extension =
-    file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+  const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
   const objectKey = `profiles/${auth.userId}/${kind}/${crypto.randomUUID()}.${extension}`;
   const checksum = await sha256Hex(bytes);
   const timestamp = now();
@@ -339,9 +265,7 @@ async function uploadProfileMedia(
   const previousAssetId = nullableString(previous?.asset_id);
   const previousObjectKey = nullableString(previous?.object_key);
   if (previousAssetId && previousAssetId !== assetId) {
-    const deleted = await env.DB.prepare(
-      "DELETE FROM media_assets WHERE id = ? AND owner_id = ?",
-    )
+    const deleted = await env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?")
       .bind(previousAssetId, auth.userId)
       .run();
     if (deleted.success && previousObjectKey) {
@@ -376,8 +300,7 @@ async function removeProfileMedia(
 ) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  const profileColumn =
-    kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
+  const profileColumn = kind === "avatar" ? "avatar_asset_id" : "cover_asset_id";
   const previous = await env.DB.prepare(
     `SELECT p.${profileColumn} AS asset_id, m.object_key
        FROM public_profiles p
@@ -396,9 +319,10 @@ async function removeProfileMedia(
       `UPDATE public_profiles SET ${profileColumn} = NULL,
         profile_version = profile_version + 1, updated_at = ? WHERE id = ?`,
     ).bind(timestamp, auth.userId),
-    env.DB.prepare(
-      "DELETE FROM media_assets WHERE id = ? AND owner_id = ?",
-    ).bind(assetId, auth.userId),
+    env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
+      assetId,
+      auth.userId,
+    ),
   ]);
   if (results.some((result) => !result.success)) return databaseError(cors);
   if (objectKey) {
@@ -422,30 +346,10 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
     "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
   ];
   const values: Value[] = [];
-  addFilter(
-    where,
-    values,
-    "l.category_id",
-    clean(url.searchParams.get("categoryId"), 120),
-  );
-  addFilter(
-    where,
-    values,
-    "l.subcategory_id",
-    clean(url.searchParams.get("subcategoryId"), 120),
-  );
-  addFilter(
-    where,
-    values,
-    "l.governorate_id",
-    clean(url.searchParams.get("governorateId"), 120),
-  );
-  addFilter(
-    where,
-    values,
-    "l.owner_id",
-    clean(url.searchParams.get("sellerId"), 120),
-  );
+  addFilter(where, values, "l.category_id", clean(url.searchParams.get("categoryId"), 120));
+  addFilter(where, values, "l.subcategory_id", clean(url.searchParams.get("subcategoryId"), 120));
+  addFilter(where, values, "l.governorate_id", clean(url.searchParams.get("governorateId"), 120));
+  addFilter(where, values, "l.owner_id", clean(url.searchParams.get("sellerId"), 120));
   const min = numberOrNull(url.searchParams.get("priceMin"));
   const max = numberOrNull(url.searchParams.get("priceMax"));
   if (min !== null) {
@@ -487,9 +391,7 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
               ...row,
               // Maintain the legacy DTO shape, never the legacy privacy leak.
               currency: "SYP",
-              details: JSON.stringify(
-                sanitizePublicListingDetails(jsonObject(row.details)),
-              ),
+              details: JSON.stringify(sanitizePublicListingDetails(jsonObject(row.details))),
             })),
             page,
             pageSize,
@@ -501,12 +403,7 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
     : databaseError(cors);
 }
 
-async function listingDetail(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  id: string,
-) {
+async function listingDetail(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
   const auth = await authenticate(request, asAuthEnv(env));
   const row = await env.DB.prepare(
     `SELECT id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
@@ -525,11 +422,7 @@ async function listingDetail(
     (!row.expires_at || String(row.expires_at) > now()),
   );
   if (!row || (!ownerView && !publiclyAvailable)) {
-    return json(
-      { error: { code: "not_found", message: "Listing not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
   }
   const images = await env.DB.prepare(
     `SELECT li.id, li.listing_id, li.media_asset_id, li.alt_ar, li.sort_order,
@@ -568,11 +461,7 @@ async function listingDetail(
   );
 }
 
-async function ownerListings(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function ownerListings(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const result = await env.DB.prepare(
@@ -613,25 +502,14 @@ async function ownerListings(
       ) um ON um.listing_id = l.id
       WHERE l.owner_id = ? ORDER BY l.updated_at DESC LIMIT 200`,
   )
-    .bind(
-      auth.userId,
-      auth.userId,
-      auth.userId,
-      auth.userId,
-      auth.userId,
-      auth.userId,
-    )
+    .bind(auth.userId, auth.userId, auth.userId, auth.userId, auth.userId, auth.userId)
     .all();
   return result.success
     ? json({ data: (result.results ?? []).map(mapListingRow) }, 200, cors)
     : databaseError(cors);
 }
 
-async function createListing(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function createListing(request: Request, env: MarketplaceEnv, cors: Headers) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const input = await parseListing(request, env, cors);
@@ -734,12 +612,7 @@ async function createListing(
   return databaseError(cors);
 }
 
-async function updateListing(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  id: string,
-) {
+async function updateListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const existing = await env.DB.prepare(
@@ -762,10 +635,7 @@ async function updateListing(
   }
   const input = await parseListing(request, env, cors);
   if (input instanceof Response) return input;
-  if (
-    input.expectedUpdatedAt &&
-    input.expectedUpdatedAt !== existing.updated_at
-  ) {
+  if (input.expectedUpdatedAt && input.expectedUpdatedAt !== existing.updated_at) {
     return json(
       {
         error: {
@@ -778,12 +648,7 @@ async function updateListing(
     );
   }
   if (input.submit) {
-    const submissionError = await validateListingSubmission(
-      env,
-      cors,
-      id,
-      input,
-    );
+    const submissionError = await validateListingSubmission(env, cors, id, input);
     if (submissionError) return submissionError;
   }
   const status = input.submit
@@ -848,25 +713,14 @@ async function updateListing(
     : databaseError(cors);
 }
 
-async function deleteListing(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  id: string,
-) {
+async function deleteListing(request: Request, env: MarketplaceEnv, cors: Headers, id: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  const listing = await env.DB.prepare(
-    "SELECT owner_id, status FROM listings WHERE id = ?",
-  )
+  const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(id)
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
-  if (
-    !["draft", "pending_review", "approved", "rejected"].includes(
-      listing.status,
-    )
-  ) {
+  if (!["draft", "pending_review", "approved", "rejected"].includes(listing.status)) {
     return json(
       {
         error: {
@@ -889,14 +743,12 @@ async function deleteListing(
   const statements = [
     env.DB.prepare("DELETE FROM listing_images WHERE listing_id = ?").bind(id),
     ...(assets.results ?? []).map((asset) =>
-      env.DB.prepare(
-        "DELETE FROM media_assets WHERE id = ? AND owner_id = ?",
-      ).bind(asset.id, auth.userId),
+      env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
+        asset.id,
+        auth.userId,
+      ),
     ),
-    env.DB.prepare("DELETE FROM listings WHERE id = ? AND owner_id = ?").bind(
-      id,
-      auth.userId,
-    ),
+    env.DB.prepare("DELETE FROM listings WHERE id = ? AND owner_id = ?").bind(id, auth.userId),
   ];
   const results = await env.DB.batch(statements);
   if (results.some((result) => !result.success)) return databaseError(cors);
@@ -920,20 +772,12 @@ async function uploadImage(
 ) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  const listing = await env.DB.prepare(
-    "SELECT owner_id, status FROM listings WHERE id = ?",
-  )
+  const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(listingId)
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
-  if (!["draft", "rejected", "approved"].includes(listing.status))
-    return forbidden(cors);
-  if (
-    !request.headers
-      .get("Content-Type")
-      ?.toLowerCase()
-      .startsWith("multipart/form-data")
-  ) {
+  if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);
+  if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
     return json(
       {
         error: {
@@ -948,11 +792,7 @@ async function uploadImage(
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File)) return validation(cors, "Image file required.");
-  if (
-    !IMAGE_TYPES.has(file.type) ||
-    file.size <= 0 ||
-    file.size > MAX_IMAGE_BYTES
-  ) {
+  if (!IMAGE_TYPES.has(file.type) || file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
     return validation(cors, "Unsupported image type or size.");
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -995,16 +835,11 @@ async function uploadImage(
     .bind(listingId)
     .first<{ count: number }>();
   if ((count?.count ?? 0) >= MAX_IMAGES) {
-    return json(
-      { error: { code: "limit_exceeded", message: "Image limit reached." } },
-      409,
-      cors,
-    );
+    return json({ error: { code: "limit_exceeded", message: "Image limit reached." } }, 409, cors);
   }
   const assetId = crypto.randomUUID();
   const imageId = crypto.randomUUID();
-  const extension =
-    file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+  const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
   // A retry may share a checksum with another in-flight upload. Use a unique
   // R2 key so compensating deletion can never remove a successful sibling.
   const objectKey = `listings/${auth.userId}/${listingId}/${assetId}.${extension}`;
@@ -1073,27 +908,13 @@ async function uploadImage(
   );
 }
 
-async function listImages(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  listingId: string,
-) {
+async function listImages(request: Request, env: MarketplaceEnv, cors: Headers, listingId: string) {
   const auth = await authenticate(request, asAuthEnv(env));
-  const listing = await env.DB.prepare(
-    "SELECT owner_id, status FROM listings WHERE id = ?",
-  )
+  const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(listingId)
     .first<{ owner_id: string; status: string }>();
-  if (
-    !listing ||
-    (listing.status !== "approved" && listing.owner_id !== auth?.userId)
-  ) {
-    return json(
-      { error: { code: "not_found", message: "Listing not found." } },
-      404,
-      cors,
-    );
+  if (!listing || (listing.status !== "approved" && listing.owner_id !== auth?.userId)) {
+    return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
   }
 
   const result = await env.DB.prepare(
@@ -1106,9 +927,7 @@ async function listImages(
   if (!result.success) return databaseError(cors);
 
   const mediaPrefix =
-    listing.status === "approved"
-      ? "/v1/media/assets"
-      : "/v1/account/media/assets";
+    listing.status === "approved" ? "/v1/media/assets" : "/v1/account/media/assets";
   return json(
     {
       data: (result.results ?? []).map((row) => ({
@@ -1135,14 +954,11 @@ async function reorderImages(
 ) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
-  const listing = await env.DB.prepare(
-    "SELECT owner_id, status FROM listings WHERE id = ?",
-  )
+  const listing = await env.DB.prepare("SELECT owner_id, status FROM listings WHERE id = ?")
     .bind(listingId)
     .first<{ owner_id: string; status: string }>();
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
-  if (!["draft", "rejected", "approved"].includes(listing.status))
-    return forbidden(cors);
+  if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);
   const body = await readJson(request);
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const imageIds = Array.isArray(body.data.imageIds)
@@ -1159,10 +975,7 @@ async function reorderImages(
     new Set(imageIds).size !== imageIds.length ||
     storedIds.some((id) => !imageIds.includes(id))
   ) {
-    return validation(
-      cors,
-      "Image order must contain every listing image exactly once.",
-    );
+    return validation(cors, "Image order must contain every listing image exactly once.");
   }
   const temporary = await env.DB.batch(
     imageIds.map((id, index) =>
@@ -1173,9 +986,11 @@ async function reorderImages(
   );
   if (temporary.some((result) => !result.success)) return databaseError(cors);
   const finalStatements = imageIds.map((id, index) =>
-    env.DB.prepare(
-      "UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?",
-    ).bind(index, id, listingId),
+    env.DB.prepare("UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?").bind(
+      index,
+      id,
+      listingId,
+    ),
   );
   if (listing.status === "approved") {
     finalStatements.push(
@@ -1190,12 +1005,7 @@ async function reorderImages(
     : databaseError(cors);
 }
 
-async function deleteImage(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  imageId: string,
-) {
+async function deleteImage(request: Request, env: MarketplaceEnv, cors: Headers, imageId: string) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   const row = await env.DB.prepare(
@@ -1209,8 +1019,7 @@ async function deleteImage(
   if (!row || row.owner_id !== auth.userId || row.listing_owner !== auth.userId)
     return forbidden(cors);
   const listingStatus = stringValue(row.listing_status);
-  if (!["draft", "rejected", "approved"].includes(listingStatus))
-    return forbidden(cors);
+  if (!["draft", "rejected", "approved"].includes(listingStatus)) return forbidden(cors);
   const timestamp = now();
   const listingTransition =
     listingStatus === "approved"
@@ -1224,9 +1033,10 @@ async function deleteImage(
   const results = await env.DB.batch([
     ...listingTransition,
     env.DB.prepare("DELETE FROM listing_images WHERE id = ?").bind(imageId),
-    env.DB.prepare(
-      "DELETE FROM media_assets WHERE id = ? AND owner_id = ?",
-    ).bind(String(row.asset_id), auth.userId),
+    env.DB.prepare("DELETE FROM media_assets WHERE id = ? AND owner_id = ?").bind(
+      String(row.asset_id),
+      auth.userId,
+    ),
   ]);
   if (results.some((result) => !result.success)) return databaseError(cors);
 
@@ -1240,12 +1050,7 @@ async function deleteImage(
   );
   return json({ data: { success: true } }, 200, cors);
 }
-async function privateMedia(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-  assetId: string,
-) {
+async function privateMedia(request: Request, env: MarketplaceEnv, cors: Headers, assetId: string) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   const asset = await env.DB.prepare(
@@ -1255,19 +1060,11 @@ async function privateMedia(
     .bind(assetId, auth.userId)
     .first<Row>();
   if (!asset) {
-    return json(
-      { error: { code: "not_found", message: "Media not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
   const object = await env.MEDIA.get(String(asset.object_key));
   if (!object) {
-    return json(
-      { error: { code: "not_found", message: "Media not found." } },
-      404,
-      cors,
-    );
+    return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
   const headers = new Headers(cors);
   object.writeHttpMetadata(headers);
@@ -1278,11 +1075,7 @@ async function privateMedia(
   return new Response(object.body, { status: 200, headers });
 }
 
-async function parseListing(
-  request: Request,
-  env: MarketplaceEnv,
-  cors: Headers,
-) {
+async function parseListing(request: Request, env: MarketplaceEnv, cors: Headers) {
   const body = await readJson(request);
   if (!body.ok) return json({ error: body.error }, body.status, cors);
   const categoryId = clean(body.data.categoryId, 120);
@@ -1297,8 +1090,7 @@ async function parseListing(
   )
     .bind(categoryId, governorateId)
     .first<{ category_ok: number; governorate_ok: number }>();
-  if (!refs?.category_ok || !refs.governorate_ok)
-    return validation(cors, "Invalid references.");
+  if (!refs?.category_ok || !refs.governorate_ok) return validation(cors, "Invalid references.");
   const subcategoryId = clean(body.data.subcategoryId, 120);
   if (subcategoryId) {
     const sub = await env.DB.prepare(
@@ -1318,8 +1110,7 @@ async function parseListing(
     if (!location) return validation(cors, "Invalid location.");
   }
   const price = numberOrNull(body.data.price);
-  if (price !== null && (price < 0 || price > 1e15))
-    return validation(cors, "Invalid price.");
+  if (price !== null && (price < 0 || price > 1e15)) return validation(cors, "Invalid price.");
   const details = jsonObject(body.data.details);
   const contactOptions = booleanRecord(body.data.contactOptions);
   const creationRequestId = clean(body.data.creationRequestId, 120);
@@ -1366,14 +1157,8 @@ async function validateListingSubmission(
   if (input.description.trim().length < 10) {
     return validation(cors, "A complete listing description is required.");
   }
-  if (
-    input.priceType === "fixed" &&
-    (input.price === null || input.price <= 0)
-  ) {
-    return validation(
-      cors,
-      "A positive price is required for fixed-price listings.",
-    );
+  if (input.priceType === "fixed" && (input.price === null || input.price <= 0)) {
+    return validation(cors, "A positive price is required for fixed-price listings.");
   }
 
   const assignment = await env.DB.prepare(
@@ -1385,8 +1170,7 @@ async function validateListingSubmission(
   )
     .bind(listingId)
     .first<{ id: string; filter_schema_key: string | null }>();
-  if (!assignment)
-    return validation(cors, "Choose a valid final taxonomy category.");
+  if (!assignment) return validation(cors, "Choose a valid final taxonomy category.");
 
   const image = await env.DB.prepare(
     `SELECT li.id FROM listing_images li
@@ -1396,8 +1180,7 @@ async function validateListingSubmission(
   )
     .bind(listingId)
     .first<{ id: string }>();
-  if (!image)
-    return validation(cors, "Upload at least one image before submission.");
+  if (!image) return validation(cors, "Upload at least one image before submission.");
 
   const schemaTokens = parseSchemaTokens(assignment.filter_schema_key);
   if (schemaTokens.length === 0) return null;
@@ -1415,15 +1198,10 @@ async function validateListingSubmission(
     .all<{ key: string; validation_schema: string | null }>();
   const missing = (fields.results ?? []).filter((field) => {
     const rules = jsonObject(field.validation_schema);
-    return (
-      rules.required === true && !hasListingValue(input.details[field.key])
-    );
+    return rules.required === true && !hasListingValue(input.details[field.key]);
   });
   return missing.length > 0
-    ? validation(
-        cors,
-        "Complete all required category fields before submission.",
-      )
+    ? validation(cors, "Complete all required category fields before submission.")
     : null;
 }
 
@@ -1434,11 +1212,7 @@ function parseSchemaTokens(value: string | null): string[] {
     if (Array.isArray(parsed)) {
       return parsed.filter((item): item is string => typeof item === "string");
     }
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      Array.isArray((parsed as Row).fields)
-    ) {
+    if (parsed && typeof parsed === "object" && Array.isArray((parsed as Row).fields)) {
       return ((parsed as Row).fields as unknown[]).filter(
         (item): item is string => typeof item === "string",
       );
@@ -1462,8 +1236,7 @@ function normalizeProfile(data: Row) {
   const firstName = clean(data.firstName, 40);
   const lastName = clean(data.lastName, 40);
   const displayName =
-    clean(data.displayName, 120) ??
-    [firstName, lastName].filter(Boolean).join(" ");
+    clean(data.displayName, 120) ?? [firstName, lastName].filter(Boolean).join(" ");
   const preferred = clean(data.preferredContactMethod, 20);
   if (
     !displayName ||
@@ -1563,14 +1336,11 @@ function mapListingRow(row: Row) {
 }
 
 function jsonObject(value: unknown): Row {
-  if (value && typeof value === "object" && !Array.isArray(value))
-    return value as Row;
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Row;
   if (typeof value !== "string") return {};
   try {
     const parsed = JSON.parse(value);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Row)
-      : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Row) : {};
   } catch {
     return {};
   }
@@ -1612,10 +1382,7 @@ function optionalMetric(value: unknown): number | undefined {
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -1626,20 +1393,15 @@ function repairWindows1256Mojibake(value: string): string {
     if (byte === undefined) return value;
     bytes.push(byte);
   }
-  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(
-    Uint8Array.from(bytes),
-  );
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
   return repaired.includes("\uFFFD") ? value : repaired;
 }
 function matchesImageSignature(bytes: Uint8Array, type: string) {
-  if (type === "image/jpeg")
-    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (type === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   if (type === "image/png")
     return bytes
       .slice(0, 8)
-      .every(
-        (value, index) => value === [137, 80, 78, 71, 13, 10, 26, 10][index],
-      );
+      .every((value, index) => value === [137, 80, 78, 71, 13, 10, 26, 10][index]);
   if (type === "image/webp")
     return (
       new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" &&
@@ -1652,48 +1414,30 @@ async function sha256Hex(bytes: Uint8Array) {
     bytes.byteOffset,
     bytes.byteOffset + bytes.byteLength,
   ) as ArrayBuffer;
-  return Array.from(
-    new Uint8Array(await crypto.subtle.digest("SHA-256", input)),
-  )
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", input)))
     .map((value) => value.toString(16).padStart(2, "0"))
     .join("");
 }
-function addFilter(
-  where: string[],
-  values: Value[],
-  column: string,
-  value: string | null,
-) {
+function addFilter(where: string[], values: Value[], column: string, value: string | null) {
   if (value) {
     where.push(`${column} = ?`);
     values.push(value);
   }
 }
 function clean(value: unknown, max: number) {
-  return typeof value === "string" && value.trim()
-    ? value.trim().slice(0, max)
-    : null;
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : null;
 }
 function numberOrNull(value: unknown) {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
-function integer(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function integer(value: string | null, fallback: number, min: number, max: number) {
   const parsed = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(parsed)
-    ? Math.max(min, Math.min(max, parsed))
-    : fallback;
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
 }
 function allowed(value: unknown, choices: string[], fallback: string) {
-  return typeof value === "string" && choices.includes(value)
-    ? value
-    : fallback;
+  return typeof value === "string" && choices.includes(value) ? value : fallback;
 }
 function now() {
   return new Date().toISOString();
@@ -1702,18 +1446,10 @@ function validation(cors: Headers, message: string) {
   return json({ error: { code: "validation_error", message } }, 400, cors);
 }
 function unauthorized(cors: Headers) {
-  return json(
-    { error: { code: "auth_required", message: "Authentication required." } },
-    401,
-    cors,
-  );
+  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
 }
 function forbidden(cors: Headers) {
-  return json(
-    { error: { code: "permission_denied", message: "Permission denied." } },
-    403,
-    cors,
-  );
+  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
 }
 function databaseError(cors: Headers) {
   return json(
