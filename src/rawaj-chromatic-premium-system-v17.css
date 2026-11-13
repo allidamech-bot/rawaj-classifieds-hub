@@ -27,13 +27,13 @@
   --rawaj-v17-text: var(--rawaj-ink-primary);
   --rawaj-v17-text-2: var(--rawaj-ink-secondary);
   --rawaj-v17-text-3: var(--rawaj-ink-secondary);
-  --rawaj-v17-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
-  --rawaj-v17-shadow-raised: 0 22px 52px rgba(0, 0, 0, 0.32);
-  --rawaj-v17-inset: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --rawaj-v17-shadow: 0 1px 3px rgba(21, 35, 34, 0.06);
+  --rawaj-v17-shadow-raised: 0 6px 20px rgba(21, 35, 34, 0.09);
+  --rawaj-v17-inset: 0 0 0 transparent;
   --rawaj-v17-radius-card: 1.05rem;
   --rawaj-v17-radius-panel: 1.35rem;
-  --rawaj-v17-gradient-action: #cb334f;
-  --rawaj-v17-gradient-icon: #d83658;
+  --rawaj-v17-gradient-action: var(--rawaj-brand-primary);
+  --rawaj-v17-gradient-icon: var(--rawaj-brand-primary);
 
   --rawaj-page-background: var(--rawaj-v17-canvas);
   --rawaj-page-background-deep: var(--rawaj-canvas);
@@ -114,11 +114,11 @@ body {
 
 /* Header and navigation. */
 .rawaj-app-header {
-  border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
-  background: rgba(25, 27, 35, 0.97) !important;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), var(--rawaj-v17-inset) !important;
-  backdrop-filter: blur(22px) saturate(118%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+  border-bottom: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-canvas) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .rawaj-app-header .rawaj-brand-divider {
@@ -181,7 +181,6 @@ body {
   border-color: var(--rawaj-v17-border) !important;
   color: var(--rawaj-v17-text) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="border"] {
@@ -191,7 +190,6 @@ body {
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-card"],
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-background"] {
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 .rawaj-app-shell :is(.tap-card, [data-ui="card"][data-interactive="true"], .rawaj-color-card) {
@@ -260,10 +258,10 @@ body {
 
 .rawaj-app-shell :is(button, a)[class*="border"][class*="bg-transparent"],
 .rawaj-app-shell :is(.rawaj-secondary-action, [data-ui="button"][data-variant="secondary"], [data-slot="button"][data-variant="outline"]) {
-  border-color: rgba(216, 174, 95, 0.2) !important;
-  color: #eee7df !important;
-  background: rgba(30,33,42,.9) !important;
-  box-shadow: 0 7px 18px rgba(0,0,0,.17), var(--rawaj-v17-inset) !important;
+  border-color: var(--rawaj-divider) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell :is(button, a):focus-visible {
@@ -385,9 +383,8 @@ body {
 
 /* Listing detail. */
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
-  border-color: rgba(216,174,95,.17) !important;
+  border-color: var(--rawaj-divider) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 /* Add/edit listing studio. */
@@ -424,9 +421,9 @@ body {
 
 /* Auth pages. */
 .rawaj-app-shell :is(.rawaj-auth-v2, .rawaj-auth-card, [data-auth-surface]) {
-  border-color: rgba(216,174,95,.19) !important;
-  background: #1b1d26 !important;
-  box-shadow: var(--rawaj-v17-shadow-raised), var(--rawaj-v17-inset) !important;
+  border-color: var(--rawaj-divider) !important;
+  background: var(--rawaj-surface) !important;
+  box-shadow: var(--rawaj-v17-shadow) !important;
 }
 
 /* Empty states, skeletons and feedback. */
@@ -451,9 +448,9 @@ body {
 /* Footer and mobile dock. */
 .rawaj-app-shell footer,
 .rawaj-footer {
-  border-top-color: rgba(216,174,95,.11) !important;
-  color: var(--rawaj-v17-text-2) !important;
-  background: #10141b !important;
+  border-top-color: var(--rawaj-divider) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-bottom-nav,
