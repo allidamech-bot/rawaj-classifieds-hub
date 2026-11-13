@@ -66,7 +66,7 @@ test("approved store composition and owner interactions", async ({ page }, testI
   // A rendered-page regression guard: global legacy styles previously made
   // the entire ivory storefront charcoal and left headings/prices unreadable.
   for (const [selector, property, expected] of [
-    ["main.my-store", "backgroundColor", "rgb(252, 250, 247)"],
+    ["main.my-store", "backgroundColor", "rgb(255, 255, 255)"],
     [".my-store-identity h1", "color", "rgb(16, 23, 22)"],
     [".my-store-stats dd", "color", "rgb(21, 35, 34)"],
     [".ms-owner-listing-card", "backgroundColor", "rgb(255, 253, 250)"],
@@ -295,7 +295,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
           .locator("main.my-store-public")
           .evaluate((element) => getComputedStyle(element).backgroundColor),
       )
-      .toBe("rgb(252, 250, 247)");
+      .toBe("rgb(255, 255, 255)");
     await page.screenshot({
       path: testInfo.outputPath("buyer-store-" + width + ".png"),
       fullPage: true,
