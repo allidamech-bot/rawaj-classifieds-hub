@@ -53,3 +53,12 @@
   color: #fffaf0 !important;
   opacity: 0.9 !important;
 }
+
+/* The unconfigured owner cover was pale (#d9e0da) underneath a white large
+ * heading (measured 1.34:1). Match the public store's established petrol
+ * fallback while leaving uploaded covers, typography and layout untouched.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .my-store-cover[data-has-cover="false"] {
+  background: linear-gradient(125deg, #103f42 0%, #215451 60%, #446461 100%) !important;
+}

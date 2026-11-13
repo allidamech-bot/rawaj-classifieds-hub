@@ -175,16 +175,15 @@ async function waitForHydration(page: Page): Promise<void> {
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {
   const selector = page.locator('[data-listing-taxonomy-selector="true"]');
-  const finalStatus = selector.getByText(/تم اختيار التصنيف النهائي|Final category selected/i);
-
-  for (let depth = 0; depth < 12; depth += 1) {
-    if (await finalStatus.isVisible().catch(() => false)) return;
-    const options = selector.getByRole("listitem");
-    if ((await options.count()) === 0) throw new Error("No taxonomy option was available.");
-    await options.first().click();
-    await page.waitForTimeout(200);
-  }
-  throw new Error("Could not select a final taxonomy category.");
+  // Use a known mapped leaf for the publishing lifecycle fixture, not whichever
+  // leaf happens to sort first. Taxonomy browsing is tested independently.
+  await selector.getByRole("searchbox").fill("سيارات للبيع");
+  const leaf = selector.locator('[data-taxonomy-kind="search-leaf"]').filter({
+    hasText: /سيارات للبيع|Cars for sale/i,
+  }).first();
+  await expect(leaf).toBeVisible({ timeout: 20_000 });
+  await leaf.click();
+  await expect(selector.getByText(/تم اختيار التصنيف النهائي|Final category selected/i)).toBeVisible();
 }
 
 async function advanceUntilPriceAndLocation(page: Page): Promise<void> {
