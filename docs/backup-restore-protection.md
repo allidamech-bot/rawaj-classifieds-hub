@@ -22,6 +22,12 @@ Render and review the Syria production config locally, then run the existing rea
 `audit-production-d1.mjs` command with an outside-repository backup directory and report path. Abort
 if any identity check fails. Never supply a config or database name from another repository.
 
+The backup command now **fails before remote access** unless both paths are absolute, outside the
+repository (including symlink-resolved paths), and unused. Put the new backup directory and
+the separate report under private, access-controlled storage. The command creates its backup
+directory with mode 0700 and all output files with mode 0600; it refuses to overwrite an old
+snapshot or report. Keep the reported manifest SHA-256 in a separately protected record.
+
 ## R2 backup
 
 Inventory and download only from `rawaj-listing-images-production`. Preserve object keys, size,
@@ -40,3 +46,27 @@ Production restore is prohibited during routine validation. A future restore mus
 
 No current repository command performs a generic production restore. The reconciliation rehearsal is
 local-only and cannot target production.
+
+
+## Offline backup integrity verification (no production writes)
+
+Before treating a new D1 snapshot as a usable backup, run:
+
+```sh
+node cloudflare/worker/scripts/verify-syria-d1-backup.mjs \\
+  --backup-dir=/absolute/private/syria-d1-backup \\
+  --expected-manifest-sha256=<sha256-from-the-audit-report>
+```
+
+The verifier reads only local backup files. It checks exact Syria Worker/D1/R2/Firebase
+identifiers, the externally pinned manifest checksum, the exported schema checksum, the
+complete ordinary-table list, every table's SHA-256 and row count, and every declared FTS
+exclusion. It rejects duplicate manifest entries, corrupt files and symlinked table dumps.
+A snapshot without the newer `schemaSha256` field is *not* accepted by this integrity
+verifier; preserve old snapshots but create a fresh checked export rather than silently
+claiming they have passed.
+
+**Important:** A checksum-verified export is **not** a completed restore rehearsal.
+Reconstruction, foreign-key checks and application-level acceptance on an isolated D1
+database remain separate requirements before calling disaster recovery proven.
+Never restore into production as part of this verification.
