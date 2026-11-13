@@ -51,12 +51,15 @@
   filter: drop-shadow(0 5px 11px rgba(0, 0, 0, 0.24)) !important;
 }
 
-/* Shared shell: deep charcoal/navy glass rather than the old medium-grey band. */
+/* Shared header surface and neutral navigation controls. */
 .rawaj-app-header,
 .rawaj-shell-header,
 .rawaj-shell-header--workspace,
 .rawaj-shell-header--context {
-  background: rgba(19, 23, 32, 0.985) !important;
+  background: var(--rawaj-canvas) !important;
+  color: var(--rawaj-ink-primary) !important;
+  border-color: var(--rawaj-divider) !important;
+  box-shadow: none !important;
 }
 
 /* Only neutral/inactive shell controls are normalized. Active/current states keep
@@ -69,9 +72,9 @@
 .rawaj-home-menu-action:not([aria-current="page"]):not([data-active="true"]),
 .rawaj-shell-header__actions > .relative > button {
   border-color: rgba(216, 174, 95, 0.12) !important;
-  color: #ddd8d3 !important;
-  background: #181d27 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 8px 20px rgba(0, 0, 0, 0.19) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
+  box-shadow: none !important;
 }
 
 /* My Store is an intentional capability accent, not a neutral utility control. */
@@ -207,12 +210,11 @@
   background: #10151d !important;
 }
 
-/* Footer canvas is unified, while its support/safety/privacy pills keep their
- * individual red/blue/gold premium tones from the underlying design system. */
+/* Shared footer surface. */
 .rawaj-site-footer,
 .rawaj-site-footer__mobile {
   border-color: rgba(216, 174, 95, 0.09) !important;
-  background: #0d1118 !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 /* Portal content is outside the route shell in older Radix primitives. */
@@ -225,6 +227,6 @@ body :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-co
 /* Keep mobile dock aligned with the approved /more reference on every route. */
 .rawaj-bottom-nav-shell {
   border-color: rgba(216, 174, 95, 0.14) !important;
-  background: rgba(14, 18, 25, 0.97) !important;
+  background: var(--rawaj-brand-primary) !important;
   box-shadow: 0 17px 40px rgba(0, 0, 0, 0.43), inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
 }

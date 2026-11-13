@@ -105,7 +105,7 @@ export function MyStoreIdentity({
           preserveAspectRatio="none"
           aria-hidden="true"
         >
-          <path d="M0 35Q150 0 350 34T800 30T1100 30V60H0Z" fill="#fcfaf7" />
+          <path d="M0 35Q150 0 350 34T800 30T1100 30V60H0Z" fill="var(--rawaj-canvas, #fff)" />
         </svg>
       </div>
       <div className="my-store-identity-row">

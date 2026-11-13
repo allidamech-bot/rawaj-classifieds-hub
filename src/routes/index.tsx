@@ -100,6 +100,20 @@ function HomePage() {
               text={text}
             />
 
+            {categoryLoadFailed ? (
+              <EmptyState
+                className="rawaj-signature-home__load-state"
+                title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
+                description={text(
+                  "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة تصفح الأقسام.",
+                  "Listings remain available. Try again to restore category browsing.",
+                )}
+                action={retryAction}
+              />
+            ) : (
+              <HomeCategories worlds={categoryWorlds} language={language} text={text} />
+            )}
+
             {listingLoadFailed ? (
               <EmptyState
                 className="rawaj-signature-home__load-state"
@@ -115,20 +129,6 @@ function HomePage() {
                 <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <HomeLatestListings listings={latestListings} language={language} text={text} />
               </>
-            )}
-
-            {categoryLoadFailed ? (
-              <EmptyState
-                className="rawaj-signature-home__load-state"
-                title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
-                description={text(
-                  "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة تصفح الأقسام.",
-                  "Listings remain available. Try again to restore category browsing.",
-                )}
-                action={retryAction}
-              />
-            ) : (
-              <HomeCategories worlds={categoryWorlds} language={language} text={text} />
             )}
 
             <div className="rawaj-signature-ad-placement">

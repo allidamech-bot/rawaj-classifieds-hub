@@ -29,7 +29,7 @@ const buttonVariants = cva(
       size: {
         default: "h-[var(--rawaj-control-height)]",
         sm: "h-[var(--rawaj-control-height-sm)] min-h-[var(--rawaj-control-height-sm)] px-3 text-xs",
-        compact: "h-9 min-h-9 rounded-lg px-2.5 text-xs",
+        compact: "h-11 min-h-11 rounded-lg px-2.5 text-xs",
         lg: "h-[var(--rawaj-control-height-lg)] min-h-[var(--rawaj-control-height-lg)] px-6 text-sm",
         icon: "h-[var(--rawaj-control-height)] w-[var(--rawaj-control-height)] px-0",
       },
@@ -52,6 +52,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         data-ui="button"
+        data-size={size ?? "default"}
         data-variant={variant ?? "default"}
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
