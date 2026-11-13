@@ -4,8 +4,19 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [privacy, legacy, publicListings, publicCore, auth, rateLimit, admin, adminManagement, schema, integration] =
-  await Promise.all([
+const [
+  privacy,
+  legacy,
+  publicListings,
+  publicCore,
+  auth,
+  rateLimit,
+  admin,
+  adminManagement,
+  schema,
+  integration,
+] = await Promise.all(
+  [
     "cloudflare/worker/src/public-listing-privacy.ts",
     "cloudflare/worker/src/marketplace-private.ts",
     "cloudflare/worker/src/public-listings.ts",
@@ -16,14 +27,18 @@ const [privacy, legacy, publicListings, publicCore, auth, rateLimit, admin, admi
     "cloudflare/worker/src/admin-user-management.ts",
     "cloudflare/d1/migrations/0002_public_marketplace_foundation.sql",
     "cloudflare/worker/test/marketplace.integration.test.mjs",
-  ].map(read));
+  ].map(read),
+);
 
 test("legacy and canonical public responses use the same contact-data sanitizer", () => {
   assert.match(privacy, /PRIVATE_DETAIL_KEYS/);
   assert.match(privacy, /contactwhatsapp/);
   assert.match(privacy, /contactphone/);
   assert.match(privacy, /sanitizeValue\(item, depth \+ 1\)/);
-  assert.match(legacy, /sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
+  assert.match(
+    legacy,
+    /sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/,
+  );
   assert.match(legacy, /listing: ownerView/);
   assert.match(legacy, /publiclyAvailable/);
   assert.match(legacy, /l\.expires_at IS NULL OR l\.expires_at/);
@@ -65,7 +80,10 @@ test("invalid bearer tokens cannot mint fresh rate-limit buckets", () => {
 test("upload compensation cannot delete another concurrent attempt's object", () => {
   assert.match(schema, /object_key TEXT NOT NULL UNIQUE/);
   assert.match(legacy, /const assetId = crypto\.randomUUID\(\)/);
-  assert.match(legacy, /const objectKey = `listings\/\$\{auth\.userId\}\/\$\{listingId\}\/\$\{assetId\}\.\$\{extension\}`/);
+  assert.match(
+    legacy,
+    /const objectKey = `listings\/\$\{auth\.userId\}\/\$\{listingId\}\/\$\{assetId\}\.\$\{extension\}`/,
+  );
   assert.match(legacy, /await env\.MEDIA\.delete\(objectKey\)/);
   assert.match(integration, /phase 1: concurrent duplicate image uploads/);
 });
