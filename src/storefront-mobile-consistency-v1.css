@@ -43,6 +43,20 @@
   }
 }
 
+/* The footer itself reserves dock clearance; the generic shell reserve was
+ * adding a second, conspicuous empty stripe after the store footer. */
+@media (max-width: 1023.98px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-app-shell__page {
+    padding-bottom: 0 !important;
+  }
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store {
+    padding-bottom: 56px !important;
+  }
+}
+
 /* In-page public store links are not generic app-wide current-route cards. */
 .rawaj-app-shell[data-resolved-pathname^="/seller/"]
   main.my-store.my-store-public
