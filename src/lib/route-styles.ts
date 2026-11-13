@@ -68,6 +68,7 @@ import storeWorkspaceCss from "../rawaj-store-workspace.css?url";
 import marketplaceControlsCss from "../rawaj-marketplace-controls.css?url";
 import storefrontMobileConsistencyCss from "../storefront-mobile-consistency-v1.css?url";
 import notificationsContrastClosureCss from "../notifications-contrast-closure.css?url";
+import verificationContrastClosureCss from "../verification-contrast-closure.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -131,6 +132,7 @@ export const auditedOverrideStyleHrefs = [
   marketplaceControlsCss,
   storefrontMobileConsistencyCss,
   notificationsContrastClosureCss,
+  verificationContrastClosureCss,
 ] as const;
 
 export interface RouteStyleScope {
