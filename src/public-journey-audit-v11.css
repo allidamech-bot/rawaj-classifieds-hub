@@ -523,7 +523,7 @@
   height: 3.5rem !important;
   border-width: 1px !important;
   border-radius: 1rem !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: var(--rawaj-action-primary-foreground) !important;
   background: var(--rawaj-action-brand) !important;
 }
 
