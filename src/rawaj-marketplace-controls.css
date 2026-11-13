@@ -203,3 +203,56 @@
     position: static !important;
   }
 }
+
+.rawaj-app-shell :is(.rawaj-secondary-state, .rawaj-secondary-notice) {
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-text-primary);
+  border: 1px solid var(--rawaj-border);
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell .rawaj-secondary-state {
+  padding: clamp(1rem, 4vw, 1.75rem) !important;
+}
+
+.rawaj-app-shell .rawaj-secondary-action {
+  display: inline-flex;
+  min-block-size: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+}
+
+.rawaj-app-shell .rawaj-secondary-action:hover {
+  background: var(--rawaj-action-primary-hover) !important;
+}
+
+.rawaj-app-shell .rawaj-secondary-action:disabled {
+  opacity: 0.65;
+}
+
+.rawaj-app-shell
+  :is(
+    .rawaj-secondary-state,
+    .rawaj-secondary-notice,
+    .rawaj-safety-v2,
+    .rawaj-admin-v3,
+    .rawaj-compare-dock,
+    .rawaj-compare-dialog
+  )
+  :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--rawaj-text-gold) !important;
+  outline-offset: 2px;
+}
+
+.rawaj-compare-dialog .rawaj-compare-card__remove,
+.rawaj-compare-dock .rawaj-compare-dock__clear {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+.rawaj-compare-dialog .rawaj-compare-table-wrap {
+  max-inline-size: 100%;
+  overscroll-behavior-inline: contain;
+}
