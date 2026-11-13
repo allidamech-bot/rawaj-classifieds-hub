@@ -128,9 +128,9 @@ test("approved store composition and owner interactions", async ({ page }, testI
   await expect(page.getByRole("dialog").getByText("Drafts & edits")).toBeVisible();
   await expect
     .poll(() =>
-      page.locator(".my-store-dialog .ms-storefront-owner-tabs").evaluate(
-        (element) => getComputedStyle(element).backgroundColor,
-      ),
+      page
+        .locator(".my-store-dialog .ms-storefront-owner-tabs")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
     )
     .toBe("rgba(0, 0, 0, 0)");
   await page.keyboard.press("Escape");
@@ -154,8 +154,9 @@ test("approved store composition and owner interactions", async ({ page }, testI
   await page.screenshot({ path: testInfo.outputPath("store-missing-image.png"), fullPage: true });
 });
 
-
-test("public seller has owner-level visual fidelity without owner actions", async ({ page }, testInfo) => {
+test("public seller has owner-level visual fidelity without owner actions", async ({
+  page,
+}, testInfo) => {
   test.setTimeout(180000);
   await page.addInitScript(() => {
     localStorage.setItem("rawaj-language", "en");
@@ -179,12 +180,15 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
       .toBe(true);
     await expect
       .poll(() =>
-        page.locator("main.my-store-public").evaluate(
-          (element) => getComputedStyle(element).backgroundColor,
-        ),
+        page
+          .locator("main.my-store-public")
+          .evaluate((element) => getComputedStyle(element).backgroundColor),
       )
       .toBe("rgb(252, 250, 247)");
-    await page.screenshot({ path: testInfo.outputPath("buyer-store-" + width + ".png"), fullPage: true });
+    await page.screenshot({
+      path: testInfo.outputPath("buyer-store-" + width + ".png"),
+      fullPage: true,
+    });
   }
   await page.setViewportSize({ width: 390, height: 950 });
   await expect(page.locator(".my-store-public .my-store-public-follow")).toBeVisible();
