@@ -124,7 +124,7 @@
 
 .rawaj-app-shell .rawaj-adaptive-card[data-featured="true"] {
   border-color: rgba(219, 73, 179, 0.3) !important;
-  background: #231a27 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 18px 40px rgba(65,25,55,.28), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 
@@ -142,8 +142,8 @@
 
 .rawaj-app-shell .rawaj-adaptive-card__category {
   border: 1px solid rgba(219,73,179,.12) !important;
-  color: #d889bd !important;
-  background: rgba(219,73,179,.055) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 .rawaj-app-shell .rawaj-adaptive-card__title {
@@ -182,8 +182,8 @@
 
 .rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
   border-color: rgba(255,255,255,.14) !important;
-  color: #fff !important;
-  background: #d93a68 !important;
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-app-shell .rawaj-adaptive-card__status[data-tone="reserved"] {
@@ -201,12 +201,12 @@
 /* Promoted/latest discovery groups must not fall back to legacy grey. */
 .rawaj-app-shell .rawaj-categories-discovery__group[data-tone="promoted"] {
   border-color: rgba(219,73,179,.17) !important;
-  background: #1d1822 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell .rawaj-categories-discovery__latest-grid .rawaj-adaptive-card,
 .rawaj-app-shell .rawaj-categories-discovery__promoted-grid .rawaj-adaptive-card {
-  background: #1a1e27 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 @media (hover: hover) and (pointer: fine) {

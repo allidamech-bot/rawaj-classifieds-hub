@@ -159,9 +159,9 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] strong {
-  color: #e9c46a !important;
-  font-size: 0.78rem !important;
-  font-weight: 950 !important;
+  color: var(--rawaj-ink-primary) !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__hint {

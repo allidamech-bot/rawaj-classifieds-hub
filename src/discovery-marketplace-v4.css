@@ -484,13 +484,21 @@ body,
   background: var(--rawaj-warning-surface-light) !important;
 }
 
-.rawaj-legal-v3 > div > section,
+.rawaj-legal-v3 > div > section {
+  border: 0 !important;
+  border-bottom: 1px solid var(--rawaj-divider) !important;
+  border-radius: 0 !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
+  box-shadow: none !important;
+}
+
 .rawaj-prohibited-v3 > div:first-child,
 .rawaj-prohibited-v3 > div.grid > div {
-  border-color: rgba(216, 174, 95, 0.12) !important;
+  border-color: var(--rawaj-divider) !important;
   color: var(--rawaj-ink-primary) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-legal-v3 :is(h2, h3),

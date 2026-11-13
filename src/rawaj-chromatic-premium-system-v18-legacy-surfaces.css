@@ -46,7 +46,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
-  background: #211923 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
@@ -91,7 +91,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
   border-color: rgba(216,174,95,.24) !important;
-  color: #f8ead0 !important;
+  color: var(--rawaj-brand-primary) !important;
   background: rgba(216,174,95,.1) !important;
 }
 
@@ -175,7 +175,7 @@
   --auth-v12-border: rgba(216,174,95,.13) !important;
   --auth-v12-border-active: rgba(216,174,95,.46) !important;
   --auth-v12-copy: var(--rawaj-ink-secondary) !important;
-  --auth-v12-muted: #858d98 !important;
+  --auth-v12-muted: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell:is(
@@ -277,7 +277,7 @@
   [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero {
-  background: #19211f !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* -------------------------------------------------------------------------- */

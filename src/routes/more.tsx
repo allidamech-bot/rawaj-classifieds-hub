@@ -18,7 +18,7 @@ import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ReferralGrowthPanel } from "@/features/growth/ReferralGrowthPanel";
 import { AccountRecentlyViewed } from "@/features/retention/AccountRecentlyViewed";
-import { TrustHubHero, TrustSectionHeader } from "@/features/trust/TrustSupportExperience";
+import styles from "@/features/account/account-workspace.module.css";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
@@ -57,7 +57,7 @@ type AccountRow = {
   disabled?: boolean;
 };
 
-const primaryShortcuts: (AccountRow & { world: string })[] = [
+const primaryShortcuts: AccountRow[] = [
   {
     titleAr: "النشاط",
     titleEn: "Activity",
@@ -65,11 +65,10 @@ const primaryShortcuts: (AccountRow & { world: string })[] = [
     hintEn: "Messages and what needs attention",
     to: "/activity",
     icon: Activity,
-    world: "rawaj-world-indigo",
   },
 ];
 
-const secondaryShortcuts: (AccountRow & { world: string })[] = [
+const secondaryShortcuts: AccountRow[] = [
   {
     titleAr: "Boost",
     titleEn: "Boost",
@@ -77,28 +76,24 @@ const secondaryShortcuts: (AccountRow & { world: string })[] = [
     hintEn: "Get more buyers",
     to: "/promotion",
     icon: Rocket,
-    world: "rawaj-world-orange",
   },
   {
     titleAr: "المفضلة",
     titleEn: "Favorites",
     to: "/favorites",
     icon: Heart,
-    world: "rawaj-world-plum",
   },
   {
     titleAr: "بحث محفوظ",
     titleEn: "Saved searches",
     to: "/saved-searches",
     icon: Bookmark,
-    world: "rawaj-world-gold",
   },
   {
     titleAr: "التوثيق",
     titleEn: "Verification",
     to: "/verification",
     icon: BadgeCheck,
-    world: "rawaj-world-emerald",
   },
 ];
 
@@ -173,42 +168,52 @@ function MorePage() {
   ];
 
   return (
-    <div className="rawaj-trust-v2 rawaj-more-v2 min-h-dvh" dir={isArabic ? "rtl" : "ltr"}>
+    <div className={styles.page} dir={isArabic ? "rtl" : "ltr"}>
       <AppHeader compact />
 
-      <main className="container-wide rawaj-account-command-v3 rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <TrustHubHero
-          mode="more"
-          displayName={displayName}
-          location={profile?.cityArea || profile?.governorate || undefined}
-          avatarUrl={profile?.avatarUrl}
-          signedIn={Boolean(user)}
-          verified={profile?.verificationStatus === "verified"}
-          unreadActivity={unreadTotal}
-        />
+      <main className={styles.workspace}>
+        <header className={styles.identity}>
+          {profile?.avatarUrl ? (
+            <img src={profile.avatarUrl} alt="" width={56} height={56} decoding="async" />
+          ) : (
+            <span className={styles.avatar}>
+              <User aria-hidden="true" />
+            </span>
+          )}
+          <div>
+            <h1 dir="auto">{displayName || text("حسابي", "Account")}</h1>
+            {profile?.cityArea || profile?.governorate ? (
+              <p dir="auto">{profile.cityArea || profile.governorate}</p>
+            ) : null}
+            {profile?.verificationStatus === "verified" ? (
+              <p className={styles.verified}>
+                <BadgeCheck aria-hidden="true" />
+                {text("حساب موثّق", "Verified account")}
+              </p>
+            ) : null}
+          </div>
+        </header>
 
-        <section className="rawaj-more-v2__command">
-          <TrustSectionHeader
-            eyebrow={text("الاختصارات", "Shortcuts")}
-            title={text("مركز العمليات", "Command center")}
-            description={text(
-              "وصول سريع إلى الرسائل والتنبيهات.",
-              "Quick access to messages and notifications.",
-            )}
-          />
-          <div className="rawaj-more-v2__command">
+        <section aria-labelledby="account-shortcuts">
+          <h2 id="account-shortcuts" className={styles.heading}>
+            {text("نشاط الحساب", "Account activity")}
+          </h2>
+          <div className={styles.shortcuts}>
             {primaryShortcuts.map((row) => (
               <PrimaryShortcut
                 key={row.titleEn}
                 row={row}
                 text={text}
-                badgeCount={row.to === "/activity" ? counts.messages + counts.notifications : 0}
+                badgeCount={row.to === "/activity" ? unreadTotal : 0}
               />
             ))}
           </div>
         </section>
 
-        <section className="rawaj-more-v2__secondary">
+        <section
+          className={styles.shortcuts}
+          aria-label={text("اختصارات الحساب", "Account shortcuts")}
+        >
           {secondaryShortcuts.map((row) => (
             <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
@@ -217,7 +222,7 @@ function MorePage() {
         {user ? <AccountRecentlyViewed userId={profile?.id ?? user.id} /> : null}
         {user ? <ReferralGrowthPanel /> : null}
 
-        <div className="rawaj-more-v2__sections">
+        <div className={styles.groups}>
           {logoutError && (
             <p
               role="alert"
@@ -278,10 +283,8 @@ function AccountSection({
   quiet?: boolean;
 }) {
   return (
-    <section className="rawaj-account-section" data-tone={quiet ? "muted" : "default"}>
-      <h2 className="relative px-2 pb-2.5 text-[10px] font-semibold tracking-[0.04em] text-brand-orange">
-        {title}
-      </h2>
+    <section className={styles.panel} data-tone={quiet ? "muted" : "default"}>
+      <h2 className={styles.heading}>{title}</h2>
       <div className="relative divide-y divide-border/70">{children}</div>
     </section>
   );
@@ -292,17 +295,14 @@ function PrimaryShortcut({
   text,
   badgeCount = 0,
 }: {
-  row: AccountRow & { world: string };
+  row: AccountRow;
   text: (ar: string, en: string) => string;
   badgeCount?: number;
 }) {
   const Icon = row.icon;
   return (
-    <Link
-      to={row.to ?? "/more"}
-      className={`rawaj-color-card ${row.world} group min-h-36 rounded-[1.35rem] p-4 transition hover:-translate-y-0.5`}
-    >
-      <span className="relative grid h-11 w-11 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-soft">
+    <Link to={row.to ?? "/more"} className={styles.shortcut}>
+      <span className={styles.icon}>
         <Icon className="h-5 w-5" />
         {badgeCount > 0 && (
           <span className="absolute -end-2 -top-2 grid min-h-5 min-w-5 place-items-center rounded-full bg-destructive px-1.5 text-[9px] font-extrabold text-white ring-2 ring-card">
@@ -310,13 +310,10 @@ function PrimaryShortcut({
           </span>
         )}
       </span>
-      <span className="relative mt-5 block text-base font-bold text-primary">
-        {text(row.titleAr, row.titleEn)}
-      </span>
-      <span className="relative mt-1.5 block text-[11px] leading-5 text-muted-foreground">
+      <span className={styles.shortcutTitle}>{text(row.titleAr, row.titleEn)}</span>
+      <span className={styles.hint}>
         {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
       </span>
-      <ChevronLeft className="relative mt-4 h-4 w-4 text-brand-orange rtl:rotate-180" />
     </Link>
   );
 }
@@ -325,7 +322,7 @@ function SecondaryShortcut({
   row,
   text,
 }: {
-  row: AccountRow & { world: string };
+  row: AccountRow;
   text: (ar: string, en: string) => string;
 }) {
   const Icon = row.icon;
@@ -337,19 +334,15 @@ function SecondaryShortcut({
       aria-label={
         isBoost ? text("Boost — احصل على عملاء أكثر", "Boost — Get more buyers") : undefined
       }
-      className={`rawaj-color-card ${row.world} flex min-h-20 flex-col items-center justify-center gap-2 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5`}
+      className={styles.shortcut}
     >
-      <span className={isBoost ? "rawaj-boost-shortcut__icon" : undefined}>
-        <Icon className={isBoost ? "h-7 w-7" : "h-4.5 w-4.5"} />
+      <span className={styles.icon}>
+        <Icon className="h-5 w-5" />
       </span>
       <span className="relative">
-        <strong className="block text-[10.5px] font-semibold text-foreground">
-          {text(row.titleAr, row.titleEn)}
-        </strong>
+        <strong className={styles.shortcutTitle}>{text(row.titleAr, row.titleEn)}</strong>
         {isBoost ? (
-          <small className="rawaj-boost-shortcut__hint mt-1 block text-[10px] font-semibold">
-            {text("احصل على عملاء أكثر", "Get more buyers")}
-          </small>
+          <small className={styles.hint}>{text("احصل على عملاء أكثر", "Get more buyers")}</small>
         ) : null}
       </span>
     </Link>
@@ -376,12 +369,12 @@ function AccountItem({
         </span>
         <span className="min-w-0">
           <span
-            className={`block truncate text-sm font-semibold ${row.destructive ? "text-destructive" : "text-foreground"}`}
+            className={`block break-words text-sm font-semibold ${row.destructive ? "text-destructive" : "text-foreground"}`}
           >
             {text(row.titleAr, row.titleEn)}
           </span>
           {(row.hintAr || row.hintEn) && (
-            <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+            <span className="mt-0.5 block break-words text-sm text-muted-foreground">
               {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
             </span>
           )}

@@ -264,8 +264,8 @@
   [data-resolved-pathname="/notifications"]
 ) .rawaj-communication-hero__actions [data-active="true"] {
   border-color: rgba(184, 151, 98, 0.24) !important;
-  color: #ffd0c7 !important;
-  background: rgba(184, 151, 98, 0.08) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 /* Activity: one clear switch, then one focused feed. */
@@ -488,8 +488,8 @@
 
 .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline[data-read="false"] .rawaj-notification-timeline__icon {
   border-color: rgba(184, 151, 98, 0.22) !important;
-  color: #ffd0c7 !important;
-  background: rgba(184, 151, 98, 0.08) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy {
@@ -534,8 +534,8 @@
   border-inline-start: 1px solid var(--rawaj-border) !important;
   border-radius: 0.72rem !important;
   padding: 0.45rem 0.6rem !important;
-  color: #c9defd !important;
-  background: rgba(98, 139, 128, 0.055) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
   font-size: 0.59rem !important;
   font-weight: 800 !important;
   box-shadow: none !important;

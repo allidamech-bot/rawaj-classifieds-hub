@@ -26,22 +26,31 @@ test("categories direct load keeps its designed atlas and active production ad t
     .toBe(true);
 
   const categoryVisuals = await page.evaluate(() => {
-    const hero = document.querySelector<HTMLElement>(".rawaj-categories-v2__hero");
-    const card = document.querySelector<HTMLElement>(".rawaj-category-directory-card");
-    if (!hero || !card) return null;
+    const heading = document.querySelector<HTMLElement>("[data-category-directory-heading]");
+    const grid = document.querySelector<HTMLElement>("[data-category-directory-grid]");
+    const link = document.querySelector<HTMLElement>("[data-category-directory-link]");
+    const icon = link?.querySelector<HTMLElement>("[data-category-directory-icon]");
+    if (!heading || !grid || !link || !icon) return null;
+    const headingStyle = getComputedStyle(heading);
+    const gridStyle = getComputedStyle(grid);
+    const linkStyle = getComputedStyle(link);
     return {
-      heroBackground: getComputedStyle(hero).backgroundImage,
-      heroRadius: Number.parseFloat(getComputedStyle(hero).borderRadius),
-      cardDisplay: getComputedStyle(card).display,
-      cardRadius: Number.parseFloat(getComputedStyle(card).borderRadius),
+      headingBackground: headingStyle.backgroundImage,
+      gridDisplay: gridStyle.display,
+      linkBackground: linkStyle.backgroundColor,
+      linkImage: linkStyle.backgroundImage,
+      linkBorder: linkStyle.borderStyle,
+      iconBackground: getComputedStyle(icon).backgroundColor,
     };
   });
 
   expect(categoryVisuals).not.toBeNull();
-  expect(categoryVisuals?.heroBackground).toBe("none");
-  expect(categoryVisuals?.heroRadius ?? 0).toBeGreaterThan(16);
-  expect(categoryVisuals?.cardDisplay).not.toBe("none");
-  expect(categoryVisuals?.cardRadius ?? 0).toBeGreaterThan(16);
+  expect(categoryVisuals?.headingBackground).toBe("none");
+  expect(categoryVisuals?.gridDisplay).toBe("grid");
+  expect(categoryVisuals?.linkBackground).toBe("rgb(255, 255, 255)");
+  expect(categoryVisuals?.linkImage).toBe("none");
+  expect(categoryVisuals?.linkBorder).toBe("solid");
+  expect(categoryVisuals?.iconBackground).not.toBe("rgba(0, 0, 0, 0)");
 });
 
 test("mobile chat workspace state overrides stale or transient panel classes", async ({

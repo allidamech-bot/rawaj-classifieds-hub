@@ -1,0 +1,266 @@
+.page {
+  background: var(--rawaj-canvas);
+  color: var(--rawaj-ink-primary);
+}
+
+.container {
+  display: grid;
+  max-inline-size: 76rem;
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 32px);
+  gap: clamp(24px, 4vw, 48px);
+}
+
+.hero,
+.section,
+.stack {
+  display: grid;
+  gap: 16px;
+  min-inline-size: 0;
+}
+
+.hero h1 {
+  font-size: clamp(1.625rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.search {
+  display: flex;
+  min-block-size: 52px;
+  max-inline-size: 48rem;
+  border: 1px solid var(--rawaj-control-border);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.search label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-inline-size: 0;
+  gap: 8px;
+  padding-inline: 8px;
+}
+
+.search input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  outline: none;
+}
+
+.search input::placeholder {
+  color: var(--rawaj-ink-secondary);
+}
+
+.search button {
+  border-radius: 8px;
+  padding-inline: 16px;
+  background: var(--rawaj-brand-primary);
+  color: var(--rawaj-text-inverse);
+  font-weight: 600;
+}
+
+.search:focus-within,
+.page a:focus-visible,
+.search button:focus-visible {
+  outline: 2px solid var(--rawaj-brand-primary);
+  outline-offset: 2px;
+}
+
+.shortcuts,
+.metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shortcut,
+.sectionHeader a,
+.metadata span,
+.body small,
+.safety {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcut,
+.sectionHeader a,
+.safety a {
+  min-block-size: 44px;
+  padding-inline: 8px;
+  color: var(--rawaj-link-on-light);
+  font-weight: 600;
+}
+
+.page svg {
+  flex-shrink: 0;
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.categoryGrid,
+.recentGrid,
+.featuredGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.categoryGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}
+
+.recentGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+}
+
+@media (min-width: 48rem) {
+  .featuredGrid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  }
+}
+
+.category,
+.lead,
+.compact,
+.safety,
+.empty {
+  min-inline-size: 0;
+  border: 1px solid var(--rawaj-divider);
+  border-radius: 16px;
+  background: var(--rawaj-surface);
+}
+
+.category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 60px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+
+.category span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  block-size: 32px;
+  border-radius: 8px;
+  background: var(--rawaj-surface-subtle);
+  color: var(--rawaj-brand-primary);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sectionHeader h2 {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 700;
+}
+
+.sectionHeader small,
+.body > span,
+.body small,
+.body p,
+.metadata,
+.safety small {
+  color: var(--rawaj-ink-secondary);
+  font-size: 0.875rem;
+}
+
+.lead,
+.compact {
+  overflow: hidden;
+}
+
+.lead > a {
+  display: block;
+}
+
+.compact {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+}
+
+.thumbnail,
+.leadMedia {
+  position: relative;
+  overflow: hidden;
+  background: var(--rawaj-surface-subtle);
+}
+
+.thumbnail {
+  aspect-ratio: 1;
+}
+
+.leadMedia {
+  aspect-ratio: 16 / 9;
+}
+
+.thumbnail > *,
+.leadMedia > img,
+.leadMedia > div {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.body {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+
+.body h3,
+.body strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.lead .body strong,
+.body b {
+  color: var(--rawaj-brand-primary);
+  font-weight: 700;
+}
+
+.imageLabel,
+.featuredBadge {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--rawaj-surface);
+  color: var(--rawaj-ink-primary);
+  font-size: 0.8125rem;
+}
+
+.imageLabel {
+  inset-block: auto 8px;
+}
+
+.arrow {
+  display: none;
+}
+
+.safety,
+.empty {
+  padding: 12px;
+}
+
+.safety small {
+  display: block;
+}
+
+.safety a {
+  display: grid;
+  place-items: center;
+  margin-inline-start: auto;
+}

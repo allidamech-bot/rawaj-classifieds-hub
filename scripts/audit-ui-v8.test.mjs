@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -67,8 +68,7 @@ const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.al
   readFile(new URL("../src/footer-contrast-system-v13.css", import.meta.url), "utf8"),
 ]);
 
-test("audited component corrections load after legacy recovery layers", () => {
-  const recoveryIndex = routeStyles.indexOf('import "../rawaj-page-by-page-recovery-v7b.css";');
+test("audited component corrections load without the retired dark recovery layer", () => {
   const correctionIndex = routeStyles.indexOf("auditCorrectionsV8Css,");
   const homeIndex = routeStyles.indexOf("homeAuditV8Css,");
   const categoriesIndex = routeStyles.indexOf("categoriesDiscoveryV8Css,");
@@ -82,7 +82,6 @@ test("audited component corrections load after legacy recovery layers", () => {
   const authIndex = routeStyles.indexOf("authFeedbackSystemV12Css,");
 
   for (const index of [
-    recoveryIndex,
     correctionIndex,
     homeIndex,
     categoriesIndex,
@@ -97,7 +96,8 @@ test("audited component corrections load after legacy recovery layers", () => {
   ]) {
     assert.notEqual(index, -1);
   }
-  assert.ok(correctionIndex > recoveryIndex);
+  assert.doesNotMatch(routeStyles, /rawaj-page-by-page-recovery-v7b?[.]css/);
+  assert.doesNotMatch(routeStyles, /rawaj-home-(?:approved|final)[.]css/);
   assert.ok(homeIndex > correctionIndex);
   assert.ok(categoriesIndex > correctionIndex);
   assert.ok(ownerIndex > categoriesIndex);
@@ -111,6 +111,24 @@ test("audited component corrections load after legacy recovery layers", () => {
 
   assert.doesNotMatch(routeStyles, /import "\.\.\/rawaj-audit-corrections-v8\.css";/);
   assert.doesNotMatch(routeStyles, /import "\.\.\/owner-listings-workspace-v9\.css";/);
+});
+
+
+test("retired dark home and emergency recovery stylesheets are removed from the repository", () => {
+  for (const basename of [
+    "rawaj-page-by-page-recovery-v7.css",
+    "rawaj-page-by-page-recovery-v7b.css",
+    "rawaj-home-approved.css",
+    "rawaj-home-final.css",
+    "rawaj-chromatic-premium-system-v17-shell.css",
+    "rawaj-discovery-system-v3.css",
+  ]) {
+    assert.equal(
+      existsSync(new URL(`../src/${basename}`, import.meta.url)),
+      false,
+      `Retired stylesheet ${basename} must not be restored`,
+    );
+  }
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -134,15 +152,27 @@ test("footer and personal-space corrections retain readable semantic contrast", 
   assert.match(corrections, /rawaj-account-section\[data-tone="muted"\]/);
 });
 
-test("retired light-theme tokens cannot override the final dark semantic palette", () => {
-  assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
-  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-primary:\s*#18352f/);
-  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-secondary:\s*#536b63/);
-  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
-  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#d0d6cc/);
-  assert.match(semanticTokens, /--rawaj-text-muted:\s*#adbab0/);
+const initialAppStyles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+
+test("initial CSS cannot restore an independent ivory or dark palette", () => {
+  const initialTokens = initialAppStyles.split("@layer base")[0];
+  assert.ok(initialTokens.includes("--background: var(--rawaj-canvas, #ffffff);"));
+  assert.ok(initialTokens.includes("--primary: var(--rawaj-brand-primary, #103f42);"));
+  assert.ok(initialTokens.includes("color-scheme: light;"));
+  assert.equal(initialTokens.includes(".dark {"), false);
+  assert.doesNotMatch(initialTokens, /#f7f4ec|#11100d|#d96f32/i);
 });
 
+test("canonical light semantic tokens replace the retired dark theme", () => {
+  assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
+  assert.match(semanticTokens, /--rawaj-canvas:\s*#ffffff/);
+  assert.match(semanticTokens, /--rawaj-ink-primary:\s*#152322/);
+  assert.match(semanticTokens, /--rawaj-ink-secondary:\s*#53615e/);
+  assert.match(semanticTokens, /--rawaj-brand-primary:\s*#103f42/);
+  assert.match(semanticTokens, /--rawaj-text-primary:\s*var\(--rawaj-ink-primary\)/);
+  assert.match(semanticTokens, /--rawaj-text-secondary:\s*var\(--rawaj-ink-secondary\)/);
+  assert.doesNotMatch(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
+});
 test("footer renders one responsive variant and reserves the mobile dock", () => {
   assert.match(footerContrast, /\.rawaj-site-footer__mobile\s*{[\s\S]*display:\s*none !important/);
   assert.match(footerContrast, /\.rawaj-site-footer__desktop\s*{[\s\S]*display:\s*none !important/);

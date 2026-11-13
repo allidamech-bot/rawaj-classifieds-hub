@@ -14,8 +14,8 @@
 ) {
   --auth-v12-surface: var(--rawaj-card-background);
   --auth-v12-surface-soft: var(--rawaj-subtle-background);
-  --auth-v12-border: rgba(255, 255, 255, 0.09);
-  --auth-v12-border-active: rgba(184, 151, 98, 0.38);
+  --auth-v12-border: var(--rawaj-divider);
+  --auth-v12-border-active: var(--rawaj-brand-primary);
   --auth-v12-copy: var(--rawaj-text-secondary);
   --auth-v12-muted: var(--rawaj-text-muted);
 }
@@ -46,18 +46,18 @@
   min-height: 0 !important;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   border: 1px solid var(--auth-v12-border) !important;
-  border-radius: 1.35rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  background: var(--rawaj-card-background) !important;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24) !important;
+  border-radius: 16px !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside {
   min-height: 100% !important;
-  border-inline-end: 1px solid rgba(255, 255, 255, 0.07);
-  background: #34343b !important;
+  border-inline-end: 1px solid var(--rawaj-divider);
+  background: var(--rawaj-surface-subtle) !important;
   padding: clamp(1.25rem, 3vw, 1.8rem) !important;
-  color: #fff7f1 !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside::after {
@@ -66,7 +66,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__brand > span {
   border-radius: 0.85rem !important;
-  background: var(--rawaj-action-brand) !important;
+  background: var(--rawaj-brand-primary) !important;
   box-shadow: 0 10px 24px rgba(139, 170, 156, 0.2) !important;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__copy h1 {
-  color: #fff7f1 !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: "Cairo", sans-serif !important;
   font-size: clamp(1.45rem, 3.8vw, 2.15rem) !important;
   line-height: 1.38 !important;
@@ -86,15 +86,15 @@
   .rawaj-auth-aside__trust,
   .rawaj-auth-aside li strong
 ) {
-  color: rgba(245, 239, 231, 0.74) !important;
-  font-size: 0.78rem !important;
+  color: var(--rawaj-ink-secondary) !important;
+  font-size: 0.875rem !important;
   line-height: 1.7 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside li {
-  border-color: rgba(255, 255, 255, 0.085) !important;
+  border-color: var(--rawaj-divider) !important;
   border-radius: 0.85rem !important;
-  background: rgba(255, 255, 255, 0.035) !important;
+  background: var(--rawaj-surface) !important;
   padding: 0.68rem !important;
 }
 
@@ -107,31 +107,31 @@
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header > span {
   border: 1px solid rgba(184, 151, 98, 0.2) !important;
   border-radius: 0.85rem !important;
-  color: #ffc3b5 !important;
+  color: var(--rawaj-brand-primary) !important;
   background: rgba(184, 151, 98, 0.075) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header p {
-  color: #ff9d86 !important;
-  font-size: 0.74rem !important;
+  color: var(--rawaj-gold-ink) !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header h2 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: "Cairo", sans-serif !important;
   font-size: clamp(1.12rem, 3vw, 1.4rem) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header small {
   color: var(--auth-v12-copy) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
   line-height: 1.7 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs {
   border-color: var(--auth-v12-border) !important;
   border-radius: 0.9rem !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-surface-subtle) !important;
   padding: 0.28rem !important;
 }
 
@@ -139,7 +139,7 @@
   min-height: 2.8rem !important;
   border-radius: 0.68rem !important;
   color: var(--auth-v12-copy) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs button[data-active="true"] {
@@ -150,7 +150,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-field-label {
   color: var(--auth-v12-copy) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
   font-weight: 700 !important;
 }
 
@@ -158,8 +158,8 @@
   min-height: 3.1rem !important;
   border-color: var(--auth-v12-border) !important;
   border-radius: 0.82rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
   font-size: 0.88rem !important;
   box-shadow: none !important;
 }
@@ -183,21 +183,21 @@
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-forgot-link {
   min-height: 2.75rem;
   align-items: center;
-  color: #ffad9a !important;
-  font-size: 0.78rem !important;
+  color: var(--rawaj-link-on-light) !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-forgot-link:hover {
-  color: #ffd0c5 !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-google {
   min-height: 3.05rem !important;
   border-color: var(--auth-v12-border) !important;
   border-radius: 0.82rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  font-size: 0.78rem !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
+  font-size: 0.875rem !important;
   box-shadow: none !important;
 }
 
@@ -209,15 +209,15 @@
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-security-note {
   border-color: rgba(98, 139, 128, 0.17) !important;
   border-radius: 0.82rem !important;
-  color: #cbd8ef !important;
+  color: var(--rawaj-ink-secondary) !important;
   background: rgba(98, 139, 128, 0.045) !important;
-  font-size: 0.75rem !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-divider span {
   color: var(--auth-v12-muted) !important;
-  background: #2c2d33 !important;
-  font-size: 0.72rem !important;
+  background: var(--rawaj-surface) !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-home-link,
@@ -226,37 +226,37 @@
   align-items: center;
   justify-content: center;
   color: var(--auth-v12-copy) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state {
   border-radius: 0.82rem !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
   line-height: 1.65 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="loading"] {
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   color: var(--auth-v12-copy) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="success"] {
   border: 1px solid rgba(71, 190, 143, 0.2) !important;
-  color: #a9e5cb !important;
-  background: rgba(71, 190, 143, 0.06) !important;
+  color: var(--rawaj-success) !important;
+  background: var(--rawaj-success-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="error"] {
   border: 1px solid rgba(239, 104, 95, 0.2) !important;
-  color: #ffb2aa !important;
-  background: rgba(239, 104, 95, 0.06) !important;
+  color: var(--rawaj-danger) !important;
+  background: var(--rawaj-danger-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="warning"] {
   border: 1px solid rgba(227, 160, 75, 0.2) !important;
-  color: #f2d2a6 !important;
-  background: rgba(227, 160, 75, 0.06) !important;
+  color: var(--rawaj-warning) !important;
+  background: var(--rawaj-warning-surface) !important;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -272,20 +272,20 @@
   width: min(100%, 31rem);
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 1.25rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   background: var(--rawaj-card-background) !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-icon {
   border: 1px solid rgba(184, 151, 98, 0.2) !important;
   color: #fff !important;
-  background: var(--rawaj-action-brand) !important;
+  background: var(--rawaj-brand-primary) !important;
   box-shadow: 0 10px 24px rgba(139, 170, 156, 0.17) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card h1 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: "Cairo", sans-serif !important;
   font-size: clamp(1.15rem, 4vw, 1.45rem) !important;
 }
@@ -298,15 +298,15 @@
 
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card label > span {
   color: var(--auth-v12-copy) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.875rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input {
   min-height: 3.1rem !important;
   border-color: var(--auth-v12-border) !important;
   border-radius: 0.82rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input:focus-visible {
@@ -318,7 +318,7 @@
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-state {
   border-radius: 0.9rem !important;
   color: var(--auth-v12-copy) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
+  background: var(--rawaj-surface) !important;
   font-size: 0.8rem !important;
   line-height: 1.75 !important;
 }
@@ -340,13 +340,13 @@
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 1.25rem !important;
   padding: clamp(1.4rem, 5vw, 2rem) !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   background: var(--rawaj-card-background) !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card h1 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: "Cairo", sans-serif !important;
 }
 
@@ -357,7 +357,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__spinner {
-  color: #ff8e75 !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -367,11 +367,11 @@
 .rawaj-feedback-state {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 1.35rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   background: var(--rawaj-card-background) !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-feedback-state::before {
@@ -385,22 +385,22 @@
 
 .rawaj-feedback-state[data-tone="error"] {
   border-color: rgba(239, 104, 95, 0.2) !important;
-  background: #323137 !important;
+  background: var(--rawaj-danger-surface) !important;
 }
 
 .rawaj-feedback-state > p:first-child {
-  color: #ff9d86 !important;
+  color: var(--rawaj-gold-ink) !important;
   font-family: "Cairo", sans-serif !important;
   font-variant-numeric: tabular-nums;
 }
 
 .rawaj-feedback-state h1 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
+  color: var(--rawaj-ink-primary) !important;
   font-family: "Cairo", sans-serif !important;
 }
 
 .rawaj-feedback-state > p:not(:first-child) {
-  color: var(--rawaj-text-secondary, #c9c4bd) !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-feedback-state [data-ui="button"] {
@@ -418,7 +418,7 @@
   [data-resolved-pathname="/auth/callback"]
 ) :is(button, a, input):focus-visible,
 .rawaj-feedback-state :is(button, a):focus-visible {
-  outline: 3px solid rgba(184, 151, 98, 0.34) !important;
+  outline: 2px solid var(--rawaj-brand-primary) !important;
   outline-offset: 3px !important;
 }
 

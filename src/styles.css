@@ -45,83 +45,39 @@
 
 :root {
   --radius: 1rem;
+  color-scheme: light;
 
-  /* RAWAJ Quiet Luxury — warm ivory, ink navy, restrained metal, living orange */
-  --background: #f7f4ec;
-  --foreground: #17202c;
-  --card: #fffefb;
-  --card-foreground: #17202c;
-  --card-warm: #fbf7ed;
-  --muted-surface: #f0ece2;
-  --popover: #fffefb;
-  --popover-foreground: #17202c;
-
-  --primary: #102b46;
-  --primary-foreground: #fffaf0;
-
-  --secondary: #eee9de;
-  --secondary-foreground: #17202c;
-
-  --muted: #eee9de;
-  --muted-foreground: #68707d;
-
-  --accent: #d96f32;
+  /* The first paint follows RAWAJ's canonical light/petrol identity.
+   * Component and route tokens are defined in design-foundation.css. */
+  --background: var(--rawaj-canvas, #ffffff);
+  --foreground: var(--rawaj-ink-primary, #152322);
+  --card: var(--rawaj-surface, #ffffff);
+  --card-foreground: var(--rawaj-ink-primary, #152322);
+  --card-warm: var(--rawaj-surface-subtle, #f6f7f6);
+  --muted-surface: var(--rawaj-surface-subtle, #f6f7f6);
+  --popover: var(--rawaj-surface, #ffffff);
+  --popover-foreground: var(--rawaj-ink-primary, #152322);
+  --primary: var(--rawaj-brand-primary, #103f42);
+  --primary-foreground: #ffffff;
+  --secondary: var(--rawaj-surface-subtle, #f6f7f6);
+  --secondary-foreground: var(--rawaj-ink-primary, #152322);
+  --muted: var(--rawaj-surface-subtle, #f6f7f6);
+  --muted-foreground: var(--rawaj-ink-secondary, #53615e);
+  --accent: var(--rawaj-brand-primary, #103f42);
   --accent-foreground: #ffffff;
-
-  --gold: #c59a4a;
-  --gold-foreground: #17202c;
-
-  --brand-orange: #d96f32;
+  --gold: var(--rawaj-brand-gold, #bd984b);
+  --gold-foreground: #201e1a;
+  --brand-orange: var(--rawaj-action-coral, #6b5133);
   --brand-orange-foreground: #ffffff;
-  --brand-navy: #102b46;
-
-  --emerald-trust: #176a53;
+  --brand-navy: var(--rawaj-action-brand, #315c50);
+  --emerald-trust: var(--rawaj-success, #176145);
   --emerald-trust-foreground: #ffffff;
-
-  --destructive: #a83f38;
+  --destructive: var(--rawaj-danger, #a12b31);
   --destructive-foreground: #ffffff;
-  --warning: #bd7a28;
-
-  --border: #e5dfd3;
-  --input: #d6cec0;
-  --ring: #d96f32;
-}
-
-.dark {
-  --background: #11100d;
-  --foreground: #f6efe0;
-  --card: #191714;
-  --card-foreground: #f6efe0;
-  --card-warm: #171512;
-  --muted-surface: #262119;
-  --popover: #191714;
-  --popover-foreground: #f6efe0;
-
-  --primary: #f6efe0;
-  --primary-foreground: #11100d;
-
-  --secondary: #262119;
-  --secondary-foreground: #f6efe0;
-
-  --muted: #262119;
-  --muted-foreground: #b8ad9b;
-
-  --accent: #d2a95c;
-  --accent-foreground: #11100d;
-
-  --gold: #d2a95c;
-  --gold-foreground: #11100d;
-
-  --emerald-trust: #34a67d;
-  --emerald-trust-foreground: #07130f;
-
-  --destructive: #e26c62;
-  --destructive-foreground: #150706;
-  --warning: #e0a04b;
-
-  --border: rgba(246, 239, 224, 0.18);
-  --input: rgba(246, 239, 224, 0.28);
-  --ring: #d2a95c;
+  --warning: var(--rawaj-warning, #754500);
+  --border: var(--rawaj-divider, #e3e7e4);
+  --input: var(--rawaj-control-border, #798783);
+  --ring: var(--rawaj-link, #17565a);
 }
 
 @layer base {
@@ -345,8 +301,8 @@
     gap: 0.45rem;
     min-height: 2.75rem;
     border-radius: 0.95rem;
-    background: #143653;
-    color: var(--color-primary-foreground);
+    background: var(--rawaj-action-primary);
+    color: var(--rawaj-action-primary-foreground);
     font-family: var(--font-display);
     font-size: 0.78rem;
     font-weight: 700;
@@ -357,6 +313,17 @@
       transform 160ms ease,
       box-shadow 160ms ease,
       filter 160ms ease;
+  }
+
+  /* Header sign-in is a light-surface action, never white text on a light button. */
+  .rawaj-app-header a.rawaj-header-login-cta {
+    color: var(--rawaj-ink-primary) !important;
+    background: var(--rawaj-surface-subtle) !important;
+    border: 1px solid var(--rawaj-divider) !important;
+  }
+
+  .rawaj-app-header a.rawaj-header-login-cta .rawaj-header-login-cta__label {
+    color: inherit !important;
   }
 
   .rawaj-button-primary:active {

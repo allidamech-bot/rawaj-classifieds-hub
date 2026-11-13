@@ -79,10 +79,10 @@ function useViewportState() {
   return keyboardOpen;
 }
 
-function useDarkBrowserChrome() {
+function useLightBrowserChrome() {
   useEffect(() => {
     const root = document.documentElement;
-    root.style.colorScheme = "dark";
+    root.style.colorScheme = "light";
 
     let themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!themeMeta) {
@@ -90,7 +90,7 @@ function useDarkBrowserChrome() {
       themeMeta.name = "theme-color";
       document.head.appendChild(themeMeta);
     }
-    themeMeta.content = "#242529";
+    themeMeta.content = "#ffffff";
   }, []);
 }
 
@@ -195,7 +195,7 @@ export function AppShell({
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
     config.mode,
   );
-  useDarkBrowserChrome();
+  useLightBrowserChrome();
   useAccessibleFieldNameFallbacks(pathname);
 
   return (

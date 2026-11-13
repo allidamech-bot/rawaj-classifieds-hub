@@ -1,3 +1,4 @@
+import styles from "@/features/account/account-workspace.module.css";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, History, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,7 +19,7 @@ export function AccountRecentlyViewed({ userId }: { userId: string }) {
 
   return (
     <div className="grid gap-2" data-user-scope={userId}>
-      <section className="rawaj-account-section" data-tone="default">
+      <section className={styles.panel} data-tone="default">
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
@@ -34,7 +35,7 @@ export function AccountRecentlyViewed({ userId }: { userId: string }) {
               <span className="block text-sm font-semibold text-foreground">
                 {text("سجل المشاهدة", "Viewing history")}
               </span>
-              <span className="mt-0.5 block text-[10px] leading-5 text-muted-foreground">
+              <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
                 {text(
                   "اضغط لعرض الإعلانات التي شاهدتها مؤخرًا.",
                   "Tap to view listings you recently opened.",
@@ -113,13 +114,13 @@ export function RecentlyViewedHistory({ userId }: { userId: string }) {
 
   return (
     <section
-      className="rawaj-account-section p-3 sm:p-4"
+      className={styles.panel}
       aria-labelledby="rawaj-account-recent-title"
       aria-busy={loading || clearing}
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold text-brand-orange">
+          <p className="text-xs font-bold text-brand-orange">
             {text("سجل المشاهدة", "Viewing history")}
           </p>
           <h2 id="rawaj-account-recent-title" className="mt-1 text-sm font-extrabold">

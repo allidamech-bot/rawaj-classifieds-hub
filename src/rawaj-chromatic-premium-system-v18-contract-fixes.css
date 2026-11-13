@@ -75,7 +75,7 @@ button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-en
 
 /* Activity secondary copy/timestamps must stay comfortably above AA contrast. */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .text-muted-foreground {
-  color: #b7bdc6 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 /* activity-command-premium.css owns this row with an equally-important,
@@ -84,7 +84,7 @@ button.rawaj-touch-target[aria-label="Notifications"] > span.absolute.-top-1.-en
 .rawaj-app-shell[data-resolved-pathname="/activity"]
   a.rawaj-notification-timeline
   p:last-child {
-  color: #b7bdc6 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 /* The communication-center eyebrow is intentionally small; give it enough

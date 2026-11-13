@@ -58,6 +58,13 @@ test("image-only search is enforced by the public listing query", () => {
   assert.match(api, /\.select\(listingSelect\)/);
 });
 
+test("retired dark discovery V3 is absent and live result states keep their own layout", () => {
+  assert.doesNotMatch(routeStyles, /rawaj-discovery-system-v3[.]css/);
+  assert.match(css, /[.]rawaj-search-empty-state\s*\{/);
+  assert.match(css, /[.]rawaj-search-empty-state__icon\s*\{/);
+  assert.match(css, /[.]rawaj-search-results-v1\s*>\s*:not\([.]rawaj-search-results-v1__sidebar\)/);
+});
+
 test("results use compact toolbar, contextual quick filters, and URL-backed view modes", () => {
   assert.match(route, /<SearchResultsToolbar/);
   assert.match(route, /<QuickFilterRail/);
@@ -98,9 +105,9 @@ test("filters stay category aware and hide irrelevant fields", () => {
 
 test("categories retain taxonomy behavior inside a spatial directory", () => {
   assert.match(categories, /rawaj-categories-v2/);
-  assert.match(categories, /rawaj-categories-v2__hero/);
-  assert.match(categories, /rawaj-category-directory-grid/);
-  assert.match(categories, /rawaj-category-directory-card/);
+  assert.match(categories, /data-category-directory-heading/);
+  assert.match(categories, /data-category-directory-grid/);
+  assert.match(categories, /data-category-directory-card/);
   assert.match(categories, /fetchPublicTaxonomyNodes\(\)/);
   assert.match(categories, /taxonomyListingUrlSearch/);
 });

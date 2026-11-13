@@ -22,7 +22,7 @@
   --rawaj-signature-cyan: var(--rawaj-accent-cyan);
   --rawaj-signature-success: #70d5b1;
   color: var(--rawaj-signature-text);
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
@@ -62,11 +62,11 @@
   top: 0;
   z-index: 35;
   border: 0 !important;
-  color: var(--rawaj-signature-text);
-  background: rgba(36, 46, 42, 0.97) !important;
-  box-shadow: 0 9px 24px rgba(7, 8, 11, 0.14) !important;
-  backdrop-filter: blur(22px) saturate(110%);
-  -webkit-backdrop-filter: blur(22px) saturate(110%);
+  color: var(--rawaj-ink-primary);
+  background: var(--rawaj-canvas) !important;
+  box-shadow: 0 1px 0 var(--rawaj-divider) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
@@ -122,7 +122,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
   display: inline !important;
-  color: #c8c2cd !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-family: "Cairo", system-ui, sans-serif !important;
   font-size: 0.66rem !important;
   font-weight: 600 !important;
@@ -140,11 +140,11 @@
   height: 2.45rem !important;
   min-height: 2.45rem !important;
   padding: 0 !important;
-  color: #d6d0cb !important;
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
-  border-radius: 13px !important;
-  background: rgba(255, 255, 255, 0.032) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.026) !important;
+  color: var(--rawaj-ink-primary) !important;
+  border: 1px solid var(--rawaj-divider) !important;
+  border-radius: 12px !important;
+  background: var(--rawaj-surface-subtle) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action:hover,
@@ -823,7 +823,7 @@
   border: 1px solid transparent !important;
   border-radius: 20px !important;
   border-color: var(--rawaj-border-strong) !important;
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.23) !important;
 }
 

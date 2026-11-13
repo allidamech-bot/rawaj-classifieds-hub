@@ -1,9 +1,9 @@
+import styles from "./account-workspace.module.css";
 import { Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Bell,
   Bookmark,
-  Camera,
   CheckCircle2,
   FileSpreadsheet,
   Heart,
@@ -160,20 +160,19 @@ export function AccountIdentityHero({
   const showAvatar = Boolean(avatarUrl && failedAvatarUrl !== avatarUrl);
 
   return (
-    <section className="rawaj-account-identity" data-signed-in={signedIn}>
-      <div className="rawaj-account-identity__cover">
-        {showCover ? (
+    <section className={styles.profile} data-signed-in={signedIn}>
+      {showCover ? (
+        <div className={styles.cover}>
           <img
             src={coverUrl ?? undefined}
             alt=""
             decoding="async"
             onError={() => setFailedCoverUrl(coverUrl ?? null)}
           />
-        ) : null}
-        <div aria-hidden="true" />
-      </div>
-      <div className="rawaj-account-identity__content">
-        <div className="rawaj-account-identity__avatar">
+        </div>
+      ) : null}
+      <div className={styles.identity}>
+        <div className={styles.avatar}>
           {showAvatar ? (
             <img
               src={avatarUrl ?? undefined}
@@ -184,22 +183,17 @@ export function AccountIdentityHero({
           ) : (
             <User aria-hidden="true" />
           )}
-          {signedIn ? (
-            <span>
-              <Camera aria-hidden="true" />
-            </span>
-          ) : null}
         </div>
-        <div className="rawaj-account-identity__copy">
+        <div className={styles.identityCopy}>
           <p>
             {signedIn
               ? text("مساحتي الشخصية", "My personal space")
               : text("حساب رواج", "RAWAJ account")}
           </p>
           <div>
-            <h1>{displayName}</h1>
+            <h1 dir="auto">{displayName}</h1>
             {verified ? (
-              <strong>
+              <strong className={styles.verified}>
                 <BadgeCheck aria-hidden="true" />
                 {text("موثّق", "Verified")}
               </strong>
@@ -207,13 +201,13 @@ export function AccountIdentityHero({
           </div>
           {email ? <small>{email}</small> : null}
           {location ? <span>{location}</span> : null}
-          <div className="rawaj-account-identity__badges">
+          <div className={styles.profileBadges}>
             <b>{roleLabel}</b>
             <b>{statusLabel}</b>
           </div>
         </div>
       </div>
-      <div className="rawaj-account-identity__actions">{actions}</div>
+      <div className={styles.profileActions}>{actions}</div>
     </section>
   );
 }
@@ -221,10 +215,7 @@ export function AccountIdentityHero({
 export function AccountQuickLinks() {
   const { text } = useUiPreferences();
   return (
-    <nav
-      className="rawaj-account-quick-links"
-      aria-label={text("اختصارات الحساب", "Account shortcuts")}
-    >
+    <nav className={styles.shortcuts} aria-label={text("اختصارات الحساب", "Account shortcuts")}>
       <AccountQuickLink
         to="/profile/listings"
         icon={FileSpreadsheet}
@@ -265,13 +256,13 @@ function AccountQuickLink({
   description: string;
 }) {
   return (
-    <Link to={to}>
-      <span>
+    <Link to={to} className={styles.shortcut}>
+      <span className={styles.icon}>
         <Icon aria-hidden="true" />
       </span>
       <div>
-        <strong>{title}</strong>
-        <small>{description}</small>
+        <strong className={styles.shortcutTitle}>{title}</strong>
+        <small className={styles.hint}>{description}</small>
       </div>
     </Link>
   );

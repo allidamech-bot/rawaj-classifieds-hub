@@ -1,3 +1,4 @@
+import directory from "@/features/categories/category-directory.module.css";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Briefcase,
@@ -169,9 +170,9 @@ function CategoriesPage() {
     <>
       <PageHeader title={text("الأقسام", "Categories")} titleIsPageHeading={false} />
       <main className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
-          <div className="px-4 pt-4 sm:px-6">
-            <h1 className="text-xl font-bold leading-snug text-foreground sm:text-2xl" dir="auto">
+        <section className={directory.heading} data-category-directory-heading>
+          <div>
+            <h1 className={directory.title} dir="auto">
               {currentNode
                 ? taxonomyNodeName(currentNode, language)
                 : text("تصفّح الأقسام", "Browse categories")}
@@ -179,9 +180,9 @@ function CategoriesPage() {
             {currentNode && <Breadcrumbs path={currentPath} language={language} text={text} />}
           </div>
 
-          <div className="rawaj-categories-v2__hero-search p-3 sm:p-4">
+          <div>
             <div
-              className="rawaj-category-directory-search"
+              className={directory.search}
               role="search"
               aria-label={text("بحث الأقسام", "Category search")}
             >
@@ -365,7 +366,11 @@ function TaxonomyDirectory({
 }
 
 function DirectoryGrid({ children }: { children: React.ReactNode }) {
-  return <section className="rawaj-category-directory-grid mt-5">{children}</section>;
+  return (
+    <section className={directory.grid} data-category-directory-grid>
+      {children}
+    </section>
+  );
 }
 
 function TaxonomyRow({
@@ -387,7 +392,7 @@ function TaxonomyRow({
   const isLeaf = !hasChildren;
 
   return (
-    <article className="rawaj-category-directory-card tap-card">
+    <article className={directory.card} data-category-directory-card>
       <Link
         to={isLeaf ? "/listings" : "/categories"}
         search={
@@ -395,25 +400,21 @@ function TaxonomyRow({
             ? taxonomyListingUrlSearch(resolveTaxonomyListingSearch(node, path))
             : { node: node.id }
         }
-        className="group flex h-full items-center gap-3 p-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
+        className={directory.link}
+        data-category-directory-link
       >
-        <span className="category-tile h-11 w-11 shrink-0 sm:h-12 sm:w-12">
+        <span className={directory.icon} data-category-directory-icon>
           <Icon className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
-            <span
-              className="min-w-0 break-words text-sm font-semibold text-foreground sm:text-[15px]"
-              dir="auto"
-            >
+            <span className={directory.name} dir="auto">
               {taxonomyNodeName(node, language)}
             </span>
-            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
+            <ChevronLeft aria-hidden="true" className={directory.chevron} />
           </span>
-          {pathLabel && (
-            <span className="mt-1 block truncate text-[11px] font-bold text-gold">{pathLabel}</span>
-          )}
-          <span className="mt-1.5 inline-flex text-[11px] font-semibold text-brand-orange sm:mt-2 sm:text-xs">
+          {pathLabel && <span className={directory.secondary}>{pathLabel}</span>}
+          <span className={directory.secondary}>
             {isLeaf
               ? text("عرض النتائج", "View results")
               : text("استعراض الفروع", "Browse children")}

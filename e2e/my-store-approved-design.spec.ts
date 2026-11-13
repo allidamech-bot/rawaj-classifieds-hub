@@ -66,7 +66,7 @@ test("approved store composition and owner interactions", async ({ page }, testI
   // A rendered-page regression guard: global legacy styles previously made
   // the entire ivory storefront charcoal and left headings/prices unreadable.
   for (const [selector, property, expected] of [
-    ["main.my-store", "backgroundColor", "rgb(252, 250, 247)"],
+    ["main.my-store", "backgroundColor", "rgb(255, 255, 255)"],
     [".my-store-identity h1", "color", "rgb(16, 23, 22)"],
     [".my-store-stats dd", "color", "rgb(21, 35, 34)"],
     [".ms-owner-listing-card", "backgroundColor", "rgb(255, 253, 250)"],
@@ -91,21 +91,25 @@ test("approved store composition and owner interactions", async ({ page }, testI
     if (width <= 430) {
       await expect
         .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
+          page
+            .locator("[data-shell-region=bottom-dock-region]")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
         .toBe("rgba(0, 0, 0, 0)");
       await expect
         .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
+          page
+            .locator("[data-shell-region=bottom-dock-region]")
+            .evaluate((el) => getComputedStyle(el).backdropFilter),
         )
         .toBe("none");
       await expect
         .poll(() =>
           page
-            .locator(".rawaj-bottom-nav-shell")
+            .locator("[data-dock-surface]")
             .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
-        .toBe("rgb(20, 59, 57)");
+        .toBe("rgb(16, 63, 66)");
     }
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
@@ -175,6 +179,25 @@ test("approved store composition and owner interactions", async ({ page }, testI
     fullPage: false,
   });
   await page.keyboard.press("Escape");
+  await test.step("My Store tabs do not intercept Manage Store at 480, 500, and 520px", async () => {
+    for (const width of [480, 500, 520]) {
+      await page.setViewportSize({ width, height: 820 });
+      const options = page.locator(".my-store-owner-menu summary");
+      await options.click();
+      await page.getByRole("button", { name: "Manage store", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: "Manage store" });
+      await expect(dialog).toBeVisible();
+      await expect
+        .poll(() => dialog.evaluate((element) => element.contains(document.activeElement)))
+        .toBe(true);
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await page.getByRole("button", { name: "About", exact: true }).click();
+      await expect(page.getByText("About this store", { exact: true })).toBeVisible();
+      await page.getByRole("button", { name: /Listings \(/ }).click();
+    }
+    await page.setViewportSize({ width: 390, height: 1000 });
+  });
   await expect(page.locator(".my-store-add")).toHaveAttribute("href", "/add-listing");
   await page.locator(".my-store-topbar .my-store-nav summary").click();
   await page.getByRole("button", { name: "العربية", exact: true }).click();
@@ -238,22 +261,26 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     if (width < 1024) {
       await expect
         .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
+          page
+            .locator("[data-shell-region=bottom-dock-region]")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
         .toBe("rgba(0, 0, 0, 0)");
       await expect
         .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
+          page
+            .locator("[data-shell-region=bottom-dock-region]")
+            .evaluate((el) => getComputedStyle(el).backdropFilter),
         )
         .toBe("none");
       await expect
         .poll(() =>
           page
-            .locator(".rawaj-bottom-nav-shell")
+            .locator("[data-dock-surface]")
             .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
-        .toBe("rgb(20, 59, 57)");
-      await expect(page.locator(".rawaj-dock-item[data-section='categories']")).toHaveAttribute(
+        .toBe("rgb(16, 63, 66)");
+      await expect(page.locator("[data-dock-surface] [data-section='categories']")).toHaveAttribute(
         "data-active",
         "false",
       );
@@ -268,7 +295,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
           .locator("main.my-store-public")
           .evaluate((element) => getComputedStyle(element).backgroundColor),
       )
-      .toBe("rgb(252, 250, 247)");
+      .toBe("rgb(255, 255, 255)");
     await page.screenshot({
       path: testInfo.outputPath("buyer-store-" + width + ".png"),
       fullPage: true,

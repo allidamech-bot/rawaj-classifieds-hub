@@ -59,12 +59,12 @@ export function PlaceholderArt({ type, label, className = "", aspect = "wide" }:
     >
       <div className="absolute inset-0 grid place-items-center p-3">
         <Icon
-          className="h-11 w-11 text-[var(--rawaj-text-gold)] sm:h-14 sm:w-14"
+          className="h-10 w-10 text-[var(--rawaj-ink-secondary)] sm:h-12 sm:w-12"
           strokeWidth={1.75}
         />
       </div>
       {label ? (
-        <span className="absolute bottom-2 start-2 max-w-[calc(100%-1rem)] truncate rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-[10px] font-medium text-white/55 backdrop-blur-sm">
+        <span className="absolute bottom-2 start-2 max-w-[calc(100%-1rem)] truncate rounded-lg border border-border bg-white/95 px-2 py-1 text-xs font-medium text-[var(--rawaj-ink-secondary)]">
           {label}
         </span>
       ) : null}

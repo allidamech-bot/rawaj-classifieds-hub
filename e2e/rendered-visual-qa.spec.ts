@@ -10,6 +10,8 @@ const viewports = [
   { name: "desktop-1440", width: 1440, height: 1000, project: "desktop" },
 ] as const;
 
+/* These detail/storefront IDs are seeded by rawaj-e2e-api-fixtures.ts.
+ * Never depend on mutable remote database rows in rendered visual QA. */
 const routes = [
   { name: "home", path: "/" },
   { name: "categories", path: "/categories" },
@@ -19,12 +21,12 @@ const routes = [
   { name: "listings", path: "/listings" },
   {
     name: "listing-detail",
-    path: "/listings/da100001-0000-4000-8000-000000000001",
+    path: "/listings/e2e-listing-featured",
   },
   { name: "offers", path: "/offers" },
   {
     name: "seller-storefront",
-    path: "/seller/90fc1187-0357-46da-9c19-d984536df794",
+    path: "/seller/00000000-0000-4000-8000-000000000010",
   },
   { name: "login", path: "/login" },
   { name: "reset-password-invalid", path: "/reset-password" },

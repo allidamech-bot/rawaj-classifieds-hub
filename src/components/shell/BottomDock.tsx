@@ -1,3 +1,4 @@
+import styles from "./BottomDock.module.css";
 import { Link } from "@tanstack/react-router";
 import { LayoutGrid, Home, MessagesSquare, Plus, CircleUserRound } from "lucide-react";
 
@@ -71,14 +72,11 @@ export function BottomDock({ pathname }: BottomDockProps) {
 
   return (
     <nav
-      className="rawaj-mobile-dock pointer-events-none fixed inset-x-0 z-40 lg:hidden"
+      className={styles.dock}
       data-shell-region="bottom-dock-region"
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div
-        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid grid-cols-5 items-end"
-        role="list"
-      >
+      <div className={styles.surface} data-dock-surface role="list">
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
@@ -108,7 +106,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
               data-active={active}
               data-primary={item.primary === true}
               data-badge-count={badgeCount > 0 ? badgeCount : undefined}
-              className="rawaj-dock-item relative flex min-w-0 flex-col items-center justify-end active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+              className={styles.item}
               aria-label={accessibleLabel}
               aria-current={active ? "page" : undefined}
               onClick={(event) => {
@@ -120,9 +118,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
               <span
                 data-active={active && !item.primary}
                 className={`relative grid place-items-center ${
-                  item.primary
-                    ? "rawaj-dock-create -mt-3 h-11 w-11 ring-[3px] ring-card"
-                    : "rawaj-dock-icon rounded-xl"
+                  item.primary ? styles.create : styles.icon
                 }`}
               >
                 <Icon
@@ -133,14 +129,14 @@ export function BottomDock({ pathname }: BottomDockProps) {
                 {badgeCount > 0 ? (
                   <span
                     aria-hidden="true"
-                    className="rawaj-bottom-dock__badge rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card"
+                    className="rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card"
                   >
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 ) : null}
               </span>
               <span
-                className={`rawaj-bottom-dock__label max-w-full truncate ${
+                className={`${styles.label} max-w-full truncate ${
                   active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >

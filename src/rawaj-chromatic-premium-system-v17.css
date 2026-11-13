@@ -27,13 +27,13 @@
   --rawaj-v17-text: var(--rawaj-ink-primary);
   --rawaj-v17-text-2: var(--rawaj-ink-secondary);
   --rawaj-v17-text-3: var(--rawaj-ink-secondary);
-  --rawaj-v17-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
-  --rawaj-v17-shadow-raised: 0 22px 52px rgba(0, 0, 0, 0.32);
-  --rawaj-v17-inset: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --rawaj-v17-shadow: 0 1px 3px rgba(21, 35, 34, 0.06);
+  --rawaj-v17-shadow-raised: 0 6px 20px rgba(21, 35, 34, 0.09);
+  --rawaj-v17-inset: 0 0 0 transparent;
   --rawaj-v17-radius-card: 1.05rem;
   --rawaj-v17-radius-panel: 1.35rem;
-  --rawaj-v17-gradient-action: #cb334f;
-  --rawaj-v17-gradient-icon: #d83658;
+  --rawaj-v17-gradient-action: var(--rawaj-brand-primary);
+  --rawaj-v17-gradient-icon: var(--rawaj-brand-primary);
 
   --rawaj-page-background: var(--rawaj-v17-canvas);
   --rawaj-page-background-deep: var(--rawaj-canvas);
@@ -114,11 +114,11 @@ body {
 
 /* Header and navigation. */
 .rawaj-app-header {
-  border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
-  background: rgba(25, 27, 35, 0.97) !important;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), var(--rawaj-v17-inset) !important;
-  backdrop-filter: blur(22px) saturate(118%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
+  border-bottom: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-canvas) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .rawaj-app-header .rawaj-brand-divider {
@@ -181,7 +181,6 @@ body {
   border-color: var(--rawaj-v17-border) !important;
   color: var(--rawaj-v17-text) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="border"] {
@@ -191,7 +190,6 @@ body {
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-card"],
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-background"] {
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 .rawaj-app-shell :is(.tap-card, [data-ui="card"][data-interactive="true"], .rawaj-color-card) {
@@ -260,10 +258,10 @@ body {
 
 .rawaj-app-shell :is(button, a)[class*="border"][class*="bg-transparent"],
 .rawaj-app-shell :is(.rawaj-secondary-action, [data-ui="button"][data-variant="secondary"], [data-slot="button"][data-variant="outline"]) {
-  border-color: rgba(216, 174, 95, 0.2) !important;
-  color: #eee7df !important;
-  background: rgba(30,33,42,.9) !important;
-  box-shadow: 0 7px 18px rgba(0,0,0,.17), var(--rawaj-v17-inset) !important;
+  border-color: var(--rawaj-divider) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell :is(button, a):focus-visible {
@@ -281,7 +279,7 @@ body {
 /* Inputs, selects, search, and form controls. */
 .rawaj-app-shell :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-ui="input"], [data-slot="input"], [data-slot="textarea"], [role="combobox"]) {
   border-color: rgba(216, 174, 95, 0.16) !important;
-  color: #f5f0e9 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: var(--rawaj-surface-subtle) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 5px 14px rgba(0,0,0,.12) !important;
 }
@@ -302,19 +300,19 @@ body {
 /* Tabs, chips, pills, badges. */
 .rawaj-app-shell :is([role="tablist"], [data-slot="tabs-list"], .rawaj-tabs-list) {
   border: 1px solid rgba(216,174,95,.11) !important;
-  background: rgba(15,18,25,.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
 .rawaj-app-shell :is([role="tab"][aria-selected="true"], [data-slot="tabs-trigger"][data-state="active"]) {
-  color: #fff6e7 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(216,174,95,.15) !important;
   box-shadow: inset 0 0 0 1px rgba(216,174,95,.17), 0 7px 18px rgba(0,0,0,.18) !important;
 }
 
 .rawaj-app-shell :is(.badge, [data-ui="badge"], [data-slot="badge"], [class*="rounded-full"][class*="border"]) {
   border-color: rgba(216,174,95,.18) !important;
-  color: #e9dfd4 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(216,174,95,.045) !important;
 }
 
@@ -322,7 +320,7 @@ body {
 .rawaj-app-shell :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]) {
   border-color: rgba(216,174,95,.2) !important;
   color: var(--rawaj-v17-text) !important;
-  background: rgba(27,31,41,.985) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 28px 72px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.055) !important;
   backdrop-filter: blur(22px) saturate(118%) !important;
   -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
@@ -385,16 +383,15 @@ body {
 
 /* Listing detail. */
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
-  border-color: rgba(216,174,95,.17) !important;
+  border-color: var(--rawaj-divider) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
 /* Add/edit listing studio. */
 .rawaj-app-shell[data-resolved-pathname="/add-listing"] :is(.rawaj-studio-panel, .rawaj-listing-studio-card, [data-ui="card"]),
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] :is(.rawaj-studio-panel, .rawaj-listing-studio-card, [data-ui="card"]) {
   border-color: rgba(190,86,155,.19) !important;
-  background: #1a1923 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 /* Personal space, profile, favorites, saved searches, activity. */
@@ -403,14 +400,14 @@ body {
 .rawaj-app-shell[data-resolved-pathname="/saved-searches"] :is(.rawaj-saved-search-card, [data-ui="card"]),
 .rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-activity-card, [data-ui="card"]) {
   border-color: rgba(216,174,95,.17) !important;
-  background: #191c25 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* Chats, notifications, communication. */
 .rawaj-app-shell[data-resolved-pathname="/chats"] :is(.rawaj-message-card, [data-ui="card"]),
 .rawaj-app-shell[data-resolved-pathname="/notifications"] :is(.rawaj-notification-card, [data-ui="card"]) {
   border-color: rgba(74,140,255,.17) !important;
-  background: #171d27 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* Storefront, verification, safety and support. */
@@ -419,48 +416,48 @@ body {
 .rawaj-app-shell[data-resolved-pathname="/safety"] :is(.rawaj-support-card, [data-ui="card"]),
 .rawaj-app-shell[data-resolved-pathname="/support"] :is(.rawaj-support-card, [data-ui="card"]) {
   border-color: rgba(92,178,144,.18) !important;
-  background: #17211f !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* Auth pages. */
 .rawaj-app-shell :is(.rawaj-auth-v2, .rawaj-auth-card, [data-auth-surface]) {
-  border-color: rgba(216,174,95,.19) !important;
-  background: #1b1d26 !important;
-  box-shadow: var(--rawaj-v17-shadow-raised), var(--rawaj-v17-inset) !important;
+  border-color: var(--rawaj-divider) !important;
+  background: var(--rawaj-surface) !important;
+  box-shadow: var(--rawaj-v17-shadow) !important;
 }
 
 /* Empty states, skeletons and feedback. */
 .rawaj-app-shell :is(.rawaj-empty-state, [data-ui="empty-state"], [data-empty-state]) {
   border-color: rgba(216,174,95,.16) !important;
   color: var(--rawaj-v17-text-2) !important;
-  background: #161a22 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell :is(.skeleton, [data-slot="skeleton"], [data-ui="skeleton"]) {
-  background: #151922 !important;
+  background: var(--rawaj-surface-subtle) !important;
   background-size: 220% 100% !important;
 }
 
 .rawaj-app-shell :is([role="status"], .rawaj-toast, [data-slot="toast"]) {
   border-color: rgba(216,174,95,.2) !important;
-  color: #f6f1ea !important;
-  background: rgba(28,32,42,.98) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 18px 42px rgba(0,0,0,.36), var(--rawaj-v17-inset) !important;
 }
 
 /* Footer and mobile dock. */
 .rawaj-app-shell footer,
 .rawaj-footer {
-  border-top-color: rgba(216,174,95,.11) !important;
-  color: var(--rawaj-v17-text-2) !important;
-  background: #10141b !important;
+  border-top-color: var(--rawaj-divider) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-bottom-nav,
 .rawaj-mobile-dock,
 .rawaj-app-shell [data-mobile-dock] {
   border: 1px solid rgba(216,174,95,.14) !important;
-  background: rgba(27,30,38,.96) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 -8px 32px rgba(0,0,0,.3), 0 18px 50px rgba(0,0,0,.4), var(--rawaj-v17-inset) !important;
   backdrop-filter: blur(22px) saturate(118%) !important;
   -webkit-backdrop-filter: blur(22px) saturate(118%) !important;
@@ -468,7 +465,7 @@ body {
 
 .rawaj-bottom-nav :is([aria-current="page"], [data-active="true"]),
 .rawaj-mobile-dock :is([aria-current="page"], [data-active="true"]) {
-  color: #f9ead1 !important;
+  color: var(--rawaj-ink-primary) !important;
   background: rgba(216,174,95,.12) !important;
   box-shadow: inset 0 0 0 1px rgba(216,174,95,.15) !important;
 }

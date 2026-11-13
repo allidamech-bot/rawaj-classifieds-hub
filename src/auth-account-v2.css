@@ -36,9 +36,9 @@
   min-height: 100%;
   overflow: hidden;
   align-content: space-between;
-  background: #082f2a;
+  background: var(--rawaj-surface-subtle);
   padding: clamp(1.5rem, 4vw, 2.4rem);
-  color: white;
+  color: var(--rawaj-ink-primary);
 }
 
 .rawaj-auth-aside::after {
@@ -90,8 +90,8 @@
 }
 
 .rawaj-auth-aside__copy > p {
-  color: #f2c77f;
-  font-size: 0.6rem;
+  color: var(--rawaj-ink-secondary);
+  font-size: 0.875rem;
   font-weight: 900;
   letter-spacing: 0.04em;
 }
@@ -99,7 +99,7 @@
 .rawaj-auth-aside__copy h1 {
   max-width: 28rem;
   margin-top: 0.6rem;
-  color: white;
+  color: var(--rawaj-ink-primary);
   font-family: var(--font-display, inherit);
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 900;
@@ -111,8 +111,8 @@
   display: block;
   max-width: 31rem;
   margin-top: 0.75rem;
-  color: color-mix(in srgb, white 70%, transparent);
-  font-size: 0.72rem;
+  color: var(--rawaj-ink-secondary);
+  font-size: 0.9375rem;
   line-height: 1.9;
 }
 
@@ -143,7 +143,7 @@
   place-items: center;
   border-radius: 0.65rem;
   background: color-mix(in srgb, white 9%, transparent);
-  color: #f2c77f;
+  color: var(--rawaj-brand-primary);
 }
 
 .rawaj-auth-aside li svg {
