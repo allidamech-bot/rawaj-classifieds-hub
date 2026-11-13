@@ -103,9 +103,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await page.keyboard.press("Escape");
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
     await approvedDialog.locator(".ms-shop-listing-health summary").click();
-    const listingPerformance = approvedDialog.locator(
-      '[data-owner-listing-performance="true"]',
-    );
+    const listingPerformance = approvedDialog.locator('[data-owner-listing-performance="true"]');
     await expect(listingPerformance.locator('[data-owner-metric="views"]')).toContainText("24");
     await expect(listingPerformance.locator('[data-owner-metric="favorites"]')).toContainText("5");
     await expect(listingPerformance.locator('[data-owner-metric="conversations"]')).toContainText(
@@ -169,9 +167,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
-    await expect(
-      approvedDialog.getByLabel(/السعر الجديد|New price/i),
-    ).toHaveValue(REDUCED_PRICE, { timeout: 30_000 });
+    await expect(approvedDialog.getByLabel(/السعر الجديد|New price/i)).toHaveValue(REDUCED_PRICE, {
+      timeout: 30_000,
+    });
     await expect(
       approvedDialog.getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i),
     ).toHaveValue("90");
@@ -248,9 +246,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
 
-    const deleteDialog = page
-      .getByRole("dialog", { name: /حذف المسودة|Delete draft/i })
-      .last();
+    const deleteDialog = page.getByRole("dialog", { name: /حذف المسودة|Delete draft/i }).last();
     await expect(deleteDialog).toBeVisible();
     await clickTwiceInSameTick(
       deleteDialog.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
