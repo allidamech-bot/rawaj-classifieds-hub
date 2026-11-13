@@ -51,9 +51,9 @@
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
-  color: #1f2024;
-  background: #e7bf7b;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  color: var(--rawaj-brand-primary);
+  background: var(--rawaj-surface-subtle);
+  box-shadow: none;
 }
 
 .rawaj-admin-command-hero__icon svg {
@@ -68,7 +68,7 @@
 .rawaj-admin-command-hero__copy p {
   margin: 0;
   color: var(--rawaj-gold-ink) !important;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 
@@ -85,7 +85,7 @@
   max-width: 68ch;
   margin-top: 0.4rem;
   color: var(--rawaj-ink-secondary) !important;
-  font-size: 0.73rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.7;
 }
@@ -100,7 +100,7 @@
   padding: 0.5rem 0.8rem;
   color: var(--rawaj-gold-ink) !important;
   background: rgba(205, 162, 96, 0.08);
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -115,7 +115,7 @@
   padding: 0.75rem 0.85rem;
   color: var(--rawaj-danger);
   background: rgba(234, 113, 104, 0.055);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 
@@ -131,7 +131,7 @@
   padding: 0.45rem 0.7rem;
   color: var(--rawaj-danger);
   background: rgba(234, 113, 104, 0.07);
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 
@@ -142,7 +142,7 @@
   border-radius: 1.2rem !important;
   padding: clamp(0.85rem, 2vw, 1.05rem) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="pulse"] {
@@ -212,7 +212,7 @@
 
 .rawaj-admin-metric-card span {
   color: var(--rawaj-text-muted);
-  font-size: 0.66rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -283,7 +283,7 @@
   grid-area: label;
   margin: 0;
   color: var(--rawaj-text-secondary) !important;
-  font-size: 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   line-height: 1.4;
 }
@@ -313,7 +313,7 @@
   padding: 0.95rem !important;
   color: var(--rawaj-text-secondary) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
 }
 
 .rawaj-admin-mini-metrics {
@@ -350,14 +350,14 @@
 
 .rawaj-admin-mini-metric span {
   color: var(--rawaj-text-muted);
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 
 .rawaj-admin-command-card__description {
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   line-height: 1.65;
 }
 
@@ -373,7 +373,7 @@
   color: #fff !important;
   background: var(--rawaj-action-primary) !important;
   box-shadow: 0 9px 20px rgba(155, 40, 111, 0.2) !important;
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 
@@ -426,7 +426,7 @@
 .rawaj-admin-quick-link h3 {
   margin: 0;
   color: var(--rawaj-text-primary) !important;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   font-weight: 850;
   line-height: 1.45;
 }
@@ -434,7 +434,7 @@
 .rawaj-admin-quick-link p {
   margin: 0.2rem 0 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.62rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -450,7 +450,7 @@
   text-align: center;
   color: var(--rawaj-text-secondary) !important;
   background: var(--rawaj-surface) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
 }
 
 .rawaj-admin-dashboard-state > svg {
@@ -469,7 +469,7 @@
   max-width: 60ch;
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   line-height: 1.65;
 }
 
@@ -480,7 +480,7 @@
   padding: 0.5rem 0.8rem;
   color: #fff;
   background: var(--rawaj-action-primary);
-  font-size: 0.69rem;
+  font-size: 0.8125rem;
   font-weight: 800;
 }
 
