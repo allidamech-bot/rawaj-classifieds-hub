@@ -56,17 +56,18 @@ export function OfflineNotice() {
     const refreshWhenVisible = () => {
       if (document.visibilityState === "visible") void refreshSystemStatus();
     };
+    const refreshOnFocus = () => void refreshSystemStatus();
     const refreshAfterOwnerChange = () => void refreshSystemStatus(true);
 
     void refreshSystemStatus();
     const interval = window.setInterval(() => void refreshSystemStatus(), SYSTEM_STATUS_REFRESH_MS);
-    window.addEventListener("focus", refreshAfterOwnerChange);
+    window.addEventListener("focus", refreshOnFocus);
     window.addEventListener("rawaj:system-control-changed", refreshAfterOwnerChange);
     document.addEventListener("visibilitychange", refreshWhenVisible);
 
     return () => {
       window.clearInterval(interval);
-      window.removeEventListener("focus", refreshAfterOwnerChange);
+      window.removeEventListener("focus", refreshOnFocus);
       window.removeEventListener("rawaj:system-control-changed", refreshAfterOwnerChange);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
