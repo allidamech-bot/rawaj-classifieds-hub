@@ -1,5 +1,5 @@
 /* RAWAJ homepage audit corrections V8.
- * Reorders the existing homepage regions without changing listing or ad data.
+ * Sizes the advertisement region in the homepage content flow.
  */
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {
@@ -12,16 +12,7 @@
   flex-direction: column;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero {
-  order: 10;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-trust-row {
-  order: 20;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-ad-placement {
-  order: 30;
   width: 100%;
   margin-block: 0.85rem 0.35rem;
 }
@@ -33,28 +24,12 @@
   padding-inline: 0 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-featured {
-  order: 40;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-latest {
-  order: 50;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-categories {
-  order: 60;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-safety {
-  order: 70;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__load-state {
-  order: 45;
-}
-
 @media (max-width: 39.99rem) {
   .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-ad-placement {
     margin-top: 0.65rem;
   }
+}
+
+.rawaj-signature-ad-placement:empty {
+  display: none;
 }
