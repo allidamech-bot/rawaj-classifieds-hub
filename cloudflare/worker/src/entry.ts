@@ -77,7 +77,13 @@ export default {
       }
 
       const securedRequest = securityResult instanceof Request ? securityResult : request;
-      const response = await routeRequest(securedRequest, env, requestId);
+      if (new URL(securedRequest.url).pathname === "/v1/telemetry/client-errors") {
+        const telemetryResponse = required(
+          await handleClientErrorTelemetry(securedRequest, env, requestId),
+        );
+        return withCors(telemetryResponse, responseHeaders(cors, requestId, securedRequest));
+      }
+      const response = await routeRequest(securedRequest, env);
       return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
@@ -115,13 +121,10 @@ export default {
   },
 };
 
-async function routeRequest(request: Request, env: EntryEnv, requestId: string): Promise<Response> {
+async function routeRequest(request: Request, env: EntryEnv): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  if (path === "/v1/telemetry/client-errors") {
-    return required(await handleClientErrorTelemetry(request, env, requestId));
-  }
   if (path === "/v1/admin/system-controls" || path === "/v1/system-status") {
     return required(await handleSystemControls(request, env));
   }
