@@ -386,7 +386,7 @@ async function actorKey(request: Request, env: SecurityEnv): Promise<string> {
   // Bind authenticated quotas to a VERIFIED Firebase subject, not to bearer
   // text (which is attacker controlled and changes on token refresh).
   const authorization = request.headers.get("Authorization") ?? "";
-  const bearer = /^Bearer\\s+([^\\s]+)$/i.exec(authorization)?.[1];
+  const bearer = /^Bearer\s+([^\s]+)$/i.exec(authorization)?.[1];
   if (bearer && bearer.length <= 4096) {
     const identity = await verifyFirebaseIdToken(bearer, env);
     if (identity) return `auth:${identity.subject}`;
