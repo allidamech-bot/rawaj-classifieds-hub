@@ -97,6 +97,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       "2",
     );
 
+    await approvedCard.getByText(/الحالة والأداء|Status and performance/).click();
     const listingPerformance = approvedCard.locator('[data-owner-listing-performance="true"]');
     await expect(listingPerformance.locator('[data-owner-metric="views"]')).toContainText("24");
     await expect(listingPerformance.locator('[data-owner-metric="favorites"]')).toContainText("5");
