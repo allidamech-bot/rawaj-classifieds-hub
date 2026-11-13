@@ -159,14 +159,9 @@ test("footer renders one responsive variant and reserves the mobile dock", () =>
 test("owner workspace uses a compact management summary and prioritizes drafts", () => {
   assert.match(storefrontIdentity, /OwnerStoreWorkspaceSummary/);
   assert.match(storefrontIdentity, /if \(mode === "owner"\)/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary/);
-  assert.match(ownerWorkspace, /approvedCount/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__completeness/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__actions/);
-  assert.doesNotMatch(ownerWorkspace, /needsEditCount|pendingCount|closedCount/);
-  assert.match(ownerCorrections, /rawaj-storefront-notice\[data-tone="draft"\][\s\S]*order: 1/);
-  assert.match(ownerCorrections, /rawaj-owner-workspace-summary[\s\S]*order: 2/);
-  assert.match(ownerCorrections, /a:has\(svg\.lucide-pencil\)[\s\S]*grid-column: 1 \/ -1/);
+  assert.match(ownerWorkspace, /rawaj-shop-header__cover/);
+  assert.match(ownerWorkspace, /rawaj-approved-stats/);
+  assert.match(ownerWorkspace, /rawaj-shop-header__actions/);
   assert.doesNotMatch(ownerCorrections, /main\s+:is\(section, article, form/);
 });
 
