@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { verifySyriaR2Recovery } from "../cloudflare/worker/scripts/verify-syria-r2-backup.mjs";
+import { acceptSyriaOfflineRecovery } from "../cloudflare/worker/scripts/accept-syria-offline-recovery.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const roots = [];
@@ -36,7 +37,7 @@ async function fixture() {
       {
         type: "table",
         name: "media_assets",
-        sql: "CREATE TABLE media_assets (object_key TEXT PRIMARY KEY)",
+        sql: "CREATE TABLE media_assets (object_key TEXT PRIMARY KEY, byte_size INTEGER, checksum_sha256 TEXT, content_type TEXT, etag TEXT, owner_id TEXT, status TEXT)",
       },
     ],
   };
@@ -163,5 +164,51 @@ test("requires independently pinned D1 and R2 manifests", async () => {
       expectedR2ManifestSha256: undefined,
     }),
     /independent R2 manifest/,
+  );
+});
+
+test("one-command acceptance composes existing D1 restore and R2 checks without remote access", async () => {
+  const f = await fixture();
+  const result = await acceptSyriaOfflineRecovery(f.options);
+  assert.equal(result.result, "offline_snapshot_reconstruction_and_media_integrity_passed");
+  assert.equal(result.d1.restoredTables, 1);
+  assert.equal(result.d1.restoredRows, 1);
+  assert.equal(result.d1.rowContentVerified, true);
+  assert.equal(result.d1.foreignKeyViolations, 0);
+  assert.equal(result.r2.readyMediaReferencesVerified, 1);
+  assert.equal(result.productionProvenanceVerified, false);
+  assert.equal(result.realProductionRestorePerformed, false);
+  assert.equal(result.remoteReads, false);
+  assert.equal(result.remoteWrites, false);
+});
+
+test("combined acceptance refuses missing independent pins and nested snapshots", async () => {
+  const f = await fixture();
+  await assert.rejects(
+    acceptSyriaOfflineRecovery({ ...f.options, expectedD1ManifestSha256: undefined }),
+    /independent D1 SHA-256/,
+  );
+  await assert.rejects(
+    acceptSyriaOfflineRecovery({ ...f.options, r2Directory: f.d1Directory }),
+    /separate directories/,
+  );
+  await assert.rejects(
+    acceptSyriaOfflineRecovery({ ...f.options, expectedR2ManifestSha256: "0".repeat(64) }),
+    /R2 manifest checksum mismatch/,
+  );
+});
+
+test("combined acceptance requires private directories outside the repository", async () => {
+  const f = await fixture();
+  await assert.rejects(
+    acceptSyriaOfflineRecovery({ ...f.options, d1Directory: "./relative-backup" }),
+    /must be absolute/,
+  );
+  await assert.rejects(
+    acceptSyriaOfflineRecovery({
+      ...f.options,
+      d1Directory: new URL("../cloudflare/d1/migrations/", import.meta.url).pathname,
+    }),
+    /outside the RAWAJ source repository/,
   );
 });

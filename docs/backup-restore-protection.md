@@ -129,3 +129,37 @@ an MD5 or SHA-256 substitute.**
 backup exists. Its CI tests use synthetic local media only. A separate
 read-only production inventory/download, isolated upload-and-retrieve rehearsal,
 and app-level image access acceptance are required before claiming recovery ready.
+
+## Single-command offline D1 + R2 acceptance
+
+When BOTH separately acquired Syria snapshot bundles and their independently
+recorded SHA-256 manifest digests are available, use the **existing verifiers
+through one orchestrated check**. This command does not acquire a snapshot and
+does not contact any production or remote service:
+
+```sh
+node cloudflare/worker/scripts/accept-syria-offline-recovery.mjs \\
+  --d1-dir=/absolute/private/syria-d1-backup \\
+  --d1-sha256=<independently-recorded-d1-manifest-sha256> \\
+  --r2-dir=/absolute/private/syria-r2-backup \\
+  --r2-sha256=<independently-recorded-r2-manifest-sha256>
+```
+
+The tool composes the already implemented D1 in-memory reconstruction (#847)
+and D1↔R2 object integrity checks (#850). It fails if either pin is missing,
+a bundle lies inside the repository, or the directories overlap. Its JSON
+result explicitly records `productionProvenanceVerified: false` and
+`realProductionRestorePerformed: false`: the tool cannot independently prove
+that supplied local files came from live production, nor does it create a
+disposable R2 bucket or test deployed application endpoints. A valid result
+is only **offline supplied-file reconstruction and integrity**.
+
+**Current acceptance blocker:** the repository's CI uses synthetic snapshots
+and does not contain a protected private D1+R2 snapshot pair with independently
+pinned manifests. Never add actual backup data or confidential restore reports
+to this repository. Production-origin evidence must be obtained separately by
+an authorized operator using read-only inventory/export procedures and
+stored outside version control. Log production snapshot provenance, creation
+time, versions, R2 isolation/retrieval and live image/search checks separately
+before declaring end-to-end disaster recovery accepted.
+
