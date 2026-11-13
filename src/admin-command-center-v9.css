@@ -245,7 +245,7 @@
   border-radius: 0.95rem !important;
   padding: 0.7rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: none !important;
 }
 
@@ -372,7 +372,7 @@
   padding: 0.5rem 0.8rem !important;
   color: #fff !important;
   background: var(--rawaj-action-primary) !important;
-  box-shadow: 0 9px 20px rgba(155, 40, 111, 0.2) !important;
+  box-shadow: none !important;
   font-size: 0.8125rem;
   font-weight: 800;
 }
@@ -393,7 +393,7 @@
   border-radius: 1rem !important;
   padding: 0.75rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: none !important;
 }
 

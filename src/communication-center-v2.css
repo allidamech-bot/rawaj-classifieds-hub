@@ -869,9 +869,9 @@
   align-items: center;
   gap: 0.45rem;
   border-radius: 0.9rem;
-  background: var(--rawaj-surface-warm);
-  padding: 0.55rem;
-  color: var(--color-foreground);
+  background: var(--rawaj-surface-subtle);
+  padding: 0.75rem;
+  color: var(--rawaj-ink-primary);
   font-size: 0.8125rem;
   font-weight: 800;
 }

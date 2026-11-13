@@ -58,7 +58,7 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child h2 svg,
 .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child > div > div:first-child > span svg {
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child p.text-muted-foreground {
@@ -107,7 +107,7 @@
 .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-muted-surface"] {
   border-color: var(--rawaj-border) !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin/"] .rawaj-admin-v3 [class*="bg-primary/5"] {
