@@ -60,9 +60,9 @@ test.describe("premium listing workflow responsiveness", () => {
       await page.setViewportSize(viewport);
       await page.waitForTimeout(75);
       await expectNoPageOverflow(page, `profile-listings:${viewport.width}`);
-      await expect(
-        ownerWorkspace.locator('.rawaj-owner-workspace-summary__actions [data-priority="primary"]'),
-      ).toBeVisible();
+      const postLink = ownerWorkspace.locator("a.rawaj-shop-post");
+      await expect(postLink).toBeVisible();
+      await expect(postLink).toHaveAttribute("href", "/add-listing");
       await expect(ownerWorkspace.locator('input[type="search"]')).toBeVisible();
     }
 
