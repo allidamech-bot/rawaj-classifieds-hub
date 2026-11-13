@@ -9,6 +9,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const files = await Promise.all([
   read("cloudflare/worker/src/auth.ts"),
   read("cloudflare/worker/src/admin.ts"),
+  read("cloudflare/worker/src/admin-user-management.ts"),
   read("cloudflare/worker/src/admin-campaigns.ts"),
   read("cloudflare/worker/src/admin-safety.ts"),
   read("cloudflare/worker/src/admin-taxonomy-review.ts"),
@@ -21,6 +22,7 @@ const files = await Promise.all([
 const [
   auth,
   admin,
+  adminUserManagement,
   campaigns,
   safety,
   taxonomyReview,
@@ -32,6 +34,7 @@ const [
 
 const mutationModules = [
   admin,
+  adminUserManagement,
   campaigns,
   safety,
   taxonomyReview,
@@ -39,7 +42,15 @@ const mutationModules = [
   trustSupport,
   verification,
 ];
-const auditedModules = [admin, campaigns, safety, taxonomyReview, dataQuality, trustSupport];
+const auditedModules = [
+  admin,
+  adminUserManagement,
+  campaigns,
+  safety,
+  taxonomyReview,
+  dataQuality,
+  trustSupport,
+];
 
 const hasAnyRoleGuard = (source) =>
   /roles\.includes\("(?:owner|admin|moderator)"\)|requireAdminRole\(|isAdminLike\(|canModerate\(|canManage\(/.test(
@@ -65,7 +76,7 @@ test("owner-only operations are enforced for the most sensitive workspaces", () 
   assert.match(campaigns, /roles\.includes\("owner"\)|hasOwnerRole/);
   assert.match(taxonomyReview, /roles\.includes\("owner"\)/);
   assert.match(dataQuality, /roles\.includes\("owner"\)/);
-  assert.match(admin, /requireAdminRole\(auth, "owner"\)/);
+  assert.match(adminUserManagement, /operation === "roles" && !auth\.roles\.includes\("owner"\)/);
 });
 
 test("administrative mutations produce audit records", () => {
