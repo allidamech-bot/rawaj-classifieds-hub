@@ -15,6 +15,7 @@ test.describe("authenticated launch-critical journey", () => {
     const wizardProbes: string[] = [];
     page.on("console", (message) => {
       if (message.text().includes("[RAWAJ_WIZARD_PROBE]")) wizardProbes.push(message.text());
+      if (message.text().includes("[RAWAJ_NATIVE_CLICK]")) wizardProbes.push(message.text());
     });
     const remoteWrites: string[] = [];
     const authorizedPrivateRequests: string[] = [];
@@ -71,6 +72,18 @@ test.describe("authenticated launch-critical journey", () => {
     const beforeContinueStep = await page
       .locator('.rawaj-studio-steps [data-state="active"]')
       .allTextContents();
+    await page.evaluate(() => {
+      document.addEventListener(
+        "click",
+        (event) => {
+          const target = event.target;
+          if (target instanceof Element) {
+            console.info("[RAWAJ_NATIVE_CLICK]", target.tagName, target.textContent?.trim().slice(0, 48));
+          }
+        },
+        { capture: true, once: true },
+      );
+    });
     await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
     const immediatelyAfterContinue = await page
       .locator('.rawaj-studio-steps [data-state="active"]')
