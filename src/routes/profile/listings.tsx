@@ -863,7 +863,17 @@ function MyListingsPage() {
           )}
         </section>
         <Dialog open={toolsOpen} onOpenChange={setToolsOpen}>
-          <DialogContent className="my-store-dialog" dir={language === "ar" ? "rtl" : "ltr"}>
+          <DialogContent
+            className="my-store-dialog"
+            dir={language === "ar" ? "rtl" : "ltr"}
+            onCloseAutoFocus={(event) => {
+              if (attentionQueue) {
+                // Focus the results heading after Radix releases the dialog focus trap.
+                event.preventDefault();
+                inventoryHeadingRef.current?.focus();
+              }
+            }}
+          >
             <DialogHeader>
               <DialogTitle>{text("إدارة المتجر", "Manage store")}</DialogTitle>
               <DialogDescription>
