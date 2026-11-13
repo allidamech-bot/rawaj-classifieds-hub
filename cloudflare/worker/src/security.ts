@@ -1,6 +1,12 @@
 import { verifyFirebaseIdToken } from "./auth";
-import { enforceAdminSecurityPerimeter, type AdminSecurityEnv } from "./admin-security";
-import { inspectUploadedImage, stripImagePrivacyMetadata } from "./image-security";
+import {
+  enforceAdminSecurityPerimeter,
+  type AdminSecurityEnv,
+} from "./admin-security";
+import {
+  inspectUploadedImage,
+  stripImagePrivacyMetadata,
+} from "./image-security";
 import { logSecurityEvent } from "./security-observability";
 import { handleSecuritySummary } from "./security-summary";
 import { requireTurnstile, type TurnstileEnv } from "./turnstile";
@@ -27,7 +33,11 @@ type LimitDecision = {
 
 const MAX_MARKETPLACE_IMAGE_REQUEST_BYTES = 9 * 1024 * 1024;
 const MAX_MARKETPLACE_IMAGE_BYTES = 8 * 1024 * 1024;
-const MARKETPLACE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MARKETPLACE_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 export async function enforceRequestSecurity(
   request: Request,
@@ -41,7 +51,10 @@ export async function enforceRequestSecurity(
 
   if (isMarketplaceImageUpload(path, request.method)) {
     const contentLength = readContentLength(request);
-    if (contentLength !== null && contentLength > MAX_MARKETPLACE_IMAGE_REQUEST_BYTES) {
+    if (
+      contentLength !== null &&
+      contentLength > MAX_MARKETPLACE_IMAGE_REQUEST_BYTES
+    ) {
       logSecurityEvent({
         event: "upload_request_rejected",
         severity: "warning",
@@ -95,11 +108,20 @@ export async function enforceRequestSecurity(
   }
 
   if (isMarketplaceImageUpload(path, request.method)) {
-    const imageResult = await inspectMarketplaceImageRequest(request, requestId, path);
+    const imageResult = await inspectMarketplaceImageRequest(
+      request,
+      requestId,
+      path,
+    );
     if (imageResult) return imageResult;
   }
 
-  const adminPerimeter = await enforceAdminSecurityPerimeter(request, env, requestId, path);
+  const adminPerimeter = await enforceAdminSecurityPerimeter(
+    request,
+    env,
+    requestId,
+    path,
+  );
   if (adminPerimeter) return adminPerimeter;
 
   if (request.method === "GET" && path === "/v1/admin/security-summary") {
@@ -149,7 +171,8 @@ async function inspectMarketplaceImageRequest(
   }
 
   const file = form.get("file");
-  if (!(file instanceof File) || !MARKETPLACE_IMAGE_TYPES.has(file.type)) return null;
+  if (!(file instanceof File) || !MARKETPLACE_IMAGE_TYPES.has(file.type))
+    return null;
   if (file.size <= 0 || file.size > MAX_MARKETPLACE_IMAGE_BYTES) {
     logSecurityEvent({
       event: "image_upload_rejected",
@@ -219,7 +242,10 @@ async function inspectMarketplaceImageRequest(
     );
   }
 
-  const sanitizedInspection = inspectUploadedImage(sanitization.bytes, file.type);
+  const sanitizedInspection = inspectUploadedImage(
+    sanitization.bytes,
+    file.type,
+  );
   if (!sanitizedInspection.ok || sanitizedInspection.data.hasPrivacyMetadata) {
     logSecurityEvent({
       event: "image_upload_rejected",
@@ -268,9 +294,13 @@ function rebuildImageUploadRequest(
     sanitizedBytes.byteOffset,
     sanitizedBytes.byteOffset + sanitizedBytes.byteLength,
   ) as ArrayBuffer;
-  const replacement = new File([sanitizedBuffer], sanitizedFileName(originalFile.type), {
-    type: originalFile.type,
-  });
+  const replacement = new File(
+    [sanitizedBuffer],
+    sanitizedFileName(originalFile.type),
+    {
+      type: originalFile.type,
+    },
+  );
 
   form.forEach((value, key) => {
     if (key === "file" && value === originalFile) {
@@ -298,7 +328,11 @@ function sanitizedFileName(contentType: string): string {
   return "upload.webp";
 }
 
-function classifyRequest(path: string, method: string, env: SecurityEnv): LimitDecision {
+function classifyRequest(
+  path: string,
+  method: string,
+  env: SecurityEnv,
+): LimitDecision {
   const upperMethod = method.toUpperCase();
 
   if (/^\/v1\/admin(?:\/|$)/.test(path)) {
@@ -309,7 +343,10 @@ function classifyRequest(path: string, method: string, env: SecurityEnv): LimitD
     };
   }
 
-  if (isMarketplaceImageUpload(path, upperMethod) || isChatAttachmentUpload(path, upperMethod)) {
+  if (
+    isMarketplaceImageUpload(path, upperMethod) ||
+    isChatAttachmentUpload(path, upperMethod)
+  ) {
     return {
       className: "upload",
       binding: env.RATE_LIMIT_UPLOAD,
@@ -351,11 +388,16 @@ function protectedTurnstileAction(path: string, method: string): string | null {
 
 function isMarketplaceImageUpload(path: string, method: string): boolean {
   if (method.toUpperCase() !== "POST") return false;
-  return path === "/v1/profile/media" || /^\/v1\/listings\/[^/]+\/images$/.test(path);
+  return (
+    path === "/v1/profile/media" || /^\/v1\/listings\/[^/]+\/images$/.test(path)
+  );
 }
 
 function isChatAttachmentUpload(path: string, method: string): boolean {
-  return method.toUpperCase() === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path);
+  return (
+    method.toUpperCase() === "POST" &&
+    /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)
+  );
 }
 
 function isAbuseProneMutation(path: string, method: string): boolean {
