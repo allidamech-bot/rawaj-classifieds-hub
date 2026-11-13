@@ -62,11 +62,11 @@
   top: 0;
   z-index: 35;
   border: 0 !important;
-  color: var(--rawaj-signature-text);
-  background: rgba(36, 46, 42, 0.97) !important;
-  box-shadow: 0 9px 24px rgba(7, 8, 11, 0.14) !important;
-  backdrop-filter: blur(22px) saturate(110%);
-  -webkit-backdrop-filter: blur(22px) saturate(110%);
+  color: var(--rawaj-ink-primary);
+  background: var(--rawaj-canvas) !important;
+  box-shadow: 0 1px 0 var(--rawaj-divider) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
@@ -140,11 +140,11 @@
   height: 2.45rem !important;
   min-height: 2.45rem !important;
   padding: 0 !important;
-  color: #d6d0cb !important;
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
-  border-radius: 13px !important;
-  background: rgba(255, 255, 255, 0.032) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.026) !important;
+  color: var(--rawaj-ink-primary) !important;
+  border: 1px solid var(--rawaj-divider) !important;
+  border-radius: 12px !important;
+  background: var(--rawaj-surface-subtle) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action:hover,

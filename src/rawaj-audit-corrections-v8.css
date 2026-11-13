@@ -41,9 +41,9 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-site-footer {
   margin-top: clamp(1rem, 3vw, 2.25rem) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: #202126 !important;
-  color: var(--rawaj-text-primary) !important;
+  border-top: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-canvas) !important;
+  color: var(--rawaj-ink-primary) !important;
 }
 
 .rawaj-site-footer__mobile {
