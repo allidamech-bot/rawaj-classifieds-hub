@@ -181,3 +181,10 @@
   main.my-store .my-store-cover {
   background-color: #103f42 !important;
 }
+
+/* Posting wizard: the active coral step must keep readable white text.
+ * This overrides the inherited gold/washed-out strong color only while active. */
+.rawaj-app-shell[data-resolved-pathname="/add-listing"]
+  .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__copy strong {
+  color: #fff !important;
+}
