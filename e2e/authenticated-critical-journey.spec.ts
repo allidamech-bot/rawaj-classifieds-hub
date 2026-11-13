@@ -78,7 +78,11 @@ test.describe("authenticated launch-critical journey", () => {
         (event) => {
           const target = event.target;
           if (target instanceof Element) {
-            console.info("[RAWAJ_NATIVE_CLICK]", target.tagName, target.textContent?.trim().slice(0, 48));
+            console.info(
+              "[RAWAJ_NATIVE_CLICK]",
+              target.tagName,
+              target.textContent?.trim().slice(0, 48),
+            );
           }
         },
         { capture: true, once: true },
