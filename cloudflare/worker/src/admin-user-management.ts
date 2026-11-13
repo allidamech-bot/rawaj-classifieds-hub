@@ -78,8 +78,17 @@ export async function handleAdminUserManagement(
     const results = await env.DB.batch([
       env.DB.prepare(
         "UPDATE public_profiles SET account_status = ?, updated_at = ? " +
-        "WHERE id = ? AND account_status = ?",
-      ).bind(status, timestamp, userId, target.account_status),
+        "WHERE id = ? AND account_status = ? " +
+        "AND NOT EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = ? AND r.role = 'owner') " +
+        // Administrators may never freeze or ban staff, even if roles change concurrently.
+        (!auth.roles.includes("owner")
+          ? "AND NOT EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = ? " +
+            "AND r.role IN ('admin', 'moderator'))"
+          : ""),
+      ).bind(
+        status, timestamp, userId, target.account_status, userId,
+        ...(!auth.roles.includes("owner") ? [userId] : []),
+      ),
       env.DB.prepare(
         "UPDATE auth_users SET disabled_at = CASE WHEN ? = 'disabled' THEN ? ELSE NULL END, " +
         "updated_at = ? WHERE id = ? AND EXISTS (" +
@@ -115,8 +124,11 @@ export async function handleAdminUserManagement(
     const timestamp = new Date().toISOString();
     const change = action === "assign"
       ? env.DB.prepare(
-          "INSERT OR IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, ?, ?)",
-        ).bind(userId, role, timestamp)
+          "INSERT OR IGNORE INTO user_roles (user_id, role, created_at) " +
+          "SELECT ?, ?, ? WHERE EXISTS (" +
+          "SELECT 1 FROM public_profiles WHERE id = ? AND account_status = 'active') " +
+          "AND NOT EXISTS (SELECT 1 FROM user_roles WHERE user_id = ? AND role = 'owner')",
+        ).bind(userId, role, timestamp, userId, userId)
       : env.DB.prepare(
           "DELETE FROM user_roles WHERE user_id = ? AND role = ?",
         ).bind(userId, role);
