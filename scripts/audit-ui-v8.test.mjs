@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -95,7 +96,8 @@ test("audited component corrections load without the retired dark recovery layer
   ]) {
     assert.notEqual(index, -1);
   }
-  assert.doesNotMatch(routeStyles, /rawaj-page-by-page-recovery-v7b[.]css/);
+  assert.doesNotMatch(routeStyles, /rawaj-page-by-page-recovery-v7b?[.]css/);
+  assert.doesNotMatch(routeStyles, /rawaj-home-(?:approved|final)[.]css/);
   assert.ok(homeIndex > correctionIndex);
   assert.ok(categoriesIndex > correctionIndex);
   assert.ok(ownerIndex > categoriesIndex);
@@ -109,6 +111,23 @@ test("audited component corrections load without the retired dark recovery layer
 
   assert.doesNotMatch(routeStyles, /import "\.\.\/rawaj-audit-corrections-v8\.css";/);
   assert.doesNotMatch(routeStyles, /import "\.\.\/owner-listings-workspace-v9\.css";/);
+});
+
+
+test("retired dark home and emergency recovery stylesheets are removed from the repository", () => {
+  for (const basename of [
+    "rawaj-page-by-page-recovery-v7.css",
+    "rawaj-page-by-page-recovery-v7b.css",
+    "rawaj-home-approved.css",
+    "rawaj-home-final.css",
+    "rawaj-discovery-system-v3.css",
+  ]) {
+    assert.equal(
+      existsSync(new URL(`../src/${basename}`, import.meta.url)),
+      false,
+      `Retired stylesheet ${basename} must not be restored`,
+    );
+  }
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
