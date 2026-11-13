@@ -1,7 +1,12 @@
-import { OwnerStoreWorkspaceSummary } from "@/features/storefront/OwnerStoreWorkspaceSummary";
+import { MyStoreHeader } from "@/features/storefront/MyStoreHeader";
+import "@/features/storefront/my-store.css";
+import { MyStoreIdentity } from "@/features/storefront/MyStoreIdentity";
 import { fetchSellerFollowSummary } from "@/lib/api/retention-discovery";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  MoreHorizontal,
+  Search,
+  ArrowDownUp,
   AlertTriangle,
   BadgePercent,
   BellRing,
@@ -142,6 +147,8 @@ function MyListingsPage() {
   const profileId = auth.profile?.id ?? null;
   const [followers, setFollowers] = useState<{ id: string; count: number } | null>(null);
   const [listingCategory, setListingCategory] = useState("");
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   useEffect(() => {
     if (!profileId) return;
     let active = true;
@@ -482,12 +489,14 @@ function MyListingsPage() {
   }
 
   function selectTab(tab: StoreTab) {
+    setToolsOpen(false);
     setActiveTab(tab);
     setListingCategory("");
     setAttentionQueue(null);
   }
 
   function openAttentionQueue(tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) {
+    setToolsOpen(false);
     setActiveTab(tab);
     setListingCategory("");
     setAttentionQueue(queue);
@@ -570,14 +579,9 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader
-        title={text("متجري", "My store")}
-        titleIsPageHeading={false}
-        to="/profile"
-        backMode="history"
-      />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center rawaj-store-workspace rawaj-shop-desk rawaj-approved-store container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <OwnerStoreWorkspaceSummary
+      <MyStoreHeader />
+      <main className="my-store" dir={language === "ar" ? "rtl" : "ltr"}>
+        <MyStoreIdentity
           sellerId={profileId ?? ""}
           displayName={displayName}
           secondaryName={auth.profile?.businessName ? auth.profile?.displayName : null}
@@ -591,352 +595,400 @@ function MyListingsPage() {
           followerCount={followers?.id === profileId ? followers.count : null}
           approvedCount={grouped.approved.length}
           completeness={storeCompleteness}
+          onManage={() => setToolsOpen(true)}
         />
 
-        <div className="rawaj-shop-desk__layout">
-          <aside
-            className="rawaj-shop-desk__rail"
-            hidden={!latestDraft && listings.length === 0}
-            aria-label={text("متابعة المتجر", "Store activity")}
-          >
-            {latestDraft ? (
-              <StorefrontNotice
-                tone="draft"
-                title={text("لديك مسودة محفوظة", "You have a saved draft")}
-                description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
-                  latestDraft.updatedAt,
-                  language,
-                )}`}
-                action={
-                  <>
+        <section className="ms-owner-inventory" aria-labelledby="ms-owner-inventory-title">
+          <header className="sr-only">
+            <h2 id="ms-owner-inventory-title" ref={inventoryHeadingRef} tabIndex={-1}>
+              {text("إعلانات المتجر", "Store listings")}
+            </h2>
+          </header>
+
+          <div className="ms-owner-workspace-sticky">
+            <nav className="ms-approved-tabs" aria-label={text("أقسام المتجر", "Store sections")}>
+              <button
+                type="button"
+                aria-pressed={activeTab !== "reviews" && activeTab !== "about"}
+                onClick={() => selectTab("approved")}
+              >
+                {text("الإعلانات", "Listings")} ({grouped.approved.length})
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeTab === "about"}
+                onClick={() => selectTab("about")}
+              >
+                {text("النبذة", "About")}
+              </button>
+              <button
+                type="button"
+                aria-pressed={activeTab === "reviews"}
+                onClick={() => selectTab("reviews")}
+              >
+                {text("التقييمات", "Reviews")} ({ratingCount})
+              </button>
+            </nav>
+            {attentionQueue ? (
+              <div className="rawaj-store-queue">
+                <strong>
+                  {
+                    {
+                      drafts: text("المسودات", "Drafts"),
+                      edits: text("إعلانات تحتاج تعديلاً", "Listings needing edits"),
+                      expiry: text("تنتهي خلال 7 أيام", "Expiring within 7 days"),
+                      editable_no_image: text(
+                        "مسودات وتعديلات بلا صور",
+                        "Drafts and edits without images",
+                      ),
+                      live_no_image: text("إعلانات نشطة بلا صور", "Live listings without images"),
+                    }[attentionQueue]
+                  }
+                </strong>
+                <button type="button" onClick={() => setAttentionQueue(null)}>
+                  {text("إلغاء التصفية", "Clear filter")}
+                </button>
+              </div>
+            ) : null}
+
+            {activeTab !== "reviews" && activeTab !== "about" ? (
+              <div className="ms-approved-filters">
+                <select
+                  aria-label={text("فئة الإعلانات", "Listing category")}
+                  value={listingCategory}
+                  onChange={(event) => setListingCategory(event.target.value)}
+                >
+                  <option value="">{text("كل الفئات", "All Categories")}</option>
+                  {categories.map(([id, label]) => (
+                    <option key={id} value={id}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <label className="my-store-search" data-open={searchOpen}>
+                  <Search aria-hidden="true" />
+                  <input
+                    aria-label={text("البحث في إعلاناتي", "Search my listings")}
+                    placeholder={text("ابحث في إعلاناتي…", "Search in my listings…")}
+                    value={listingSearch}
+                    onChange={(event) => setListingSearch(event.target.value)}
+                  />
+                </label>
+                <button
+                  className="my-store-search-toggle"
+                  type="button"
+                  aria-label={text("فتح البحث", "Open search")}
+                  aria-expanded={searchOpen}
+                  onClick={() => setSearchOpen(!searchOpen)}
+                >
+                  <Search />
+                </button>
+                <label className="my-store-sort">
+                  <ArrowDownUp aria-hidden="true" />
+                  <select
+                    aria-label={text("ترتيب الإعلانات", "Sort listings")}
+                    value={listingSort}
+                    onChange={(event) => setListingSort(event.target.value as OwnerListingSort)}
+                  >
+                    <option value="updated_desc">
+                      {text("الأحدث تعديلاً", "Recently updated")}
+                    </option>
+                    <option value="updated_asc">{text("الأقدم تعديلاً", "Oldest updated")}</option>
+                    <option value="price_asc">{text("السعر: الأقل", "Price: low to high")}</option>
+                    <option value="price_desc">
+                      {text("السعر: الأعلى", "Price: high to low")}
+                    </option>
+                    <option value="views_desc">{text("الأكثر مشاهدة", "Most viewed")}</option>
+                  </select>
+                </label>
+              </div>
+            ) : null}
+
+            {activeTab === "approved" ? (
+              <OwnerBulkActionBar
+                selectedCount={selectedApprovedListings.length}
+                expiryOption={bulkExpiryOption}
+                busy={bulkBusy}
+                feedback={bulkFeedback}
+                onExpiryOptionChange={setBulkExpiryOption}
+                onRenew={() => void runBulkAction("renew")}
+                onConfirmAvailability={() => void runBulkAction("availability")}
+                onClear={() => {
+                  setSelectedListingIds(new Set());
+                  setBulkFeedback("");
+                }}
+              />
+            ) : null}
+          </div>
+
+          {workspaceMessage ? (
+            <p role="status" className="ms-owner-workspace-feedback">
+              {workspaceMessage}
+            </p>
+          ) : null}
+
+          {sellerError && activeTab !== "reviews" ? (
+            <StorefrontNotice
+              tone="neutral"
+              title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
+              description={sellerError.message}
+              action={
+                <button
+                  type="button"
+                  disabled={sellerLoading}
+                  onClick={() => void loadSellerProfile()}
+                >
+                  {text("إعادة المحاولة", "Try again")}
+                </button>
+              }
+            />
+          ) : null}
+
+          {activeTab === "about" ? (
+            <Panel
+              title={text("عن المتجر", "About this store")}
+              body={auth.profile?.bio || text("لم تُضف نبذة بعد.", "No store description yet.")}
+            />
+          ) : !listingsHasLoaded && !listingsError ? (
+            <Panel title={text("جارٍ تحميل إعلاناتك…", "Loading your listings…")} loading />
+          ) : listingsError && !listingsHasLoaded ? (
+            <Panel
+              title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+              body={listingsError.message}
+              actionLabel={text("إعادة المحاولة", "Try again")}
+              onAction={() => void loadListings()}
+              actionDisabled={listingsLoading}
+            />
+          ) : activeTab === "reviews" ? (
+            sellerLoading && !sellerHasLoaded ? (
+              <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
+            ) : sellerError && !sellerHasLoaded ? (
+              <Panel
+                title={text("تعذر تحميل التقييمات", "Could not load reviews")}
+                body={sellerError.message}
+                actionLabel={text("إعادة المحاولة", "Try again")}
+                onAction={() => void loadSellerProfile()}
+                actionDisabled={sellerLoading}
+              />
+            ) : (
+              <ReviewsSection sellerProfile={sellerProfile} />
+            )
+          ) : (
+            <>
+              {listingsError ? (
+                <StorefrontNotice
+                  tone="neutral"
+                  title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
+                  description={listingsError.message}
+                  action={
                     <button
                       type="button"
-                      onClick={() => openAttentionQueue("needs_edit", "drafts")}
+                      disabled={listingsLoading}
+                      onClick={() => void loadListings()}
                     >
-                      {text("عرض المسودات", "Show drafts")}
+                      {text("إعادة المحاولة", "Try again")}
                     </button>
-                    <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
-                      {text("متابعة المسودة", "Resume draft")}
-                    </Link>
-                  </>
-                }
-              />
-            ) : null}
-
-            <OwnerWorkspaceInsights listings={listings} onQueueOpen={openAttentionQueue} />
-          </aside>
-          <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
-            <header className="rawaj-owner-inventory__header">
-              <h2 id="rawaj-owner-inventory-title" ref={inventoryHeadingRef} tabIndex={-1}>
-                {text("إعلانات المتجر", "Store listings")}
-              </h2>
-            </header>
-
-            <div className="rawaj-owner-workspace-sticky">
-              <nav
-                className="rawaj-approved-tabs"
-                aria-label={text("أقسام المتجر", "Store sections")}
-              >
-                <button
-                  type="button"
-                  aria-pressed={activeTab !== "reviews" && activeTab !== "about"}
-                  onClick={() => selectTab("approved")}
-                >
-                  {text("الإعلانات", "Listings")} ({grouped.approved.length})
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={activeTab === "about"}
-                  onClick={() => selectTab("about")}
-                >
-                  {text("النبذة", "About")}
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={activeTab === "reviews"}
-                  onClick={() => selectTab("reviews")}
-                >
-                  {text("التقييمات", "Reviews")} ({ratingCount})
-                </button>
-              </nav>
-              {activeTab !== "about" && activeTab !== "reviews" ? (
-                <div
-                  className="rawaj-storefront-owner-tabs"
-                  role="group"
-                  aria-label={text("حالات الإعلانات", "Listing statuses")}
-                  data-rawaj-segmented-control="true"
-                >
-                  <TabButton
-                    active={activeTab === "approved"}
-                    label={text("نشطة", "Live")}
-                    count={grouped.approved.length}
-                    onClick={() => selectTab("approved")}
-                  />
-                  <TabButton
-                    active={activeTab === "pending"}
-                    label={text("مراجعة", "Review")}
-                    count={grouped.pending.length}
-                    onClick={() => selectTab("pending")}
-                  />
-                  <TabButton
-                    active={activeTab === "needs_edit"}
-                    label={text("مسودات وتعديلات", "Drafts & edits")}
-                    count={grouped.needs_edit.length}
-                    onClick={() => selectTab("needs_edit")}
-                  />
-                  <TabButton
-                    active={activeTab === "closed"}
-                    label={text("مغلقة", "Closed")}
-                    count={grouped.closed.length}
-                    onClick={() => selectTab("closed")}
-                  />
-                </div>
+                  }
+                />
               ) : null}
-
-              {attentionQueue ? (
-                <div className="rawaj-store-queue">
-                  <strong>
-                    {
-                      {
-                        drafts: text("المسودات", "Drafts"),
-                        edits: text("إعلانات تحتاج تعديلاً", "Listings needing edits"),
-                        expiry: text("تنتهي خلال 7 أيام", "Expiring within 7 days"),
-                        editable_no_image: text(
-                          "مسودات وتعديلات بلا صور",
-                          "Drafts and edits without images",
-                        ),
-                        live_no_image: text("إعلانات نشطة بلا صور", "Live listings without images"),
-                      }[attentionQueue]
+              {filteredListings.length === 0 ? (
+                <div className="rawaj-store-empty">
+                  <span className="ms-shop-empty-icon">
+                    <PackageOpen aria-hidden="true" />
+                  </span>
+                  <Panel
+                    title={
+                      listingSearch.trim()
+                        ? text("لا نتائج مطابقة", "No matching listings")
+                        : listings.length === 0
+                          ? text(
+                              "متجرك جاهز لأول إعلان",
+                              "Your store is ready for its first listing",
+                            )
+                          : text("ما في إعلانات بهالحالة", "No listings in this status")
                     }
-                  </strong>
-                  <button type="button" onClick={() => setAttentionQueue(null)}>
-                    {text("إلغاء التصفية", "Clear filter")}
-                  </button>
-                </div>
-              ) : null}
-
-              {activeTab !== "reviews" && activeTab !== "about" ? (
-                <div className="rawaj-approved-filters">
-                  <select
-                    aria-label={text("فئة الإعلانات", "Listing category")}
-                    value={listingCategory}
-                    onChange={(event) => setListingCategory(event.target.value)}
-                  >
-                    <option value="">{text("كل الفئات", "All Categories")}</option>
-                    {categories.map(([id, label]) => (
-                      <option key={id} value={id}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <OwnerListingsToolbar
-                    query={listingSearch}
-                    onQueryChange={setListingSearch}
-                    sort={listingSort}
-                    onSortChange={setListingSort}
-                    performanceWindow={performanceWindow}
-                    onPerformanceWindowChange={setPerformanceWindow}
-                    totalCount={filteredListings.length}
-                    shownCount={visibleListings.length}
-                    canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
-                    selectedCount={selectedApprovedListings.length}
-                    allVisibleSelected={allVisibleApprovedSelected}
-                    onToggleVisibleSelection={toggleVisibleApprovedSelection}
+                    actionLabel={
+                      listingSearch.trim() || listingCategory
+                        ? text("مسح الفلاتر", "Clear filters")
+                        : undefined
+                    }
+                    onAction={
+                      listingSearch.trim() || listingCategory
+                        ? () => {
+                            setListingSearch("");
+                            setListingCategory("");
+                          }
+                        : undefined
+                    }
                   />
                 </div>
-              ) : null}
-
-              {activeTab === "approved" ? (
-                <OwnerBulkActionBar
-                  selectedCount={selectedApprovedListings.length}
-                  expiryOption={bulkExpiryOption}
-                  busy={bulkBusy}
-                  feedback={bulkFeedback}
-                  onExpiryOptionChange={setBulkExpiryOption}
-                  onRenew={() => void runBulkAction("renew")}
-                  onConfirmAvailability={() => void runBulkAction("availability")}
-                  onClear={() => {
-                    setSelectedListingIds(new Set());
-                    setBulkFeedback("");
+              ) : (
+                <>
+                  <div className="ms-storefront-owner-grid">
+                    {visibleListings.map((listing) => (
+                      <StoreListingCard
+                        key={`${profileId ?? "signed-out"}:${listing.id}`}
+                        listing={listing}
+                        language={language}
+                        userId={profileId}
+                        selected={selectedListingIds.has(listing.id)}
+                        selectable={activeTab === "approved" && listing.status === "approved"}
+                        duplicating={duplicatingListingId === listing.id}
+                        boostEligible={
+                          boostEligibilityLoaded &&
+                          isListingEligibleForSearchBoost(listing, boostPromotions)
+                        }
+                        onSelectionChange={handleSelectionChange}
+                        onDuplicate={handleDuplicateListing}
+                        onDeleted={handleListingDeleted}
+                        onChanged={handleListingChanged}
+                      />
+                    ))}
+                  </div>
+                  {hasMoreListings ? (
+                    <button
+                      type="button"
+                      className="ms-owner-load-more"
+                      onClick={() =>
+                        setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)
+                      }
+                    >
+                      {text("عرض المزيد", "Load more")} · {visibleListings.length}/
+                      {filteredListings.length}
+                    </button>
+                  ) : null}
+                </>
+              )}
+            </>
+          )}
+        </section>
+        <Dialog open={toolsOpen} onOpenChange={setToolsOpen}>
+          <DialogContent className="my-store-dialog" dir={language === "ar" ? "rtl" : "ltr"}>
+            <DialogHeader>
+              <DialogTitle>{text("إدارة المتجر", "Manage store")}</DialogTitle>
+              <DialogDescription>
+                {text(
+                  "الحالات والإجراءات الجماعية والأداء",
+                  "Statuses, bulk actions and performance",
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            {activeTab !== "about" && activeTab !== "reviews" ? (
+              <div
+                className="ms-storefront-owner-tabs"
+                role="group"
+                aria-label={text("حالات الإعلانات", "Listing statuses")}
+                data-rawaj-segmented-control="true"
+              >
+                <TabButton
+                  active={activeTab === "approved"}
+                  label={text("نشطة", "Live")}
+                  count={grouped.approved.length}
+                  onClick={() => selectTab("approved")}
+                />
+                <TabButton
+                  active={activeTab === "pending"}
+                  label={text("مراجعة", "Review")}
+                  count={grouped.pending.length}
+                  onClick={() => {
+                    selectTab("pending");
+                    setToolsOpen(false);
                   }}
                 />
-              ) : null}
-            </div>
-
-            {workspaceMessage ? (
-              <p role="status" className="rawaj-owner-workspace-feedback">
-                {workspaceMessage}
-              </p>
-            ) : null}
-
-            {sellerError && activeTab !== "reviews" ? (
-              <StorefrontNotice
-                tone="neutral"
-                title={text("تعذر تحديث بيانات المتجر", "Could not refresh store details")}
-                description={sellerError.message}
-                action={
-                  <button
-                    type="button"
-                    disabled={sellerLoading}
-                    onClick={() => void loadSellerProfile()}
-                  >
-                    {text("إعادة المحاولة", "Try again")}
-                  </button>
-                }
-              />
-            ) : null}
-
-            {activeTab === "about" ? (
-              <Panel
-                title={text("عن المتجر", "About this store")}
-                body={auth.profile?.bio || text("لم تُضف نبذة بعد.", "No store description yet.")}
-              />
-            ) : !listingsHasLoaded && !listingsError ? (
-              <Panel title={text("جارٍ تحميل إعلاناتك…", "Loading your listings…")} loading />
-            ) : listingsError && !listingsHasLoaded ? (
-              <Panel
-                title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
-                body={listingsError.message}
-                actionLabel={text("إعادة المحاولة", "Try again")}
-                onAction={() => void loadListings()}
-                actionDisabled={listingsLoading}
-              />
-            ) : activeTab === "reviews" ? (
-              sellerLoading && !sellerHasLoaded ? (
-                <Panel title={text("جاري تحميل التقييمات", "Loading reviews")} />
-              ) : sellerError && !sellerHasLoaded ? (
-                <Panel
-                  title={text("تعذر تحميل التقييمات", "Could not load reviews")}
-                  body={sellerError.message}
-                  actionLabel={text("إعادة المحاولة", "Try again")}
-                  onAction={() => void loadSellerProfile()}
-                  actionDisabled={sellerLoading}
+                <TabButton
+                  active={activeTab === "needs_edit"}
+                  label={text("مسودات وتعديلات", "Drafts & edits")}
+                  count={grouped.needs_edit.length}
+                  onClick={() => {
+                    selectTab("needs_edit");
+                    setToolsOpen(false);
+                  }}
                 />
-              ) : (
-                <ReviewsSection sellerProfile={sellerProfile} />
-              )
-            ) : (
-              <>
-                {listingsError ? (
-                  <StorefrontNotice
-                    tone="neutral"
-                    title={text("تعذر تحديث إعلاناتك", "Could not refresh your listings")}
-                    description={listingsError.message}
-                    action={
-                      <button
-                        type="button"
-                        disabled={listingsLoading}
-                        onClick={() => void loadListings()}
-                      >
-                        {text("إعادة المحاولة", "Try again")}
-                      </button>
-                    }
-                  />
-                ) : null}
-                {filteredListings.length === 0 ? (
-                  <div className="rawaj-store-empty">
-                    <span className="rawaj-shop-empty-icon">
-                      <PackageOpen aria-hidden="true" />
-                    </span>
-                    <Panel
-                      title={
-                        listingSearch.trim()
-                          ? text("لا نتائج مطابقة", "No matching listings")
-                          : listings.length === 0
-                            ? text(
-                                "متجرك جاهز لأول إعلان",
-                                "Your store is ready for its first listing",
-                              )
-                            : text("ما في إعلانات بهالحالة", "No listings in this status")
-                      }
-                      actionLabel={
-                        listingSearch.trim() || listingCategory
-                          ? text("مسح الفلاتر", "Clear filters")
-                          : undefined
-                      }
-                      onAction={
-                        listingSearch.trim() || listingCategory
-                          ? () => {
-                              setListingSearch("");
-                              setListingCategory("");
-                            }
-                          : undefined
-                      }
-                    />
-                    {listings.length === 0 && !listingSearch.trim() ? (
-                      <Link to="/add-listing" className="rawaj-store-empty__action">
-                        <Plus aria-hidden="true" size={18} />
-                        {text("أضف أول إعلان", "Post your first listing")}
-                      </Link>
-                    ) : null}
-                  </div>
-                ) : (
-                  <>
-                    <div className="rawaj-storefront-owner-grid">
-                      {visibleListings.map((listing) => (
-                        <StoreListingCard
-                          key={`${profileId ?? "signed-out"}:${listing.id}`}
-                          listing={listing}
-                          language={language}
-                          userId={profileId}
-                          selected={selectedListingIds.has(listing.id)}
-                          selectable={activeTab === "approved" && listing.status === "approved"}
-                          duplicating={duplicatingListingId === listing.id}
-                          boostEligible={
-                            boostEligibilityLoaded &&
-                            isListingEligibleForSearchBoost(listing, boostPromotions)
-                          }
-                          onSelectionChange={handleSelectionChange}
-                          onDuplicate={handleDuplicateListing}
-                          onDeleted={handleListingDeleted}
-                          onChanged={handleListingChanged}
-                        />
-                      ))}
-                    </div>
-                    {hasMoreListings ? (
-                      <button
-                        type="button"
-                        className="rawaj-owner-load-more"
-                        onClick={() =>
-                          setVisibleCount((current) => current + OWNER_LISTINGS_PAGE_SIZE)
-                        }
-                      >
-                        {text("عرض المزيد", "Load more")} · {visibleListings.length}/
-                        {filteredListings.length}
-                      </button>
-                    ) : null}
-                  </>
-                )}
-              </>
-            )}
-          </section>
-          <aside
-            className="rawaj-shop-desk__secondary"
-            aria-label={text("أدوات المتجر", "Store tools")}
-          >
-            <details className="rawaj-shop-tools">
-              <summary>
-                <Megaphone aria-hidden="true" />
-                {text("أدوات الترويج", "Promotion tools")}
-              </summary>
-              <div>
-                <Link to="/promotion">{text("تعزيز الظهور", "Boost visibility")}</Link>
-                <Link to="/promotion-request">{text("طلب ترويج", "Request promotion")}</Link>
+                <TabButton
+                  active={activeTab === "closed"}
+                  label={text("مغلقة", "Closed")}
+                  count={grouped.closed.length}
+                  onClick={() => {
+                    selectTab("closed");
+                    setToolsOpen(false);
+                  }}
+                />
               </div>
-            </details>
-            <OwnerPerformanceOverview
-              summary={performanceSummary}
-              scopeNote={text(
-                performanceWindow === "all"
-                  ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
-                  : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
-                performanceWindow === "all"
-                  ? "Metrics are lifetime totals for all tracked listings."
-                  : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
-              )}
+            ) : null}
+
+            <OwnerListingsToolbar
+              query={listingSearch}
+              onQueryChange={setListingSearch}
+              sort={listingSort}
+              onSortChange={setListingSort}
+              performanceWindow={performanceWindow}
+              onPerformanceWindowChange={setPerformanceWindow}
+              totalCount={filteredListings.length}
+              shownCount={visibleListings.length}
+              canSelect={activeTab === "approved" && visibleApprovedIds.length > 0}
+              selectedCount={selectedApprovedListings.length}
+              allVisibleSelected={allVisibleApprovedSelected}
+              onToggleVisibleSelection={toggleVisibleApprovedSelection}
             />
-          </aside>
-        </div>
+            <aside
+              className="ms-shop-desk__rail"
+              hidden={!latestDraft && listings.length === 0}
+              aria-label={text("متابعة المتجر", "Store activity")}
+            >
+              {latestDraft ? (
+                <StorefrontNotice
+                  tone="draft"
+                  title={text("لديك مسودة محفوظة", "You have a saved draft")}
+                  description={`${latestDraft.title} · ${text("آخر حفظ", "Last saved")} ${formatSavedAt(
+                    latestDraft.updatedAt,
+                    language,
+                  )}`}
+                  action={
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openAttentionQueue("needs_edit", "drafts")}
+                      >
+                        {text("عرض المسودات", "Show drafts")}
+                      </button>
+                      <Link to="/profile/listings/$id" params={{ id: latestDraft.id }}>
+                        {text("متابعة المسودة", "Resume draft")}
+                      </Link>
+                    </>
+                  }
+                />
+              ) : null}
+
+              <OwnerWorkspaceInsights listings={listings} onQueueOpen={openAttentionQueue} />
+            </aside>
+            <aside
+              className="ms-shop-desk__secondary"
+              aria-label={text("أدوات المتجر", "Store tools")}
+            >
+              <details className="ms-shop-tools">
+                <summary>
+                  <Megaphone aria-hidden="true" />
+                  {text("أدوات الترويج", "Promotion tools")}
+                </summary>
+                <div>
+                  <Link to="/promotion">{text("تعزيز الظهور", "Boost visibility")}</Link>
+                  <Link to="/promotion-request">{text("طلب ترويج", "Request promotion")}</Link>
+                </div>
+              </details>
+              <OwnerPerformanceOverview
+                summary={performanceSummary}
+                scopeNote={text(
+                  performanceWindow === "all"
+                    ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
+                    : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
+                  performanceWindow === "all"
+                    ? "Metrics are lifetime totals for all tracked listings."
+                    : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
+                )}
+              />
+            </aside>
+          </DialogContent>
+        </Dialog>
       </main>
     </>
   );
@@ -1025,8 +1077,8 @@ function OwnerPerformanceOverview({
       aria-label={text("ملخص أداء الإعلانات", "Listing performance summary")}
       className="rawaj-color-card rawaj-world-blue overflow-hidden rounded-[1.2rem]"
     >
-      <header className="rawaj-owner-performance__header">
-        <span className="rawaj-owner-performance__title">
+      <header className="ms-owner-performance__header">
+        <span className="ms-owner-performance__title">
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           <span>
             <strong>{text("أداء إعلاناتك", "Your listing performance")}</strong>
@@ -1035,7 +1087,7 @@ function OwnerPerformanceOverview({
         <button
           type="button"
           aria-expanded={expanded}
-          aria-controls="rawaj-owner-performance-details"
+          aria-controls="ms-owner-performance-details"
           onClick={() => setExpanded((current) => !current)}
         >
           {text("التفاصيل", "Details")}
@@ -1044,8 +1096,8 @@ function OwnerPerformanceOverview({
       </header>
 
       {expanded ? (
-        <div id="rawaj-owner-performance-details" className="rawaj-owner-performance__details">
-          <div className="rawaj-owner-performance__kpis">
+        <div id="ms-owner-performance-details" className="ms-owner-performance__details">
+          <div className="ms-owner-performance__kpis">
             {metrics.map((metric) => (
               <div key={metric.key} data-owner-summary-metric={metric.key}>
                 <span>{metric.icon}</span>
@@ -1251,7 +1303,7 @@ function TabButton({
 }) {
   return (
     <button type="button" aria-pressed={active} onClick={onClick} data-active={active}>
-      {label} <strong className="rawaj-owner-tab-count">({count})</strong>
+      {label} <strong className="ms-owner-tab-count">({count})</strong>
     </button>
   );
 }
@@ -1533,9 +1585,9 @@ function StoreListingCard({
 
   return (
     <>
-      <article className="rawaj-owner-listing-card rawaj-product-card group">
-        <div className="rawaj-owner-listing-card__overview">
-          <div className="rawaj-product-media">
+      <article className="ms-owner-listing-card ms-product-card group">
+        <div className="ms-owner-listing-card__overview">
+          <div className="ms-product-media">
             {selectable ? (
               <button
                 type="button"
@@ -1550,7 +1602,7 @@ function StoreListingCard({
                     : text("تحديد للإجراءات الجماعية", "Select for bulk actions")
                 }
                 onClick={() => onSelectionChange(listing.id, !selected)}
-                className="rawaj-owner-listing-select"
+                className="ms-owner-listing-select"
                 data-selected={selected}
               >
                 {selected ? <CheckSquare aria-hidden="true" /> : <Square aria-hidden="true" />}
@@ -1565,9 +1617,9 @@ function StoreListingCard({
               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]"
             />
           </div>
-          <div className="rawaj-owner-listing-card__summary">
+          <div className="ms-owner-listing-card__summary">
             <h3 dir="auto">{listing.title}</h3>
-            <div className="rawaj-store-card-price">
+            <div className="ms-store-card-price">
               <bdi>
                 {formatPriceLocalized(
                   listing.price ?? 0,
@@ -1578,10 +1630,10 @@ function StoreListingCard({
               </bdi>
               {hasNegotiableAmount ? <small>{text("قابل للتفاوض", "Negotiable")}</small> : null}
             </div>
-            <span className="rawaj-store-card-status" data-status={listing.status}>
+            <span className="ms-store-card-status" data-status={listing.status}>
               {listingStatusLabel(listing.status, language)}
             </span>
-            <div className="rawaj-owner-listing-card__facts">
+            <div className="ms-owner-listing-card__facts">
               <span>
                 {categoryName(listing.categoryId, listing.categoryNameAr ?? undefined, language)}
               </span>
@@ -1596,359 +1648,384 @@ function StoreListingCard({
             </div>
           </div>
         </div>
-        <div className="rawaj-owner-listing-card__actions">
-          {canEdit ? (
-            <Link
-              to="/profile/listings/$id"
-              params={{ id: listing.id }}
-              aria-label={text("تعديل الإعلان", "Edit listing")}
-              title={text("تعديل الإعلان", "Edit listing")}
-              data-tone="primary"
-            >
-              <Pencil aria-hidden="true" />
-              <span>
-                {listing.status === "draft"
-                  ? text("متابعة", "Continue")
-                  : listing.status === "rejected"
-                    ? text("إصلاح", "Fix")
-                    : text("تعديل", "Edit")}
-              </span>
-            </Link>
-          ) : null}
-          {listing.status === "approved" ? (
-            <button
-              type="button"
-              aria-expanded={managementOpen}
-              aria-controls={`${listing.id}-management-panel`}
-              aria-label={text("إدارة الإعلان", "Manage listing")}
-              title={text("إدارة الإعلان", "Manage listing")}
-              onClick={() => setManagementOpen((current) => !current)}
-              data-tone="primary"
-            >
-              <Pencil aria-hidden="true" />
-              {text("إدارة", "Manage")}
-            </button>
-          ) : null}
-          {canReactivate ? (
-            <button
-              type="button"
-              disabled={lifecycleBusy}
-              onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
-              data-tone="primary"
-            >
-              <Rocket aria-hidden="true" />
-              {text("إعادة التفعيل", "Reactivate")}
-            </button>
-          ) : null}
-          {listing.status === "approved" ? (
-            <Link
-              to="/listings/$id"
-              params={{ id: listing.id }}
-              aria-label={text("عرض الإعلان", "View listing")}
-              title={text("عرض الإعلان", "View listing")}
-              data-tone="view"
-            >
-              <Eye aria-hidden="true" />
-              <span>{text("عرض", "View")}</span>
-            </Link>
-          ) : null}
-          {listing.status !== "approved" ? (
-            <button
-              type="button"
-              aria-expanded={managementOpen}
-              aria-controls={`${listing.id}-management-panel`}
-              onClick={() => setManagementOpen((current) => !current)}
-              className="rawaj-owner-listing-card__manage"
-              data-tone={listing.status === "pending_review" ? "primary" : undefined}
-            >
-              {listing.status === "pending_review"
-                ? text("التفاصيل", "Details")
-                : text("المزيد", "More")}
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${managementOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-          ) : null}
+        <div className="my-store-card-meta">
+          <span title={text("المشاهدات المسجلة", "Recorded views")}>
+            <Eye />
+            {listing.recordedViewCount ?? "—"}
+          </span>
+          <span title={text("المفضلة", "Favorites")}>
+            <Heart />
+            {listing.favoriteCount ?? "—"}
+          </span>
+          <span>
+            <Clock3 />
+            <time dateTime={listing.updatedAt}>
+              {new Date(listing.updatedAt).toLocaleDateString(
+                language === "ar" ? "ar-SY" : "en-GB",
+                { day: "numeric", month: "short" },
+              )}
+            </time>
+          </span>
         </div>
-        <div className="rawaj-owner-listing-card__content">
-          <details className="rawaj-shop-listing-health">
-            <summary>{text("الحالة والأداء", "Status and performance")}</summary>
-            <div
-              className="rawaj-owner-listing-card__signals"
-              aria-label={text("حالة الإعلان", "Listing status")}
-            >
-              {listing.status === "draft" ? (
-                <span data-tone="draft">
-                  <Pencil aria-hidden="true" />
-                  <strong>{text("مسودة", "Draft")}</strong>
-                  <small>{formatSavedAt(listing.updatedAt, language)}</small>
-                </span>
-              ) : null}
-              {listing.reservedAt ? (
-                <span data-tone="warning">
-                  <Clock3 aria-hidden="true" />
-                  <strong>{text("محجوز حالياً", "Currently reserved")}</strong>
-                </span>
-              ) : listing.status === "approved" ? (
-                <span data-tone={listing.renewedAt ? "success" : "neutral"}>
-                  <CircleCheckBig aria-hidden="true" />
-                  <strong>
-                    {listing.renewedAt
-                      ? text("التوفر مؤكّد", "Availability confirmed")
-                      : text("تأكيد التوفر مطلوب", "Confirm availability")}
-                  </strong>
-                  {listing.renewedAt ? (
-                    <small>{formatSavedAt(listing.renewedAt, language)}</small>
-                  ) : null}
-                </span>
-              ) : null}
-              {expiryInsight ? (
-                <span data-tone={expiryInsight.tone}>
-                  <Clock3 aria-hidden="true" />
-                  <strong>{expiryInsight.title}</strong>
-                  <small>
-                    {expiryInsight.description}
-                    {listing.expiresAt ? ` · ${formatSavedAt(listing.expiresAt, language)}` : ""}
-                  </small>
-                </span>
-              ) : null}
-            </div>
-            <OwnerListingPerformance listing={listing} language={language} />
-          </details>
-          {listing.status === "rejected" && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/8 p-3">
-              <p className="text-[11px] font-bold text-destructive">
-                {text("سبب رفض الإعلان", "Listing rejection reason")}
-              </p>
-              <p className="mt-1 text-[11px] leading-5 text-destructive">
-                {listing.rejectionReason ||
-                  text(
-                    "لم تضف الإدارة ملاحظة تفصيلية. راجع بيانات الإعلان والصور ثم أعد إرساله.",
-                    "No detailed admin note was provided. Review the listing data and photos, then resubmit it.",
-                  )}
-              </p>
-              <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-                {text(
-                  "عدّل الملاحظات المطلوبة واحفظ التغييرات، ثم استخدم زر إعادة الإرسال للمراجعة.",
-                  "Address the requested changes, save them, then use the resubmit-for-review action.",
-                )}
-              </p>
-            </div>
+        <button
+          type="button"
+          className="my-store-card-menu"
+          aria-label={text(
+            `إجراءات الإعلان: ${listing.title}`,
+            `Listing actions: ${listing.title}`,
           )}
-          {lifecycleError && (
-            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
-              {lifecycleError}
-            </p>
-          )}
-          {priceDropError && (
-            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
-              {priceDropError}
-            </p>
-          )}
-          {reservationError && (
-            <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
-              {reservationError}
-            </p>
-          )}
-
-          {managementOpen ? (
-            <div
-              id={`${listing.id}-management-panel`}
-              role="region"
-              aria-label={text("إجراءات الإعلان", "Listing actions")}
-              className="rawaj-owner-listing-management space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline"
-            >
-              <div className="rawaj-owner-listing-management__top-actions">
-                {canShareCard ? (
-                  <button
-                    type="button"
-                    onClick={() => queueListingSharePrompt(listing.id)}
-                    aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
-                    title={text("مشاركة بطاقة الإعلان", "Share listing card")}
-                    data-tone="share"
-                  >
-                    <Share2 aria-hidden="true" />
-                    <span>{text("مشاركة", "Share")}</span>
-                  </button>
-                ) : null}
-                {boostEligible ? (
-                  <button
-                    type="button"
-                    onClick={() => queueSearchBoostIntent(listing.id)}
-                    data-tone="boost"
-                    aria-label={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
-                    title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
-                  >
-                    <Rocket aria-hidden="true" />
-                    <span>Boost</span>
-                  </button>
-                ) : null}
+          onClick={() => setManagementOpen(true)}
+        >
+          <MoreHorizontal />
+        </button>
+        <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
+          <DialogContent className="my-store-dialog" dir={language === "ar" ? "rtl" : "ltr"}>
+            <DialogHeader>
+              <DialogTitle>{listing.title}</DialogTitle>
+              <DialogDescription>{listingStatusLabel(listing.status, language)}</DialogDescription>
+            </DialogHeader>
+            <div className="ms-owner-listing-card__actions">
+              {selectable ? (
                 <button
                   type="button"
-                  disabled={duplicating}
-                  onClick={() => void onDuplicate(listing)}
-                  aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
-                  title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
-                  className="rawaj-owner-listing-management__duplicate"
+                  aria-pressed={selected}
+                  onClick={() => onSelectionChange(listing.id, !selected)}
                 >
-                  <Copy className={duplicating ? "animate-pulse" : ""} aria-hidden="true" />
-                  {duplicating
-                    ? text("جارٍ إنشاء النسخة", "Creating copy")
-                    : text("نسخ كمسودة", "Duplicate as draft")}
+                  <CheckSquare />
+                  {text("تحديد للإجراءات الجماعية", "Select for bulk actions")}
                 </button>
-              </div>
-              {canReducePrice ? (
-                <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
-                  <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
-                    <BadgePercent className="h-3.5 w-3.5 text-brand-orange" />
-                    {text("تخفيض السعر", "Reduce price")}
-                  </p>
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      inputMode="decimal"
-                      value={priceDropDraft}
-                      onChange={(event) => setPriceDropDraft(event.target.value)}
-                      disabled={priceDropBusy}
-                      aria-label={text("السعر الجديد", "New price")}
-                      className="min-h-10 min-w-0 flex-1 rounded-xl bg-card px-3 py-2 text-xs font-bold outline-none hairline disabled:opacity-60"
-                    />
-                    <button
-                      type="button"
-                      disabled={priceDropBusy}
-                      onClick={() => void handlePriceDrop()}
-                      className="min-h-10 rounded-xl bg-brand-orange px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
-                    >
-                      {priceDropBusy ? text("جارٍ الحفظ", "Saving") : text("خفض", "Reduce")}
-                    </button>
-                  </div>
-                </div>
               ) : null}
-
-              <div className="grid grid-cols-2 gap-2">
-                {canManageReservation ? (
-                  <button
-                    type="button"
-                    disabled={reservationBusy}
-                    onClick={() => void handleReservationToggle()}
-                    className={`min-h-10 rounded-xl px-3 py-2 text-[10px] font-bold disabled:opacity-60 ${listing.reservedAt ? "bg-warning/12 text-warning" : "bg-card text-foreground hairline"}`}
-                  >
-                    {listing.reservedAt
-                      ? text("إلغاء الحجز", "Clear reservation")
-                      : text("وضع محجوز", "Mark reserved")}
-                  </button>
-                ) : null}
-                {canClose ? (
-                  <button
-                    type="button"
-                    disabled={lifecycleBusy}
-                    onClick={() => void handleAvailabilityConfirm()}
-                    className="min-h-10 rounded-xl bg-emerald-trust/10 px-3 py-2 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
-                  >
-                    {text("تأكيد أنه متوفر", "Confirm availability")}
-                  </button>
-                ) : null}
-              </div>
-
-              {canClose ? (
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <select
-                    value={String(expiryOption)}
-                    disabled={lifecycleBusy}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      setExpiryOption(
-                        value === "never" ? "never" : (Number(value) as 30 | 60 | 90),
-                      );
-                    }}
-                    aria-label={text("مدة صلاحية الإعلان", "Listing expiry duration")}
-                    className="min-h-10 rounded-xl border border-border/70 bg-card px-3 text-[10px] font-bold text-foreground disabled:opacity-60"
-                  >
-                    <option value="30">{text("30 يوم", "30 days")}</option>
-                    <option value="60">{text("60 يوم", "60 days")}</option>
-                    <option value="90">{text("90 يوم", "90 days")}</option>
-                    <option value="never">{text("بدون انتهاء", "No automatic expiry")}</option>
-                  </select>
-                  <button
-                    type="button"
-                    disabled={lifecycleBusy}
-                    onClick={() => void handleExpiryUpdate()}
-                    className="min-h-10 rounded-xl bg-primary/10 px-3 text-[10px] font-bold text-primary disabled:opacity-60"
-                  >
-                    {text("تطبيق", "Apply")}
-                  </button>
-                </div>
+              {canEdit ? (
+                <Link
+                  to="/profile/listings/$id"
+                  params={{ id: listing.id }}
+                  aria-label={text("تعديل الإعلان", "Edit listing")}
+                  title={text("تعديل الإعلان", "Edit listing")}
+                  data-tone="primary"
+                >
+                  <Pencil aria-hidden="true" />
+                  <span>
+                    {listing.status === "draft"
+                      ? text("متابعة", "Continue")
+                      : listing.status === "rejected"
+                        ? text("إصلاح", "Fix")
+                        : text("تعديل", "Edit")}
+                  </span>
+                </Link>
               ) : null}
-
-              {canClose ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    disabled={lifecycleBusy}
-                    onClick={() =>
-                      setPendingLifecycleConfirmation({ action: "close", targetStatus: "sold" })
-                    }
-                    className="min-h-10 rounded-xl bg-card px-2 text-[10px] font-bold hairline disabled:opacity-60"
-                  >
-                    {text("تم البيع", "Sold")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={lifecycleBusy}
-                    onClick={() =>
-                      setPendingLifecycleConfirmation({ action: "close", targetStatus: "rented" })
-                    }
-                    className="min-h-10 rounded-xl bg-card px-2 text-[10px] font-bold hairline disabled:opacity-60"
-                  >
-                    {text("تم التأجير", "Rented")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={lifecycleBusy}
-                    onClick={() =>
-                      setPendingLifecycleConfirmation({
-                        action: "close",
-                        targetStatus: "unavailable",
-                      })
-                    }
-                    className="min-h-10 rounded-xl bg-warning/10 px-2 text-[10px] font-bold text-warning disabled:opacity-60"
-                  >
-                    {text("غير متاح", "Unavailable")}
-                  </button>
-                </div>
-              ) : null}
-
               {canReactivate ? (
                 <button
                   type="button"
                   disabled={lifecycleBusy}
                   onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
-                  className="min-h-10 w-full rounded-xl bg-primary px-3 text-[10px] font-bold text-primary-foreground disabled:opacity-60"
+                  data-tone="primary"
                 >
-                  {text("إعادة التفعيل للمراجعة", "Reactivate for review")}
+                  <Rocket aria-hidden="true" />
+                  {text("إعادة التفعيل", "Reactivate")}
                 </button>
               ) : null}
-
-              {canDelete ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteError("");
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-destructive/10 px-3 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
+              {listing.status === "approved" ? (
+                <Link
+                  to="/listings/$id"
+                  params={{ id: listing.id }}
+                  aria-label={text("عرض الإعلان", "View listing")}
+                  title={text("عرض الإعلان", "View listing")}
+                  data-tone="view"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {listing.status === "draft"
-                    ? text("حذف المسودة", "Delete draft")
-                    : text("حذف الإعلان", "Delete listing")}
-                </button>
+                  <Eye aria-hidden="true" />
+                  <span>{text("عرض", "View")}</span>
+                </Link>
               ) : null}
             </div>
-          ) : null}
-        </div>
+            <div className="ms-owner-listing-card__content">
+              <details className="ms-shop-listing-health">
+                <summary>{text("الحالة والأداء", "Status and performance")}</summary>
+                <div
+                  className="ms-owner-listing-card__signals"
+                  aria-label={text("حالة الإعلان", "Listing status")}
+                >
+                  {listing.status === "draft" ? (
+                    <span data-tone="draft">
+                      <Pencil aria-hidden="true" />
+                      <strong>{text("مسودة", "Draft")}</strong>
+                      <small>{formatSavedAt(listing.updatedAt, language)}</small>
+                    </span>
+                  ) : null}
+                  {listing.reservedAt ? (
+                    <span data-tone="warning">
+                      <Clock3 aria-hidden="true" />
+                      <strong>{text("محجوز حالياً", "Currently reserved")}</strong>
+                    </span>
+                  ) : listing.status === "approved" ? (
+                    <span data-tone={listing.renewedAt ? "success" : "neutral"}>
+                      <CircleCheckBig aria-hidden="true" />
+                      <strong>
+                        {listing.renewedAt
+                          ? text("التوفر مؤكّد", "Availability confirmed")
+                          : text("تأكيد التوفر مطلوب", "Confirm availability")}
+                      </strong>
+                      {listing.renewedAt ? (
+                        <small>{formatSavedAt(listing.renewedAt, language)}</small>
+                      ) : null}
+                    </span>
+                  ) : null}
+                  {expiryInsight ? (
+                    <span data-tone={expiryInsight.tone}>
+                      <Clock3 aria-hidden="true" />
+                      <strong>{expiryInsight.title}</strong>
+                      <small>
+                        {expiryInsight.description}
+                        {listing.expiresAt
+                          ? ` · ${formatSavedAt(listing.expiresAt, language)}`
+                          : ""}
+                      </small>
+                    </span>
+                  ) : null}
+                </div>
+                <OwnerListingPerformance listing={listing} language={language} />
+              </details>
+              {listing.status === "rejected" && (
+                <div className="rounded-xl border border-destructive/20 bg-destructive/8 p-3">
+                  <p className="text-[11px] font-bold text-destructive">
+                    {text("سبب رفض الإعلان", "Listing rejection reason")}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-5 text-destructive">
+                    {listing.rejectionReason ||
+                      text(
+                        "لم تضف الإدارة ملاحظة تفصيلية. راجع بيانات الإعلان والصور ثم أعد إرساله.",
+                        "No detailed admin note was provided. Review the listing data and photos, then resubmit it.",
+                      )}
+                  </p>
+                  <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+                    {text(
+                      "عدّل الملاحظات المطلوبة واحفظ التغييرات، ثم استخدم زر إعادة الإرسال للمراجعة.",
+                      "Address the requested changes, save them, then use the resubmit-for-review action.",
+                    )}
+                  </p>
+                </div>
+              )}
+              {lifecycleError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {lifecycleError}
+                </p>
+              )}
+              {priceDropError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {priceDropError}
+                </p>
+              )}
+              {reservationError && (
+                <p className="rounded-lg bg-destructive/10 p-2 text-[11px] text-destructive">
+                  {reservationError}
+                </p>
+              )}
+
+              {managementOpen ? (
+                <div
+                  id={`${listing.id}-management-panel`}
+                  role="region"
+                  aria-label={text("إجراءات الإعلان", "Listing actions")}
+                  className="ms-owner-listing-management space-y-3 rounded-xl bg-muted-surface/55 p-3 hairline"
+                >
+                  <div className="ms-owner-listing-management__top-actions">
+                    {canShareCard ? (
+                      <button
+                        type="button"
+                        onClick={() => queueListingSharePrompt(listing.id)}
+                        aria-label={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                        title={text("مشاركة بطاقة الإعلان", "Share listing card")}
+                        data-tone="share"
+                      >
+                        <Share2 aria-hidden="true" />
+                        <span>{text("مشاركة", "Share")}</span>
+                      </button>
+                    ) : null}
+                    {boostEligible ? (
+                      <button
+                        type="button"
+                        onClick={() => queueSearchBoostIntent(listing.id)}
+                        data-tone="boost"
+                        aria-label={text(
+                          "Boost — احصل على عملاء أكثر",
+                          "Boost — get more customers",
+                        )}
+                        title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                      >
+                        <Rocket aria-hidden="true" />
+                        <span>Boost</span>
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={duplicating}
+                      onClick={() => void onDuplicate(listing)}
+                      aria-label={text("نسخ الإعلان كمسودة", "Duplicate listing as draft")}
+                      title={text("نسخ كمسودة بدون الصور", "Duplicate as a draft without images")}
+                      className="ms-owner-listing-management__duplicate"
+                    >
+                      <Copy className={duplicating ? "animate-pulse" : ""} aria-hidden="true" />
+                      {duplicating
+                        ? text("جارٍ إنشاء النسخة", "Creating copy")
+                        : text("نسخ كمسودة", "Duplicate as draft")}
+                    </button>
+                  </div>
+                  {canReducePrice ? (
+                    <div className="rounded-xl bg-brand-orange/5 p-2.5 hairline">
+                      <p className="flex items-center gap-1.5 text-[10px] font-bold text-primary">
+                        <BadgePercent className="h-3.5 w-3.5 text-brand-orange" />
+                        {text("تخفيض السعر", "Reduce price")}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          inputMode="decimal"
+                          value={priceDropDraft}
+                          onChange={(event) => setPriceDropDraft(event.target.value)}
+                          disabled={priceDropBusy}
+                          aria-label={text("السعر الجديد", "New price")}
+                          className="min-h-10 min-w-0 flex-1 rounded-xl bg-card px-3 py-2 text-xs font-bold outline-none hairline disabled:opacity-60"
+                        />
+                        <button
+                          type="button"
+                          disabled={priceDropBusy}
+                          onClick={() => void handlePriceDrop()}
+                          className="min-h-10 rounded-xl bg-brand-orange px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                        >
+                          {priceDropBusy ? text("جارٍ الحفظ", "Saving") : text("خفض", "Reduce")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {canManageReservation ? (
+                      <button
+                        type="button"
+                        disabled={reservationBusy}
+                        onClick={() => void handleReservationToggle()}
+                        className={`min-h-10 rounded-xl px-3 py-2 text-[10px] font-bold disabled:opacity-60 ${listing.reservedAt ? "bg-warning/12 text-warning" : "bg-card text-foreground hairline"}`}
+                      >
+                        {listing.reservedAt
+                          ? text("إلغاء الحجز", "Clear reservation")
+                          : text("وضع محجوز", "Mark reserved")}
+                      </button>
+                    ) : null}
+                    {canClose ? (
+                      <button
+                        type="button"
+                        disabled={lifecycleBusy}
+                        onClick={() => void handleAvailabilityConfirm()}
+                        className="min-h-10 rounded-xl bg-emerald-trust/10 px-3 py-2 text-[10px] font-bold text-emerald-trust disabled:opacity-60"
+                      >
+                        {text("تأكيد أنه متوفر", "Confirm availability")}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {canClose ? (
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <select
+                        value={String(expiryOption)}
+                        disabled={lifecycleBusy}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setExpiryOption(
+                            value === "never" ? "never" : (Number(value) as 30 | 60 | 90),
+                          );
+                        }}
+                        aria-label={text("مدة صلاحية الإعلان", "Listing expiry duration")}
+                        className="min-h-10 rounded-xl border border-border/70 bg-card px-3 text-[10px] font-bold text-foreground disabled:opacity-60"
+                      >
+                        <option value="30">{text("30 يوم", "30 days")}</option>
+                        <option value="60">{text("60 يوم", "60 days")}</option>
+                        <option value="90">{text("90 يوم", "90 days")}</option>
+                        <option value="never">{text("بدون انتهاء", "No automatic expiry")}</option>
+                      </select>
+                      <button
+                        type="button"
+                        disabled={lifecycleBusy}
+                        onClick={() => void handleExpiryUpdate()}
+                        className="min-h-10 rounded-xl bg-primary/10 px-3 text-[10px] font-bold text-primary disabled:opacity-60"
+                      >
+                        {text("تطبيق", "Apply")}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {canClose ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        disabled={lifecycleBusy}
+                        onClick={() =>
+                          setPendingLifecycleConfirmation({ action: "close", targetStatus: "sold" })
+                        }
+                        className="min-h-10 rounded-xl bg-card px-2 text-[10px] font-bold hairline disabled:opacity-60"
+                      >
+                        {text("تم البيع", "Sold")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={lifecycleBusy}
+                        onClick={() =>
+                          setPendingLifecycleConfirmation({
+                            action: "close",
+                            targetStatus: "rented",
+                          })
+                        }
+                        className="min-h-10 rounded-xl bg-card px-2 text-[10px] font-bold hairline disabled:opacity-60"
+                      >
+                        {text("تم التأجير", "Rented")}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={lifecycleBusy}
+                        onClick={() =>
+                          setPendingLifecycleConfirmation({
+                            action: "close",
+                            targetStatus: "unavailable",
+                          })
+                        }
+                        className="min-h-10 rounded-xl bg-warning/10 px-2 text-[10px] font-bold text-warning disabled:opacity-60"
+                      >
+                        {text("غير متاح", "Unavailable")}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {canReactivate ? (
+                    <button
+                      type="button"
+                      disabled={lifecycleBusy}
+                      onClick={() => setPendingLifecycleConfirmation({ action: "reactivate" })}
+                      className="min-h-10 w-full rounded-xl bg-primary px-3 text-[10px] font-bold text-primary-foreground disabled:opacity-60"
+                    >
+                      {text("إعادة التفعيل للمراجعة", "Reactivate for review")}
+                    </button>
+                  ) : null}
+
+                  {canDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError("");
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-destructive/10 px-3 text-[10px] font-bold text-destructive transition hover:bg-destructive/20"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {listing.status === "draft"
+                        ? text("حذف المسودة", "Delete draft")
+                        : text("حذف الإعلان", "Delete listing")}
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </DialogContent>
+        </Dialog>
       </article>
 
       {pendingLifecycleConfirmation && lifecycleConfirmationCopy ? (
@@ -1963,7 +2040,7 @@ function StoreListingCard({
         >
           <DialogContent
             showCloseButton={false}
-            className="rawaj-color-card rawaj-world-orange max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
+            className="my-store-dialog max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
           >
             <DialogHeader>
               <DialogTitle className="text-base font-extrabold text-foreground">
@@ -2023,7 +2100,7 @@ function StoreListingCard({
       >
         <DialogContent
           showCloseButton={false}
-          className="rawaj-color-card rawaj-world-orange max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
+          className="my-store-dialog max-w-sm gap-0 rounded-[1.25rem] p-5 sm:p-6"
           dir="rtl"
         >
           <DialogHeader>
@@ -2131,7 +2208,7 @@ function ReviewsSection({ sellerProfile }: { sellerProfile: PublicSellerProfile 
   }
 
   return (
-    <section className="rawaj-storefront-owner-reviews grid gap-3">
+    <section className="ms-storefront-owner-reviews grid gap-3">
       {reviews.map((review) => (
         <article key={review.id} className="rounded-2xl bg-card p-4 hairline">
           <div className="flex items-center gap-1 text-gold">
