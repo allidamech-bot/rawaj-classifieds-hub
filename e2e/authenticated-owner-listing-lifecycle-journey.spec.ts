@@ -63,7 +63,14 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       window.sessionStorage.setItem(marker, "1");
     });
 
-    await signIn(page, "/profile/listings?tab=approved");
+    await page.goto("/profile/listings?tab=approved");
+    await waitForHydration(page);
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: /^(Sign in|تسجيل الدخول)$/ })
+      .click();
+    expect(new URL(page.url()).searchParams.get("returnTo")).toBe("/profile/listings?tab=approved");
+    await signIn(page);
     await expect(page).toHaveURL(/\/profile\/listings(?:\?tab=approved)?(?:[&#]|$)/, {
       timeout: 30_000,
     });
@@ -208,9 +215,19 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await reloadCurrentPage(page);
     await expect(ownerCard(page, APPROVED_TITLE)).toBeVisible({ timeout: 30_000 });
 
-    await openOwnerTab(page, "needs_edit");
+    await page.getByRole("button", { name: /عرض المسودات|Show drafts/i }).click();
+    await expect(
+      page.getByRole("heading", { name: /إعلانات المتجر|Store listings/i }),
+    ).toBeFocused();
+    await expect(page.locator(".rawaj-store-queue")).toContainText(/المسودات|Drafts/i);
     const draftCard = ownerCard(page, DRAFT_TITLE);
     await expect(draftCard).toBeVisible({ timeout: 30_000 });
+    await expect(draftCard.locator(".rawaj-store-card-price bdi")).not.toContainText(
+      /قابل للتفاوض|Negotiable/i,
+    );
+    await expect(draftCard.locator(".rawaj-store-card-price small")).toContainText(
+      /قابل للتفاوض|Negotiable/i,
+    );
     await openListingManagement(draftCard);
     await clickTwiceInSameTick(
       draftCard.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
@@ -295,10 +312,7 @@ async function clickTwiceInSameTick(locator: Locator): Promise<void> {
   });
 }
 
-async function signIn(page: Page, returnTo: string): Promise<void> {
-  await page.goto(`/login?returnTo=${encodeURIComponent(returnTo)}`, {
-    waitUntil: "domcontentloaded",
-  });
+async function signIn(page: Page): Promise<void> {
   await waitForHydration(page);
   await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
   await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
