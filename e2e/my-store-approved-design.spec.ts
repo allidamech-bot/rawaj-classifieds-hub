@@ -171,6 +171,17 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     "#storefront-listings",
   );
   await expect(page.locator("#seller-reviews")).toBeVisible();
+  await expect(page.locator(".my-store-public-reviews")).toBeVisible();
+  await expect(page.locator(".my-store-public-safety")).toBeVisible();
+  for (const selector of [".my-store-public-reviews", ".my-store-public-safety"]) {
+    await expect
+      .poll(() =>
+        page
+          .locator(selector)
+          .evaluate((element) => getComputedStyle(element).backgroundColor),
+      )
+      .toBe("rgb(255, 253, 250)");
+  }
   await expect(page.locator(".my-store-public-grid .my-store-public-card").first()).toBeVisible();
   for (const width of [390, 430, 1440]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 950 });
