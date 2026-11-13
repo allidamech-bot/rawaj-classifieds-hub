@@ -726,9 +726,9 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-preview__media small {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(24, 25, 30, 0.76) !important;
-  color: var(--studio-v5-text-soft) !important;
+  border: 1px solid var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-brand-primary) !important;
+  color: var(--rawaj-action-primary-foreground) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-preview__body strong {
