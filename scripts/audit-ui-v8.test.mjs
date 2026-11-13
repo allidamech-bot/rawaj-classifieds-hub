@@ -7,7 +7,7 @@ const [
   corrections,
   homeCorrections,
   categoriesCorrections,
-  ownerCorrections,
+  ownerRoute,
   studioCorrections,
   personalCorrections,
   adminWorkspaceCorrections,
@@ -31,7 +31,7 @@ const [
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-home-audit-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-categories-discovery-v8.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-workspaces-v9.css", import.meta.url), "utf8"),
@@ -159,15 +159,12 @@ test("footer renders one responsive variant and reserves the mobile dock", () =>
 test("owner workspace uses a compact management summary and prioritizes drafts", () => {
   assert.match(storefrontIdentity, /OwnerStoreWorkspaceSummary/);
   assert.match(storefrontIdentity, /if \(mode === "owner"\)/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary/);
-  assert.match(ownerWorkspace, /approvedCount/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__completeness/);
-  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__actions/);
+  assert.match(ownerWorkspace, /rawaj-shop-header__identity/);
+  assert.match(ownerWorkspace, /rawaj-shop-header__actions/);
+  assert.match(ownerWorkspace, /rawaj-shop-profile-details/);
   assert.doesNotMatch(ownerWorkspace, /needsEditCount|pendingCount|closedCount/);
-  assert.match(ownerCorrections, /rawaj-storefront-notice\[data-tone="draft"\][\s\S]*order: 1/);
-  assert.match(ownerCorrections, /rawaj-owner-workspace-summary[\s\S]*order: 2/);
-  assert.match(ownerCorrections, /a:has\(svg\.lucide-pencil\)[\s\S]*grid-column: 1 \/ -1/);
-  assert.doesNotMatch(ownerCorrections, /main\s+:is\(section, article, form/);
+  assert.match(ownerRoute, /rawaj-shop-desk__rail[\s\S]*tone="draft"[\s\S]*rawaj-owner-inventory/);
+  assert.match(ownerRoute, /rawaj-owner-inventory[\s\S]*rawaj-shop-desk__secondary/);
 });
 
 test("listing creation and draft editing use one compact semantic studio", () => {
