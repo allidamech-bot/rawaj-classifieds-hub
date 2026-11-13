@@ -84,6 +84,9 @@ jobs:
           cd cloudflare/worker
           node --test --test-concurrency=1 test/marketplace.integration.test.mjs
 
+      - name: Verify audited dependency APIs
+        run: node --test scripts/dependency-security-compatibility.test.mjs
+
       - name: Typecheck application
         run: npm run typecheck
 
