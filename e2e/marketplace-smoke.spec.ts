@@ -100,7 +100,12 @@ test("home search submits trimmed queries", async ({ page }) => {
   search = page.locator("#rawaj-signature-search-input");
   await expect(search).toBeVisible();
   await search.fill("  iPhone 15  ");
-  await page.locator(".rawaj-signature-search button").click();
+  // Activate the real submit button by keyboard: CSS transitions can scroll
+  // the visible submit out of the pointer viewport during a Playwright click.
+  const submit = page.locator(".rawaj-signature-search button[type='submit']");
+  await expect(submit).toBeEnabled();
+  await submit.focus();
+  await submit.press("Enter");
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   expect(new URL(page.url()).searchParams.get("q")).toBe("iPhone 15");
 
@@ -157,7 +162,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   expect(ratio).toBeGreaterThan(2.2);
   expect(ratio).toBeLessThan(2.38);
 
-  await page.locator(".rawaj-signature-location").click();
+  await page.locator(".rawaj-discovery-actions a[href^="/listings"]").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   const listingsSlot = page.locator('[data-placement-page="search_results"]');
   await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
@@ -169,7 +174,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
 
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
-  const listingsLink = page.locator(".rawaj-signature-location");
+  const listingsLink = page.locator(".rawaj-discovery-actions a[href^="/listings"]");
   await expect(listingsLink).toBeVisible();
   await listingsLink.click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -199,7 +204,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await route.continue();
   });
 
-  const listingsLink = page.locator(".rawaj-signature-location");
+  const listingsLink = page.locator(".rawaj-discovery-actions a[href^="/listings"]");
 
   try {
     await listingsLink.dispatchEvent("click");
