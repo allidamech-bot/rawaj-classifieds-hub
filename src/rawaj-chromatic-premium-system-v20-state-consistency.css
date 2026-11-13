@@ -119,10 +119,10 @@
   > section.text-center[class*="bg-card"]
   > p,
 .rawaj-feedback-state > p:not(:first-child) {
-  color: #aeb3bb !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
-/* Icon wells: one quiet dark/chromatic treatment while preserving each route's
+/* Icon wells: one quiet neutral treatment while preserving each route's
  * semantic icon color (gold, orange, warning, etc.). */
 .rawaj-app-shell:is(
     [data-resolved-pathname="/favorites"],
@@ -143,7 +143,7 @@
   > section.text-center[class*="bg-card"]
   > span:first-child {
   border: 1px solid rgba(216, 174, 95, 0.18) !important;
-  background: #20242d !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow:
     0 9px 22px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
