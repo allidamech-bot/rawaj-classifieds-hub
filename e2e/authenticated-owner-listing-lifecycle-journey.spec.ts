@@ -244,9 +244,10 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
-    await expect(page.locator(".rawaj-store-empty")).toContainText(/ما في إعلانات بهالحالة|No listings in this status|متجرك جاهز لأول إعلان|Your store is ready for its first listing/i, {
-      timeout: 30_000,
-    });
+    await expect(page.locator(".rawaj-store-empty")).toContainText(
+      /ما في إعلانات بهالحالة|No listings in this status|متجرك جاهز لأول إعلان|Your store is ready for its first listing/i,
+      { timeout: 30_000 },
+    );
 
     expect(Object.fromEntries(lifecycleActions)).toEqual({
       reserve: 1,

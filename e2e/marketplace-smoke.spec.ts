@@ -157,7 +157,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   expect(ratio).toBeGreaterThan(2.2);
   expect(ratio).toBeLessThan(2.38);
 
-  await page.locator(".rawaj-discovery-actions a[href^="/listings"]").click();
+  await page.locator('.rawaj-discovery-actions a[href^="/listings"]').click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   const listingsSlot = page.locator('[data-placement-page="search_results"]');
   await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
@@ -169,7 +169,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
 
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
-  const listingsLink = page.locator(".rawaj-discovery-actions a[href^="/listings"]");
+  const listingsLink = page.locator('.rawaj-discovery-actions a[href^="/listings"]');
   await expect(listingsLink).toBeVisible();
   await listingsLink.click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -199,7 +199,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await route.continue();
   });
 
-  const listingsLink = page.locator(".rawaj-discovery-actions a[href^="/listings"]");
+  const listingsLink = page.locator('.rawaj-discovery-actions a[href^="/listings"]');
 
   try {
     await listingsLink.dispatchEvent("click");
