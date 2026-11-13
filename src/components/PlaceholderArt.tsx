@@ -1,4 +1,3 @@
-import { useId } from "react";
 import {
   Armchair,
   Briefcase,
@@ -44,7 +43,6 @@ interface Props {
 
 export function PlaceholderArt({ type, label, className = "", aspect = "wide" }: Props) {
   const Icon = glyphs[type] ?? Sparkles;
-  const gradientId = `rawaj-placeholder-${useId().replace(/:/g, "")}`;
   const ratio =
     aspect === "square"
       ? "aspect-square"
@@ -56,28 +54,14 @@ export function PlaceholderArt({ type, label, className = "", aspect = "wide" }:
 
   return (
     <div
-      className={`rawaj-placeholder-art relative w-full overflow-hidden rounded-[var(--rawaj-radius-card)] border border-[#d8ae5f]/10 bg-[#0d121a] ${ratio} ${className}`}
+      className={`rawaj-placeholder-art relative w-full overflow-hidden rounded-[var(--rawaj-radius-card)] border border-border bg-[var(--rawaj-surface-inset)] ${ratio} ${className}`}
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(225,77,191,0.10),transparent_30%),radial-gradient(circle_at_58%_58%,rgba(74,140,255,0.07),transparent_38%),linear-gradient(145deg,#151a24,#0b1017)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),transparent_38%,rgba(0,0,0,0.16))]" />
       <div className="absolute inset-0 grid place-items-center p-3">
-        <span className="relative grid place-items-center">
-          <span className="absolute h-10 w-16 rounded-full bg-fuchsia-500/10 blur-xl sm:h-12 sm:w-20" />
-          <Icon
-            className="relative h-11 w-11 drop-shadow-[0_8px_15px_rgba(236,72,153,0.34)] sm:h-14 sm:w-14"
-            stroke={`url(#${gradientId})`}
-            strokeWidth={1.85}
-          >
-            <defs>
-              <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ff8b63" />
-                <stop offset="46%" stopColor="#f54f88" />
-                <stop offset="100%" stopColor="#be4bdb" />
-              </linearGradient>
-            </defs>
-          </Icon>
-        </span>
+        <Icon
+          className="h-11 w-11 text-[var(--rawaj-text-gold)] sm:h-14 sm:w-14"
+          strokeWidth={1.75}
+        />
       </div>
       {label ? (
         <span className="absolute bottom-2 start-2 max-w-[calc(100%-1rem)] truncate rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-[10px] font-medium text-white/55 backdrop-blur-sm">

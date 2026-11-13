@@ -113,7 +113,7 @@ export function ReferralGrowthPanel() {
 
   return (
     <section className="overflow-hidden rounded-[1.6rem] border border-brand-orange/20 bg-card shadow-soft">
-      <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-primary via-primary to-primary/90 p-5 text-primary-foreground sm:p-6">
+      <div className="relative overflow-hidden border-b border-border/60 bg-primary p-5 text-primary-foreground sm:p-6">
         <div className="absolute -end-16 -top-16 h-48 w-48 rounded-full bg-brand-orange/18 blur-2xl" />
         <div className="relative flex items-start gap-4">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft">

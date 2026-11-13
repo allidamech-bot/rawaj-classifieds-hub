@@ -12,17 +12,7 @@
   top: -11rem;
   z-index: -1;
   height: 36rem;
-  background:
-    radial-gradient(
-      circle at 90% 4%,
-      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
-      transparent 29%
-    ),
-    radial-gradient(
-      circle at 7% 0%,
-      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
-      transparent 27%
-    );
+  background: transparent;
   pointer-events: none;
 }
 
@@ -32,13 +22,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: clamp(1.5rem, 5vw, 2.3rem);
-  background:
-    radial-gradient(
-      circle at 86% 8%,
-      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
-      transparent 28%
-    ),
-    linear-gradient(145deg, #082f2a, var(--color-primary) 54%, #1f5e50);
+  background: #082f2a;
   padding: clamp(1rem, 4vw, 1.8rem);
   color: white;
   box-shadow: 0 26px 66px color-mix(in srgb, var(--color-primary) 24%, transparent);
@@ -180,7 +164,7 @@
 
 .rawaj-communication-hero__actions a[data-active="true"] {
   border-color: transparent;
-  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  background: #ff7653;
   box-shadow: 0 10px 26px color-mix(in srgb, var(--rawaj-orange) 27%, transparent);
 }
 
@@ -383,7 +367,7 @@
   overflow: hidden;
   border: 2px solid color-mix(in srgb, white 70%, var(--color-border));
   border-radius: 0.85rem;
-  background: linear-gradient(145deg, #f1c67c, #ef8e58);
+  background: #f1c67c;
   color: var(--color-primary);
   font-size: 0.75rem;
   font-weight: 900;
@@ -469,13 +453,7 @@
 
 .rawaj-message-header {
   border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      color-mix(in srgb, var(--rawaj-orange) 8%, transparent),
-      transparent 35%
-    ),
-    var(--rawaj-surface-card);
+  background: var(--rawaj-surface-card);
   padding: 0.8rem;
 }
 
@@ -518,12 +496,7 @@
   flex-direction: column;
   gap: 0.45rem;
   overflow-y: auto;
-  background:
-    linear-gradient(
-      color-mix(in srgb, var(--color-primary) 1.5%, transparent) 1px,
-      transparent 1px
-    ),
-    var(--rawaj-surface-warm);
+  background: var(--rawaj-surface-warm);
   background-size: 100% 3rem;
   padding: 0.85rem;
 }
@@ -643,7 +616,7 @@
   justify-content: center;
   gap: 0.35rem;
   border-radius: 0.9rem;
-  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  background: #ff7653;
   padding-inline: 1rem;
   color: white;
   font-size: 0.62rem;

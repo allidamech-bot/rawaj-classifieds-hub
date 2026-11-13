@@ -154,12 +154,6 @@ interface HomeHeroProps {
 function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHeroProps) {
   return (
     <section className="rawaj-signature-hero" aria-labelledby="rawaj-signature-home-title">
-      <div className="rawaj-signature-hero__aurora" aria-hidden="true">
-        <span data-wave="one" />
-        <span data-wave="two" />
-        <span data-wave="three" />
-      </div>
-
       <div className="rawaj-signature-hero__content">
         <span className="rawaj-signature-hero__kicker">
           <Sparkles aria-hidden="true" />

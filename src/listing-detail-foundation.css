@@ -16,9 +16,7 @@ main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surf
 }
 
 main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surface:first-child > div:first-child {
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.65), transparent 55%),
-    var(--color-muted-surface);
+  background: var(--color-muted-surface);
 }
 
 main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surface:first-child img {
@@ -32,8 +30,7 @@ main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surf
 main.listing-detail-mobile-bottom > .grid > div:first-child > section.rawaj-surface:nth-of-type(2),
 main.listing-detail-mobile-bottom aside > div > section.rawaj-surface:first-child {
   border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-card) 96%, white) 0%, var(--color-card) 100%);
+  background: color-mix(in srgb, var(--color-card) 96%, white);
   box-shadow: var(--rawaj-shadow-soft);
 }
 

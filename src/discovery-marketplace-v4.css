@@ -422,9 +422,7 @@ body,
   ) {
   border-color: rgba(216, 174, 95, 0.11) !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
+  background: #171b24 !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
@@ -440,10 +438,7 @@ body,
 /* Offers keep their own identity, but use the same deep shell instead of grey. */
 .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage {
   border-color: rgba(216, 174, 95, 0.2) !important;
-  background:
-    radial-gradient(circle at 90% 0%, rgba(184, 151, 98, 0.13), transparent 34%),
-    radial-gradient(circle at 8% 100%, rgba(74, 140, 255, 0.1), transparent 40%),
-    linear-gradient(145deg, #17221f 0%, #111821 58%, #0c1219 100%) !important;
+  background: #17221f !important;
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
@@ -458,9 +453,7 @@ body,
 .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty {
   border-color: rgba(216, 174, 95, 0.12) !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(219, 73, 179, 0.055), transparent 40%),
-    linear-gradient(150deg, #181c25, #11151d) !important;
+  background: #181c25 !important;
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2) !important;
 }
 
@@ -476,23 +469,19 @@ body,
 .rawaj-support-faq details {
   border-color: rgba(216, 174, 95, 0.11) !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
+  background: #171b24 !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
 .rawaj-safety-v2 .rawaj-safety-guide[data-warning="true"] {
   border-color: rgba(216, 174, 95, 0.28) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.09), transparent 42%),
-    linear-gradient(150deg, #1d1a14, #12151b) !important;
+  background: #1d1a14 !important;
 }
 
 .rawaj-legal-v3 > p:first-child {
   border-color: rgba(216, 174, 95, 0.2) !important;
   color: #c8c0b7 !important;
-  background: linear-gradient(145deg, #1d1a14, #13171e) !important;
+  background: #1d1a14 !important;
 }
 
 .rawaj-legal-v3 > div > section,
@@ -500,9 +489,7 @@ body,
 .rawaj-prohibited-v3 > div.grid > div {
   border-color: rgba(216, 174, 95, 0.12) !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(198, 44, 120, 0.04), transparent 42%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
+  background: #171b24 !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
@@ -536,15 +523,13 @@ body,
 .rawaj-detail-v2 :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
   border: 1px solid rgba(216, 174, 95, 0.11) !important;
   color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
+  background: #171b24 !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19) !important;
 }
 
 .rawaj-detail-v2 .rawaj-detail-price {
   border: 1px solid rgba(216, 174, 95, 0.16) !important;
-  background: linear-gradient(145deg, rgba(216, 174, 95, 0.09), rgba(20, 24, 33, 0.95)) !important;
+  background: rgba(216, 174, 95, 0.09) !important;
 }
 
 .rawaj-detail-v2 .rawaj-detail-seller__actions :is(a, button) {
@@ -556,13 +541,13 @@ body,
 .rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
   border-color: transparent !important;
   color: #fff !important;
-  background: linear-gradient(135deg, #6b5133, #28564b) !important;
+  background: #6b5133 !important;
 }
 
 .rawaj-detail-v2 :is(.rawaj-demo-listing-notice, .rawaj-detail-reserved) {
   border: 1px solid rgba(216, 174, 95, 0.2) !important;
   color: #ead7ad !important;
-  background: linear-gradient(145deg, #241d13, #17171a) !important;
+  background: #241d13 !important;
 }
 
 .rawaj-detail-v2 .rawaj-detail-similar__item,

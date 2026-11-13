@@ -1,5 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Languages, LogIn, MapPin, Menu, Plus, Search, Store, User, UserCog } from "lucide-react";
+import {
+  Languages,
+  LogIn,
+  MapPin,
+  Menu,
+  Plus,
+  Search,
+  Store,
+  CircleUserRound,
+  UserCog,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
@@ -177,7 +187,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               title={text("حسابي", "My account")}
               className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
-              <User className="h-4 w-4" strokeWidth={1.9} />
+              <CircleUserRound className="h-4 w-4" strokeWidth={1.9} />
             </Link>
           ) : (
             <Link

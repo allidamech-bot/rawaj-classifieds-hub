@@ -99,7 +99,7 @@ main.listing-detail-mobile-bottom [class*="bg-card-warm"] {
 
 .rawaj-pulse-page .rawaj-merchant-stage {
   border-radius: var(--rawaj-radius-surface);
-  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  background: #102b46;
   box-shadow: var(--rawaj-shadow-soft);
 }
 
@@ -187,7 +187,7 @@ main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md [class*="bg-ca
 
 .rawaj-pulse-page .rawaj-id-card {
   border-radius: var(--rawaj-radius-surface);
-  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  background: #102b46;
   box-shadow: var(--rawaj-shadow-soft);
 }
 
@@ -244,7 +244,7 @@ main.container-wide.mobile-page-bottom:has(#account-info) a {
 /* Categories: preserve taxonomy depth while removing decorative color cycling. */
 main.container-wide:has(> .rawaj-hero-surface input[type="search"]) > .rawaj-hero-surface {
   border-radius: var(--rawaj-radius-surface);
-  background: linear-gradient(140deg, #102b46 0%, #0d243b 72%, #143653 100%);
+  background: #102b46;
   box-shadow: var(--rawaj-shadow-soft);
 }
 

@@ -12,17 +12,7 @@
   top: -8rem;
   z-index: -1;
   height: 26rem;
-  background:
-    radial-gradient(
-      circle at 88% 8%,
-      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 12% 0%,
-      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
-      transparent 26%
-    );
+  background: transparent;
   pointer-events: none;
 }
 
@@ -36,13 +26,7 @@
   margin-bottom: 1rem;
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: clamp(1.45rem, 4vw, 2.2rem);
-  background:
-    radial-gradient(
-      circle at 82% 15%,
-      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
-      transparent 28%
-    ),
-    linear-gradient(145deg, #092f2a, var(--color-primary) 54%, #1c5a4d);
+  background: #092f2a;
   padding: clamp(1.15rem, 4vw, 1.8rem);
   color: white;
   box-shadow: 0 24px 60px color-mix(in srgb, var(--color-primary) 24%, transparent);
@@ -128,11 +112,7 @@
   transform: rotate(-6deg);
   border: 1px solid color-mix(in srgb, white 20%, transparent);
   border-radius: 1.35rem;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, white 17%, transparent),
-    color-mix(in srgb, white 7%, transparent)
-  );
+  background: color-mix(in srgb, white 17%, transparent);
   color: #f2c77f;
   box-shadow: 0 18px 38px color-mix(in srgb, black 22%, transparent);
   backdrop-filter: blur(14px);
@@ -280,7 +260,7 @@
 }
 
 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__line {
-  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold));
+  background: var(--rawaj-orange);
 }
 
 .rawaj-studio-autosave {
@@ -364,7 +344,7 @@
   width: 0.2rem;
   height: 2.2rem;
   border-radius: 999px;
-  background: linear-gradient(var(--rawaj-orange), var(--rawaj-gold));
+  background: var(--rawaj-orange);
 }
 
 .rawaj-studio-section__heading {
@@ -479,13 +459,7 @@
   justify-content: center;
   border: 1px dashed color-mix(in srgb, var(--rawaj-orange) 38%, var(--color-border));
   border-radius: 1.2rem;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      color-mix(in srgb, var(--rawaj-orange) 8%, transparent),
-      transparent 42%
-    ),
-    var(--rawaj-surface-warm);
+  background: var(--rawaj-surface-warm);
   color: var(--color-muted-foreground);
   text-align: center;
 }
@@ -566,7 +540,7 @@
   min-height: 10.5rem;
   place-items: center;
   overflow: hidden;
-  background: linear-gradient(145deg, #e9efe8, #f7efe3);
+  background: #e9efe8;
   color: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
@@ -653,24 +627,18 @@
   font-size: 1.35rem;
 }
 
-.rawaj-studio-quality__score > span {
-  display: grid;
+.rawaj-studio-quality__ring {
   width: 2.7rem;
   height: 2.7rem;
-  place-items: center;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--rawaj-orange) var(--studio-score),
-    color-mix(in srgb, var(--color-primary) 8%, var(--color-background)) 0
-  );
+  flex: none;
+  fill: none;
+  stroke: var(--rawaj-border-strong);
+  stroke-width: 4;
+  transform: rotate(-90deg);
 }
 
-.rawaj-studio-quality__score > span::after {
-  content: "";
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: var(--rawaj-surface-card);
+.rawaj-studio-quality__ring circle:last-child {
+  stroke: var(--rawaj-text-gold);
 }
 
 .rawaj-studio-quality__track {
@@ -685,7 +653,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold));
+  background: var(--rawaj-orange);
   transition: width var(--motion-medium) ease;
 }
 

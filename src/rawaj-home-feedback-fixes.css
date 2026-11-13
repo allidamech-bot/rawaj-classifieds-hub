@@ -110,9 +110,7 @@
   display: grid !important;
   place-items: center !important;
   color: #74d2e3 !important;
-  background:
-    radial-gradient(circle at 50% 32%, rgba(82, 161, 180, 0.14), transparent 34%),
-    linear-gradient(145deg, #292c32, #202227) !important;
+  background: #292c32 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div svg,
@@ -130,8 +128,7 @@
   position: sticky;
   isolation: isolate;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(38, 39, 44, 0.985), rgba(34, 35, 40, 0.965)) !important;
+  background: rgba(38, 39, 44, 0.985) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
@@ -142,17 +139,11 @@
   left: 0;
   width: 58%;
   pointer-events: none;
-  background:
-    radial-gradient(circle, rgba(255, 132, 101, 0.72) 0 0.8px, transparent 1.45px) 0 0 / 11px 11px,
-    radial-gradient(circle, rgba(139, 170, 156, 0.56) 0 0.9px, transparent 1.55px) 3px 5px / 15px 15px,
-    radial-gradient(circle, rgba(112, 115, 255, 0.42) 0 0.75px, transparent 1.4px) 7px 1px / 18px 18px,
-    radial-gradient(ellipse at 6% 50%, rgba(184, 151, 98, 0.19), transparent 43%),
-    radial-gradient(ellipse at 42% 50%, rgba(139, 170, 156, 0.16), transparent 50%),
-    radial-gradient(ellipse at 82% 53%, rgba(98, 139, 128, 0.12), transparent 48%);
+  background: transparent;
   opacity: 0.76;
   filter: saturate(105%);
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {

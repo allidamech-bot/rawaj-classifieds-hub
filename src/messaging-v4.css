@@ -14,7 +14,7 @@
 .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] {
   border: 1px solid color-mix(in srgb, white 12%, transparent);
   border-radius: var(--radius-hero, 1.25rem);
-  background: linear-gradient(135deg, #092d29, #123f38 72%, #1b554a);
+  background: #092d29;
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 

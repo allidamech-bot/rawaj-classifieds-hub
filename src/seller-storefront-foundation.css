@@ -9,9 +9,7 @@ main.container-wide:has(.rawaj-merchant-stage)::before {
   top: 0;
   height: 26rem;
   pointer-events: none;
-  background:
-    radial-gradient(28rem 16rem at 92% 4%, rgba(197, 154, 74, 0.14), transparent 68%),
-    radial-gradient(24rem 16rem at 8% 18%, rgba(232, 111, 50, 0.1), transparent 70%);
+  background: transparent;
   filter: blur(2px);
 }
 
@@ -23,10 +21,7 @@ main.container-wide:has(.rawaj-merchant-stage) > div {
 .rawaj-merchant-stage {
   isolation: isolate;
   border-color: rgba(255, 255, 255, 0.2);
-  background:
-    radial-gradient(26rem 18rem at 88% 8%, rgba(197, 154, 74, 0.3), transparent 62%),
-    radial-gradient(22rem 18rem at 4% 108%, rgba(232, 111, 50, 0.22), transparent 64%),
-    linear-gradient(135deg, #0b2238 0%, #102e4b 48%, #173e5f 100%);
+  background: #0b2238;
   box-shadow:
     0 28px 70px rgba(8, 24, 42, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -48,19 +43,7 @@ main.container-wide:has(.rawaj-merchant-stage) > div {
 }
 
 .rawaj-merchant-scrim {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(8, 24, 42, 0.08) 0%,
-      rgba(8, 24, 42, 0.18) 34%,
-      rgba(8, 24, 42, 0.86) 100%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(8, 24, 42, 0.95) 0%,
-      rgba(13, 36, 59, 0.72) 54%,
-      rgba(13, 36, 59, 0.34) 100%
-    );
+  background: rgba(8, 24, 42, 0.08);
 }
 
 .rawaj-merchant-stage .rawaj-id-avatar {
@@ -172,9 +155,7 @@ main.container-wide:has(.rawaj-merchant-stage) input:focus {
 
 .rawaj-pulse-page main.container-wide .rawaj-merchant-stage > div:first-child {
   height: 18rem;
-  background:
-    linear-gradient(180deg, rgba(8, 24, 42, 0.08), rgba(8, 24, 42, 0.82)),
-    linear-gradient(135deg, #0b2238 0%, #102e4b 55%, #173e5f 100%);
+  background: rgba(8, 24, 42, 0.08);
 }
 
 .rawaj-pulse-page main.container-wide .rawaj-merchant-stage > div:first-child img:first-child {
