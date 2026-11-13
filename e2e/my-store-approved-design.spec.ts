@@ -203,6 +203,10 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     localStorage.setItem("rawaj-language", "en");
   });
   await page.goto("/seller/00000000-0000-4000-8000-000000000010");
+  // Wait for React hydration and the requested locale before clicking anchor tabs.
+  // Otherwise a click can hit SSR-only markup before its onClick handler exists.
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+  await expect(page.locator(".my-store-public .my-store-add")).toContainText("Browse listings");
   await expect(page.locator("main.my-store-public")).toBeVisible();
   await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
   await expect(page.locator(".my-store-identity h1")).toBeVisible();
