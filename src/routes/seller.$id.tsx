@@ -450,7 +450,7 @@ function ReviewsPanel({
   }
 
   return (
-    <section id="seller-reviews" className="rawaj-storefront-v2__reviews">
+    <section id="seller-reviews" className="my-store-public-reviews">
       <div className="relative z-10">
         <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -687,7 +687,7 @@ function ReviewsPanel({
 function SafetyPanel() {
   const { text } = useUiPreferences();
   return (
-    <section className="rawaj-storefront-safety">
+    <section className="my-store-public-safety">
       <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
       <div className="relative z-10 flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-brand-orange text-white">
