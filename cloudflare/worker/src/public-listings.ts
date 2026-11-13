@@ -1,3 +1,4 @@
+import { sanitizePublicListingDetails } from "./public-listing-privacy";
 type D1Value = string | number | null;
 
 type JsonRecord = Record<string, unknown>;
@@ -591,15 +592,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
 }
 
 function sanitizePublicDetails(details: JsonRecord): JsonRecord {
-  const blocked = new Set([
-    "phone",
-    "mobile",
-    "contact_phone",
-    "whatsapp",
-    "whatsApp",
-    "contact_whatsapp",
-  ]);
-  return Object.fromEntries(Object.entries(details).filter(([key]) => !blocked.has(key)));
+  return sanitizePublicListingDetails(details);
 }
 
 function toFtsQuery(value: string): string {
