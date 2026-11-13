@@ -114,14 +114,14 @@
 
 .rawaj-button-primary {
   border-radius: var(--radius-button);
-  background: var(--rawaj-action-coral);
-  color: #fff;
-  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
+  background: var(--rawaj-action-primary);
+  color: var(--rawaj-action-primary-foreground);
+  box-shadow: none;
 }
 
 .rawaj-button-primary:hover {
-  background: var(--rawaj-action-coral-hover);
-  filter: saturate(1.02);
+  background: var(--rawaj-action-primary-hover);
+  filter: none;
 }
 
 .rawaj-icon-button {

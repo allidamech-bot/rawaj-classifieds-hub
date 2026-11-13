@@ -301,8 +301,8 @@
     gap: 0.45rem;
     min-height: 2.75rem;
     border-radius: 0.95rem;
-    background: #143653;
-    color: var(--color-primary-foreground);
+    background: var(--rawaj-action-primary);
+    color: var(--rawaj-action-primary-foreground);
     font-family: var(--font-display);
     font-size: 0.78rem;
     font-weight: 700;
@@ -313,6 +313,17 @@
       transform 160ms ease,
       box-shadow 160ms ease,
       filter 160ms ease;
+  }
+
+  /* Header sign-in is a light-surface action, never white text on a light button. */
+  .rawaj-app-header a.rawaj-header-login-cta {
+    color: var(--rawaj-ink-primary) !important;
+    background: var(--rawaj-surface-subtle) !important;
+    border: 1px solid var(--rawaj-divider) !important;
+  }
+
+  .rawaj-app-header a.rawaj-header-login-cta .rawaj-header-login-cta__label {
+    color: inherit !important;
   }
 
   .rawaj-button-primary:active {
