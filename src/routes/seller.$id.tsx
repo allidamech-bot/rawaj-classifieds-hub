@@ -60,6 +60,7 @@ function SellerPage() {
   const router = useRouter();
   const retrySections = () => void router.invalidate();
   const [followerCount, setFollowerCount] = useState<number | null>(null);
+  const [currentSection, setCurrentSection] = useState<"listings" | "about" | "reviews">("listings");
 
   useEffect(() => {
     let active = true;
@@ -111,11 +112,25 @@ function SellerPage() {
             className="ms-approved-tabs my-store-public-tabs"
             aria-label={text("أقسام المتجر", "Store sections")}
           >
-            <a href="#storefront-listings" aria-current="page">
+            <a
+              href="#storefront-listings"
+              aria-current={currentSection === "listings" ? "location" : undefined}
+              onClick={() => setCurrentSection("listings")}
+            >
               {text("الإعلانات", "Listings")} ({seller.approvedListingCount ?? "—"})
             </a>
-            <a href="#seller-about">{text("نبذة", "About")}</a>
-            <a href="#seller-reviews">
+            <a
+              href="#seller-about"
+              aria-current={currentSection === "about" ? "location" : undefined}
+              onClick={() => setCurrentSection("about")}
+            >
+              {text("نبذة", "About")}
+            </a>
+            <a
+              href="#seller-reviews"
+              aria-current={currentSection === "reviews" ? "location" : undefined}
+              onClick={() => setCurrentSection("reviews")}
+            >
               {text("التقييمات", "Reviews")} ({seller.ratingSummary?.count ?? 0})
             </a>
           </nav>
