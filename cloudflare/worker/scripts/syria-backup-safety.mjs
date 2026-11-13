@@ -33,14 +33,20 @@ async function assertUnused(path, label) {
 
 /** Refuse in-repo, symlink-escaped, relative and overwrite-prone D1 backups. */
 export async function assertSafeBackupOutputPaths({ backupDir, report, repositoryRoot }) {
-  if (![backupDir, report, repositoryRoot].every((value) => typeof value === "string" && isAbsolute(value))) {
+  if (
+    ![backupDir, report, repositoryRoot].every(
+      (value) => typeof value === "string" && isAbsolute(value),
+    )
+  ) {
     throw new Error("Backup directory, report path and repository root must be absolute paths.");
   }
   const repository = await realpath(repositoryRoot);
   const backup = await canonicalTarget(backupDir);
   const reportTarget = await canonicalTarget(report);
   if (isInside(repository, backup) || isInside(repository, reportTarget)) {
-    throw new Error("Backup outputs must be outside the RAWAJ repository (including symlink aliases).");
+    throw new Error(
+      "Backup outputs must be outside the RAWAJ repository (including symlink aliases).",
+    );
   }
   if (isInside(backup, reportTarget) || isInside(reportTarget, backup)) {
     throw new Error("Backup directory and report destination must be separate.");
