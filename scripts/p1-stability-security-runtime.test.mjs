@@ -28,15 +28,19 @@ test("public listing details remove contact information recursively without losi
   const result = exports.sanitizePublicListingDetails({
     phone: "test-private-phone",
     contact_phone: "test-private-number",
+    "contact.phone": "test-private-dotted-phone",
     email: "test-private-email",
     color: "blue",
-    specifications: { whatsapp: "test-private-chat", model: "valid-model" },
-    sections: [{ contactWhatsApp: "test-private-chat", year: 2026 }],
+    specifications: { whatsapp: "test-private-chat", "contact.email": "test-private-dotted-email", model: "valid-model" },
+    sections: [{ contactWhatsApp: "test-private-chat", "contact.whatsapp": "test-private-dotted-chat", year: 2026 }],
   });
   assert.equal(result.phone, undefined);
   assert.equal(result.contact_phone, undefined);
+  assert.equal(result["contact.phone"], undefined);
   assert.equal(result.email, undefined);
   assert.equal(result.specifications.whatsapp, undefined);
+  assert.equal(result.specifications["contact.email"], undefined);
+  assert.equal(result.sections[0]["contact.whatsapp"], undefined);
   assert.equal(result.sections[0].contactWhatsApp, undefined);
   assert.equal(result.specifications.model, "valid-model");
   assert.equal(result.sections[0].year, 2026);

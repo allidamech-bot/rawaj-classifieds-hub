@@ -25,7 +25,7 @@ export function sanitizePublicListingDetails(
 function sanitizeObject(value: Record<string, unknown>, depth: number): Record<string, unknown> {
   const safe: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
-    const normalized = key.toLowerCase().replace(/[-_\s]/g, "");
+    const normalized = key.toLowerCase().replace(/[-._\s]/g, "");
     if (PRIVATE_DETAIL_KEYS.has(normalized)) continue;
     safe[key] = sanitizeValue(item, depth + 1);
   }

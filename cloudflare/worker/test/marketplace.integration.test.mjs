@@ -1416,7 +1416,8 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
     details: {
       color: "green",
       email: "secret-test-only@example.invalid",
-      nested: { whatsapp: "secret-test-only", model: "visible-model" },
+      "contact.phone": "secret-dotted-phone",
+      nested: { whatsapp: "secret-test-only", "contact.email": "secret-dotted-email", model: "visible-model" },
     },
   });
   assert.equal(pending.response.status, 200);
@@ -1433,6 +1434,8 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
   const sellerListing = seller.payload.data.listings.find((item) => item.id === id);
   assert.ok(sellerListing);
   assert.equal(sellerListing.details.email, undefined);
+  assert.equal(sellerListing.details["contact.phone"], undefined);
+  assert.equal(sellerListing.details.nested["contact.email"], undefined);
   assert.equal(sellerListing.details.nested.whatsapp, undefined);
   assert.equal(sellerListing.details.nested.model, "visible-model");
 
@@ -1446,6 +1449,8 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
   const recentListing = recents.payload.data.find((item) => item.listingId === id)?.listing;
   assert.ok(recentListing);
   assert.equal(recentListing.details.email, undefined);
+  assert.equal(recentListing.details["contact.phone"], undefined);
+  assert.equal(recentListing.details.nested["contact.email"], undefined);
   assert.equal(recentListing.details.nested.whatsapp, undefined);
   assert.equal(recentListing.details.color, "green");
 
@@ -1460,12 +1465,16 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
   assert.ok(favorite);
   const favoriteDetails = JSON.parse(favorite.details);
   assert.equal(favoriteDetails.email, undefined);
+  assert.equal(favoriteDetails["contact.phone"], undefined);
+  assert.equal(favoriteDetails.nested["contact.email"], undefined);
   assert.equal(favoriteDetails.nested.whatsapp, undefined);
   assert.equal(favoriteDetails.color, "green");
 
   const ownerView = await api(`/api/listings/${id}`, owner);
   assert.equal(ownerView.response.status, 200);
   assert.equal(ownerView.payload.data.listing.details.email, "secret-test-only@example.invalid");
+  assert.equal(ownerView.payload.data.listing.details["contact.phone"], "secret-dotted-phone");
+  assert.equal(ownerView.payload.data.listing.details.nested["contact.email"], "secret-dotted-email");
 });
 
 test("phase 1: owner-only roles and account freezing, restrictions, restore, audit", async () => {
