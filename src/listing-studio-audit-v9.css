@@ -144,7 +144,7 @@
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps li[data-state="active"] button {
   border-color: rgba(169, 200, 187, 0.26) !important;
   color: #fff !important;
-  background: rgba(194, 68, 49, 0.82) !important;
+  background: var(--rawaj-action-primary) !important;
   box-shadow: 0 8px 18px rgba(155, 40, 111, 0.2) !important;
 }
 
@@ -924,4 +924,11 @@
   .rawaj-taxonomy-breadcrumb__segment button {
     max-width: 8.5rem;
   }
+}
+
+.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"])
+  .rawaj-listing-studio-v4
+  :is(.rawaj-studio-section, .rawaj-studio-shell__aside)
+  :is(p, label > span, .rawaj-studio-preview__heading p, .rawaj-studio-quality__score p) {
+  color: var(--rawaj-text-primary) !important;
 }
