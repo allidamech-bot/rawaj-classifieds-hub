@@ -53,7 +53,7 @@ test("approved store composition and owner interactions", async ({ page }, testI
       categoryId: i === 1 ? "cat-home" : "cat-furniture",
       primaryImageUrl: "/__store-photo.jpg",
       price: [5900000, 8750000, 7200000, 4100000][i],
-      updatedAt: `2026-11-${12 - i}T12:00:00Z`,
+      updatedAt: `2026-11-${String(12 - i).padStart(2, "0")}T12:00:00Z`,
     }));
     await route.fulfill({ json: body });
   });
@@ -76,8 +76,13 @@ test("approved store composition and owner interactions", async ({ page }, testI
   ] as const) {
     await expect
       .poll(() =>
-        page.locator(selector).first().evaluate((element, key) =>
-          getComputedStyle(element)[key as keyof CSSStyleDeclaration], property),
+        page
+          .locator(selector)
+          .first()
+          .evaluate(
+            (element, key) => getComputedStyle(element)[key as keyof CSSStyleDeclaration],
+            property,
+          ),
       )
       .toBe(expected);
   }
