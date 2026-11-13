@@ -711,8 +711,8 @@
 
 .rawaj-filter-sheet .input,
 .rawaj-filter-sheet :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  border-color: var(--rawaj-control-border) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
   color-scheme: light;
 }
@@ -736,27 +736,27 @@
 .rawaj-filter-sheet a.bg-primary {
   border: 1px solid rgba(100, 169, 255, 0.22) !important;
   background: rgba(100, 169, 255, 0.12) !important;
-  color: #a8ceff !important;
+  color: var(--rawaj-brand-primary) !important;
 }
 
 .rawaj-filter-sheet__footer {
   position: sticky;
   z-index: 6;
   bottom: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
-  background: rgba(39, 40, 46, 0.97) !important;
+  border-top: 1px solid var(--rawaj-divider) !important;
+  background: var(--rawaj-surface) !important;
   backdrop-filter: blur(16px) saturate(125%);
 }
 
 .rawaj-filter-sheet__footer button:first-child {
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--rawaj-control-border) !important;
   background: rgba(255, 255, 255, 0.035) !important;
   color: var(--rawaj-text-secondary, #c3c4c9) !important;
 }
 
 .rawaj-filter-sheet__footer button:last-child {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: #f06b52 !important;
+  background: var(--rawaj-brand-primary) !important;
   color: #fff !important;
   box-shadow: 0 14px 30px rgba(218, 67, 160, 0.18) !important;
 }

@@ -153,10 +153,10 @@
 }
 
 .rawaj-filter-sheet[data-scroll-mode="content"] .rawaj-filter-sheet__footer button:last-child {
-  border-color: rgba(255, 139, 55, 0.35) !important;
-  background: #ff8a3d !important;
+  border-color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-brand-primary) !important;
   color: #ffffff !important;
-  box-shadow: 0 12px 26px rgba(239, 109, 50, 0.24) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-search-results-v1 > .mt-3.flex.flex-wrap {
