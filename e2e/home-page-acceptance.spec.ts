@@ -52,7 +52,7 @@ test("home category cards expose unique canonical destinations", async ({ page }
 
   await categoryLinks.first().click();
   await expect(page).not.toHaveURL(/\/$/);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
 });
 
@@ -84,19 +84,19 @@ test("browser back and forward keep exactly one resolved page", async ({ page })
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
 
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(1);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(1);
 
   await page.goForward();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
 });
 
 test("all supported routes mount one correctly targeted public ad slot", async ({
@@ -162,13 +162,13 @@ test("active home ad mounts without an empty SSR placeholder or shifting main co
     await expect(
       page.locator('[data-placement-page="home"][data-placement-loading="true"]'),
     ).toHaveCount(0);
-    const mainTopBefore = (await page.locator("main.rawaj-signature-home").boundingBox())?.y;
+    const mainTopBefore = (await page.locator("main[data-marketplace-home]").boundingBox())?.y;
     expect(mainTopBefore).toBeDefined();
 
     releaseRequest();
     const loadedSlot = page.locator('[data-placement-page="home"][data-placement-loading="false"]');
     await expect(loadedSlot).toBeVisible();
-    const mainTopAfter = (await page.locator("main.rawaj-signature-home").boundingBox())?.y;
+    const mainTopAfter = (await page.locator("main[data-marketplace-home]").boundingBox())?.y;
     expect(mainTopAfter).toBeDefined();
     expect(Math.abs(mainTopAfter! - mainTopBefore!)).toBeLessThanOrEqual(1);
   } finally {

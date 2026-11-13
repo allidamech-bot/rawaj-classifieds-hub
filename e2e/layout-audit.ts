@@ -253,7 +253,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         .slice(0, 20);
 
       const footer = document.querySelector(".rawaj-site-footer");
-      const dock = document.querySelector(".rawaj-mobile-dock");
+      const dock = document.querySelector("[data-shell-region=bottom-dock-region]");
       let footerDockOverlap = false;
       if (footer && dock && visible(footer) && visible(dock)) {
         const footerBottomAtMaxScroll =

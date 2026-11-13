@@ -73,7 +73,7 @@ test("home shell renders one header and one responsive dock", async ({ page }, t
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
   await expect(page.locator("main.rawaj-signature-home")).toHaveCount(1);
 
-  const dock = page.locator(".rawaj-mobile-dock");
+  const dock = page.locator("[data-shell-region=bottom-dock-region]");
   await expect(dock).toHaveCount(1);
   if (testInfo.project.name.startsWith("mobile")) {
     await expect(dock).toBeVisible();
@@ -127,7 +127,10 @@ test("mobile home search hides the bottom dock while the keyboard field is focus
   const search = page.locator("#rawaj-signature-search-input");
   await search.focus();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "true");
-  await expect(page.locator(".rawaj-mobile-dock")).toHaveCSS("pointer-events", "none");
+  await expect(page.locator("[data-shell-region=bottom-dock-region]")).toHaveCSS(
+    "pointer-events",
+    "none",
+  );
 
   await search.blur();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
@@ -251,8 +254,10 @@ test("rapid bottom navigation resolves to one page without stacked route content
 
   const shell = page.locator(".rawaj-app-shell");
   const pageContent = page.locator('[data-shell-region="page-content"]');
-  const categoriesDockLink = page.locator('.rawaj-mobile-dock a[href="/categories"]');
-  const homeDockLink = page.locator('.rawaj-mobile-dock a[href="/"]');
+  const categoriesDockLink = page.locator(
+    '[data-shell-region=bottom-dock-region] a[href="/categories"]',
+  );
+  const homeDockLink = page.locator('[data-shell-region=bottom-dock-region] a[href="/"]');
 
   try {
     await categoriesDockLink.dispatchEvent("click");
@@ -314,7 +319,7 @@ test("home stays within the viewport at audited mobile and desktop widths", asyn
     const submitBounds = await searchSubmit.boundingBox();
     expect(submitBounds?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    const dock = page.locator(".rawaj-mobile-dock");
+    const dock = page.locator("[data-shell-region=bottom-dock-region]");
     if (width < 1024) {
       await expect(dock).toBeVisible();
     } else {

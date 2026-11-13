@@ -1,0 +1,78 @@
+.dock {
+  position: fixed;
+  z-index: 40;
+  inset-inline: 0;
+  inset-block-end: 0;
+  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.surface {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-inline: auto;
+  max-inline-size: 28rem;
+  padding: 4px;
+  border-radius: 20px;
+  background: var(--rawaj-brand-primary);
+  color: var(--rawaj-text-inverse);
+  pointer-events: auto;
+}
+
+.item {
+  display: flex;
+  min-inline-size: 0;
+  min-block-size: 60px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 2px;
+  border-radius: 12px;
+  color: inherit;
+}
+
+.item[aria-current="page"] {
+  background: rgb(255 255 255 / 18%);
+}
+
+.item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -3px;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    background: rgb(255 255 255 / 18%);
+  }
+}
+
+.icon,
+.create {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.create {
+  inline-size: 32px;
+  block-size: 28px;
+  border-radius: 8px;
+  background: var(--rawaj-surface);
+  color: var(--rawaj-brand-primary);
+}
+
+.label {
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+:global(html[data-keyboard-open="true"]) .dock,
+:global([data-keyboard-open="true"]) .dock {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .dock {
+    display: none;
+  }
+}

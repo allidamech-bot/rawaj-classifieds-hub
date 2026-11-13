@@ -33,7 +33,7 @@ test("phase 3 covers every core discovery surface without changing routes", () =
     assert.match(css, new RegExp(contract.replaceAll(".", "\\.")));
   }
   assert.match(home, /<DiscoveryHero/);
-  assert.match(categories, /rawaj-category-directory-card/);
+  assert.match(categories, /data-category-directory-card/);
   assert.match(listings, /<SearchResultsToolbar/);
   assert.match(detail, /rawaj-detail-summary/);
   assert.match(cards, /rawaj-adaptive-card/);

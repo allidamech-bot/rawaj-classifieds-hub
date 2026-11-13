@@ -9,19 +9,19 @@ test("categories route loads its designed atlas instead of utility-only rows", a
   expect(response?.status() ?? 200).toBeLessThan(500);
   await waitForHydration(page);
 
-  const hero = page.locator(".rawaj-categories-v2__hero");
-  const grid = page.locator(".rawaj-category-directory-grid");
-  const firstCard = page.locator(".rawaj-category-directory-card").first();
+  const hero = page.locator("[data-category-directory-heading]");
+  const grid = page.locator("[data-category-directory-grid]");
+  const firstCard = page.locator("[data-category-directory-card]").first();
 
   await expect(hero).toBeVisible();
   await expect(grid).toBeVisible();
   await expect(firstCard).toBeVisible();
 
   const visualContract = await page.evaluate(() => {
-    const hero = document.querySelector<HTMLElement>(".rawaj-categories-v2__hero");
-    const grid = document.querySelector<HTMLElement>(".rawaj-category-directory-grid");
-    const card = document.querySelector<HTMLElement>(".rawaj-category-directory-card");
-    const icon = card?.querySelector<HTMLElement>(".category-tile");
+    const hero = document.querySelector<HTMLElement>("[data-category-directory-heading]");
+    const grid = document.querySelector<HTMLElement>("[data-category-directory-grid]");
+    const card = document.querySelector<HTMLElement>("[data-category-directory-link]");
+    const icon = card?.querySelector<HTMLElement>("[data-category-directory-icon]");
 
     if (!hero || !grid || !card || !icon) return null;
 
@@ -32,11 +32,10 @@ test("categories route loads its designed atlas instead of utility-only rows", a
 
     return {
       heroBackground: heroStyle.backgroundImage,
-      heroRadius: Number.parseFloat(heroStyle.borderRadius),
       gridDisplay: gridStyle.display,
       gridColumns: gridStyle.gridTemplateColumns,
       cardBackground: cardStyle.backgroundImage,
-      cardRadius: Number.parseFloat(cardStyle.borderRadius),
+      cardColor: cardStyle.backgroundColor,
       cardBorderStyle: cardStyle.borderStyle,
       iconBackground: iconStyle.backgroundColor,
     };
@@ -44,11 +43,10 @@ test("categories route loads its designed atlas instead of utility-only rows", a
 
   expect(visualContract).not.toBeNull();
   expect(visualContract?.heroBackground).toBe("none");
-  expect(visualContract?.heroRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.gridDisplay).toBe("grid");
   expect(visualContract?.gridColumns).not.toBe("none");
   expect(visualContract?.cardBackground).toBe("none");
-  expect(visualContract?.cardRadius ?? 0).toBeGreaterThan(16);
+  expect(visualContract?.cardColor).toBe("rgb(255, 255, 255)");
   expect(visualContract?.cardBorderStyle).toBe("solid");
   expect(visualContract?.iconBackground).not.toBe("rgba(0, 0, 0, 0)");
 });
@@ -64,10 +62,10 @@ test("categories atlas stays readable at narrow mobile widths", async ({ page },
     const metrics = await page.evaluate(() => ({
       viewportWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
-      cardCount: document.querySelectorAll(".rawaj-category-directory-card").length,
+      cardCount: document.querySelectorAll("[data-category-directory-card]").length,
       firstCardHeight:
         document
-          .querySelector<HTMLElement>(".rawaj-category-directory-card")
+          .querySelector<HTMLElement>("[data-category-directory-card]")
           ?.getBoundingClientRect().height ?? 0,
     }));
 

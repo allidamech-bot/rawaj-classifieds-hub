@@ -1,0 +1,112 @@
+.heading {
+  display: grid;
+  gap: 16px;
+  color: var(--rawaj-ink-primary);
+}
+
+.title {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  max-inline-size: 40rem;
+  padding-inline: 12px;
+  border: 1px solid var(--rawaj-control-border);
+  border-radius: 12px;
+  color: var(--rawaj-ink-secondary);
+  background: var(--rawaj-surface);
+}
+
+.search input {
+  align-self: stretch;
+  color: var(--rawaj-ink-primary);
+}
+
+.search input::placeholder {
+  color: var(--rawaj-ink-secondary);
+}
+
+.search button {
+  min-block-size: 44px;
+  padding-inline: 8px;
+  color: var(--rawaj-link-on-light);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 12px;
+  margin-block-start: 16px;
+}
+
+.card {
+  min-inline-size: 0;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  block-size: 100%;
+  min-block-size: 72px;
+  padding: 12px;
+  border: 1px solid var(--rawaj-divider);
+  border-radius: 16px;
+  background: var(--rawaj-surface);
+  color: var(--rawaj-ink-primary);
+}
+
+@media (hover: hover) {
+  .link:hover {
+    background: var(--rawaj-surface-subtle);
+    border-color: var(--rawaj-control-border);
+  }
+}
+
+.search:focus-within,
+.search button:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--rawaj-brand-primary);
+  outline-offset: 2px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  block-size: 40px;
+  border-radius: 12px;
+  background: var(--rawaj-surface-subtle);
+  color: var(--rawaj-brand-primary);
+}
+
+.name {
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.secondary {
+  display: block;
+  margin-block-start: 4px;
+  color: var(--rawaj-ink-secondary);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.chevron {
+  flex: 0 0 16px;
+  block-size: 16px;
+  color: var(--rawaj-ink-secondary);
+}
+
+.chevron:dir(ltr) {
+  transform: scaleX(-1);
+}

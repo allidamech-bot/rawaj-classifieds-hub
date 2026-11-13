@@ -98,9 +98,9 @@ test("filters stay category aware and hide irrelevant fields", () => {
 
 test("categories retain taxonomy behavior inside a spatial directory", () => {
   assert.match(categories, /rawaj-categories-v2/);
-  assert.match(categories, /rawaj-categories-v2__hero/);
-  assert.match(categories, /rawaj-category-directory-grid/);
-  assert.match(categories, /rawaj-category-directory-card/);
+  assert.match(categories, /data-category-directory-heading/);
+  assert.match(categories, /data-category-directory-grid/);
+  assert.match(categories, /data-category-directory-card/);
   assert.match(categories, /fetchPublicTaxonomyNodes\(\)/);
   assert.match(categories, /taxonomyListingUrlSearch/);
 });
