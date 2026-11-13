@@ -1417,7 +1417,11 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
       color: "green",
       email: "secret-test-only@example.invalid",
       "contact.phone": "secret-dotted-phone",
-      nested: { whatsapp: "secret-test-only", "contact.email": "secret-dotted-email", model: "visible-model" },
+      nested: {
+        whatsapp: "secret-test-only",
+        "contact.email": "secret-dotted-email",
+        model: "visible-model",
+      },
     },
   });
   assert.equal(pending.response.status, 200);
@@ -1474,7 +1478,10 @@ test("phase 1: auxiliary listing surfaces redact private fields for other users"
   assert.equal(ownerView.response.status, 200);
   assert.equal(ownerView.payload.data.listing.details.email, "secret-test-only@example.invalid");
   assert.equal(ownerView.payload.data.listing.details["contact.phone"], "secret-dotted-phone");
-  assert.equal(ownerView.payload.data.listing.details.nested["contact.email"], "secret-dotted-email");
+  assert.equal(
+    ownerView.payload.data.listing.details.nested["contact.email"],
+    "secret-dotted-email",
+  );
 });
 
 test("phase 1: owner-only roles and account freezing, restrictions, restore, audit", async () => {
