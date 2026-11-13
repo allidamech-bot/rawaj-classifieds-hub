@@ -24,3 +24,12 @@
 .rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
   color: #13251e !important;
 }
+
+/* The home search was moved into normal flow by marketplace-controls.css,
+ * but a legacy >=40rem rule kept translateX(-50%) on the form. On desktop this
+ * shifts its submit button outside the viewport despite a visible input.
+ * Clear the obsolete transform, without changing the form geometry.
+ */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-search-panel .rawaj-signature-search {
+  transform: none !important;
+}
