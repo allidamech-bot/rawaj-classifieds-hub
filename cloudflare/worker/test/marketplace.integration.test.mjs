@@ -1379,7 +1379,7 @@ test("phase 1: legacy public listing paths redact contact fields without hiding 
   assert.equal(privateOwner.response.status, 200);
   assert.equal(legacy.payload.data.listing.details.phone, undefined);
   assert.equal(legacy.payload.data.listing.details.nested.contact_whatsapp, undefined);
-  assert.equal(canonical.payload.data.details.phone, undefined);
+  assert.equal(canonical.payload.data.listing.details.phone, undefined);
   assert.equal(privateOwner.payload.data.listing.details.phone, "private-test-only");
   const publicRow = legacyList.payload.data.items.find((item) => item.id === id);
   assert.ok(publicRow);
