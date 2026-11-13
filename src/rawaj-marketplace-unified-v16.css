@@ -567,9 +567,9 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor {
-  border-color: var(--r16-line) !important;
+  border-color: var(--rawaj-divider) !important;
   border-radius: 1rem !important;
-  background: var(--r16-card) !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: none !important;
 }
 
@@ -578,25 +578,25 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor form > .rounded-2xl.bg-muted-surface {
-  border: 1px solid var(--r16-line) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 0.88rem !important;
-  background: var(--r16-card-inset) !important;
+  background: var(--rawaj-surface-subtle) !important;
   padding: 0.68rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rounded-xl.bg-card {
-  border: 1px solid var(--r16-line) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 0.78rem !important;
-  background: var(--r16-card) !important;
+  background: var(--rawaj-surface) !important;
   padding: 0.62rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface {
   height: 7.5rem !important;
   min-height: 7.5rem !important;
-  border: 1px solid var(--r16-line) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 0.72rem !important;
-  background: #151819 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface.h-36 {
@@ -612,9 +612,9 @@
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor label.inline-flex.cursor-pointer,
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor button.inline-flex.items-center {
   min-height: 2.15rem !important;
-  border: 1px solid var(--r16-line) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 0.62rem !important;
-  background: var(--r16-card-raised) !important;
+  background: var(--rawaj-surface-subtle) !important;
   padding: 0.35rem 0.62rem !important;
   font-size: 0.65rem !important;
 }

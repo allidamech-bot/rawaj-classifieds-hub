@@ -46,7 +46,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__cover {
-  background: #211923 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-identity__avatar {
@@ -277,7 +277,7 @@
   [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero {
-  background: #19211f !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* -------------------------------------------------------------------------- */
