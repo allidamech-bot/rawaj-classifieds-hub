@@ -5,14 +5,14 @@
  */
 
 .rawaj-app-shell {
-  --v6-panel: rgba(47, 48, 54, 0.985);
-  --v6-panel-raised: rgba(53, 54, 61, 0.985);
-  --v6-inset: rgba(24, 25, 30, 0.72);
-  --v6-line: rgba(255, 255, 255, 0.08);
+  --v6-panel: var(--rawaj-surface);
+  --v6-panel-raised: var(--rawaj-surface);
+  --v6-inset: var(--rawaj-surface-subtle);
+  --v6-line: var(--rawaj-divider);
   --v6-line-strong: rgba(104, 173, 255, 0.24);
-  --v6-text: #f4f1ed;
-  --v6-text-soft: #c7c7cd;
-  --v6-muted: #9697a0;
+  --v6-text: var(--rawaj-ink-primary);
+  --v6-text-soft: var(--rawaj-ink-secondary);
+  --v6-muted: var(--rawaj-ink-secondary);
   --v6-coral: #ff7559;
   --v6-pink: #df49b5;
   --v6-blue: #68adff;
@@ -56,7 +56,7 @@
 
 .rawaj-detail-v2 {
   min-height: 100dvh;
-  background: #242529 !important;
+  background: var(--rawaj-canvas) !important;
   color: var(--v6-text);
 }
 
@@ -98,7 +98,7 @@
 .rawaj-detail-media__thumbnails button {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-detail-media__thumbnails button[aria-pressed="true"] {
@@ -229,7 +229,7 @@
 .rawaj-similar-listings :is(article, a),
 .rawaj-similar-listings-rail :is(article, a) {
   border-color: var(--v6-line) !important;
-  background: rgba(48, 49, 55, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--v6-text-soft) !important;
 }
 
@@ -254,7 +254,7 @@
   isolation: isolate;
   border-color: rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.45rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 22px 54px rgba(0, 0, 0, 0.24) !important;
@@ -338,7 +338,7 @@
 
 .rawaj-storefront-v2 :is(input, textarea, select) {
   border-color: var(--v6-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--v6-text) !important;
   color-scheme: light;
 }
@@ -374,7 +374,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.35rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   color: #fff !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -492,7 +492,7 @@
   min-height: 3rem;
   border: 1px solid var(--v6-line) !important;
   border-radius: 0.82rem;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--v6-text) !important;
   color-scheme: light;
   box-shadow: none !important;
@@ -536,7 +536,7 @@
 .rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main .rawaj-surface,
 .rawaj-app-shell:is([data-resolved-pathname="/offers"], [data-resolved-pathname^="/category/"], [data-resolved-pathname^="/syria/"]) main .bg-muted-surface {
   border-color: var(--v6-line) !important;
-  background: rgba(48, 49, 55, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--v6-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
@@ -622,7 +622,7 @@
 .rawaj-admin-v3 :is(input, textarea, select) {
   min-height: 2.85rem;
   border-color: var(--v6-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--v6-text) !important;
   color-scheme: light;
   box-shadow: none !important;

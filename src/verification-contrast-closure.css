@@ -1,14 +1,11 @@
-/* Verification-route AA readability: the inherited muted/warning text lands
- * at 4.47:1 on its cards. Increase luminance without changing copy, layout,
- * eligibility logic, notices, or any other route. */
 .rawaj-app-shell[data-resolved-pathname="/verification"]
   main.container-wide p.text-muted-foreground,
 .rawaj-app-shell[data-resolved-pathname="/verification"]
   main.container-wide small.text-muted-foreground {
-  color: #d0d8db !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/verification"]
   main.container-wide p.text-warning {
-  color: #f5cc83 !important;
+  color: var(--rawaj-gold-ink) !important;
 }

@@ -1,16 +1,10 @@
-/*
- * Notification readability closure for the existing dark communication UI.
- * Scoped to /notifications only; does not change semantic colors of active
- * controls, destructive feedback, message content, or other routes.
- * Muted text must clear WCAG AA 4.5:1 on graphite/petrol surfaces.
- */
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
   .rawaj-communication-hero__copy > p,
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
   .rawaj-communication-section-header p {
-  color: #ffe0c0 !important;
+  color: var(--rawaj-gold-ink) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
@@ -25,13 +19,13 @@
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
   .rawaj-notification-timeline__copy :is(p, small) {
-  color: #d5dce0 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
   .rawaj-notification-preferences p.text-muted-foreground {
-  color: #d5dce0 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
@@ -39,5 +33,5 @@
 .rawaj-app-shell[data-resolved-pathname="/notifications"]
   main.rawaj-communication-v2--notifications
   .rawaj-notification-preferences p.text-xs.font-extrabold {
-  color: #f0f3f2 !important;
+  color: var(--rawaj-ink-primary) !important;
 }

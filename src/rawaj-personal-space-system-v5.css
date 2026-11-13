@@ -1,5 +1,5 @@
 /* RAWAJ Personal Space System V5
- * Unified dark experience for authentication, account, favorites, notifications,
+ * Shared light surfaces for authentication, account, favorites, notifications,
  * messaging, saved activity, and owner workspaces.
  * Presentation only: Firebase Auth and Cloudflare-backed behavior remain unchanged.
  */
@@ -13,14 +13,14 @@
     .rawaj-communication-v2,
     .rawaj-messaging-v4
   ) {
-  --personal-panel: rgba(47, 48, 54, 0.98);
-  --personal-panel-raised: rgba(53, 54, 61, 0.98);
-  --personal-inset: rgba(25, 26, 31, 0.72);
-  --personal-line: rgba(255, 255, 255, 0.08);
+  --personal-panel: var(--rawaj-surface);
+  --personal-panel-raised: var(--rawaj-surface);
+  --personal-inset: var(--rawaj-surface-subtle);
+  --personal-line: var(--rawaj-divider);
   --personal-line-strong: rgba(104, 173, 255, 0.24);
-  --personal-text: #f4f1ed;
-  --personal-text-soft: #c7c7cd;
-  --personal-muted: #9697a0;
+  --personal-text: var(--rawaj-ink-primary);
+  --personal-text-soft: var(--rawaj-ink-secondary);
+  --personal-muted: var(--rawaj-ink-secondary);
   --personal-coral: #ff7559;
   --personal-pink: #df49b5;
   --personal-blue: #68adff;
@@ -68,7 +68,7 @@
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside {
   isolation: isolate;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   color: #fff !important;
 }
 
@@ -176,7 +176,7 @@
 .rawaj-auth-premium-v3 .input {
   min-height: 3.2rem !important;
   border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--personal-text) !important;
   color-scheme: light;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
@@ -229,7 +229,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.45rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   color: #fff !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -379,7 +379,7 @@
 
 .rawaj-account-hub-v3 :is(input, textarea, select).input {
   border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--personal-text) !important;
   color-scheme: light;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
@@ -438,7 +438,7 @@
 .rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface),
 .rawaj-account-activity-v3 :is(.rawaj-activity-panel, .rawaj-notification-panel, .rawaj-notification-preferences, .rawaj-communication-follow-up) {
   border-color: var(--personal-line) !important;
-  background: rgba(48, 49, 55, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
@@ -483,7 +483,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.3rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   color: #fff !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -555,7 +555,7 @@
 .rawaj-communication-v2 .rawaj-communication-signed-out {
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.15rem !important;
-  background: rgba(48, 49, 55, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--personal-text-soft) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
@@ -664,7 +664,7 @@
 .rawaj-messaging-v4 {
   --message-border: var(--personal-line) !important;
   --message-muted: #2d2e34 !important;
-  --message-surface: #292a30 !important;
+  --message-surface: var(--rawaj-surface) !important;
   --message-ink: var(--personal-text) !important;
   --message-subtle: var(--personal-muted) !important;
 }
@@ -673,7 +673,7 @@
   min-height: min(75dvh, 50rem) !important;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.2rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
     0 18px 42px rgba(0, 0, 0, 0.2) !important;
@@ -699,7 +699,7 @@
 
 .rawaj-messaging-v4 .rawaj-communication-search {
   border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: #a9c8bb !important;
 }
 
@@ -739,7 +739,7 @@
   border-color: #303137 !important;
   background: #393a42 !important;
   color: #a9c8bb !important;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px var(--rawaj-divider) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary__copy strong {
@@ -758,7 +758,7 @@
 
 .rawaj-messaging-v4 .rawaj-message-panel {
   border-inline-start-color: rgba(255, 255, 255, 0.065) !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-message-header {
@@ -783,7 +783,7 @@
 }
 
 .rawaj-messaging-v4 .rawaj-message-stream {
-  background: #24252a !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-message-bubble {
@@ -820,7 +820,7 @@
 
 .rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea) {
   border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--personal-text) !important;
   color-scheme: light;
 }
@@ -862,7 +862,7 @@
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(section, article, form).rawaj-surface,
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main .bg-muted-surface {
   border-color: var(--personal-line) !important;
-  background: rgba(48, 49, 55, 0.98) !important;
+  background: var(--rawaj-surface) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
@@ -877,7 +877,7 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(input, textarea, select) {
   border-color: var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
+  background: var(--rawaj-surface-subtle) !important;
   color: var(--personal-text) !important;
   color-scheme: light;
 }
