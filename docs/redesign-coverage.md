@@ -9,6 +9,8 @@ Source inventory for the local redesign based on main edc31c8. Acceptance requir
 - The Categories acceptance contract now targets the new directory components rather than retired atlas classes.
 - These changes remain **unverified until CI and rendered visual acceptance pass**. Do not mark the affected rows Accepted based on source edits alone.
 - Other route families shown as Pending below have **not** been redesigned or accepted in this batch.
+- Shared component badges/buttons and the previous /more and /profile CSS legacy palette now use semantic light/status tokens; all affected rendered states remain subject to acceptance.
+
 
 
 | Route or state | Role | Family | Implementation source | Status | Visual evidence | Responsive | RTL/LTR | Accessibility | Functional regression | Acceptance |

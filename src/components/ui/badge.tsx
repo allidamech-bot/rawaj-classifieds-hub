@@ -17,8 +17,7 @@ const badgeVariants = cva(
           "border-[var(--rawaj-divider)] bg-[var(--rawaj-success-surface)] text-[var(--rawaj-success)]",
         warning:
           "border-[var(--rawaj-divider)] bg-[var(--rawaj-warning-surface)] text-[var(--rawaj-warning)]",
-        gold:
-          "border-[var(--rawaj-divider)] bg-[var(--rawaj-warning-surface)] text-[var(--rawaj-gold-ink)]",
+        gold: "border-[var(--rawaj-divider)] bg-[var(--rawaj-warning-surface)] text-[var(--rawaj-gold-ink)]",
         destructive:
           "border-[var(--rawaj-divider)] bg-[var(--rawaj-danger-surface)] text-[var(--rawaj-danger)]",
         outline:
