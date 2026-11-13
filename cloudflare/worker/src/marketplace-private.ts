@@ -1,3 +1,4 @@
+import { sanitizePublicListingDetails } from "./public-listing-privacy";
 import {
   authenticate,
   corsHeaders,
@@ -323,7 +324,11 @@ async function removeProfileMedia(
 async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
   const page = integer(url.searchParams.get("page"), 1, 1, 100_000);
   const pageSize = integer(url.searchParams.get("pageSize"), 30, 1, 50);
-  const where = ["l.status = 'approved'", "l.archived_at IS NULL"];
+  const where = [
+    "l.status = 'approved'",
+    "l.archived_at IS NULL",
+    "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
+  ];
   const values: Value[] = [];
   addFilter(where, values, "l.category_id", clean(url.searchParams.get("categoryId"), 120));
   addFilter(where, values, "l.subcategory_id", clean(url.searchParams.get("subcategoryId"), 120));
@@ -363,7 +368,18 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
     .bind(...values)
     .all();
   return result.success
-    ? json({ data: { items: result.results ?? [], page, pageSize } }, 200, cors)
+    ? json({
+        data: {
+          items: (result.results ?? []).map((row) => ({
+            ...row,
+            // Maintain the legacy DTO shape, never the legacy privacy leak.
+            currency: "SYP",
+            details: JSON.stringify(sanitizePublicListingDetails(jsonObject(row.details))),
+          })),
+          page,
+          pageSize,
+        },
+      }, 200, cors)
     : databaseError(cors);
 }
 
@@ -378,7 +394,14 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   )
     .bind(id)
     .first<Row>();
-  if (!row || (row.status !== "approved" && row.owner_id !== auth?.userId)) {
+  const ownerView = Boolean(row && auth?.userId === row.owner_id);
+  const publiclyAvailable = Boolean(
+    row &&
+      row.status === "approved" &&
+      !row.archived_at &&
+      (!row.expires_at || String(row.expires_at) > now()),
+  );
+  if (!row || (!ownerView && !publiclyAvailable)) {
     return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
   }
   const images = await env.DB.prepare(
@@ -391,7 +414,13 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   return json(
     {
       data: {
-        listing: mapListingRow(row),
+        listing: ownerView
+          ? mapListingRow(row)
+          : {
+              ...mapListingRow(row),
+              currency: "SYP",
+              details: sanitizePublicListingDetails(jsonObject(row.details)),
+            },
         images: (images.results ?? []).map((image) => ({
           id: stringValue(image.id),
           listingId: stringValue(image.listing_id),
@@ -756,7 +785,9 @@ async function uploadImage(
   const assetId = crypto.randomUUID();
   const imageId = crypto.randomUUID();
   const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
-  const objectKey = `listings/${auth.userId}/${listingId}/${checksum}.${extension}`;
+  // A retry may share a checksum with another in-flight upload. Use a unique
+  // R2 key so compensating deletion can never remove a successful sibling.
+  const objectKey = `listings/${auth.userId}/${listingId}/${assetId}.${extension}`;
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
