@@ -101,7 +101,9 @@ test("approved store composition and owner interactions", async ({ page }, testI
         .toBe("none");
       await expect
         .poll(() =>
-          page.locator(".rawaj-bottom-nav-shell").evaluate((el) => getComputedStyle(el).backgroundColor),
+          page
+            .locator(".rawaj-bottom-nav-shell")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
         .toBe("rgb(20, 59, 57)");
     }
@@ -122,7 +124,10 @@ test("approved store composition and owner interactions", async ({ page }, testI
         .evaluate((el) => getComputedStyle(el).backgroundColor),
     )
     .toBe("rgba(0, 0, 0, 0)");
-  await page.screenshot({ path: testInfo.outputPath("owner-store-mobile-dock.png"), fullPage: false });
+  await page.screenshot({
+    path: testInfo.outputPath("owner-store-mobile-dock.png"),
+    fullPage: false,
+  });
   await page.getByRole("button", { name: "About", exact: true }).click();
   await expect(page.getByText("About this store", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /Reviews \(/ }).click();
@@ -239,7 +244,9 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
         .toBe("none");
       await expect
         .poll(() =>
-          page.locator(".rawaj-bottom-nav-shell").evaluate((el) => getComputedStyle(el).backgroundColor),
+          page
+            .locator(".rawaj-bottom-nav-shell")
+            .evaluate((el) => getComputedStyle(el).backgroundColor),
         )
         .toBe("rgb(20, 59, 57)");
       await expect(page.locator(".rawaj-dock-item[data-section='categories']")).toHaveAttribute(
@@ -269,9 +276,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await expect
     .poll(() => firstTab.evaluate((el) => getComputedStyle(el).backgroundColor))
     .toBe("rgba(0, 0, 0, 0)");
-  await expect
-    .poll(() => firstTab.evaluate((el) => getComputedStyle(el).boxShadow))
-    .toBe("none");
+  await expect.poll(() => firstTab.evaluate((el) => getComputedStyle(el).boxShadow)).toBe("none");
   await page.locator('.my-store-public-tabs a[href="#seller-about"]').click();
   await expect(page.locator('.my-store-public-tabs a[href="#seller-about"]')).toHaveAttribute(
     "aria-current",
@@ -285,7 +290,10 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   expect(browseBox).not.toBeNull();
   expect(shareBox).not.toBeNull();
   expect(Math.abs(browseBox!.y - shareBox!.y)).toBeLessThan(8);
-  await page.screenshot({ path: testInfo.outputPath("buyer-store-mobile-dock.png"), fullPage: false });
+  await page.screenshot({
+    path: testInfo.outputPath("buyer-store-mobile-dock.png"),
+    fullPage: false,
+  });
   await page.locator(".my-store-public-card").first().click();
   await expect(page).toHaveURL(/\/listings\//);
 });
