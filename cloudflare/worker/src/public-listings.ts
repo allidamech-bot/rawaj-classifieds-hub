@@ -74,10 +74,7 @@ interface ListingFilters {
   detailCondition: string | null;
   employmentType: string | null;
   salaryType: string | null;
-  attributeFilters: Record<
-    string,
-    string | boolean | string[] | { min?: number; max?: number }
-  >;
+  attributeFilters: Record<string, string | boolean | string[] | { min?: number; max?: number }>;
 }
 
 const API_VERSION = "v1";
@@ -150,9 +147,7 @@ export async function handlePublicListingsRequest(
     values.push(filters.priceMax);
   }
   if (filters.withPhotos) {
-    where.push(
-      "EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)",
-    );
+    where.push("EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)");
   }
 
   addJsonTextFilter(where, values, ["car_make", "make"], filters.carMake);
@@ -169,12 +164,7 @@ export async function handlePublicListingsRequest(
   addJsonTextFilter(where, values, ["property_type"], filters.propertyType);
   addJsonNumberFilter(where, values, "rooms", filters.rooms);
   addJsonTextFilter(where, values, ["rental_duration"], filters.rentalDuration);
-  addJsonTextFilter(
-    where,
-    values,
-    ["electronics_brand"],
-    filters.electronicsBrand,
-  );
+  addJsonTextFilter(where, values, ["electronics_brand"], filters.electronicsBrand);
   addJsonTextFilter(where, values, ["condition"], filters.detailCondition);
   addJsonTextFilter(where, values, ["employment_type"], filters.employmentType);
   addJsonTextFilter(where, values, ["salary_type"], filters.salaryType);
@@ -220,8 +210,7 @@ export async function handlePublicListingsRequest(
     .bind(...values)
     .all<JsonRecord>();
   if (!result.success) {
-    if (result.error)
-      console.error("rawaj_public_listings_database_error", result.error);
+    if (result.error) console.error("rawaj_public_listings_database_error", result.error);
     return json(
       {
         error: {
@@ -256,11 +245,7 @@ export async function handlePublicListingsRequest(
   );
 }
 
-function applyTaxonomyScope(
-  where: string[],
-  values: D1Value[],
-  filters: ListingFilters,
-): void {
+function applyTaxonomyScope(where: string[], values: D1Value[], filters: ListingFilters): void {
   const clauses: string[] = [];
 
   if (filters.taxonomyNodeIds.length > 0) {
@@ -331,10 +316,7 @@ function readListingFilters(params: URLSearchParams): ListingFilters {
       .map(decodeLegacyScope)
       .filter((value): value is LegacyScope => Boolean(value))
       .slice(0, 25),
-    taxonomyLegacySubcategoryId: cleanText(
-      params.get("taxonomyLegacySubcategoryId"),
-      120,
-    ),
+    taxonomyLegacySubcategoryId: cleanText(params.get("taxonomyLegacySubcategoryId"), 120),
     carMake: cleanText(params.get("carMake"), 120),
     carModel: cleanText(params.get("carModel"), 120),
     yearFrom: integerOrNull(params.get("yearFrom")),
@@ -345,10 +327,7 @@ function readListingFilters(params: URLSearchParams): ListingFilters {
       params.get("taxonomyPropertyPurpose") ?? params.get("propertyPurpose"),
       100,
     ),
-    propertyType: cleanText(
-      params.get("taxonomyPropertyType") ?? params.get("propertyType"),
-      100,
-    ),
+    propertyType: cleanText(params.get("taxonomyPropertyType") ?? params.get("propertyType"), 100),
     rooms: integerOrNull(params.get("rooms")),
     rentalDuration: cleanText(params.get("rentalDuration"), 80),
     electronicsBrand: cleanText(params.get("electronicsBrand"), 120),
@@ -361,29 +340,18 @@ function readListingFilters(params: URLSearchParams): ListingFilters {
 
 function decodeAttributeFilters(
   value: string | null,
-): Record<
-  string,
-  string | boolean | string[] | { min?: number; max?: number }
-> {
+): Record<string, string | boolean | string[] | { min?: number; max?: number }> {
   if (!value || value.length > 12_000) return {};
   try {
     const parsed = JSON.parse(base64UrlDecode(value));
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
-      return {};
-    const output: Record<
-      string,
-      string | boolean | string[] | { min?: number; max?: number }
-    > = {};
-    for (const [key, raw] of Object.entries(
-      parsed as Record<string, unknown>,
-    ).slice(0, 50)) {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const output: Record<string, string | boolean | string[] | { min?: number; max?: number }> = {};
+    for (const [key, raw] of Object.entries(parsed as Record<string, unknown>).slice(0, 50)) {
       if (!/^[A-Za-z0-9_.-]{1,120}$/.test(key)) continue;
       if (typeof raw === "string") output[key] = raw.slice(0, 240);
       else if (typeof raw === "boolean") output[key] = raw;
       else if (Array.isArray(raw)) {
-        const values = raw
-          .filter((item): item is string => typeof item === "string")
-          .slice(0, 50);
+        const values = raw.filter((item): item is string => typeof item === "string").slice(0, 50);
         if (values.length) output[key] = values;
       } else if (raw && typeof raw === "object") {
         const source = raw as Record<string, unknown>;
@@ -404,10 +372,7 @@ function decodeAttributeFilters(
 function applyAttributeFilters(
   where: string[],
   values: D1Value[],
-  filters: Record<
-    string,
-    string | boolean | string[] | { min?: number; max?: number }
-  >,
+  filters: Record<string, string | boolean | string[] | { min?: number; max?: number }>,
 ): void {
   for (const [key, filter] of Object.entries(filters)) {
     const path = `$."${key}"`;
@@ -438,21 +403,15 @@ function applyAttributeFilters(
 function decodeLegacyScope(value: string): LegacyScope | null {
   if (!value || value.length > 1_000) return null;
   try {
-    const parsed = JSON.parse(base64UrlDecode(value)) as Record<
-      string,
-      unknown
-    >;
-    const categoryId =
-      typeof parsed.categoryId === "string" ? parsed.categoryId.trim() : "";
+    const parsed = JSON.parse(base64UrlDecode(value)) as Record<string, unknown>;
+    const categoryId = typeof parsed.categoryId === "string" ? parsed.categoryId.trim() : "";
     if (!categoryId) return null;
     return {
       categoryId: categoryId.slice(0, 120),
-      ...(typeof parsed.subcategoryId === "string" &&
-      parsed.subcategoryId.trim()
+      ...(typeof parsed.subcategoryId === "string" && parsed.subcategoryId.trim()
         ? { subcategoryId: parsed.subcategoryId.trim().slice(0, 120) }
         : {}),
-      ...(typeof parsed.propertyPurpose === "string" &&
-      parsed.propertyPurpose.trim()
+      ...(typeof parsed.propertyPurpose === "string" && parsed.propertyPurpose.trim()
         ? { propertyPurpose: parsed.propertyPurpose.trim().slice(0, 100) }
         : {}),
       ...(typeof parsed.propertyType === "string" && parsed.propertyType.trim()
@@ -516,15 +475,12 @@ function addJsonNumberRange(
 }
 
 function readSort(value: string | null): ListingSort {
-  return value === "featured" || value === "cheapest" || value === "expensive"
-    ? value
-    : "latest";
+  return value === "featured" || value === "cheapest" || value === "expensive" ? value : "latest";
 }
 
 function listingOrder(sort: ListingSort): string {
   if (sort === "cheapest") return "l.price IS NULL ASC, l.price ASC, l.id ASC";
-  if (sort === "expensive")
-    return "l.price IS NULL ASC, l.price DESC, l.id ASC";
+  if (sort === "expensive") return "l.price IS NULL ASC, l.price DESC, l.id ASC";
   return "active_feature_rank DESC, l.created_at DESC, l.id DESC";
 }
 
@@ -541,13 +497,7 @@ function buildCursorClause(
     typeof cursor.isFeatured === "boolean"
   ) {
     const featured = cursor.isFeatured ? 1 : 0;
-    values.push(
-      featured,
-      featured,
-      cursor.createdAt,
-      cursor.createdAt,
-      cursor.id,
-    );
+    values.push(featured, featured, cursor.createdAt, cursor.createdAt, cursor.id);
     return `(
       ${ACTIVE_FEATURE_SQL} < ?
       OR (
@@ -557,10 +507,7 @@ function buildCursorClause(
     )`;
   }
 
-  if (
-    (sort === "cheapest" || sort === "expensive") &&
-    cursor.price !== undefined
-  ) {
+  if ((sort === "cheapest" || sort === "expensive") && cursor.price !== undefined) {
     if (cursor.price === null) {
       values.push(cursor.id);
       return "l.price IS NULL AND l.id > ?";
@@ -577,15 +524,11 @@ function cursorFromRow(sort: ListingSort, row: JsonRecord): WorkerCursor {
   return {
     sort,
     id: stringValue(row.id),
-    ...(sort === "latest" || sort === "featured"
-      ? { createdAt: stringValue(row.created_at) }
-      : {}),
+    ...(sort === "latest" || sort === "featured" ? { createdAt: stringValue(row.created_at) } : {}),
     ...(sort === "latest" || sort === "featured"
       ? { isFeatured: booleanValue(row.active_feature_rank) }
       : {}),
-    ...(sort === "cheapest" || sort === "expensive"
-      ? { price: nullableNumber(row.price) }
-      : {}),
+    ...(sort === "cheapest" || sort === "expensive" ? { price: nullableNumber(row.price) } : {}),
   };
 }
 
@@ -602,14 +545,9 @@ function decodeCursor(value: string | null): WorkerCursor | null {
     return {
       sort,
       id: parsed.id,
-      createdAt:
-        typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
-      price:
-        typeof parsed.price === "number" || parsed.price === null
-          ? parsed.price
-          : undefined,
-      isFeatured:
-        typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
+      createdAt: typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
+      price: typeof parsed.price === "number" || parsed.price === null ? parsed.price : undefined,
+      isFeatured: typeof parsed.isFeatured === "boolean" ? parsed.isFeatured : undefined,
     };
   } catch {
     return null;
@@ -674,10 +612,7 @@ function toFtsQuery(value: string): string {
 }
 
 function cacheHeaders(env: PublicListingsEnv): Headers {
-  const seconds = integerValue(
-    env.API_CACHE_SECONDS,
-    DEFAULT_API_CACHE_SECONDS,
-  );
+  const seconds = integerValue(env.API_CACHE_SECONDS, DEFAULT_API_CACHE_SECONDS);
   const headers = new Headers();
   headers.set(
     "Cache-Control",
@@ -702,17 +637,12 @@ function corsHeaders(origin: string | null, env: PublicListingsEnv): Headers {
   return headers;
 }
 
-function json(
-  payload: unknown,
-  status: number,
-  ...headerSets: Headers[]
-): Response {
+function json(payload: unknown, status: number, ...headerSets: Headers[]): Response {
   const headers = new Headers({
     "Content-Type": "application/json; charset=utf-8",
     "X-Content-Type-Options": "nosniff",
   });
-  for (const set of headerSets)
-    set.forEach((value, key) => headers.set(key, value));
+  for (const set of headerSets) set.forEach((value, key) => headers.set(key, value));
   return new Response(JSON.stringify(payload), { status, headers });
 }
 
@@ -733,16 +663,9 @@ function integerOrNull(value: string | null): number | null {
   return Number.isFinite(number) ? number : null;
 }
 
-function integerParam(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
+function integerParam(value: string | null, fallback: number, min: number, max: number): number {
   const number = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(number)
-    ? Math.max(min, Math.min(max, number))
-    : fallback;
+  return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
 }
 
 function integerValue(value: string | undefined, fallback: number): number {
@@ -751,23 +674,16 @@ function integerValue(value: string | undefined, fallback: number): number {
 }
 
 function stringValue(value: unknown, fallback = ""): string {
-  return typeof value === "string"
-    ? repairWindows1256Mojibake(value)
-    : fallback;
+  return typeof value === "string" ? repairWindows1256Mojibake(value) : fallback;
 }
 
 function nullableString(value: unknown): string | null {
-  return typeof value === "string" && value.length > 0
-    ? repairWindows1256Mojibake(value)
-    : null;
+  return typeof value === "string" && value.length > 0 ? repairWindows1256Mojibake(value) : null;
 }
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [
-    windows1256Decoder.decode(Uint8Array.of(byte)),
-    byte,
-  ]),
+  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -778,9 +694,7 @@ function repairWindows1256Mojibake(value: string): string {
     if (byte === undefined) return value;
     bytes.push(byte);
   }
-  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(
-    Uint8Array.from(bytes),
-  );
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
   return repaired.includes("\uFFFD") ? value : repaired;
 }
 
@@ -795,8 +709,7 @@ function booleanValue(value: unknown): boolean {
 }
 
 function jsonObject(value: unknown): JsonRecord {
-  if (value && typeof value === "object" && !Array.isArray(value))
-    return value as JsonRecord;
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as JsonRecord;
   if (typeof value !== "string") return {};
   try {
     const parsed = JSON.parse(value);
@@ -812,10 +725,7 @@ function base64UrlEncode(value: string): string {
   const bytes = new TextEncoder().encode(value);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function base64UrlDecode(value: string): string {
