@@ -1,0 +1,144 @@
+/*
+ * Storefront-only visual contract: remove the legacy floating dock's
+ * full-viewport glass backdrop, keep one solid floating navigation surface,
+ * and make in-page store sections feel like tabs instead of boxed links.
+ * Do not apply to /, discovery, listing detail, or other app routes.
+ */
+@media (max-width: 1023.98px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock::before,
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock .rawaj-bottom-nav-shell {
+    background: #143b39 !important;
+    background-image: none !important;
+    color: #f9f7f0 !important;
+    border: 1px solid rgba(247, 242, 229, 0.18) !important;
+    box-shadow: 0 10px 24px rgba(16, 63, 66, 0.18) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* In-page public store links are not generic app-wide current-route cards. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .ms-approved-tabs.my-store-public-tabs {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid #dedbd5 !important;
+  box-shadow: none !important;
+  gap: clamp(6px, 2vw, 22px) !important;
+  align-items: stretch;
+  justify-content: space-between;
+  overflow: visible;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .my-store-public-tabs > a {
+  display: inline-flex;
+  flex: 0 1 auto;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+  padding: 9px clamp(1px, 1.5vw, 12px) 12px;
+  border: 0 !important;
+  border-bottom: 3px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #384442 !important;
+  font-weight: 650;
+  text-decoration: none !important;
+  white-space: nowrap;
+  font-size: clamp(12px, 3.45vw, 15px);
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .my-store-public-tabs > a[aria-current="location"] {
+  border-bottom-color: #103f42 !important;
+  color: #103f42 !important;
+  font-weight: 800;
+}
+
+/* Same clean underlined navigation in the owner's own store. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store
+  .ms-approved-tabs > button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Public store: browse + share should be adjacent, never two stranded rows. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px !important;
+  gap: 10px !important;
+  align-items: center;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > .my-store-add {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > .my-store-public-follow {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  width: 100%;
+  min-height: 44px;
+  justify-self: stretch;
+}
+
+@media (min-width: 1024px) {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions {
+    grid-template-columns: minmax(0, 1fr) 48px !important;
+  }
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+    width: 48px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .my-store-public-tabs > a {
+    transition: none !important;
+  }
+}
