@@ -1,3 +1,4 @@
+import { sanitizePublicListingDetails } from "./public-listing-privacy";
 type D1Value = string | number | null;
 
 type JsonRecord = Record<string, unknown>;
@@ -211,7 +212,12 @@ export async function handlePublicListingsRequest(
   if (!result.success) {
     if (result.error) console.error("rawaj_public_listings_database_error", result.error);
     return json(
-      { error: { code: "database_unavailable", message: "Data service unavailable." } },
+      {
+        error: {
+          code: "database_unavailable",
+          message: "Data service unavailable.",
+        },
+      },
       503,
       cors,
     );
@@ -591,15 +597,7 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
 }
 
 function sanitizePublicDetails(details: JsonRecord): JsonRecord {
-  const blocked = new Set([
-    "phone",
-    "mobile",
-    "contact_phone",
-    "whatsapp",
-    "whatsApp",
-    "contact_whatsapp",
-  ]);
-  return Object.fromEntries(Object.entries(details).filter(([key]) => !blocked.has(key)));
+  return sanitizePublicListingDetails(details);
 }
 
 function toFtsQuery(value: string): string {

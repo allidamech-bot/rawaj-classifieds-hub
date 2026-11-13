@@ -42,7 +42,7 @@ test("rate limiting uploads Turnstile and admin denials emit structured events",
 });
 
 test("admin security summary is rate-limited perimeter-protected and admin-only", () => {
-  const perimeterIndex = security.indexOf("await enforceAdminSecurityPerimeter(request, env, requestId, path)");
+  const perimeterIndex = security.search(/await\s+enforceAdminSecurityPerimeter\s*\(/);
   const summaryIndex = security.indexOf('path === "/v1/admin/security-summary"');
   assert.ok(perimeterIndex >= 0 && summaryIndex > perimeterIndex);
   assert.match(summary, /role === "admin" \|\| role === "owner"/);
