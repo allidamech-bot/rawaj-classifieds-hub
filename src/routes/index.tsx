@@ -353,7 +353,11 @@ function HomeLatestListings({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <section className={styles.section} aria-labelledby="rawaj-signature-latest-title">
+    <section
+      className={styles.section}
+      aria-labelledby="rawaj-signature-latest-title"
+      data-home-recent
+    >
       <HomeSectionHeader
         title={<span id="rawaj-signature-latest-title">{text("وصل حديثًا", "Just arrived")}</span>}
         eyebrow={text("أحدث إعلانات السوق", "The market's latest listings")}
@@ -472,7 +476,12 @@ function HomeCategoryTile({
 
   if (world.target.kind === "legacy") {
     return (
-      <Link to="/category/$slug" params={{ slug: world.target.slug }} className={className}>
+      <Link
+        to="/category/$slug"
+        params={{ slug: world.target.slug }}
+        className={className}
+        data-home-category
+      >
         {content}
       </Link>
     );
@@ -480,14 +489,19 @@ function HomeCategoryTile({
 
   if (world.target.kind === "directory") {
     return (
-      <Link to="/categories" search={{ node: world.target.node }} className={className}>
+      <Link
+        to="/categories"
+        search={{ node: world.target.node }}
+        className={className}
+        data-home-category
+      >
         {content}
       </Link>
     );
   }
 
   return (
-    <Link to="/listings" search={world.target.search} className={className}>
+    <Link to="/listings" search={world.target.search} className={className} data-home-category>
       {content}
     </Link>
   );

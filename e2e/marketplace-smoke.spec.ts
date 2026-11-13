@@ -313,7 +313,7 @@ test("home stays within the viewport at audited mobile and desktop widths", asyn
     expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
     await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
     await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-    await expect(page.locator("[data-marketplace-home] a[href^='/category/'], [data-marketplace-home] a[href^='/categories?']").first()).toBeVisible();
+    await expect(page.locator("[data-home-category]").first()).toBeVisible();
 
     const searchSubmit = page.locator("[data-marketplace-home] form[role=search] button");
     const submitBounds = await searchSubmit.boundingBox();
