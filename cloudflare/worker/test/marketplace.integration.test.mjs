@@ -1427,6 +1427,15 @@ test("phase 1: owner-only roles and account freezing, restrictions, restore, aud
   });
   assert.equal(restricted.response.status, 201);
   assert.ok(typeof restricted.payload.data === "string");
+  const repeatedRestriction = await api("/v1/admin/users/restrictions", {
+    ...admin, method: "POST",
+    body: {
+      userId: member.userId, restrictionType: "posting",
+      action: "set", reason: "Retry request",
+    },
+  });
+  assert.equal(repeatedRestriction.response.status, 200);
+  assert.equal(repeatedRestriction.payload.data, restricted.payload.data);
   const underRestriction = await api("/v1/listings", {
     ...member, method: "POST", body: listingInput(),
   });
