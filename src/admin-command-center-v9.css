@@ -19,9 +19,9 @@
   border: 1px solid rgba(205, 162, 96, 0.22) !important;
   border-radius: 1.35rem !important;
   padding: clamp(1.05rem, 2.7vw, 1.45rem) !important;
-  color: #fff !important;
-  background: #2f3036 !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.23), inset 0 1px 0 rgba(255, 255, 255, 0.075) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-command-hero::after {
@@ -67,14 +67,14 @@
 
 .rawaj-admin-command-hero__copy p {
   margin: 0;
-  color: #e9c997 !important;
+  color: var(--rawaj-gold-ink) !important;
   font-size: 0.7rem;
   font-weight: 800;
 }
 
 .rawaj-admin-command-hero__copy h2 {
   margin: 0.2rem 0 0;
-  color: #fff !important;
+  color: var(--rawaj-ink-primary) !important;
   font-size: clamp(1.15rem, 3vw, 1.65rem);
   font-weight: 900;
   line-height: 1.35;
@@ -84,7 +84,7 @@
   display: block;
   max-width: 68ch;
   margin-top: 0.4rem;
-  color: rgba(242, 239, 235, 0.76) !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-size: 0.73rem;
   font-weight: 500;
   line-height: 1.7;
@@ -98,7 +98,7 @@
   border: 1px solid rgba(205, 162, 96, 0.25);
   border-radius: 0.85rem;
   padding: 0.5rem 0.8rem;
-  color: #f0d6aa !important;
+  color: var(--rawaj-gold-ink) !important;
   background: rgba(205, 162, 96, 0.08);
   font-size: 0.7rem;
   font-weight: 800;
@@ -113,7 +113,7 @@
   border: 1px solid rgba(234, 113, 104, 0.2);
   border-radius: 1rem;
   padding: 0.75rem 0.85rem;
-  color: #f2aaa4;
+  color: var(--rawaj-danger);
   background: rgba(234, 113, 104, 0.055);
   font-size: 0.72rem;
   font-weight: 700;
@@ -129,7 +129,7 @@
   border: 1px solid rgba(234, 113, 104, 0.18);
   border-radius: 0.78rem;
   padding: 0.45rem 0.7rem;
-  color: #f5c1bd;
+  color: var(--rawaj-danger);
   background: rgba(234, 113, 104, 0.07);
   font-size: 0.68rem;
   font-weight: 800;
@@ -141,18 +141,18 @@
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.2rem !important;
   padding: clamp(0.85rem, 2vw, 1.05rem) !important;
-  background: #303137 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="pulse"] {
   border-color: rgba(98, 139, 128, 0.16) !important;
-  background: #2e333c !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="queues"] {
   border-color: rgba(227, 160, 75, 0.16) !important;
-  background: #34312d !important;
+  background: var(--rawaj-warning-surface-light) !important;
 }
 
 .rawaj-admin-section-title {
@@ -223,7 +223,7 @@
 }
 
 .rawaj-admin-metric-card[data-attention="true"] strong {
-  color: #efca91;
+  color: var(--rawaj-gold-ink);
 }
 
 .rawaj-admin-queue-grid {
@@ -294,7 +294,7 @@
 }
 
 .rawaj-admin-queue-card[data-active="true"] .rawaj-admin-queue-card__icon {
-  color: #efca91;
+  color: var(--rawaj-gold-ink);
   background: rgba(227, 160, 75, 0.075);
 }
 
@@ -312,7 +312,7 @@
   border-radius: 1.15rem !important;
   padding: 0.95rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: #303137 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
@@ -449,7 +449,7 @@
   padding: 1.5rem !important;
   text-align: center;
   color: var(--rawaj-text-secondary) !important;
-  background: #303137 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
