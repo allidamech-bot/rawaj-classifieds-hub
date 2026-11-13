@@ -285,11 +285,16 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await firstTab.click();
   await expect(firstTab).toHaveAttribute("aria-current", "location");
   await expect(page.locator(".my-store-public .my-store-public-follow")).toBeVisible();
-  const browseBox = await page.locator(".my-store-public .my-store-add").boundingBox();
-  const shareBox = await page.locator(".my-store-public .my-store-actions > button").boundingBox();
-  expect(browseBox).not.toBeNull();
-  expect(shareBox).not.toBeNull();
-  expect(Math.abs(browseBox!.y - shareBox!.y)).toBeLessThan(8);
+  await expect
+    .poll(() =>
+      page.locator(".my-store-public .my-store-actions").evaluate((row) => {
+        const browse = row.querySelector(".my-store-add")?.getBoundingClientRect();
+        const share = row.querySelector(":scope > button")?.getBoundingClientRect();
+        return browse && share ? Math.abs(browse.y - share.y) : Infinity;
+      }),
+    )
+    .toBeLessThan(8);
+  await page.locator(".my-store-public .my-store-actions").scrollIntoViewIfNeeded();
   await page.screenshot({
     path: testInfo.outputPath("buyer-store-mobile-dock.png"),
     fullPage: false,
