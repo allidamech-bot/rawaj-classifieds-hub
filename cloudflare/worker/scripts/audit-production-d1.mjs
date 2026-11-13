@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { assertSafeBackupOutputPaths } from "./syria-backup-safety.mjs";
 
 const options = parseArgs(process.argv.slice(2));
 const workerRoot = resolve(import.meta.dirname, "..");
@@ -16,6 +17,11 @@ const SYRIA_PRODUCTION_IDENTITY = Object.freeze({
   firebaseProject: "project-af18fcaf-c46e-4ec5-93a",
 });
 
+await assertSafeBackupOutputPaths({
+  backupDir: options.backupDir,
+  report: options.report,
+  repositoryRoot: resolve(workerRoot, "../.."),
+});
 await assertSyriaProductionTarget();
 
 const objectsQuery = `
@@ -45,11 +51,14 @@ const report = {
     excludedVirtualTables: backup.excludedVirtualTables,
     aggregateCounts: backup.aggregateCounts,
     manifestSha256: backup.manifestSha256,
+    schemaSha256: backup.schemaSha256,
   },
 };
 
 await mkdir(resolve(options.report).replace(/[\\/][^\\/]+$/, ""), { recursive: true });
-await writeFile(resolve(options.report), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+await writeFile(resolve(options.report), `${JSON.stringify(report, null, 2)}\n`, {
+  encoding: "utf8", mode: 0o600, flag: "wx",
+});
 
 console.log(
   JSON.stringify(
@@ -62,6 +71,7 @@ console.log(
       excludedVirtualTables: backup.excludedVirtualTables,
       aggregateCounts: backup.aggregateCounts,
       manifestSha256: backup.manifestSha256,
+    schemaSha256: backup.schemaSha256,
     },
     null,
     2,
@@ -164,7 +174,7 @@ async function inspect(mode) {
 
 async function backupOrdinaryTables(schema) {
   const backupDir = resolve(options.backupDir);
-  await mkdir(backupDir, { recursive: true });
+  await mkdir(backupDir, { mode: 0o700 });
   const ordinaryTables = schema.objects
     .filter((object) => object.type === "table" && !isFtsObject(object))
     .map((object) => object.name)
@@ -178,14 +188,14 @@ async function backupOrdinaryTables(schema) {
   const manifest = [];
   const aggregateCounts = {};
 
-  await writePrivateJson(resolve(backupDir, "schema.json"), schema);
+  const schemaSha256 = await writePrivateJson(resolve(backupDir, "schema.json"), schema);
 
   for (const table of ordinaryTables) {
     const rows = wranglerQuery("remote", `SELECT * FROM "${table}"`);
     aggregateCounts[table] = rows.length;
     const target = resolve(backupDir, `${table}.json`);
     const contents = `${JSON.stringify(rows)}\n`;
-    await writeFile(target, contents, { encoding: "utf8", mode: 0o600 });
+    await writeFile(target, contents, { encoding: "utf8", mode: 0o600, flag: "wx" });
     manifest.push({
       table,
       rowCount: rows.length,
@@ -198,6 +208,7 @@ async function backupOrdinaryTables(schema) {
       generatedAt: new Date().toISOString(),
       database: options.database,
       databaseId: SYRIA_PRODUCTION_IDENTITY.databaseId,
+      schemaSha256,
       worker: SYRIA_PRODUCTION_IDENTITY.worker,
       bucket: SYRIA_PRODUCTION_IDENTITY.bucket,
       firebaseProject: SYRIA_PRODUCTION_IDENTITY.firebaseProject,
@@ -210,6 +221,7 @@ async function backupOrdinaryTables(schema) {
   await writeFile(resolve(backupDir, "manifest.json"), manifestContents, {
     encoding: "utf8",
     mode: 0o600,
+    flag: "wx",
   });
 
   return {
@@ -217,14 +229,16 @@ async function backupOrdinaryTables(schema) {
     excludedVirtualTables: virtualTables,
     aggregateCounts,
     manifestSha256: createHash("sha256").update(manifestContents).digest("hex"),
+    schemaSha256,
   };
 }
 
 async function writePrivateJson(path, value) {
-  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, {
-    encoding: "utf8",
-    mode: 0o600,
+  const contents = `${JSON.stringify(value, null, 2)}\n`;
+  await writeFile(path, contents, {
+    encoding: "utf8", mode: 0o600, flag: "wx",
   });
+  return createHash("sha256").update(contents).digest("hex");
 }
 
 function wranglerQuery(mode, sql) {
