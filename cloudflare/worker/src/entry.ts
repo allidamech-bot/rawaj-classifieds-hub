@@ -12,6 +12,7 @@ import { handleManagedMedia, type ManagedMediaEnv } from "./managed-media";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
+import { handleClientErrorTelemetry } from "./client-error-telemetry";
 import { handleFeedback, isFeedbackPath, type FeedbackEnv } from "./feedback";
 import { handleVerification, type VerificationEnv } from "./verification";
 import { handleTrustSupport, type TrustSupportEnv } from "./trust-support";
@@ -76,7 +77,7 @@ export default {
       }
 
       const securedRequest = securityResult instanceof Request ? securityResult : request;
-      const response = await routeRequest(securedRequest, env);
+      const response = await routeRequest(securedRequest, env, requestId);
       return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
@@ -114,10 +115,13 @@ export default {
   },
 };
 
-async function routeRequest(request: Request, env: EntryEnv): Promise<Response> {
+async function routeRequest(request: Request, env: EntryEnv, requestId: string): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
 
+  if (path === "/v1/telemetry/client-errors") {
+    return required(await handleClientErrorTelemetry(request, env, requestId));
+  }
   if (path === "/v1/admin/system-controls" || path === "/v1/system-status") {
     return required(await handleSystemControls(request, env));
   }
