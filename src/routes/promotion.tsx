@@ -276,7 +276,7 @@ function PromotionPage() {
             </span>
             <div className="min-w-0">
               <h1 className="text-xl font-black sm:text-2xl">Search Boost</h1>
-              <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50/80">
+              <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50">
                 {text(
                   "ارفع إعلانك في النتائج العادية ذات الصلة فقط. Boost لا يتجاوز البحث أو القسم أو الفلاتر.",
                   "Move your listing up in relevant normal results. Boost never bypasses search, category, or filters.",
@@ -465,7 +465,7 @@ function PromotionPage() {
               })}
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">{text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}</p>
+            <p className="mt-3 text-sm text-foreground">{text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}</p>
           )}
         </section>
 
