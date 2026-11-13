@@ -158,3 +158,13 @@
     transition: none !important;
   }
 }
+
+/*
+ * Accessibility: the owner empty-state title inherits legacy light text even
+ * though the approved storefront has an ivory background. Keep the fix scoped
+ * to the owner route, without changing other branded surfaces.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store .rawaj-store-empty p.text-sm.font-bold {
+  color: #152322 !important;
+}
