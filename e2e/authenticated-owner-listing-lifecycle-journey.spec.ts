@@ -226,11 +226,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await reloadCurrentPage(page);
     await expect(ownerCard(page, DRAFT_TITLE)).toHaveCount(0);
-    await expect(page.getByText(/لا توجد عناصر في هذا القسم|Nothing in this section/i)).toBeVisible(
-      {
-        timeout: 30_000,
-      },
-    );
+    await expect(page.getByText(/ما في إعلانات بهالحالة|No listings in this status/i)).toBeVisible({
+      timeout: 30_000,
+    });
 
     expect(Object.fromEntries(lifecycleActions)).toEqual({
       reserve: 1,

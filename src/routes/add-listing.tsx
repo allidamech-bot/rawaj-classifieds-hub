@@ -1867,8 +1867,8 @@ function AddListingPage() {
                   <Card
                     title={text("اختر القسم", "Choose category")}
                     description={text(
-                      "ابدأ بالقسم الأقرب لما تبيعه حتى تظهر الحقول المناسبة.",
-                      "Start with the closest category so the right fields appear.",
+                      "اختر قسم الإعلان لعرض الحقول المناسبة.",
+                      "Choose a category to see the relevant fields.",
                     )}
                   >
                     {taxonomyNodes.length > 0 ? (

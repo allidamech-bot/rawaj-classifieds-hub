@@ -64,15 +64,6 @@ export function OwnerStoreWorkspaceSummary({
         </div>
       ) : null}
 
-      <div className="rawaj-owner-workspace-summary__topline">
-        <strong data-tone={approvedCount > 0 ? "live" : "setup"}>
-          <CheckCircle2 aria-hidden="true" />
-          {approvedCount > 0
-            ? text("متاح للزوار", "Open to visitors")
-            : text("جاهز للبدء", "Ready to start")}
-        </strong>
-      </div>
-
       <div className="rawaj-owner-workspace-summary__body">
         <div className="rawaj-owner-workspace-summary__identity">
           <div className="rawaj-owner-workspace-summary__avatar">
@@ -92,6 +83,14 @@ export function OwnerStoreWorkspaceSummary({
           </div>
 
           <div className="rawaj-owner-workspace-summary__copy">
+            <div className="rawaj-owner-workspace-summary__topline">
+              <strong data-tone={approvedCount > 0 ? "live" : "setup"}>
+                <CheckCircle2 aria-hidden="true" />
+                {approvedCount > 0
+                  ? text("متاح للزوار", "Open to visitors")
+                  : text("جاهز للبدء", "Ready to start")}
+              </strong>
+            </div>
             <div className="rawaj-owner-workspace-summary__name-row">
               <h1 id="rawaj-owner-workspace-title" dir="auto">
                 {displayName}
@@ -110,13 +109,11 @@ export function OwnerStoreWorkspaceSummary({
               <MapPin aria-hidden="true" />
               {location || text("سوريا", "Syria")}
             </span>
-            <p className="rawaj-owner-workspace-summary__bio">
-              {bio ||
-                text(
-                  "واجهة متجرك العامة وإعلاناتك في مكان واحد.",
-                  "Your public presence and listings in one place.",
-                )}
-            </p>
+            {bio ? (
+              <p className="rawaj-owner-workspace-summary__bio" dir="auto">
+                {bio}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -145,12 +142,6 @@ export function OwnerStoreWorkspaceSummary({
               >
                 <span style={{ inlineSize: `${completeness}%` }} />
               </span>
-              <p>
-                {text(
-                  "أكمل الهوية لتزيد ثقة الزوار بمتجرك.",
-                  "Complete your identity to strengthen visitor trust.",
-                )}
-              </p>
             </>
           )}
         </div>
@@ -161,22 +152,30 @@ export function OwnerStoreWorkspaceSummary({
           <Plus aria-hidden="true" />
           <span>{text("إضافة إعلان", "Post listing")}</span>
         </Link>
-        <Link to="/promotion" data-tone="boost" data-priority="promotion">
-          <Rocket aria-hidden="true" />
-          <span>Boost</span>
-        </Link>
-        <Link to="/promotion-request" data-tone="promotion" data-priority="promotion">
-          <Megaphone aria-hidden="true" />
-          <span>{text("ترويج", "Promote")}</span>
-        </Link>
         <Link to="/seller/$id" params={{ id: sellerId }} data-priority="secondary">
           <Eye aria-hidden="true" />
-          <span>{text("عرض", "View")}</span>
+          <span>{text("معاينة المتجر", "Preview store")}</span>
         </Link>
         <Link to="/profile" data-priority="secondary">
           <Pencil aria-hidden="true" />
-          <span>{text("تعديل", "Edit")}</span>
+          <span>{text("تعديل الملف", "Edit profile")}</span>
         </Link>
+        <details className="rawaj-store-growth">
+          <summary>
+            <Megaphone aria-hidden="true" />
+            {text("أدوات الترويج", "Promotion tools")}
+          </summary>
+          <div>
+            <Link to="/promotion" data-priority="promotion">
+              <Rocket aria-hidden="true" />
+              <span>{text("تعزيز الظهور", "Boost visibility")}</span>
+            </Link>
+            <Link to="/promotion-request" data-priority="promotion">
+              <Megaphone aria-hidden="true" />
+              <span>{text("طلب ترويج", "Request promotion")}</span>
+            </Link>
+          </div>
+        </details>
       </div>
     </section>
   );

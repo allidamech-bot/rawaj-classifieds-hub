@@ -1,0 +1,44 @@
+/* Route changes should never change the identity of these global actions. */
+.rawaj-app-shell[data-resolved-pathname] .rawaj-mobile-dock .rawaj-dock-create,
+.rawaj-app-shell[data-resolved-pathname] :is(.rawaj-feedback-button, .rawaj-feedback-teaser) {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+  border-color: var(--rawaj-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname] .rawaj-mobile-dock .rawaj-dock-create:hover,
+.rawaj-app-shell[data-resolved-pathname] :is(.rawaj-feedback-button, .rawaj-feedback-teaser):hover {
+  background: var(--rawaj-action-primary-hover) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card {
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:hover {
+  border-color: var(--rawaj-border-active);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .category-tile {
+  color: var(--rawaj-text-gold) !important;
+  background: var(--rawaj-surface-selected) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__primary-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button {
+  background: var(--rawaj-action-primary) !important;
+  color: var(--rawaj-action-primary-foreground) !important;
+}
+
+.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-hero__description {
+  max-inline-size: 48ch;
+  text-wrap: pretty;
+}

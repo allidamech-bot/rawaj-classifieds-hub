@@ -177,11 +177,10 @@ function CategoriesPage() {
                 <Grid3X3 className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="rawaj-eyebrow">{text("دليل رواج", "RAWAJ directory")}</p>
                 <h1 className="mt-1.5 text-xl font-bold leading-[1.4] text-primary sm:text-2xl">
                   {currentNode
                     ? taxonomyNodeName(currentNode, language)
-                    : text("اختر القسم المناسب", "Choose the right category")}
+                    : text("تصفّح الأقسام", "Browse categories")}
                 </h1>
                 <p className="mt-2.5 max-w-2xl text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                   {currentNode
@@ -191,8 +190,8 @@ function CategoriesPage() {
                         "Browse child levels or open the linked listing results.",
                       ))
                     : text(
-                        "انتقل إلى القسم الأقرب لما تبحث عنه، ثم أكمل التصفية داخل نتائج الإعلانات.",
-                        "Choose the closest category, then continue refining inside listing results.",
+                        "ابحث باسم القسم أو اختره من القائمة.",
+                        "Search by category name or choose one below.",
                       )}
                 </p>
               </div>
