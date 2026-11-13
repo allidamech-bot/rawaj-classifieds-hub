@@ -23,7 +23,10 @@ const requireCondition = (condition, message) => {
 async function privateDirectory(path, label, canonicalRepository) {
   requireCondition(typeof path === "string" && isAbsolute(path), label + " must be absolute");
   const stat = await lstat(path);
-  requireCondition(stat.isDirectory() && !stat.isSymbolicLink(), label + " must be a real directory");
+  requireCondition(
+    stat.isDirectory() && !stat.isSymbolicLink(),
+    label + " must be a real directory",
+  );
   const canonical = await realpath(path);
   requireCondition(
     !containedBy(canonicalRepository, canonical),
@@ -56,7 +59,10 @@ export async function acceptSyriaOfflineRecovery({
   const d1 = await rehearseSyriaD1Backup(d1Root, {
     expectedManifestSha256: expectedD1ManifestSha256,
   });
-  requireCondition(d1.rowContentVerified && d1.foreignKeyViolations === 0, "D1 restore verification incomplete");
+  requireCondition(
+    d1.rowContentVerified && d1.foreignKeyViolations === 0,
+    "D1 restore verification incomplete",
+  );
   const r2 = await verifySyriaR2Recovery({
     d1Directory: d1Root,
     r2Directory: r2Root,
@@ -107,7 +113,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     requireCondition(match && !(match[1] in values), "unexpected or duplicate option");
     values[match[1]] = match[2];
   }
-  requireCondition(Object.keys(values).length === 4, "four explicit snapshot parameters are required");
+  requireCondition(
+    Object.keys(values).length === 4,
+    "four explicit snapshot parameters are required",
+  );
   const result = await acceptSyriaOfflineRecovery({
     d1Directory: values["d1-dir"],
     r2Directory: values["r2-dir"],
