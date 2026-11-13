@@ -168,36 +168,36 @@ export function MyStoreIdentity({
               className="my-store-public-follow"
             />
           ) : (
-          <details className="my-store-owner-menu" ref={ownerMenuRef}>
-            <summary aria-label={text("خيارات المتجر", "Store options")}>
-              <MoreHorizontal />
-            </summary>
-            <div>
-              <Link to="/profile">
-                <Pencil />
-                {text("تعديل الملف", "Edit profile")}
-              </Link>
-              <Link to="/seller/$id" params={{ id: sellerId }}>
-                <ArrowUpRight />
-                {text("معاينة المتجر", "View store")}
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  ownerMenuRef.current?.removeAttribute("open");
-                  onManage?.();
-                }}
-              >
-                <Settings />
-                {text("إدارة المتجر", "Manage store")}
-              </button>
-              {completeness < 100 ? (
-                <small>
-                  {text("اكتمال الملف", "Profile completeness")}: {completeness}%
-                </small>
-              ) : null}
-            </div>
-          </details>
+            <details className="my-store-owner-menu" ref={ownerMenuRef}>
+              <summary aria-label={text("خيارات المتجر", "Store options")}>
+                <MoreHorizontal />
+              </summary>
+              <div>
+                <Link to="/profile">
+                  <Pencil />
+                  {text("تعديل الملف", "Edit profile")}
+                </Link>
+                <Link to="/seller/$id" params={{ id: sellerId }}>
+                  <ArrowUpRight />
+                  {text("معاينة المتجر", "View store")}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    ownerMenuRef.current?.removeAttribute("open");
+                    onManage?.();
+                  }}
+                >
+                  <Settings />
+                  {text("إدارة المتجر", "Manage store")}
+                </button>
+                {completeness < 100 ? (
+                  <small>
+                    {text("اكتمال الملف", "Profile completeness")}: {completeness}%
+                  </small>
+                ) : null}
+              </div>
+            </details>
           )}
         </div>
       </div>
