@@ -66,9 +66,20 @@ test.describe("authenticated launch-critical journey", () => {
       .fill("سيارة تجريبية لاختبار رحلة النشر");
     await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
 
-    await expect(page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ })).toBeVisible(
-      { timeout: 20_000 },
-    );
+    try {
+      await expect(
+        page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ }),
+      ).toBeVisible({ timeout: 20_000 });
+    } catch (error) {
+      const validation = await page.locator('[data-error-summary="true"] li').allTextContents();
+      const activeStep = await page
+        .locator('.rawaj-studio-steps [data-state="active"]')
+        .allTextContents();
+      throw new Error(
+        `Could not reach listing photos. Validation errors: ${validation.join(" | ") || "none"}. Active step: ${activeStep.join(" | ") || "unknown"}.`,
+        { cause: error },
+      );
+    }
     await page.locator('input[type="file"][accept*="image"]').setInputFiles({
       name: "rawaj-e2e.png",
       mimeType: "image/png",
@@ -178,12 +189,17 @@ async function chooseFirstFinalCategory(page: Page): Promise<void> {
   // Use a known mapped leaf for the publishing lifecycle fixture, not whichever
   // leaf happens to sort first. Taxonomy browsing is tested independently.
   await selector.getByRole("searchbox").fill("سيارات للبيع");
-  const leaf = selector.locator('[data-taxonomy-kind="search-leaf"]').filter({
-    hasText: /سيارات للبيع|Cars for sale/i,
-  }).first();
+  const leaf = selector
+    .locator('[data-taxonomy-kind="search-leaf"]')
+    .filter({
+      hasText: /سيارات للبيع|Cars for sale/i,
+    })
+    .first();
   await expect(leaf).toBeVisible({ timeout: 20_000 });
   await leaf.click();
-  await expect(selector.getByText(/تم اختيار التصنيف النهائي|Final category selected/i)).toBeVisible();
+  await expect(
+    selector.getByText(/تم اختيار التصنيف النهائي|Final category selected/i),
+  ).toBeVisible();
 }
 
 async function advanceUntilPriceAndLocation(page: Page): Promise<void> {

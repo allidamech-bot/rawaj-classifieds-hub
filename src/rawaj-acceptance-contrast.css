@@ -60,5 +60,6 @@
  */
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
   main.my-store .my-store-cover[data-has-cover="false"] {
-  background: linear-gradient(125deg, #103f42 0%, #215451 60%, #446461 100%) !important;
+  background-color: #103f42 !important;
+  background-image: none !important;
 }
