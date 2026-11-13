@@ -362,6 +362,7 @@ function isAbuseProneMutation(path: string, method: string): boolean {
   if (["GET", "HEAD"].includes(method.toUpperCase())) return false;
   return (
     path === "/v1/feedback" ||
+    path === "/v1/telemetry/client-errors" ||
     /^\/v1\/conversations(?:\/|$)/.test(path) ||
     /^\/v1\/messages\/[^/]+\/report$/.test(path) ||
     /^\/v1\/listings\/[^/]+\/reports$/.test(path) ||

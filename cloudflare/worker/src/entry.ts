@@ -12,6 +12,7 @@ import { handleManagedMedia, type ManagedMediaEnv } from "./managed-media";
 import { handleTaxonomy, type TaxonomyEnv } from "./taxonomy";
 import { handleListingAttributes, type ListingAttributesEnv } from "./listing-attributes";
 import { handleSystemControls, type SystemControlsEnv } from "./system-controls";
+import { handleClientErrorTelemetry } from "./client-error-telemetry";
 import { handleFeedback, isFeedbackPath, type FeedbackEnv } from "./feedback";
 import { handleVerification, type VerificationEnv } from "./verification";
 import { handleTrustSupport, type TrustSupportEnv } from "./trust-support";
@@ -76,6 +77,12 @@ export default {
       }
 
       const securedRequest = securityResult instanceof Request ? securityResult : request;
+      if (new URL(securedRequest.url).pathname === "/v1/telemetry/client-errors") {
+        const telemetryResponse = required(
+          await handleClientErrorTelemetry(securedRequest, env, requestId),
+        );
+        return withCors(telemetryResponse, responseHeaders(cors, requestId, securedRequest));
+      }
       const response = await routeRequest(securedRequest, env);
       return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {

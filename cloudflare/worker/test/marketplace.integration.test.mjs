@@ -1887,6 +1887,61 @@ async function seedOfferConversation() {
   return { listingId, conversationId };
 }
 
+test("browser telemetry uses the real Worker route with origin, schema, and payload guards", async () => {
+  const endpoint = `${baseUrl}/v1/telemetry/client-errors`;
+  const canonical = {
+    v: 1,
+    mechanism: "onerror",
+    boundary: "window_error",
+    severity: "error",
+    routeGroup: "listings",
+    buildCommit: "a".repeat(40),
+    errorName: "TypeError",
+  };
+  let ordinal = 80;
+  const requestTelemetry = async (body, overrides = {}) =>
+    fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Origin: "http://localhost:8080",
+        "Content-Type": "application/json",
+        "CF-Connecting-IP": `192.0.2.${ordinal++}`,
+        ...overrides,
+      },
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    });
+
+  const accepted = await requestTelemetry(canonical);
+  assert.equal(accepted.status, 202);
+  assert.equal(accepted.headers.get("Cache-Control"), "no-store");
+  assert.ok(accepted.headers.get("X-Request-Id"));
+  assert.equal(accepted.headers.get("Access-Control-Allow-Origin"), "http://localhost:8080");
+
+  const privatePayload = await requestTelemetry({ ...canonical, rawStack: "secret-token" });
+  assert.equal(privatePayload.status, 400);
+  const privateError = await privatePayload.json();
+  assert.equal(privateError.error.code, "invalid_telemetry");
+
+  const badOrigin = await requestTelemetry(canonical, { Origin: "https://attacker.example" });
+  assert.equal(badOrigin.status, 403);
+  assert.equal(badOrigin.headers.get("Access-Control-Allow-Origin"), null);
+
+  const noOrigin = await requestTelemetry(canonical, { Origin: "" });
+  assert.equal(noOrigin.status, 403);
+
+  const invalidType = await requestTelemetry(canonical, { "Content-Type": "text/plain" });
+  assert.equal(invalidType.status, 415);
+
+  const oversized = await requestTelemetry("x".repeat(2_050));
+  assert.equal(oversized.status, 413);
+
+  const wrongMethod = await fetch(endpoint, {
+    method: "GET",
+    headers: { Origin: "http://localhost:8080" },
+  });
+  assert.equal(wrongMethod.status, 405);
+});
+
 async function createListing(session, overrides = {}) {
   const body = {
     categoryId: "test-category",
