@@ -16,6 +16,10 @@
   --rawaj-divider: #e3e7e4;
   --rawaj-control-border: #798783;
   --rawaj-brand-gold: #bd984b;
+  --rawaj-link-on-light: #17565a;
+  --rawaj-gold-ink: #76561b;
+  --rawaj-selected-surface: #e8f1ef;
+  --rawaj-warning-surface-light: #fff3dc;
 }
 
 :root,

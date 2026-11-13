@@ -7,14 +7,14 @@
 
 :root,
 .dark {
-  --rawaj-v17-canvas: #0b0e14;
-  --rawaj-v17-canvas-soft: #0f1219;
-  --rawaj-v17-surface: #141821;
-  --rawaj-v17-surface-raised: #191d27;
-  --rawaj-v17-surface-soft: #11151d;
+  --rawaj-v17-canvas: var(--rawaj-canvas);
+  --rawaj-v17-canvas-soft: var(--rawaj-canvas);
+  --rawaj-v17-surface: var(--rawaj-surface);
+  --rawaj-v17-surface-raised: var(--rawaj-surface);
+  --rawaj-v17-surface-soft: var(--rawaj-surface-subtle);
   --rawaj-v17-surface-glass: rgba(22, 26, 36, 0.82);
   --rawaj-v17-gold: #d8ae5f;
-  --rawaj-v17-gold-soft: #e8ca8d;
+  --rawaj-v17-gold-soft: var(--rawaj-gold-ink);
   --rawaj-v17-pink: #db49b3;
   --rawaj-v17-magenta: #c52c78;
   --rawaj-v17-violet: #8067ef;
@@ -23,10 +23,10 @@
   --rawaj-v17-coral: #f05f4f;
   --rawaj-v17-border: rgba(216, 174, 95, 0.16);
   --rawaj-v17-border-strong: rgba(216, 174, 95, 0.3);
-  --rawaj-v17-border-neutral: rgba(255, 255, 255, 0.085);
-  --rawaj-v17-text: #f7f3ed;
-  --rawaj-v17-text-2: #c8c2be;
-  --rawaj-v17-text-3: #8e969f;
+  --rawaj-v17-border-neutral: var(--rawaj-divider);
+  --rawaj-v17-text: var(--rawaj-ink-primary);
+  --rawaj-v17-text-2: var(--rawaj-ink-secondary);
+  --rawaj-v17-text-3: var(--rawaj-ink-secondary);
   --rawaj-v17-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
   --rawaj-v17-shadow-raised: 0 22px 52px rgba(0, 0, 0, 0.32);
   --rawaj-v17-inset: inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -36,47 +36,47 @@
   --rawaj-v17-gradient-icon: #d83658;
 
   --rawaj-page-background: var(--rawaj-v17-canvas);
-  --rawaj-page-background-deep: #080b10;
+  --rawaj-page-background-deep: var(--rawaj-canvas);
   --rawaj-card-background: var(--rawaj-v17-surface);
   --rawaj-elevated-background: var(--rawaj-v17-surface-raised);
   --rawaj-subtle-background: var(--rawaj-v17-surface-soft);
-  --rawaj-muted-surface: #171b24;
-  --rawaj-surface-active: #211d29;
-  --rawaj-surface-selected: #251b2a;
-  --rawaj-surface-inset: #0f131a;
+  --rawaj-muted-surface: var(--rawaj-surface);
+  --rawaj-surface-active: var(--rawaj-selected-surface);
+  --rawaj-surface-selected: var(--rawaj-selected-surface);
+  --rawaj-surface-inset: var(--rawaj-canvas);
   --rawaj-border: var(--rawaj-v17-border-neutral);
-  --rawaj-border-strong: rgba(255, 255, 255, 0.14);
+  --rawaj-border-strong: var(--rawaj-control-border);
   --rawaj-border-active: rgba(216, 174, 95, 0.46);
   --rawaj-text-primary: var(--rawaj-v17-text);
   --rawaj-text-secondary: var(--rawaj-v17-text-2);
   --rawaj-text-muted: var(--rawaj-v17-text-3);
-  --rawaj-link: #ef93ca;
+  --rawaj-link: var(--rawaj-link-on-light);
   --rawaj-accent-gold: var(--rawaj-v17-gold);
   --background: var(--rawaj-v17-canvas);
   --card: var(--rawaj-v17-surface);
   --popover: var(--rawaj-v17-surface-raised);
-  --muted: #171b24;
+  --muted: var(--rawaj-surface);
   --border: var(--rawaj-v17-border-neutral);
   --input: rgba(255, 255, 255, 0.13);
-  --ring: var(--rawaj-v17-gold);
+  --ring: var(--rawaj-brand-primary);
 }
 
 html,
 body {
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--rawaj-v17-canvas) !important;
 }
 
 body {
   color: var(--rawaj-v17-text);
-  background: #10131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell {
   position: relative;
   isolation: isolate;
   color: var(--rawaj-v17-text);
-  background: #10131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell::before {
@@ -96,20 +96,20 @@ body {
 /* Page-specific ambient identity without changing layout. */
 .rawaj-app-shell[data-resolved-pathname="/"],
 .rawaj-app-shell[data-resolved-pathname="/categories"] {
-  background: #10131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/listings"] {
-  background: #0f131a !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/add-listing"],
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] {
-  background: #101219 !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] {
-  background: #101319 !important;
+  background: var(--rawaj-canvas) !important;
 }
 
 /* Header and navigation. */
@@ -180,7 +180,7 @@ body {
 [data-slot="card"] {
   border-color: var(--rawaj-v17-border) !important;
   color: var(--rawaj-v17-text) !important;
-  background: #191d27 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
@@ -190,7 +190,7 @@ body {
 
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-card"],
 .rawaj-app-shell :is(section, article)[class*="rounded-"][class*="bg-background"] {
-  background: #181c25 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
@@ -282,7 +282,7 @@ body {
 .rawaj-app-shell :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-ui="input"], [data-slot="input"], [data-slot="textarea"], [role="combobox"]) {
   border-color: rgba(216, 174, 95, 0.16) !important;
   color: #f5f0e9 !important;
-  background: #11151d !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 5px 14px rgba(0,0,0,.12) !important;
 }
 
@@ -365,14 +365,14 @@ body {
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] :is(.rawaj-admin-card, .rawaj-admin-panel, [data-ui="card"]) {
   border-color: rgba(216,174,95,.18) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 /* Listing discovery and marketplace cards. */
 .rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) {
   overflow: hidden;
   border-color: rgba(216,174,95,.14) !important;
-  background: #181c25 !important;
+  background: var(--rawaj-surface) !important;
 }
 
 .rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) :is(.price, [data-price], [class*="text-brand-orange"]) {
@@ -380,13 +380,13 @@ body {
 }
 
 .rawaj-app-shell :is(.rawaj-listing-card, .rawaj-result-card, [data-listing-card]) img {
-  background: #0d1117 !important;
+  background: var(--rawaj-surface-subtle) !important;
 }
 
 /* Listing detail. */
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
   border-color: rgba(216,174,95,.17) !important;
-  background: #191d26 !important;
+  background: var(--rawaj-surface) !important;
   box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
@@ -526,7 +526,7 @@ body {
 /* Small-screen density: preserve premium depth without heavy blur or oversized glow. */
 @media (max-width: 39.99rem) {
   .rawaj-app-shell {
-    background: #10131a !important;
+    background: var(--rawaj-canvas) !important;
   }
 
   .rawaj-surface,

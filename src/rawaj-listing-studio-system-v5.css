@@ -7,11 +7,11 @@
 .rawaj-listing-studio-v4 {
   --studio-v5-panel: var(--rawaj-card-background);
   --studio-v5-panel-raised: var(--rawaj-elevated-background);
-  --studio-v5-inset: rgba(27, 28, 33, 0.8);
-  --studio-v5-border: rgba(255, 255, 255, 0.085);
+  --studio-v5-inset: var(--rawaj-surface-subtle);
+  --studio-v5-border: var(--rawaj-divider);
   --studio-v5-border-strong: rgba(110, 177, 255, 0.25);
-  --studio-v5-text: #f4f1ed;
-  --studio-v5-text-soft: #c7c7cd;
+  --studio-v5-text: var(--rawaj-ink-primary);
+  --studio-v5-text-soft: var(--rawaj-ink-secondary);
   --studio-v5-muted: var(--rawaj-text-secondary);
   --studio-v5-orange: #ff7559;
   --studio-v5-pink: var(--rawaj-text-gold);
@@ -49,7 +49,7 @@
   margin-bottom: 0.78rem !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.45rem !important;
-  background: #292a30 !important;
+  background: var(--rawaj-surface) !important;
   padding: clamp(1.15rem, 3.2vw, 2rem) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -120,7 +120,7 @@
 .rawaj-listing-studio-v4 .rawaj-studio-hero__description {
   max-width: 45rem !important;
   margin-top: 0.65rem !important;
-  color: rgba(244, 241, 237, 0.72) !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-size: clamp(0.78rem, 2vw, 0.92rem) !important;
   line-height: 1.85 !important;
 }
@@ -134,8 +134,8 @@
   min-height: 2.15rem !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 999px !important;
-  background: rgba(24, 25, 30, 0.34) !important;
-  color: rgba(244, 241, 237, 0.78) !important;
+  background: var(--rawaj-surface-subtle) !important;
+  color: var(--rawaj-ink-secondary) !important;
   padding-inline: 0.72rem !important;
   font-size: 0.64rem !important;
   font-weight: 700 !important;
@@ -151,7 +151,7 @@
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 0.78rem !important;
   background: rgba(255, 255, 255, 0.045) !important;
-  color: rgba(244, 241, 237, 0.76) !important;
+  color: var(--rawaj-ink-secondary) !important;
   font-size: 0.68rem !important;
   box-shadow: none !important;
 }
@@ -173,7 +173,7 @@
   height: 6.25rem !important;
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
   border-radius: 1.55rem !important;
-  background: rgba(255, 117, 89, 0.84) !important;
+  background: var(--rawaj-brand-primary) !important;
   color: #fff !important;
   box-shadow:
     0 20px 45px rgba(212, 64, 160, 0.2),
@@ -220,7 +220,7 @@
   min-height: 3.8rem !important;
   border: 1px solid var(--studio-v5-border) !important;
   border-radius: 0.95rem !important;
-  background: rgba(50, 51, 57, 0.94) !important;
+  background: var(--rawaj-surface) !important;
   padding: 0.72rem 0.82rem !important;
   color: var(--studio-v5-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
@@ -409,7 +409,7 @@
 .rawaj-listing-studio-v4 [data-canonical-location-selector="true"] input,
 .rawaj-listing-studio-v4 [data-canonical-location-selector="true"] button {
   min-height: 3.15rem !important;
-  border: 1px solid rgba(255, 255, 255, 0.085) !important;
+  border: 1px solid var(--rawaj-divider) !important;
   border-radius: 0.88rem !important;
   background: rgba(25, 26, 31, 0.72) !important;
   color: var(--studio-v5-text) !important;
@@ -450,7 +450,7 @@
 }
 
 .rawaj-listing-studio-v4 select.input option {
-  background: #292a30;
+  background: var(--rawaj-surface);
   color: var(--studio-v5-text);
 }
 
