@@ -44,14 +44,14 @@ test("seller storefront V2 stylesheet loads after existing storefront layers", (
   assert.ok(v2 > foundation);
 });
 
-test("public and owner storefronts share one factual identity component", () => {
-  assert.match(shared, /export function StorefrontIdentityHero/);
-  assert.match(shared, /mode: "public" \| "owner"/);
-  assert.match(shared, /approvedCount/);
-  assert.match(shared, /ratingAverage/);
-  assert.match(shared, /ratingCount/);
-  assert.match(shared, /This page shows public information and approved listings only/);
-  assert.doesNotMatch(shared, /response time|transactions completed|sales count/i);
+test("public and owner storefronts share the approved identity without invented metrics", () => {
+  assert.match(approvedIdentity, /export function MyStoreIdentity/);
+  assert.match(approvedIdentity, /mode\?: "owner" \| "public"/);
+  assert.match(approvedIdentity, /approvedCount/);
+  assert.match(approvedIdentity, /ratingAverage/);
+  assert.match(approvedIdentity, /ratingCount/);
+  assert.match(approvedIdentity, /followerCount \?\? "—"/);
+  assert.doesNotMatch(approvedIdentity, /response time|transactions completed|sales count/i);
 });
 
 test("storefront identity media falls back without blocking refreshed URLs", () => {
