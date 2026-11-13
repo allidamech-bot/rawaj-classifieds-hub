@@ -13,7 +13,7 @@ import {
   Star,
   Share2,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useUiPreferences } from "@/lib/ui-preferences";
 
@@ -55,6 +55,7 @@ export function MyStoreIdentity({
   const showCover = Boolean(coverUrl && failedCover !== coverUrl);
 
   const [feedback, setFeedback] = useState("");
+  const ownerMenuRef = useRef<HTMLDetailsElement>(null);
   async function shareStore() {
     const url = new URL("/seller/" + encodeURIComponent(sellerId), window.location.origin).href;
     try {
@@ -149,7 +150,7 @@ export function MyStoreIdentity({
           >
             <Share2 />
           </button>
-          <details className="my-store-owner-menu">
+          <details className="my-store-owner-menu" ref={ownerMenuRef}>
             <summary aria-label={text("خيارات المتجر", "Store options")}>
               <MoreHorizontal />
             </summary>
@@ -162,7 +163,13 @@ export function MyStoreIdentity({
                 <ArrowUpRight />
                 {text("معاينة المتجر", "View store")}
               </Link>
-              <button onClick={() => onManage()}>
+              <button
+                type="button"
+                onClick={() => {
+                  ownerMenuRef.current?.removeAttribute("open");
+                  onManage();
+                }}
+              >
                 <Settings />
                 {text("إدارة المتجر", "Manage store")}
               </button>
