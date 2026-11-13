@@ -17,7 +17,7 @@ body {
 
 .rawaj-app-shell {
   color: var(--rawaj-text-primary);
-  background: #242e2a;
+  background: var(--rawaj-page-background);
   font-family: var(--font-sans);
 }
 
@@ -382,9 +382,9 @@ html[dir="ltr"] .rawaj-app-header::before {
 /* Listing and media placeholders */
 .rawaj-app-shell [class*="listing"] [class*="media"] > div[aria-hidden="true"],
 .rawaj-app-shell [class*="image"] > div[aria-hidden="true"] {
-  color: #f15b98;
+  color: var(--rawaj-ink-secondary);
   border-color: var(--rawaj-border) !important;
-  background: #242e2a !important;
+  background: var(--rawaj-page-background) !important;
 }
 
 /* Public ad placements */
