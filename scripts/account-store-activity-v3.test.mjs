@@ -40,7 +40,8 @@ test("phase 6 scopes every account and activity surface without changing route b
 });
 
 test("owner and public storefronts receive distinct premium identity scopes", () => {
-  assert.match(ownerStore, /rawaj-account-store-v3/);
+  assert.match(ownerStore, /className="my-store"/);
+  assert.doesNotMatch(ownerStore, /rawaj-account-store-v3|rawaj-owner-control-center/);
   assert.match(seller, /rawaj-seller-premium-v3/);
   assert.match(storefrontCss, /\.rawaj-storefront-identity__metrics/);
   assert.match(storefrontCss, /data-tone="rating"/);

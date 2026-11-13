@@ -1,0 +1,34 @@
+name: My Store Visual Review
+on:
+  pull_request:
+    paths:
+      - src/routes/profile/listings.tsx
+      - src/features/storefront/**
+      - e2e/my-store-approved-design.spec.ts
+      - e2e/assets/my-store/**
+      - .github/workflows/my-store-visual-review.yml
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Render isolated store and verify interactions
+        env:
+          RAWAJ_E2E_USE_FIXTURES: '1'
+          VITE_PUBLIC_DATA_API_BASE_URL: http://127.0.0.1:4173
+        run: npx playwright test e2e/my-store-approved-design.spec.ts --project=desktop-chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: my-store-visual-review
+          path: test-results
+          retention-days: 14
