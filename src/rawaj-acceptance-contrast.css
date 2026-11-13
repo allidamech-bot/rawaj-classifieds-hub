@@ -21,3 +21,35 @@
   background: #d03662 !important;
   color: #fff !important;
 }
+
+/* Follow-up to the measured 2026-11-13 Chromium visual-audit failures.
+ * Contrast adjustments only. Leave storefront layout and navigation untouched.
+ * The dark-shell muted text was observed at 4.33–4.47:1 across public routes.
+ */
+.rawaj-app-shell {
+  --rawaj-text-muted: #bdcbbf;
+  --rawaj-warning: #f4bc68;
+  --rawaj-danger: #f88d83;
+}
+
+/* Only the owner empty state: the old dark card underneath ivory content
+ * caused the title to measure 1.32–1.33:1. Keep the owner's ivory surface.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .rawaj-store-empty,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .rawaj-store-empty > section,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .rawaj-store-empty p {
+  color: #152322 !important;
+  background-color: #fcfaf7 !important;
+}
+
+/* Kicker and category labels just under 4.5:1 on the legacy dark hero. */
+.rawaj-app-shell .rawaj-eyebrow,
+.rawaj-app-shell .rawaj-signature-kicker {
+  color: #f5b19b !important;
+}
+
+/* Offer-hero supporting copy was translucent and measured 4.46:1. */
+.rawaj-app-shell[data-resolved-pathname="/offers"] p.text-\\[\\#fffaf0\\]\\/72 {
+  color: #fffaf0 !important;
+  opacity: 0.9 !important;
+}
