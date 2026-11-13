@@ -184,6 +184,13 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await expect(page.locator("#seller-reviews")).toBeVisible();
   await expect(page.locator(".my-store-public-reviews")).toBeVisible();
   await expect(page.locator(".my-store-public-safety")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator("#seller-about")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgb(255, 253, 250)");
   for (const selector of [".my-store-public-reviews", ".my-store-public-safety"]) {
     await expect
       .poll(() =>
