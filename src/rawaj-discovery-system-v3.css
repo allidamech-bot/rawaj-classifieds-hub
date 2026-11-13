@@ -213,7 +213,7 @@
 
 .rawaj-search-toolbar__sort select {
   color: var(--rawaj-text-secondary, #c3c4c9) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-search-toolbar__sort option {
@@ -345,7 +345,7 @@
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: rgba(25, 26, 31, 0.72) !important;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-search-results-v1__sidebar .input:focus {
@@ -714,7 +714,7 @@
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-filter-sheet .input:focus,

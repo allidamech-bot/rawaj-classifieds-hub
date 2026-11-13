@@ -178,7 +178,7 @@
   border: 1px solid var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
 
@@ -381,7 +381,7 @@
   border: 1px solid var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
 
@@ -471,7 +471,7 @@
   border-color: var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.7) !important;
   color: var(--personal-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* --------------------------------------------------------------------------
@@ -822,7 +822,7 @@
   border: 1px solid var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea):focus-visible {
@@ -879,7 +879,7 @@
   border-color: var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* --------------------------------------------------------------------------

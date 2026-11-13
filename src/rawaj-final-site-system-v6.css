@@ -340,7 +340,7 @@
   border-color: var(--v6-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--v6-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-storefront-v2 :is(input, textarea, select):focus-visible {
@@ -494,7 +494,7 @@
   border-radius: 0.82rem;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--v6-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
   box-shadow: none !important;
 }
 
@@ -624,7 +624,7 @@
   border-color: var(--v6-line) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: var(--v6-text) !important;
-  color-scheme: dark;
+  color-scheme: light;
   box-shadow: none !important;
 }
 

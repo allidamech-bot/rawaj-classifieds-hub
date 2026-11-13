@@ -5,7 +5,7 @@
 
 html,
 body {
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--rawaj-text-primary);
   background: var(--rawaj-page-background);
   font-family: var(--font-sans);

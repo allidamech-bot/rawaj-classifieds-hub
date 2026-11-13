@@ -80,7 +80,7 @@
 }
 
 .rawaj-app-shell :is(input, textarea, select) {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-app-shell :is(input, textarea, select)::placeholder {
