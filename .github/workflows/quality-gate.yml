@@ -74,6 +74,16 @@ jobs:
       - name: Run administrative authorization regression
         run: npm run test:admin-security
 
+      - name: Run P1 security behavior and SQL regression tests
+        run: npm run test:p1-stability-security
+
+      - name: Run isolated Worker marketplace integration tests
+        run: |
+          npm run test:setup --prefix cloudflare/worker
+          npm run test:fixtures --prefix cloudflare/worker
+          cd cloudflare/worker
+          node --test --test-concurrency=1 test/marketplace.integration.test.mjs
+
       - name: Typecheck application
         run: npm run typecheck
 
