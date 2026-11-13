@@ -1410,6 +1410,64 @@ test("phase 1: legacy public listing paths redact contact fields without hiding 
   assert.equal(JSON.parse(publicRow.details).nested.contact_whatsapp, undefined);
 });
 
+test("phase 1: auxiliary listing surfaces redact private fields for other users", async () => {
+  const pending = await createListing(owner, {
+    title: "Privacy auxiliary listing",
+    details: {
+      color: "green",
+      email: "secret-test-only@example.invalid",
+      nested: { whatsapp: "secret-test-only", model: "visible-model" },
+    },
+  });
+  assert.equal(pending.response.status, 200);
+  const id = pending.payload.data.id;
+  const approval = await api("/v1/admin/listings/moderate", {
+    ...owner,
+    method: "POST",
+    body: { listingId: id, action: "approve", expectedUpdatedAt: pending.payload.data.updatedAt },
+  });
+  assert.equal(approval.response.status, 200);
+
+  const seller = await api(`/v1/sellers/${owner.userId}`);
+  assert.equal(seller.response.status, 200);
+  const sellerListing = seller.payload.data.listings.find((item) => item.id === id);
+  assert.ok(sellerListing);
+  assert.equal(sellerListing.details.email, undefined);
+  assert.equal(sellerListing.details.nested.whatsapp, undefined);
+  assert.equal(sellerListing.details.nested.model, "visible-model");
+
+  const markedRecent = await api(`/v1/listings/${id}/recent-view`, {
+    ...other,
+    method: "POST",
+  });
+  assert.equal(markedRecent.response.status, 200);
+  const recents = await api("/v1/account/recent-views", other);
+  assert.equal(recents.response.status, 200);
+  const recentListing = recents.payload.data.find((item) => item.listingId === id)?.listing;
+  assert.ok(recentListing);
+  assert.equal(recentListing.details.email, undefined);
+  assert.equal(recentListing.details.nested.whatsapp, undefined);
+  assert.equal(recentListing.details.color, "green");
+
+  const markedFavorite = await api(`/v1/listings/${id}/favorite`, {
+    ...other,
+    method: "POST",
+  });
+  assert.equal(markedFavorite.response.status, 200);
+  const favorites = await api("/v1/account/favorites", other);
+  assert.equal(favorites.response.status, 200);
+  const favorite = favorites.payload.data.find((item) => item.listing_id === id);
+  assert.ok(favorite);
+  const favoriteDetails = JSON.parse(favorite.details);
+  assert.equal(favoriteDetails.email, undefined);
+  assert.equal(favoriteDetails.nested.whatsapp, undefined);
+  assert.equal(favoriteDetails.color, "green");
+
+  const ownerView = await api(`/api/listings/${id}`, owner);
+  assert.equal(ownerView.response.status, 200);
+  assert.equal(ownerView.payload.data.listing.details.email, "secret-test-only@example.invalid");
+});
+
 test("phase 1: owner-only roles and account freezing, restrictions, restore, audit", async () => {
   const member = await signup("phase1-member");
   const forbiddenRole = await api("/v1/admin/users/roles", {

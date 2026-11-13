@@ -15,6 +15,10 @@ const [
   adminManagement,
   schema,
   integration,
+  nearbyDiscovery,
+  publicSellers,
+  accountSocial,
+  listingOperations,
 ] = await Promise.all(
   [
     "cloudflare/worker/src/public-listing-privacy.ts",
@@ -27,6 +31,10 @@ const [
     "cloudflare/worker/src/admin-user-management.ts",
     "cloudflare/d1/migrations/0002_public_marketplace_foundation.sql",
     "cloudflare/worker/test/marketplace.integration.test.mjs",
+    "cloudflare/worker/src/discovery.ts",
+    "cloudflare/worker/src/public-sellers.ts",
+    "cloudflare/worker/src/account-social.ts",
+    "cloudflare/worker/src/listing-operations.ts",
   ].map(read),
 );
 
@@ -41,6 +49,16 @@ test("legacy and canonical public responses use the same contact-data sanitizer"
   assert.match(legacy, /l\.expires_at IS NULL OR l\.expires_at/);
   assert.match(publicListings, /sanitizePublicListingDetails\(details\)/);
   assert.match(publicCore, /sanitizePublicListingDetails\(details\)/);
+});
+
+test("auxiliary listing responses share the recursive privacy policy", () => {
+  assert.match(nearbyDiscovery, /details:\s*sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
+  assert.match(publicSellers, /details:\s*sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
+  assert.doesNotMatch(publicSellers, /function sanitizeDetails\(/);
+  assert.match(accountSocial, /details:\s*sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
+  assert.match(accountSocial, /details:\s*JSON\.stringify\(sanitizePublicListingDetails\(jsonObject\(row\.details\)\)\)/);
+  assert.match(listingOperations, /details:\s*sanitizePublicListingDetails\(jsonObject\(row\.details\)\)/);
+  assert.match(integration, /phase 1: auxiliary listing surfaces redact private fields/);
 });
 
 test("frozen accounts and active restrictions are enforced on the server", () => {
