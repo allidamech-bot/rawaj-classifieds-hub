@@ -5,13 +5,13 @@
 .rawaj-app-header .rawaj-header-admin,
 .rawaj-app-header .rawaj-header-store {
   border: 1px solid rgba(216, 174, 95, 0.14) !important;
-  color: #e8e1da !important;
-  background: rgba(31, 33, 43, 0.92) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
 .rawaj-app-header .rawaj-header-search {
-  color: #aaaeb6 !important;
+  color: var(--rawaj-ink-secondary) !important;
 }
 
 .rawaj-app-header .rawaj-header-search:is(:hover, :focus-visible),
@@ -19,8 +19,8 @@
 .rawaj-app-header .rawaj-header-admin:is(:hover, :focus-visible),
 .rawaj-app-header .rawaj-header-store:is(:hover, :focus-visible) {
   border-color: rgba(216, 174, 95, 0.42) !important;
-  color: #fff6e7 !important;
-  background: rgba(51, 43, 39, 0.94) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 .rawaj-app-header .rawaj-header-store[data-active="true"] {
@@ -49,12 +49,12 @@
 }
 
 .rawaj-dock-item {
-  color: #a6a4aa !important;
+  color: #e0eeec !important;
   border-radius: 1rem !important;
 }
 
 .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
-  color: #f7e7c8 !important;
+  color: #ffffff !important;
   background: rgba(216, 174, 95, 0.08) !important;
   box-shadow: inset 0 0 0 1px rgba(216, 174, 95, 0.13) !important;
 }
@@ -65,7 +65,7 @@
 }
 
 .rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
-  color: #f0c97c !important;
+  color: #ffffff !important;
   background: rgba(216, 174, 95, 0.055) !important;
 }
 

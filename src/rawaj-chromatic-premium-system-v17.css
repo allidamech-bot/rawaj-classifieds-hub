@@ -132,8 +132,8 @@ body {
 .rawaj-home-menu-action,
 .rawaj-app-header .order-3 > .relative > button {
   border-color: rgba(216, 174, 95, 0.13) !important;
-  color: #e7e1da !important;
-  background: rgba(31, 33, 43, 0.9) !important;
+  color: var(--rawaj-ink-primary) !important;
+  background: var(--rawaj-surface-subtle) !important;
   box-shadow: 0 8px 20px rgba(0,0,0,.2), var(--rawaj-v17-inset) !important;
 }
 
@@ -142,8 +142,8 @@ body {
 .rawaj-header-location:is(:hover, :focus-visible),
 .rawaj-home-menu-action:is(:hover, :focus-visible) {
   border-color: rgba(216, 174, 95, 0.46) !important;
-  color: #fff8ea !important;
-  background: rgba(55, 46, 39, 0.92) !important;
+  color: var(--rawaj-brand-primary) !important;
+  background: var(--rawaj-selected-surface) !important;
 }
 
 .rawaj-header-nav,
@@ -153,9 +153,9 @@ body {
 
 .rawaj-header-nav-item[data-active="true"],
 .rawaj-app-shell [aria-current="page"] {
-  color: #f8f0df !important;
+  color: var(--rawaj-brand-primary) !important;
   border-color: rgba(216, 174, 95, 0.28) !important;
-  background: rgba(216, 174, 95, 0.1) !important;
+  background: var(--rawaj-selected-surface) !important;
   box-shadow: inset 0 0 0 1px rgba(216, 174, 95, 0.06), 0 6px 16px rgba(0,0,0,.16) !important;
 }
 
