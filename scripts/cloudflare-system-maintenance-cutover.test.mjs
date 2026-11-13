@@ -42,7 +42,7 @@ test("system status checks protect free-tier Workers from idle and rate-limited 
   assert.match(notice, /navigator\.onLine === false/);
   assert.match(notice, /requestInFlightRef\.current/);
   assert.match(notice, /Date\.now\(\) < nextAllowedCheckAtRef\.current/);
-  assert.match(notice, /result\.error\.code === "rate_limited"/);
+  assert.match(notice, /result\.code === "rate_limited"/);
   assert.match(notice, /refreshSystemStatus\(true\)/);
   assert.match(notice, /window\.addEventListener\("focus", refreshOnFocus\)/);
   assert.match(notice, /window\.addEventListener\("rawaj:system-control-changed", refreshAfterOwnerChange\)/);
