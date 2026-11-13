@@ -303,6 +303,17 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
     path: testInfo.outputPath("buyer-store-mobile-dock.png"),
     fullPage: false,
   });
+  await page.locator(".my-store-topbar .my-store-nav summary").click();
+  await page.getByRole("button", { name: "العربية", exact: true }).click();
+  await expect(page.locator(".my-store-public-page")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator(".my-store-public-tabs > a").first()).toContainText("الإعلانات");
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    .toBe(true);
+  await expect
+    .poll(() => firstTab.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe("rgba(0, 0, 0, 0)");
+  await page.screenshot({ path: testInfo.outputPath("buyer-store-390-rtl.png"), fullPage: true });
   await page.locator(".my-store-public-card").first().click();
   await expect(page).toHaveURL(/\/listings\//);
 });
