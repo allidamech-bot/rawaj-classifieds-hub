@@ -63,3 +63,12 @@
   background-color: #103f42 !important;
   background-image: none !important;
 }
+
+/* The no-photo public store needs a solid petrol backdrop for measured AA
+ * contrast, just like the owner fallback. Uploaded cover photos are untouched.
+ */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store-public .my-store-cover[data-has-cover="false"] {
+  background-color: #103f42 !important;
+  background-image: none !important;
+}

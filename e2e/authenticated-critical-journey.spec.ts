@@ -64,7 +64,16 @@ test.describe("authenticated launch-critical journey", () => {
     await page
       .getByPlaceholder(/مثال: سيارة كيا سيراتو|Example: Kia Cerato/i)
       .fill("سيارة تجريبية لاختبار رحلة النشر");
+    const beforeContinueStep = await page
+      .locator('.rawaj-studio-steps [data-state="active"]')
+      .allTextContents();
     await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
+    const immediatelyAfterContinue = await page
+      .locator('.rawaj-studio-steps [data-state="active"]')
+      .allTextContents();
+    const immediateValidation = await page
+      .locator('[data-error-summary="true"] li')
+      .allTextContents();
 
     try {
       await expect(
@@ -76,7 +85,7 @@ test.describe("authenticated launch-critical journey", () => {
         .locator('.rawaj-studio-steps [data-state="active"]')
         .allTextContents();
       throw new Error(
-        `Could not reach listing photos. Validation errors: ${validation.join(" | ") || "none"}. Active step: ${activeStep.join(" | ") || "unknown"}.`,
+        `Could not reach listing photos. Before: ${beforeContinueStep.join(" | ") || "unknown"}. Immediately after: ${immediatelyAfterContinue.join(" | ") || "unknown"}. Immediate validation: ${immediateValidation.join(" | ") || "none"}. Final validation: ${validation.join(" | ") || "none"}. Final step: ${activeStep.join(" | ") || "unknown"}.`,
         { cause: error },
       );
     }
