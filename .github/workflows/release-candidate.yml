@@ -2,9 +2,19 @@ name: Release Candidate
 
 on:
   workflow_dispatch:
+    inputs:
+      expected_commit_sha:
+        description: "Full 40-character lowercase SHA of the candidate to certify"
+        required: true
+        type: string
+      run_production_acceptance:
+        description: "Opt in to read-only checks of an already-deployed matching production build"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
-  group: release-candidate-${{ inputs.expected_commit_sha || github.sha }}
+  group: release-candidate-${{ inputs.expected_commit_sha }}
   cancel-in-progress: false
 
 permissions:
@@ -16,13 +26,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha || github.sha }}
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
 
     steps:
+      - name: Validate exact candidate input before checkout
+        shell: bash
+        run: |
+          if [[ ! "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "expected_commit_sha must be a full lowercase 40-character commit SHA." >&2
+            exit 1
+          fi
+
       - name: Checkout exact candidate
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.expected_commit_sha || github.sha }}
+          ref: ${{ inputs.expected_commit_sha }}
           fetch-depth: 1
           show-progress: false
 
@@ -90,7 +108,7 @@ jobs:
       - name: Upload release candidate artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-rc-${{ inputs.expected_commit_sha || github.sha }}
+          name: rawaj-rc-${{ inputs.expected_commit_sha }}
           path: |
             .output/public
             android/app/build/outputs/apk/debug/app-debug.apk
@@ -103,7 +121,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: rawaj-rc-diagnostics-${{ inputs.expected_commit_sha || github.sha }}
+          name: rawaj-rc-diagnostics-${{ inputs.expected_commit_sha }}
           path: |
             rc-quality-gate.log
             playwright-report
