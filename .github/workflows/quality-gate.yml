@@ -71,6 +71,9 @@ jobs:
       - name: Verify isolated Syria D1 backup integrity and output-path safety
         run: node --test scripts/syria-d1-backup-integrity.test.mjs scripts/syria-backup-restore-safety.test.mjs
 
+      - name: Rehearse pinned Syria D1 snapshot recovery in isolated SQLite
+        run: node --test scripts/syria-d1-isolated-restore.test.mjs
+
       - name: Validate pinned manual release candidate gates
         run: node --test scripts/release-candidate-gating.test.mjs
 

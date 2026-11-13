@@ -70,3 +70,26 @@ claiming they have passed.
 Reconstruction, foreign-key checks and application-level acceptance on an isolated D1
 database remain separate requirements before calling disaster recovery proven.
 Never restore into production as part of this verification.
+
+## Isolated restore rehearsal (offline; no production changes)
+
+After obtaining a fresh, **privately stored** Syria D1 export and preserving its manifest SHA-256
+separately, run this on a controlled host with Node.js 22 or later:
+
+```sh
+node cloudflare/worker/scripts/rehearse-syria-d1-backup.mjs \\
+  --backup-dir=/absolute/private/syria-d1-backup \\
+  --expected-manifest-sha256=<independently-recorded-64-hex-sha256>
+```
+
+This is an **in-memory** isolated SQLite reconstruction. It validates identity and every file
+against a separately pinned manifest, recreates base tables and data, checks every restored row,
+recreates indexes/views/triggers, reconstructs the deliberately omitted `listings_fts` FTS5
+index from `listings`, and fails closed if foreign keys do not reconcile. Unsupported virtual
+tables or row formats are not reported as a successful recovery.
+
+CI tests only synthetic snapshots and rejection cases. **No real Syria snapshot has been
+restored by CI.** Completion of recovery acceptance additionally requires a real snapshot
+in an isolated environment, validated API/search behavior and separate R2 media restore
+checks. No command above communicates with or writes to production D1/R2; do not place
+real backup files, manifest pins, or private reports in the repository.
