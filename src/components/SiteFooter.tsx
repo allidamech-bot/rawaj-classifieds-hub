@@ -117,10 +117,7 @@ export function SiteFooter(_props: SiteFooterProps) {
           <div className="container-wide flex flex-wrap items-center justify-between gap-3 py-5">
             <p className="text-xs text-muted-foreground">
               © {year}{" "}
-              {text(
-                "رَوَاج · سوق سوريا المجاني للإعلانات",
-                "RAWAJ · Syria classifieds marketplace",
-              )}
+              {text("رَوَاج · سوق سوريا المجاني للإعلانات", "RAWAJ · Syria classifieds marketplace")}
             </p>
             <span className="text-xs font-semibold text-muted-foreground">
               {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}
