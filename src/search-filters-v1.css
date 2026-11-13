@@ -311,6 +311,75 @@
   min-height: auto;
 }
 
+/* Actual empty-result state belongs to the search experience, not V3. */
+.rawaj-search-empty-state {
+  min-width: 0;
+  margin-top: 0.75rem;
+  border: 1px solid var(--rawaj-divider);
+  border-radius: 16px;
+  background: var(--rawaj-surface);
+  padding: clamp(1.5rem, 5vw, 2.5rem) 1rem;
+  text-align: center;
+}
+
+.rawaj-search-empty-state__icon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  margin-inline: auto;
+  border-radius: 12px;
+  background: var(--rawaj-surface-subtle);
+  color: var(--rawaj-brand-primary);
+}
+
+.rawaj-search-empty-state__icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.rawaj-search-empty-state h2 {
+  margin-top: 1rem;
+  color: var(--rawaj-ink-primary);
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.rawaj-search-empty-state p {
+  max-width: 52ch;
+  margin: 0.5rem auto 0;
+  color: var(--rawaj-ink-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.rawaj-search-empty-state .rawaj-category-empty-actions :is(a, button) {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--rawaj-divider);
+  border-radius: 12px;
+  background: var(--rawaj-surface-subtle);
+  padding-inline: 0.875rem;
+  color: var(--rawaj-ink-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.rawaj-search-empty-state .rawaj-category-empty-actions [data-tone="primary"] {
+  border-color: var(--rawaj-brand-primary);
+  background: var(--rawaj-brand-primary);
+  color: #ffffff;
+}
+
+.rawaj-search-empty-state :is(a, button):focus-visible {
+  outline: 2px solid var(--rawaj-brand-primary);
+  outline-offset: 2px;
+}
+
 /* Filter bottom sheet */
 .rawaj-filter-sheet {
   height: 94dvh;
@@ -541,10 +610,11 @@
     align-items: start;
   }
 
-  .rawaj-search-results-v1 > .rawaj-search-toolbar,
-  .rawaj-search-results-v1 > .rawaj-quick-filter-rail,
-  .rawaj-search-results-v1 > .rawaj-search-results-v1__content,
-  .rawaj-search-results-v1 > .rawaj-search-results-v1__states {
+  /* Every actual result-state sibling belongs in the content column.
+   * The live route renders filters, nearby results, listings, and recovery
+   * states directly, rather than wrapping all of them in a legacy container. */
+  .rawaj-search-results-v1 > :not(.rawaj-search-results-v1__sidebar) {
+    min-width: 0;
     grid-column: 2;
   }
 
@@ -552,7 +622,7 @@
     position: sticky;
     top: calc(var(--rawaj-header-height) + 1rem);
     grid-column: 1;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 20;
   }
 }
 

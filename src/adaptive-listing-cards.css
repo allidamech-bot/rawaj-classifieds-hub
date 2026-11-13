@@ -251,6 +251,24 @@
   white-space: nowrap;
 }
 
+/* Real images and honest category placeholders use one media frame. */
+.rawaj-listing-media--image {
+  object-fit: cover;
+}
+
+.rawaj-listing-media--placeholder {
+  border: 0;
+  border-radius: 0;
+  background: var(--rawaj-surface-subtle);
+}
+
+.rawaj-listing-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 /* Compact variant */
 .rawaj-adaptive-card--compact {
   min-height: 8.75rem;

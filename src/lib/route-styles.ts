@@ -8,7 +8,6 @@ import "../rawaj-home-feedback-fixes.css";
 import "../rawaj-home-dock-spacing.css";
 import "../rawaj-global-dark-system.css";
 import "../rawaj-shell-system-v2.css";
-import "../rawaj-discovery-system-v3.css";
 import "../rawaj-listing-studio-system-v5.css";
 import "../rawaj-personal-space-system-v5.css";
 import "../rawaj-final-site-system-v6.css";
