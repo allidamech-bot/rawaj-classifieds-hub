@@ -133,6 +133,17 @@ test("approved store composition and owner interactions", async ({ page }, testI
         .evaluate((element) => getComputedStyle(element).backgroundColor),
     )
     .toBe("rgba(0, 0, 0, 0)");
+  await expect
+    .poll(() =>
+      page
+        .locator(".my-store-dialog .ms-storefront-owner-tabs > button[aria-pressed='true']")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgb(16, 63, 66)");
+  await page.screenshot({
+    path: testInfo.outputPath("store-management-390.png"),
+    fullPage: false,
+  });
   await page.keyboard.press("Escape");
   await expect(page.locator(".my-store-add")).toHaveAttribute("href", "/add-listing");
   await page.locator(".my-store-topbar .my-store-nav summary").click();
