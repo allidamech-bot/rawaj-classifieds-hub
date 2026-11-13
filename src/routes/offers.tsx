@@ -162,7 +162,9 @@ function OfferSignal({
     <div className="rawaj-offers-signal rounded-2xl p-3">
       <Icon className="h-5 w-5 text-primary" />
       <span className="mt-2 block text-sm font-medium text-muted-foreground">{label}</span>
-      <strong className="mt-1 block text-sm font-semibold leading-6 text-foreground">{value}</strong>
+      <strong className="mt-1 block text-sm font-semibold leading-6 text-foreground">
+        {value}
+      </strong>
     </div>
   );
 }
