@@ -89,6 +89,9 @@ jobs:
       - name: Run P1 security behavior and SQL regression tests
         run: npm run test:p1-stability-security
 
+      - name: Verify browser error telemetry delivery and privacy
+        run: node --test scripts/client-error-telemetry-contract.test.mjs
+
       - name: Run isolated Worker marketplace integration tests
         run: |
           npm run test:setup --prefix cloudflare/worker
