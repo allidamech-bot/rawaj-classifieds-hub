@@ -108,7 +108,7 @@ export async function requireMutationAuth(
   }
 
   const path = normalizeApiPath(new URL(request.url).pathname);
-  const isSafetyAppeal = /^\\/v1\\/account\\/support-requests(?:\\/|$)/.test(path);
+  const isSafetyAppeal = /^\/v1\/account\/support-requests(?:\/|$)/.test(path);
   if (auth.accountStatus !== "active" && !isSafetyAppeal) {
     return json(
       { error: { code: "account_restricted", message: "Account is not active." } },
@@ -150,24 +150,24 @@ function restrictedActionTypes(path: string, method: string): string[] {
   if (upper === "GET" || upper === "HEAD") return result;
   if (
     (path === "/v1/listings" && upper === "POST") ||
-    (/^\\/v1\\/listings\\/[^/]+$/.test(path) && ["PATCH", "PUT", "DELETE"].includes(upper)) ||
-    /^\\/v1\\/listings\\/[^/]+\\/(?:lifecycle|attributes|taxonomy|images)$/.test(path) ||
-    /^\\/v1\\/listing-images\\/[^/]+$/.test(path)
+    (/^\/v1\/listings\/[^/]+$/.test(path) && ["PATCH", "PUT", "DELETE"].includes(upper)) ||
+    /^\/v1\/listings\/[^/]+\/(?:lifecycle|attributes|taxonomy|images)$/.test(path) ||
+    /^\/v1\/listing-images\/[^/]+$/.test(path)
   ) result.push("posting");
   if (
     (path === "/v1/conversations" && upper === "POST") ||
-    /^\\/v1\\/conversations\\/[^/]+\\/(?:messages|attachments|offers)$/.test(path) ||
-    /^\\/v1\\/offers\\/[^/]+$/.test(path)
+    /^\/v1\/conversations\/[^/]+\/(?:messages|attachments|offers)$/.test(path) ||
+    /^\/v1\/offers\/[^/]+$/.test(path)
   ) result.push("messaging");
   if (
-    (upper === "POST" && /^\\/v1\\/sellers\\/[^/]+\\/reviews$/.test(path)) ||
-    /^\\/v1\\/reviews\\/[^/]+\\/response$/.test(path)
+    (upper === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path)) ||
+    /^\/v1\/reviews\/[^/]+\/response$/.test(path)
   ) result.push("reviews");
-  if (/^\\/v1\\/account\\/(?:promotions|search-boosts)(?:\\/|$)/.test(path)) result.push("promotions");
+  if (/^\/v1\/account\/(?:promotions|search-boosts)(?:\/|$)/.test(path)) result.push("promotions");
   if (
     (upper === "POST" && path === "/v1/profile/media") ||
-    (upper === "POST" && /^\\/v1\\/listings\\/[^/]+\\/images$/.test(path)) ||
-    (upper === "POST" && /^\\/v1\\/conversations\\/[^/]+\\/attachments$/.test(path)) ||
+    (upper === "POST" && /^\/v1\/listings\/[^/]+\/images$/.test(path)) ||
+    (upper === "POST" && /^\/v1\/conversations\/[^/]+\/attachments$/.test(path)) ||
     (upper === "POST" && path === "/v1/account/verifications")
   ) result.push("uploads");
   return result;
