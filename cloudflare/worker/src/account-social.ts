@@ -1,3 +1,4 @@
+import { sanitizePublicListingDetails } from "./public-listing-privacy";
 import {
   authenticate,
   corsHeaders,
@@ -440,7 +441,7 @@ function socialListing(row: Row, origin: string) {
     districtAr: nullableString(row.district_ar),
     contactName: nullableString(row.contact_name),
     contactOptions: jsonObject(row.contact_options),
-    details: jsonObject(row.details),
+    details: sanitizePublicListingDetails(jsonObject(row.details)),
     isFeatured: row.is_featured === true || row.is_featured === 1,
     featuredUntil: nullableString(row.featured_until),
     reviewedBy: null,
@@ -536,7 +537,18 @@ async function listFavorites(request: Request, env: AccountSocialEnv, cors: Head
   )
     .bind(auth.userId, pageSize)
     .all();
-  return result.success ? json({ data: result.results ?? [] }, 200, cors) : databaseError(cors);
+  return result.success
+    ? json(
+        {
+          data: (result.results ?? []).map((row: Row) => ({
+            ...row,
+            details: JSON.stringify(sanitizePublicListingDetails(jsonObject(row.details))),
+          })),
+        },
+        200,
+        cors,
+      )
+    : databaseError(cors);
 }
 
 async function listSavedSearches(request: Request, env: AccountSocialEnv, cors: Headers) {

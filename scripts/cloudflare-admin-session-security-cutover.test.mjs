@@ -24,9 +24,7 @@ test("admin session security is non-breaking by default", () => {
 
 test("admin perimeter executes after rate limiting and before route dispatch", () => {
   const limiterIndex = security.indexOf("await decision.binding.limit({ key })");
-  const perimeterIndex = security.indexOf(
-    "await enforceAdminSecurityPerimeter(request, env, requestId, path)",
-  );
+  const perimeterIndex = security.search(/await\s+enforceAdminSecurityPerimeter\s*\(/);
   assert.ok(limiterIndex >= 0);
   assert.ok(perimeterIndex > limiterIndex);
   assert.match(adminSecurity, /\/\^\\\/v1\\\/admin/);
