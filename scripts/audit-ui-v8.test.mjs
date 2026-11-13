@@ -155,10 +155,10 @@ const initialAppStyles = await readFile(new URL("../src/styles.css", import.meta
 
 test("initial CSS cannot restore an independent ivory or dark palette", () => {
   const initialTokens = initialAppStyles.split("@layer base")[0];
-  assert.match(initialTokens, /--background:\\s*var\\(--rawaj-canvas,\\s*#ffffff\\)/);
-  assert.match(initialTokens, /--primary:\\s*var\\(--rawaj-brand-primary,\\s*#103f42\\)/);
-  assert.match(initialTokens, /color-scheme:\\s*light/);
-  assert.doesNotMatch(initialTokens, /\\.dark\\s*\\{/);
+  assert.ok(initialTokens.includes("--background: var(--rawaj-canvas, #ffffff);"));
+  assert.ok(initialTokens.includes("--primary: var(--rawaj-brand-primary, #103f42);"));
+  assert.ok(initialTokens.includes("color-scheme: light;"));
+  assert.equal(initialTokens.includes(".dark {"), false);
   assert.doesNotMatch(initialTokens, /#f7f4ec|#11100d|#d96f32/i);
 });
 
