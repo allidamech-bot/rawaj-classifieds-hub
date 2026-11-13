@@ -1744,6 +1744,148 @@ test("phase 1: concurrent duplicate image uploads cannot remove the winning R2 a
   }
 });
 
+test("price-offer history GET is read-only even during emergency freeze", async () => {
+  const { listingId, conversationId } = await seedOfferConversation();
+  const expiredOfferId = crypto.randomUUID();
+  const expiredAt = "2020-01-01T00:00:00.000Z";
+  const unchangedAt = "2019-12-30T00:00:00.000Z";
+  executeSql(`
+    INSERT INTO listing_price_offers (
+      id, listing_id, conversation_id, buyer_id, seller_id, created_by,
+      amount, currency, status, expires_at, client_request_id, created_at, updated_at
+    ) VALUES (
+      '${expiredOfferId}', '${listingId}', '${conversationId}',
+      '${other.userId}', '${owner.userId}', '${other.userId}',
+      300, 'SYP', 'pending', '${expiredAt}', '${crypto.randomUUID()}',
+      '${unchangedAt}', '${unchangedAt}'
+    );
+    DROP TRIGGER IF EXISTS test_offer_get_must_not_write;
+    CREATE TRIGGER test_offer_get_must_not_write
+    BEFORE UPDATE ON listing_price_offers
+    WHEN OLD.id = '${expiredOfferId}'
+    BEGIN SELECT RAISE(ABORT, 'GET attempted to mutate an offer'); END;
+    UPDATE system_controls SET enabled = 1 WHERE key = 'emergency_read_only';
+  `);
+
+  try {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const read = await api(`/v1/conversations/${conversationId}/offers`, other);
+      assert.equal(read.response.status, 200);
+      assert.equal(read.payload.data.items.length, 1);
+      assert.equal(read.payload.data.items[0].status, "expired");
+      assert.equal(read.payload.data.items[0].respondedAt, expiredAt);
+      assert.equal(read.payload.data.items[0].updatedAt, unchangedAt);
+      assert.equal(read.payload.data.listingAvailable, true);
+    }
+
+    const blocked = await api(`/v1/conversations/${conversationId}/offers`, {
+      ...other,
+      method: "POST",
+      body: { amount: 450, requestId: crypto.randomUUID() },
+    });
+    assert.equal(blocked.response.status, 503);
+    assert.equal(blocked.payload.error.code, "emergency_read_only");
+  } finally {
+    executeSql(`
+      UPDATE system_controls SET enabled = 0 WHERE key = 'emergency_read_only';
+      DROP TRIGGER IF EXISTS test_offer_get_must_not_write;
+    `);
+  }
+
+  const created = await api(`/v1/conversations/${conversationId}/offers`, {
+    ...other,
+    method: "POST",
+    body: { amount: 450, requestId: crypto.randomUUID() },
+  });
+  assert.equal(created.response.status, 201);
+  assert.equal(created.payload.data.currency, "SYP");
+  assert.equal(created.payload.data.status, "pending");
+});
+
+test("expired listings and inconsistent currencies cannot create or accept price offers", async () => {
+  const { listingId, conversationId } = await seedOfferConversation();
+  executeSql(`
+    UPDATE listings SET expires_at = '2020-01-01T00:00:00.000Z'
+    WHERE id = '${listingId}';
+  `);
+
+  const listingRead = await api(`/v1/conversations/${conversationId}/offers`, other);
+  assert.equal(listingRead.response.status, 200);
+  assert.equal(listingRead.payload.data.listingAvailable, false);
+
+  const expired = await api(`/v1/conversations/${conversationId}/offers`, {
+    ...other,
+    method: "POST",
+    body: { amount: 400, requestId: crypto.randomUUID() },
+  });
+  assert.equal(expired.response.status, 409);
+  assert.equal(expired.payload.error.code, "status_mismatch");
+
+  executeSql(`
+    UPDATE listings SET expires_at = NULL, currency = 'USD'
+    WHERE id = '${listingId}';
+  `);
+  const mismatched = await api(`/v1/conversations/${conversationId}/offers`, {
+    ...other,
+    method: "POST",
+    body: { amount: 400, requestId: crypto.randomUUID() },
+  });
+  assert.equal(mismatched.response.status, 409);
+  assert.equal(mismatched.payload.error.code, "currency_mismatch");
+
+  executeSql(`UPDATE listings SET currency = 'SYP' WHERE id = '${listingId}'`);
+  const created = await api(`/v1/conversations/${conversationId}/offers`, {
+    ...other,
+    method: "POST",
+    body: { amount: 400, requestId: crypto.randomUUID() },
+  });
+  assert.equal(created.response.status, 201);
+  assert.equal(created.payload.data.currency, "SYP");
+
+  executeSql(`
+    UPDATE listings SET expires_at = '2020-01-01T00:00:00.000Z'
+    WHERE id = '${listingId}';
+  `);
+  const accepted = await api(`/v1/offers/${created.payload.data.id}`, {
+    ...owner,
+    method: "PATCH",
+    body: {
+      action: "accept",
+      requestId: crypto.randomUUID(),
+      expectedUpdatedAt: created.payload.data.updatedAt,
+    },
+  });
+  assert.equal(accepted.response.status, 409);
+  assert.equal(accepted.payload.error.code, "status_mismatch");
+});
+
+async function seedOfferConversation() {
+  const created = await api("/v1/listings", {
+    ...owner,
+    method: "POST",
+    body: listingInput(),
+  });
+  assert.equal(created.response.status, 201);
+  const listingId = created.payload.data.id;
+  const ownerRead = await api(`/v1/listings/${listingId}`, owner);
+  assert.equal(ownerRead.response.status, 200);
+  assert.equal(ownerRead.payload.data.listing.currency, "SYP");
+
+  const conversationId = crypto.randomUUID();
+  const timestamp = new Date().toISOString();
+  executeSql(`
+    UPDATE listings SET status = 'approved', expires_at = NULL
+    WHERE id = '${listingId}';
+    INSERT INTO conversations (
+      id, listing_id, buyer_id, seller_id, status, created_at, updated_at
+    ) VALUES (
+      '${conversationId}', '${listingId}', '${other.userId}', '${owner.userId}',
+      'active', '${timestamp}', '${timestamp}'
+    );
+  `);
+  return { listingId, conversationId };
+}
+
 async function createListing(session, overrides = {}) {
   const body = {
     categoryId: "test-category",
