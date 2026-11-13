@@ -867,11 +867,11 @@ function MyListingsPage() {
             className="my-store-dialog"
             dir={language === "ar" ? "rtl" : "ltr"}
             onCloseAutoFocus={(event) => {
-              if (attentionQueue) {
-                // Focus the results heading after Radix releases the dialog focus trap.
-                event.preventDefault();
-                inventoryHeadingRef.current?.focus();
-              }
+              if (!attentionQueue) return;
+              // Radix restores focus to the menu on close unless prevented.
+              // Moving to a status queue must instead focus its inventory heading.
+              event.preventDefault();
+              inventoryHeadingRef.current?.focus({ preventScroll: true });
             }}
           >
             <DialogHeader>

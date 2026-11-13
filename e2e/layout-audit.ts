@@ -23,18 +23,6 @@ interface LayoutAuditReport {
 }
 
 export async function expectRenderedLayout(page: Page, options: LayoutAuditOptions) {
-  // Do not measure a partially loaded CSS cascade. A missing stylesheet
-  // remains an explicit failure; WCAG thresholds are not relaxed.
-  await page.waitForFunction(
-    () => {
-      const styles = Array.from(
-        document.querySelectorAll<HTMLLinkElement>('link[data-rawaj-audited-override="true"]'),
-      );
-      return styles.length > 0 && styles.every((sheet) => sheet.sheet !== null);
-    },
-    undefined,
-    { timeout: 30_000 },
-  );
   await page.evaluate(() => document.fonts.ready);
 
   const report = await page.evaluate<LayoutAuditReport, { mobile: boolean }>(

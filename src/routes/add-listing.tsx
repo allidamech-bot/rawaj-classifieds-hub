@@ -960,15 +960,14 @@ function AddListingPage() {
 
   function goNext() {
     const nextStep = Math.min(steps.length - 1, step + 1);
-    const validationStep = nextStep === 3 ? 3 : step;
-    const valid = validateCurrentStep(validationStep);
-    if (!valid) return;
+    if (!validateCurrentStep(nextStep === 3 ? 3 : step)) return;
     setStepErrors([]);
     setFieldErrors({});
-    // Keep React state updaters pure: updating progress from inside the step
-    // updater can race with rendering and leave the publishing wizard on step 1.
-    setFurthestStep((current) => Math.max(current, nextStep));
-    setStep(nextStep);
+    setStep((value) => {
+      const next = Math.min(steps.length - 1, value + 1);
+      setFurthestStep((current) => Math.max(current, next));
+      return next;
+    });
   }
 
   function handleTaxonomySelection(node: TaxonomyNode, path: TaxonomyNode[]) {

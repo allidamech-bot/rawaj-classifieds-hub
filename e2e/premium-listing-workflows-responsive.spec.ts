@@ -60,17 +60,14 @@ test.describe("premium listing workflow responsiveness", () => {
       await page.setViewportSize(viewport);
       await page.waitForTimeout(75);
       await expectNoPageOverflow(page, `profile-listings:${viewport.width}`);
-      const postListing = ownerWorkspace.locator('a.my-store-add[href="/add-listing"]');
-      await expect(postListing).toBeVisible();
-      const searchField = ownerWorkspace.locator(".my-store-search input");
-      if (!(await searchField.isVisible())) {
-        const searchToggle = ownerWorkspace.getByRole("button", {
-          name: /فتح البحث|Open search/i,
-        });
-        await expect(searchToggle).toBeVisible();
-        await searchToggle.click();
+      await expect(ownerWorkspace.locator(".my-store-identity h1")).toBeVisible();
+      await expect(ownerWorkspace.locator(".my-store-add")).toBeVisible();
+      const ownerSearch = ownerWorkspace.locator(".my-store-search input");
+      if (!(await ownerSearch.isVisible())) {
+        await ownerWorkspace.locator(".my-store-search-toggle").click();
       }
-      await expect(searchField).toBeVisible();
+      await expect(ownerSearch).toBeVisible();
+      await expect(ownerWorkspace.locator(".my-store-sort select")).toBeVisible();
     }
 
     await page.setViewportSize({ width: 390, height: 844 });

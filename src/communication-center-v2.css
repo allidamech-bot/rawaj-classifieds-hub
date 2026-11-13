@@ -1070,3 +1070,9 @@
     min-height: calc(100dvh - 9.5rem);
   }
 }
+
+/* Safety guidance must stay legible against the dark conversations panel.
+ * Scope this accessibility repair to the messages hub only. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-safety p {
+  color: #cdd5d4 !important;
+}
