@@ -350,21 +350,12 @@ function normalizedScope(path: string): string {
 }
 
 async function actorKey(request: Request): Promise<string> {
-  const authorization = request.headers.get("Authorization") ?? "";
-  const bearer = /^Bearer\s+([^\s]+)$/i.exec(authorization)?.[1];
-  if (bearer) {
-    return `auth:${(await sha256Hex(bearer)).slice(0, 32)}`;
-  }
-
+  // Always use the network identity for the baseline limiter. An unverified
+  // Authorization header is attacker-controlled and must not reset the quota.
+  // Authenticated requests remain subject to this network-wide ceiling.
   const ip = request.headers.get("CF-Connecting-IP")?.trim();
   if (ip) return `ip:${ip.slice(0, 64)}`;
-
   return "anonymous";
-}
-
-async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function readContentLength(request: Request): number | null {
