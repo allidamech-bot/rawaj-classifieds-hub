@@ -259,27 +259,6 @@
   overscroll-behavior-inline: contain;
 }
 
-/* Verified contrast corrections (CI rendered layout evidence, 2026-11-13).
- * Preserve the existing petrol/ivory design; never weaken WCAG assertions.
- * Featured was measured at 4.42:1 with the retired pink/white badge.
- */
-.rawaj-app-shell .rawaj-adaptive-card__status[data-tone="featured"] {
-  background-color: var(--rawaj-accent-gold, #cda260) !important;
-  color: #13251e !important;
-}
-
-/* The active publishing step must be legible even when older step backgrounds
- * or semi-transparent layers cascade over its own label.
- */
-.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"],
-.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] > button {
-  background-color: var(--rawaj-action-primary, #28564b) !important;
-  color: #ffffff !important;
-}
-.rawaj-app-shell .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__copy strong {
-  color: #ffffff !important;
-}
-
 /* The approved owner store uses an ivory canvas; the inherited empty-state
  * component previously combined a dark inset surface with dark text (1.32:1).
  */
