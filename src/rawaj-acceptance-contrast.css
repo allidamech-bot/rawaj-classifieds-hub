@@ -77,5 +77,19 @@
  * This small text correction leaves card geometry and content unchanged.
  */
 .rawaj-app-shell .rawaj-communication-safety p {
-  color: #e2e8de !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Route-scoped contrast for notices and their muted labels; avoid shifting
+ * the approved seller/owner store palette or spacing.
+ */
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2 {
+  --personal-muted: #dce0e4;
+  --rawaj-text-muted: #dce0e4;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  .rawaj-communication-v2 .rawaj-communication-hero__copy > p {
+  color: #fff1e8 !important;
+  opacity: 1 !important;
 }
