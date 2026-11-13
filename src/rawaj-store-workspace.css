@@ -1,0 +1,414 @@
+/* Store management uses the same surfaces and action colors as the marketplace. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-store-workspace {
+  --store-canvas: var(--rawaj-page-background);
+  --store-surface: var(--rawaj-card-background);
+  --store-surface-raised: var(--rawaj-elevated-background);
+  --store-line: var(--rawaj-border);
+  --store-line-strong: var(--rawaj-border-strong);
+  --store-ink: #f5f1e8;
+  --store-ink-soft: #d0d6cc;
+  --store-ink-muted: #adbab0;
+  display: grid !important;
+  gap: clamp(0.9rem, 2.5vw, 1.55rem) !important;
+}
+
+.rawaj-app-shell .rawaj-store-workspace > * {
+  order: 0 !important;
+  min-inline-size: 0;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-store-empty__action {
+  color: var(--rawaj-action-primary-foreground) !important;
+  background: var(--rawaj-action-primary) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-inventory__header {
+  min-block-size: auto;
+  padding-block: 0.4rem;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-inventory__header h2 {
+  font-size: clamp(1.1rem, 3vw, 1.45rem) !important;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-storefront-owner-tabs {
+  grid-template-columns: repeat(auto-fit, minmax(min(5rem, 100%), 1fr)) !important;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-storefront-owner-tabs button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-block-size: 2.75rem;
+}
+
+.rawaj-store-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: clamp(1rem, 4vw, 2rem);
+  border: 1px dashed var(--rawaj-border-strong);
+  border-radius: 1rem;
+  background: var(--rawaj-surface-inset);
+  text-align: center;
+}
+
+.rawaj-store-empty > section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.rawaj-store-empty__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-block-size: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: var(--rawaj-radius-button);
+  font-weight: 700;
+}
+
+.rawaj-store-queue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  padding-inline: 0.75rem;
+  border-inline-start: 3px solid var(--store-line-strong);
+  color: var(--store-ink);
+  background: var(--store-surface-raised);
+}
+
+.rawaj-store-queue button {
+  min-block-size: 2.75rem;
+  color: var(--store-ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.rawaj-store-card-price {
+  display: grid;
+  gap: 0.15rem;
+  color: var(--store-ink);
+}
+
+.rawaj-store-card-price bdi {
+  font-size: 1.05rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.rawaj-store-card-price small {
+  color: var(--store-ink-muted);
+}
+
+.rawaj-store-card-status {
+  justify-self: start;
+  align-self: flex-start;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  color: var(--store-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rawaj-store-card-status[data-status="approved"] {
+  color: #9bd6b7;
+}
+
+.rawaj-store-card-status:is([data-status="rejected"], [data-status="pending_review"]) {
+  color: #e8c690;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-listing-select {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+.rawaj-app-shell .rawaj-store-workspace .rawaj-owner-listing-card__summary h3 {
+  overflow-wrap: anywhere;
+}
+
+#rawaj-owner-inventory-title {
+  scroll-margin-block-start: 6rem;
+}
+
+.rawaj-shop-header {
+  --shop-accent: #d6bf94;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-inline-size: 0;
+  border: 1px solid #394842;
+  border-radius: 1.25rem;
+  background: #222b28;
+  color: #f5f1e8;
+}
+
+.rawaj-shop-header__cover {
+  display: grid;
+  place-items: center;
+  block-size: clamp(4.25rem, 11vw, 8rem);
+  overflow: hidden;
+  background: #344740;
+  color: var(--shop-accent);
+}
+
+.rawaj-shop-header__cover svg {
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+}
+
+.rawaj-shop-header__cover img,
+.rawaj-shop-header__avatar img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.rawaj-shop-header__body {
+  display: grid;
+  gap: 0.7rem;
+  padding: clamp(0.85rem, 2.6vw, 1.5rem);
+}
+
+.rawaj-shop-header__identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rawaj-shop-header__avatar {
+  display: grid;
+  place-items: center;
+  inline-size: clamp(2.65rem, 8vw, 3.5rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #66756a;
+  border-radius: 0.8rem;
+  background: #344740;
+  color: var(--shop-accent);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.rawaj-shop-header__name {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-shop-header__name h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 4vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.rawaj-shop-header__name p,
+.rawaj-shop-header__meta {
+  color: #c5d0c7;
+  font-size: 0.82rem;
+}
+
+.rawaj-shop-header__meta,
+.rawaj-shop-header__meta span {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.65rem;
+}
+
+.rawaj-shop-header__meta svg,
+.rawaj-shop-header a svg,
+.rawaj-shop-tools svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex: none;
+}
+
+.rawaj-shop-header__actions,
+.rawaj-shop-tools > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.rawaj-shop-header a,
+.rawaj-shop-tools a {
+  display: inline-flex;
+  min-block-size: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #52665c;
+  border-radius: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.rawaj-shop-header a:hover,
+.rawaj-shop-tools a:hover {
+  border-color: #d6bf94;
+}
+
+.rawaj-shop-header a.rawaj-shop-post {
+  background: var(--rawaj-action-primary);
+  color: var(--rawaj-action-primary-foreground);
+}
+
+.rawaj-shop-header a.rawaj-shop-post:hover {
+  background: var(--rawaj-action-primary-hover);
+}
+
+.rawaj-shop-profile-details,
+.rawaj-shop-tools,
+.rawaj-shop-listing-health {
+  color: var(--rawaj-text-secondary);
+  font-size: 0.85rem;
+}
+
+.rawaj-shop-profile-details summary,
+.rawaj-shop-tools summary,
+.rawaj-shop-listing-health summary {
+  min-block-size: 2.75rem;
+  padding-block: 0.65rem;
+  cursor: pointer;
+}
+
+.rawaj-shop-profile-details label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.7rem;
+}
+
+.rawaj-shop-profile-details progress {
+  max-inline-size: 100%;
+  accent-color: #d6bf94;
+}
+
+.rawaj-shop-desk__layout,
+.rawaj-shop-desk__rail,
+.rawaj-shop-desk__secondary {
+  display: grid;
+  gap: 0.8rem;
+  align-items: start;
+  min-inline-size: 0;
+}
+
+.rawaj-shop-desk__rail[hidden],
+.rawaj-shop-desk__rail:empty {
+  display: none;
+}
+
+.rawaj-shop-tools {
+  padding-inline: 0.75rem;
+  border: 1px solid var(--store-line);
+  border-radius: 0.8rem;
+}
+
+.rawaj-shop-tools summary svg {
+  display: inline-block;
+  margin-inline: 0.3rem;
+}
+
+.rawaj-shop-tools > div {
+  padding-block-end: 0.65rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-shop-desk
+  .rawaj-storefront-owner-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.5rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-shop-desk
+  .rawaj-owner-listing-card {
+  padding: 0.65rem !important;
+  border-radius: 0.7rem !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-shop-desk
+  .rawaj-owner-listing-card__overview {
+  grid-template-columns: 3.75rem minmax(0, 1fr) !important;
+  align-items: start !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  .rawaj-shop-desk
+  .rawaj-owner-listing-card__actions {
+  margin-block-start: 0.45rem !important;
+}
+
+.rawaj-app-shell .rawaj-shop-desk .rawaj-owner-performance__kpis {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.rawaj-app-shell .rawaj-shop-desk .rawaj-owner-performance__kpis strong {
+  font-size: 0.95rem !important;
+}
+
+.rawaj-shop-empty-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 1px solid var(--store-line-strong);
+  border-radius: 0.75rem;
+  color: #d6bf94;
+}
+
+.rawaj-shop-empty-icon svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}
+
+.rawaj-shop-desk :is(a, button, summary):focus-visible {
+  outline: 2px solid #d6bf94;
+  outline-offset: 2px;
+}
+
+@media (min-width: 64rem) {
+  .rawaj-shop-desk__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+  }
+
+  .rawaj-shop-desk__rail {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .rawaj-shop-desk__layout > .rawaj-owner-inventory {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .rawaj-shop-desk__secondary {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 30rem) {
+  .rawaj-shop-header__identity {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .rawaj-shop-header__identity .rawaj-shop-edit {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

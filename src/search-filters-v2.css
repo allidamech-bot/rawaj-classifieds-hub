@@ -154,7 +154,7 @@
 
 .rawaj-filter-sheet[data-scroll-mode="content"] .rawaj-filter-sheet__footer button:last-child {
   border-color: rgba(255, 139, 55, 0.35) !important;
-  background: linear-gradient(135deg, #ff8a3d, #ef6d32) !important;
+  background: #ff8a3d !important;
   color: #ffffff !important;
   box-shadow: 0 12px 26px rgba(239, 109, 50, 0.24) !important;
 }

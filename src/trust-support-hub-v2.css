@@ -12,17 +12,7 @@
   top: -10rem;
   z-index: -1;
   height: 34rem;
-  background:
-    radial-gradient(
-      circle at 88% 7%,
-      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
-      transparent 29%
-    ),
-    radial-gradient(
-      circle at 8% 0%,
-      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
-      transparent 27%
-    );
+  background: transparent;
   pointer-events: none;
 }
 
@@ -31,13 +21,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: clamp(1.5rem, 5vw, 2.3rem);
-  background:
-    radial-gradient(
-      circle at 88% 8%,
-      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
-      transparent 28%
-    ),
-    linear-gradient(145deg, #082f2a, var(--color-primary) 54%, #1f5d50);
+  background: #082f2a;
   padding: clamp(1rem, 4vw, 1.8rem);
   color: white;
   box-shadow: 0 26px 66px color-mix(in srgb, var(--color-primary) 24%, transparent);
@@ -83,7 +67,7 @@
   overflow: hidden;
   border: 2px solid color-mix(in srgb, white 75%, transparent);
   border-radius: clamp(1rem, 3vw, 1.4rem);
-  background: linear-gradient(145deg, #f2c77f, #ef8d58);
+  background: #f2c77f;
   color: var(--color-primary);
   box-shadow: 0 16px 36px color-mix(in srgb, black 26%, transparent);
 }
@@ -432,7 +416,7 @@
 .rawaj-support-panel button[type="submit"] {
   min-height: 3rem;
   border-radius: 0.88rem;
-  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
+  background: #ff7653;
   color: white;
   font-size: 0.64rem;
   font-weight: 900;
@@ -748,7 +732,7 @@
   z-index: -1;
   height: 13rem;
   border-radius: 2rem;
-  background: radial-gradient(circle at 85% 0%, rgba(205, 160, 76, 0.13), transparent 42%);
+  background: transparent;
 }
 
 .rawaj-legal-v3 > p:first-child {
@@ -764,7 +748,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--legal-v3-green) 10%, var(--color-border)) !important;
   border-radius: 1.25rem !important;
-  background: linear-gradient(145deg, #fffefa, #f8f7f1) !important;
+  background: #fffefa !important;
   padding: 1.25rem !important;
   box-shadow: 0 14px 34px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
@@ -775,7 +759,7 @@
   inset-block: 0;
   inset-inline-start: 0;
   width: 0.22rem;
-  background: linear-gradient(180deg, var(--legal-v3-coral), var(--legal-v3-gold));
+  background: var(--legal-v3-coral);
 }
 
 .rawaj-legal-v3 h2 { color: var(--legal-v3-green) !important; }
@@ -784,14 +768,14 @@
 .rawaj-prohibited-v3 > div:first-child {
   border-color: color-mix(in srgb, var(--color-destructive) 22%, var(--color-border)) !important;
   border-radius: 1.3rem !important;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--color-destructive) 9%, #fffefa), #fffefa) !important;
+  background: color-mix(in srgb, var(--color-destructive) 9%, #fffefa) !important;
   box-shadow: 0 15px 36px rgba(120, 37, 26, 0.08);
 }
 
 .rawaj-prohibited-v3 > div.grid > div {
   border-color: color-mix(in srgb, var(--color-destructive) 12%, var(--color-border)) !important;
   border-radius: 1.1rem !important;
-  background: linear-gradient(145deg, #fffefa, #f8f7f2) !important;
+  background: #fffefa !important;
   box-shadow: 0 10px 26px rgba(16, 63, 53, 0.055);
 }
 
@@ -812,7 +796,7 @@
 .rawaj-support-v2 :is(.rawaj-support-panel, .rawaj-support-topics, .rawaj-support-faq),
 .rawaj-safety-v2 .rawaj-safety-guide {
   border-color: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
-  background: linear-gradient(145deg, #fffefa, #f8f7f1);
+  background: #fffefa;
   box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -824,7 +808,7 @@
 .rawaj-support-v2 .rawaj-safety-actions a:last-child,
 .rawaj-safety-v2 .rawaj-safety-actions a:last-child {
   border: 1px solid color-mix(in srgb, var(--brand-orange) 76%, #98381d);
-  background: linear-gradient(145deg, #ee7a4c, #d75c32);
+  background: #ee7a4c;
   color: white;
   box-shadow: 0 12px 25px rgba(201, 78, 35, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }

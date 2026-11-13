@@ -64,6 +64,9 @@ import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
 import stabilityAccessibilityFixesCss from "../stability-accessibility-fixes.css?url";
 import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
 
+import storeWorkspaceCss from "../rawaj-store-workspace.css?url";
+import marketplaceControlsCss from "../rawaj-marketplace-controls.css?url";
+
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
   homeMarketplaceV2: homeMarketplaceV2Css,
@@ -122,6 +125,8 @@ export const auditedOverrideStyleHrefs = [
   ownerStoreDarkRepairCss,
   stabilityAccessibilityFixesCss,
   uiConvergenceV25Css,
+  storeWorkspaceCss,
+  marketplaceControlsCss,
 ] as const;
 
 export interface RouteStyleScope {

@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Smartphone,
   Sofa,
-  Sparkles,
   Store,
   Wrench,
   type LucideIcon,
@@ -100,7 +99,6 @@ function HomePage() {
               onSubmit={handleSearch}
               text={text}
             />
-            <HomeTrustRow text={text} />
 
             {listingLoadFailed ? (
               <EmptyState
@@ -116,9 +114,6 @@ function HomePage() {
               <>
                 <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <HomeLatestListings listings={latestListings} language={language} text={text} />
-                <div className="rawaj-signature-ad-placement">
-                  <PublicAdPlacementSlot placementPage="home" />
-                </div>
               </>
             )}
 
@@ -136,6 +131,9 @@ function HomePage() {
               <HomeCategories worlds={categoryWorlds} language={language} text={text} />
             )}
 
+            <div className="rawaj-signature-ad-placement">
+              <PublicAdPlacementSlot placementPage="home" />
+            </div>
             <HomeSafetyStrip text={text} />
           </div>
         </PageTransition>
@@ -153,45 +151,14 @@ interface HomeHeroProps {
 
 function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHeroProps) {
   return (
-    <section className="rawaj-signature-hero" aria-labelledby="rawaj-signature-home-title">
-      <div className="rawaj-signature-hero__aurora" aria-hidden="true">
-        <span data-wave="one" />
-        <span data-wave="two" />
-        <span data-wave="three" />
-      </div>
-
+    <section
+      className="rawaj-signature-hero rawaj-home-search-panel"
+      aria-labelledby="rawaj-signature-home-title"
+    >
       <div className="rawaj-signature-hero__content">
-        <span className="rawaj-signature-hero__kicker">
-          <Sparkles aria-hidden="true" />
-          {text("السوق السوري الأقرب إليك", "Your closest Syrian marketplace")}
-        </span>
         <h1 id="rawaj-signature-home-title">
           {text("كل ما تبحث عنه… في رواج", "Everything you are looking for… on RAWAJ")}
         </h1>
-        <p>
-          {text(
-            "إعلانات الأفراد والمتاجر والخدمات في مكان واحد.",
-            "Listings from people, stores, and service providers in one place.",
-          )}
-        </p>
-
-        <div className="rawaj-signature-hero__utility">
-          <Link
-            to="/listings"
-            search={{ open_filters: true }}
-            className="rawaj-signature-location"
-            aria-label={text("اختيار موقع التصفح", "Choose browse location")}
-          >
-            <MapPin aria-hidden="true" />
-            <span>{text("كل سوريا", "All Syria")}</span>
-            <ChevronLeft aria-hidden="true" />
-          </Link>
-
-          <Link to="/add-listing" className="rawaj-signature-hero__primary-action">
-            <Plus aria-hidden="true" />
-            {text("أضف إعلانًا", "Post a listing")}
-          </Link>
-        </div>
       </div>
 
       <form className="rawaj-signature-search" role="search" onSubmit={onSubmit}>
@@ -213,29 +180,25 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
         </label>
         <button type="submit">{text("بحث", "Search")}</button>
       </form>
+      <div className="rawaj-discovery-actions">
+        <Link
+          to="/listings"
+          search={{ open_filters: true, q: searchValue.trim() || undefined }}
+          className="rawaj-discovery-action"
+        >
+          <MapPin aria-hidden="true" />
+          <span>{text("الموقع: كل سوريا", "Location: All Syria")}</span>
+        </Link>
+        <Link to="/categories" className="rawaj-discovery-action">
+          <Grid3X3 aria-hidden="true" />
+          <span>{text("الأقسام", "Categories")}</span>
+        </Link>
+        <Link to="/add-listing" className="rawaj-discovery-action">
+          <Plus aria-hidden="true" />
+          <span>{text("أضف إعلانًا", "Post a listing")}</span>
+        </Link>
+      </div>
     </section>
-  );
-}
-
-function HomeTrustRow({ text }: { text: (ar: string, en: string) => string }) {
-  const items = [
-    { icon: Plus, ar: "نشر مجاني", en: "Free posting" },
-    { icon: Store, ar: "أفراد ومتاجر", en: "People and stores" },
-    { icon: MapPin, ar: "جميع المحافظات", en: "All governorates" },
-  ];
-
-  return (
-    <div className="rawaj-signature-trust-row" aria-label={text("مزايا رواج", "RAWAJ benefits")}>
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <span key={item.ar}>
-            <Icon aria-hidden="true" />
-            {text(item.ar, item.en)}
-          </span>
-        );
-      })}
-    </div>
   );
 }
 

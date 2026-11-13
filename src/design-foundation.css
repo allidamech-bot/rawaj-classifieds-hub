@@ -154,11 +154,7 @@ html {
 body {
   min-height: 100dvh;
   color: var(--foreground);
-  background:
-    radial-gradient(34rem 24rem at 102% -4%, rgba(98, 139, 128, 0.08), transparent 68%),
-    radial-gradient(28rem 20rem at -8% 14%, rgba(139, 170, 156, 0.07), transparent 66%),
-    linear-gradient(180deg, #2d2e32 0%, var(--background) 28rem),
-    var(--background);
+  background: var(--background);
   font-family: "Cairo", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.65;

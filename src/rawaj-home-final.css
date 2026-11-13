@@ -22,9 +22,7 @@
   --rawaj-lux-cyan: #69d9ec;
   --rawaj-lux-success: #70d5b1;
   color: var(--rawaj-lux-text);
-  background:
-    radial-gradient(circle at 86% 4%, rgba(91, 105, 154, 0.065), transparent 23rem),
-    linear-gradient(180deg, #303135 0%, var(--rawaj-lux-bg) 40%, #242529 100%) !important;
+  background: #303135 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
@@ -77,15 +75,7 @@
   inset-inline: 0;
   inset-block-end: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 4%,
-    rgba(255, 112, 84, 0.54),
-    rgba(220, 62, 182, 0.54),
-    rgba(140, 99, 244, 0.5),
-    rgba(63, 145, 255, 0.44),
-    transparent 96%
-  );
+  background: rgba(255, 112, 84, 0.54);
   opacity: 0.75;
   pointer-events: none;
 }
@@ -136,7 +126,7 @@
   display: block !important;
   width: 1px !important;
   height: 1.05rem !important;
-  background: linear-gradient(var(--rawaj-lux-coral), var(--rawaj-lux-pink), var(--rawaj-lux-violet)) !important;
+  background: var(--rawaj-lux-coral) !important;
   opacity: 0.72;
 }
 
@@ -181,7 +171,7 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-cta {
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
-  background: linear-gradient(115deg, var(--rawaj-lux-coral), var(--rawaj-lux-pink)) !important;
+  background: var(--rawaj-lux-coral) !important;
   box-shadow: 0 10px 25px rgba(207, 55, 166, 0.22) !important;
   font-family: "Cairo", sans-serif;
   font-weight: 600 !important;
@@ -195,9 +185,8 @@
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 28px;
-  background:
-    linear-gradient(155deg, rgba(9, 12, 40, 0.98), rgba(11, 12, 30, 0.98) 57%, rgba(18, 18, 26, 0.99)) padding-box,
-    linear-gradient(120deg, rgba(255, 112, 84, 0.48), rgba(220, 62, 182, 0.38), rgba(140, 99, 244, 0.38), rgba(63, 145, 255, 0.42)) border-box;
+  border-color: var(--rawaj-border-strong);
+  background: rgba(9, 12, 40, 0.98);
   box-shadow:
     0 26px 58px rgba(0, 0, 0, 0.31),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
@@ -208,9 +197,7 @@
   position: absolute;
   z-index: -1;
   inset: 18% 0 0;
-  background:
-    radial-gradient(ellipse at 50% 42%, rgba(13, 15, 25, 0.18), transparent 43%),
-    linear-gradient(180deg, rgba(10, 11, 19, 0.01), rgba(12, 13, 20, 0.71) 52%, rgba(12, 13, 19, 0.97) 100%);
+  background: rgba(10, 11, 19, 0.01);
   pointer-events: none;
 }
 
@@ -226,11 +213,7 @@
   content: "";
   position: absolute;
   inset: -47% -18% 50%;
-  background:
-    radial-gradient(circle at 18% 74%, rgba(255, 72, 116, 0.85), transparent 19%),
-    radial-gradient(circle at 43% 72%, rgba(126, 64, 255, 0.87), transparent 25%),
-    radial-gradient(circle at 73% 46%, rgba(29, 151, 255, 0.9), transparent 24%),
-    radial-gradient(circle at 89% 78%, rgba(255, 106, 56, 0.72), transparent 19%);
+  background: transparent;
   filter: blur(22px) saturate(116%);
   opacity: 0.84;
   transform: rotate(-5deg) scale(1.1);
@@ -248,7 +231,7 @@
   width: 80%;
   height: 6.7rem;
   inset: 4.4rem auto auto -25%;
-  background: linear-gradient(90deg, #ff7736, #ff2e88 36%, #7840f4 72%, transparent);
+  background: #ff7736;
   opacity: 0.78;
   transform: rotate(9deg);
   box-shadow: 0 0 28px rgba(238, 55, 168, 0.46);
@@ -258,7 +241,7 @@
   width: 82%;
   height: 7.4rem;
   inset: 2.2rem -32% auto auto;
-  background: linear-gradient(90deg, transparent, #2735e6 18%, #18b8ff 52%, #8c55ff 78%, #ff4b91);
+  background: #2735e6;
   opacity: 0.82;
   transform: rotate(-12deg);
   box-shadow: 0 0 32px rgba(43, 136, 255, 0.46);
@@ -268,7 +251,7 @@
   width: 65%;
   height: 5.7rem;
   inset: 9.2rem -20% auto auto;
-  background: linear-gradient(110deg, #4331c9, #ee399b 55%, #ff793a 88%);
+  background: #4331c9;
   opacity: 0.58;
   transform: rotate(13deg);
 }
@@ -363,9 +346,8 @@
   padding: 0.34rem;
   border: 1px solid transparent;
   border-radius: 18px;
-  background:
-    linear-gradient(rgba(28, 29, 37, 0.94), rgba(25, 26, 34, 0.94)) padding-box,
-    linear-gradient(115deg, rgba(255, 112, 84, 0.66), rgba(220, 62, 182, 0.58), rgba(140, 99, 244, 0.52), rgba(63, 145, 255, 0.54)) border-box;
+  border-color: var(--rawaj-border-strong);
+  background: rgba(28, 29, 37, 0.94);
   box-shadow:
     0 17px 38px rgba(0, 0, 0, 0.29),
     inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -409,7 +391,7 @@
   border: 0;
   border-radius: 14px;
   color: #fff;
-  background: linear-gradient(115deg, var(--rawaj-lux-coral), var(--rawaj-lux-pink));
+  background: var(--rawaj-lux-coral);
   box-shadow: 0 10px 24px rgba(210, 56, 170, 0.22);
   font: inherit;
   font-size: 0.76rem;
@@ -444,7 +426,7 @@
 .rawaj-lux-hero__primary-action {
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(115deg, var(--rawaj-lux-coral), var(--rawaj-lux-pink));
+  background: var(--rawaj-lux-coral);
   box-shadow: 0 12px 28px rgba(210, 56, 170, 0.22);
 }
 
@@ -517,9 +499,8 @@
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 22px;
-  background:
-    linear-gradient(155deg, #33343a, #292a2f 76%) padding-box,
-    linear-gradient(118deg, rgba(255, 112, 84, 0.58), rgba(220, 62, 182, 0.45), rgba(140, 99, 244, 0.4), rgba(63, 145, 255, 0.46)) border-box;
+  border-color: var(--rawaj-border-strong);
+  background: #33343a;
   box-shadow:
     0 21px 48px rgba(0, 0, 0, 0.27),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -533,7 +514,7 @@
   inset-inline: 12%;
   inset-block-start: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 116, 87, 0.72), rgba(214, 75, 190, 0.72), rgba(84, 143, 255, 0.64), transparent);
+  background: rgba(255, 116, 87, 0.72);
   pointer-events: none;
 }
 
@@ -570,9 +551,7 @@
   z-index: 2;
   inset: 0;
   border-radius: inherit;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 17%, transparent 70%, rgba(6, 7, 12, 0.32)),
-    radial-gradient(circle at 50% -5%, rgba(255, 255, 255, 0.11), transparent 42%);
+  background: rgba(0, 0, 0, 0.25);
   pointer-events: none;
 }
 
@@ -723,9 +702,7 @@
   padding: 0.42rem 0.45rem 0.42rem 0.62rem;
   border: 1px solid var(--rawaj-lux-border);
   border-radius: 18px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(89, 101, 154, 0.055), transparent 38%),
-    linear-gradient(150deg, #323338, #2b2c31);
+  background: #323338;
   box-shadow:
     0 13px 29px rgba(0, 0, 0, 0.19),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -738,7 +715,7 @@
   inset-inline-end: 54%;
   inset-block-start: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(220, 62, 182, 0.48), rgba(63, 145, 255, 0.4), transparent);
+  background: rgba(220, 62, 182, 0.48);
   opacity: 0.72;
 }
 
@@ -842,9 +819,8 @@
   aspect-ratio: 16 / 6.5 !important;
   border: 1px solid transparent !important;
   border-radius: 20px !important;
-  background:
-    linear-gradient(#2c2d32, #2c2d32) padding-box,
-    linear-gradient(115deg, rgba(255, 112, 84, 0.58), rgba(220, 62, 182, 0.5), rgba(140, 99, 244, 0.46), rgba(63, 145, 255, 0.48)) border-box !important;
+  border-color: var(--rawaj-border-strong) !important;
+  background: #2c2d32 !important;
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
@@ -876,9 +852,7 @@
   padding: 0.7rem 0.78rem;
   border: 1px solid var(--rawaj-lux-border);
   border-radius: 17px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(71, 133, 166, 0.07), transparent 39%),
-    linear-gradient(150deg, #313237, #2b2c30);
+  background: #313237;
   box-shadow:
     0 12px 27px rgba(0, 0, 0, 0.17),
     inset 0 1px 0 rgba(255, 255, 255, 0.032);
@@ -946,9 +920,7 @@
   padding: 0.72rem 0.78rem;
   border: 1px solid rgba(112, 213, 177, 0.17);
   border-radius: 17px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 191, 151, 0.075), transparent 35%),
-    linear-gradient(150deg, #303437, #292d30);
+  background: #303437;
   box-shadow: 0 13px 29px rgba(0, 0, 0, 0.18);
 }
 
@@ -1012,7 +984,7 @@
   inset-inline: 8%;
   inset-block-start: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 112, 84, 0.45), rgba(220, 62, 182, 0.45), rgba(140, 99, 244, 0.4), rgba(63, 145, 255, 0.42), transparent);
+  background: rgba(255, 112, 84, 0.45);
 }
 
 .rawaj-lux-mobile-footer .rawaj-brand-lockup {
@@ -1100,7 +1072,7 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-create {
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  background: linear-gradient(145deg, var(--rawaj-lux-coral), var(--rawaj-lux-pink) 58%, var(--rawaj-lux-violet)) !important;
+  background: var(--rawaj-lux-coral) !important;
   box-shadow:
     0 13px 28px rgba(216, 58, 183, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;

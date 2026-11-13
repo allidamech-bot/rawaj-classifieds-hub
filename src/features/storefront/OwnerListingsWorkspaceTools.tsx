@@ -74,30 +74,53 @@ export function filterOwnerPerformanceWindow(
   });
 }
 
+export type OwnerAttentionQueue =
+  "drafts" | "edits" | "expiry" | "editable_no_image" | "live_no_image";
+
+export function matchesOwnerAttentionQueue(
+  listing: ClassifiedListing,
+  queue: OwnerAttentionQueue,
+): boolean {
+  switch (queue) {
+    case "drafts":
+      return listing.status === "draft";
+    case "edits":
+      return listing.status === "rejected";
+    case "expiry": {
+      if (listing.status !== "approved" || !listing.expiresAt) return false;
+      const days = daysUntilExpiry(listing.expiresAt);
+      return days !== null && days >= 0 && days <= 7;
+    }
+    case "editable_no_image":
+      return (
+        (listing.status === "draft" || listing.status === "rejected") && !listing.primaryImageUrl
+      );
+    case "live_no_image":
+      return listing.status === "approved" && !listing.primaryImageUrl;
+  }
+}
+
 export function OwnerWorkspaceInsights({
   listings,
-  onTabChange,
+  onQueueOpen,
 }: {
   listings: ClassifiedListing[];
-  onTabChange: (tab: "approved" | "needs_edit") => void;
+  onQueueOpen: (tab: "approved" | "needs_edit", queue: OwnerAttentionQueue) => void;
 }) {
   const { text } = useUiPreferences();
   const [expanded, setExpanded] = useState(false);
-  const urgentExpiry = listings.filter((listing) => {
-    if (listing.status !== "approved" || !listing.expiresAt) return false;
-    const days = daysUntilExpiry(listing.expiresAt);
-    return days !== null && days >= 0 && days <= 3;
-  }).length;
-  const needsAction = listings.filter(
-    (listing) => listing.status === "draft" || listing.status === "rejected",
+  const urgentExpiry = listings.filter((listing) =>
+    matchesOwnerAttentionQueue(listing, "expiry"),
+  ).length;
+  const needsAction = listings.filter((listing) =>
+    matchesOwnerAttentionQueue(listing, "edits"),
   ).length;
   const unread = listings.reduce((total, listing) => total + (listing.unreadMessageCount ?? 0), 0);
-  const editableMissingImages = listings.filter(
-    (listing) =>
-      (listing.status === "draft" || listing.status === "rejected") && !listing.primaryImageUrl,
+  const editableMissingImages = listings.filter((listing) =>
+    matchesOwnerAttentionQueue(listing, "editable_no_image"),
   ).length;
-  const approvedMissingImages = listings.filter(
-    (listing) => listing.status === "approved" && !listing.primaryImageUrl,
+  const approvedMissingImages = listings.filter((listing) =>
+    matchesOwnerAttentionQueue(listing, "live_no_image"),
   ).length;
 
   const alerts: Array<{ key: string; content: ReactNode }> = [];
@@ -105,12 +128,12 @@ export function OwnerWorkspaceInsights({
     alerts.push({
       key: "urgent-expiry",
       content: (
-        <button type="button" data-tone="danger" onClick={() => onTabChange("approved")}>
+        <button type="button" data-tone="danger" onClick={() => onQueueOpen("approved", "expiry")}>
           <Clock3 aria-hidden="true" />
           <span>
             {text(
-              `${urgentExpiry} إعلان يحتاج تجديداً عاجلاً`,
-              `${urgentExpiry} listing(s) need urgent renewal`,
+              `${urgentExpiry} إعلان ينتهي خلال 7 أيام`,
+              `${urgentExpiry} listing(s) expire within 7 days`,
             )}
           </span>
         </button>
@@ -121,10 +144,14 @@ export function OwnerWorkspaceInsights({
     alerts.push({
       key: "needs-action",
       content: (
-        <button type="button" data-tone="warning" onClick={() => onTabChange("needs_edit")}>
+        <button
+          type="button"
+          data-tone="warning"
+          onClick={() => onQueueOpen("needs_edit", "edits")}
+        >
           <FileWarning aria-hidden="true" />
           <span>
-            {text(`${needsAction} إعلان يحتاج تدخلك`, `${needsAction} listing(s) need your action`)}
+            {text(`${needsAction} إعلان يحتاج تعديلاً`, `${needsAction} listing(s) need edits`)}
           </span>
         </button>
       ),
@@ -145,7 +172,11 @@ export function OwnerWorkspaceInsights({
     alerts.push({
       key: "editable-no-image",
       content: (
-        <button type="button" data-tone="neutral" onClick={() => onTabChange("needs_edit")}>
+        <button
+          type="button"
+          data-tone="neutral"
+          onClick={() => onQueueOpen("needs_edit", "editable_no_image")}
+        >
           <ImageOff aria-hidden="true" />
           <span>
             {text(
@@ -161,7 +192,11 @@ export function OwnerWorkspaceInsights({
     alerts.push({
       key: "approved-no-image",
       content: (
-        <button type="button" data-tone="neutral" onClick={() => onTabChange("approved")}>
+        <button
+          type="button"
+          data-tone="neutral"
+          onClick={() => onQueueOpen("approved", "live_no_image")}
+        >
           <ImageOff aria-hidden="true" />
           <span>
             {text(
@@ -182,7 +217,7 @@ export function OwnerWorkspaceInsights({
   return (
     <section
       className="rawaj-owner-smart-insights"
-      aria-label={text("تنبيهات ذكية", "Smart alerts")}
+      aria-label={text("تحتاج متابعة", "Needs attention")}
     >
       {visibleAlerts.map((alert) => (
         <div className="rawaj-owner-smart-insights__item" key={alert.key}>

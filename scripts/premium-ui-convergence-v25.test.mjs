@@ -58,11 +58,10 @@ test("shared controls and cards expose one premium sizing contract", () => {
 });
 
 test("My Store presents explicit action priority and narrow-screen containment", () => {
-  assert.match(ownerSummary, /data-priority="primary"/);
-  assert.match(ownerSummary, /data-priority="promotion"/);
-  assert.match(ownerSummary, /data-priority="secondary"/);
-  assert.match(ownerSummary, /text\("ترويج", "Promote"\)/);
-  assert.doesNotMatch(ownerSummary, /text\("تعديل الهوية", "Edit identity"\)/);
+  assert.match(ownerSummary, /to="\/add-listing" className="rawaj-shop-post"/);
+  assert.match(ownerSummary, /to="\/seller\/\$id"/);
+  assert.match(ownerSummary, /to="\/profile" className="rawaj-shop-edit"/);
+  assert.match(ownerRoute, /text\("طلب ترويج", "Request promotion"\)/);
   assert.match(ownerRoute, /<strong className="rawaj-owner-tab-count">/);
   assert.match(css, /data-resolved-pathname="\/profile\/listings"/);
   assert.match(css, /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
@@ -85,14 +84,12 @@ test("My Store presents explicit action priority and narrow-screen containment",
     css,
     /\.rawaj-owner-listing-card__signals\s*>\s*span\s*\{[\s\S]*?flex:\s*1 1 100%/,
   );
-  assert.match(
-    css,
-    /\.rawaj-owner-workspace-summary__actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(4/,
-  );
+  assert.match(ownerSummary, /rawaj-shop-header__identity/);
+  assert.match(ownerSummary, /rawaj-shop-header__actions/);
+  assert.match(ownerSummary, /<details className="rawaj-shop-profile-details">/);
+  assert.match(ownerSummary, /<progress value=\{completeness\}/);
+  assert.match(ownerRoute, /rawaj-shop-desk__secondary/);
   assert.match(css, /\.rawaj-storefront-owner-tabs\s*\{[\s\S]*?grid-template-columns:\s*repeat\(5/);
-  assert.match(css, /\.rawaj-owner-workspace-summary__bio\s*\{[\s\S]*?display:\s*none/);
-  assert.match(ownerSummary, /data-complete=\{completeness === 100\}/);
-  assert.match(ownerSummary, /rawaj-owner-workspace-summary__complete-label/);
   assert.doesNotMatch(ownerSummary, /owner-promotion-entry-fix\.css/);
   assert.match(ownerRoute, /rawaj-owner-performance__kpis/);
   assert.match(ownerRoute, /text\("إدارة", "Manage"\)/);

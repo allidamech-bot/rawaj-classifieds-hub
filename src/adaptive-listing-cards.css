@@ -336,14 +336,7 @@
 .rawaj-featured-card__scrim {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      to top,
-      rgba(5, 27, 24, 0.95) 0%,
-      rgba(5, 27, 24, 0.54) 48%,
-      rgba(5, 27, 24, 0.08) 80%
-    ),
-    linear-gradient(to right, rgba(5, 27, 24, 0.25), transparent 58%);
+  background: rgba(5, 27, 24, 0.95);
 }
 
 .rawaj-featured-card__badge {
@@ -475,12 +468,7 @@
 .rawaj-listing-card-skeleton__media,
 .rawaj-listing-card-skeleton__body span,
 .rawaj-listing-card-skeleton__facts span {
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, var(--color-muted) 88%, white) 20%,
-    color-mix(in srgb, var(--color-muted) 55%, white) 38%,
-    color-mix(in srgb, var(--color-muted) 88%, white) 56%
-  );
+  background: color-mix(in srgb, var(--color-muted) 88%, white);
   background-size: 220% 100%;
   animation: rawaj-card-skeleton-shimmer 1.45s linear infinite;
 }

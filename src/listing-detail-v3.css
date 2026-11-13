@@ -32,9 +32,7 @@
 }
 
 .rawaj-detail-media__shade {
-  background:
-    linear-gradient(180deg, rgba(1, 12, 11, 0.52), transparent 20%),
-    linear-gradient(0deg, rgba(1, 12, 11, 0.58), transparent 24%);
+  background: rgba(1, 12, 11, 0.52);
 }
 
 .rawaj-detail-media__top-actions button,

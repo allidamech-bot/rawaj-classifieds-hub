@@ -38,7 +38,7 @@ test("categories direct load keeps its designed atlas and active production ad t
   });
 
   expect(categoryVisuals).not.toBeNull();
-  expect(categoryVisuals?.heroBackground).toContain("linear-gradient");
+  expect(categoryVisuals?.heroBackground).toBe("none");
   expect(categoryVisuals?.heroRadius ?? 0).toBeGreaterThan(16);
   expect(categoryVisuals?.cardDisplay).not.toBe("none");
   expect(categoryVisuals?.cardRadius ?? 0).toBeGreaterThan(16);
