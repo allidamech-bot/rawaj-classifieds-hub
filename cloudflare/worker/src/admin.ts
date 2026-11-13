@@ -35,7 +35,10 @@ function asAuthEnv(env: AdminEnv): AuthEnv {
   return env as unknown as AuthEnv;
 }
 
-export async function handleAdmin(request: Request, env: AdminEnv): Promise<Response | null> {
+export async function handleAdmin(
+  request: Request,
+  env: AdminEnv,
+): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api\b/, "/v1");
   const cors = corsHeaders(request, asAuthEnv(env));
@@ -78,7 +81,10 @@ export async function handleAdmin(request: Request, env: AdminEnv): Promise<Resp
   if (path === "/v1/admin/notifications" && request.method === "POST") {
     return adminCreateNotification(request, env, cors);
   }
-  if (path === "/v1/admin/notifications/read-by-entity" && request.method === "POST") {
+  if (
+    path === "/v1/admin/notifications/read-by-entity" &&
+    request.method === "POST"
+  ) {
     return adminMarkNotificationsReadByEntity(request, env, cors);
   }
 
@@ -90,7 +96,9 @@ function requireAdminRole(
   minRole: "moderator" | "admin" | "owner",
 ): boolean {
   const hierarchy = ["user", "moderator", "admin", "owner"];
-  const actorLevel = Math.max(...auth.roles.map((role) => hierarchy.indexOf(role) || 0));
+  const actorLevel = Math.max(
+    ...auth.roles.map((role) => hierarchy.indexOf(role) || 0),
+  );
   const requiredLevel = hierarchy.indexOf(minRole);
   return actorLevel >= requiredLevel;
 }
@@ -186,7 +194,8 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
   const users = (result.results ?? []).map((row) => ({
     id: stringValue(row.id),
     email: nullableString(row.email),
-    displayName: nullableString(row.display_name) ?? nullableString(row.business_name),
+    displayName:
+      nullableString(row.display_name) ?? nullableString(row.business_name),
     accountStatus: stringValue(row.account_status, "active"),
     verificationStatus: stringValue(row.verification_status, "unverified"),
     createdAt: nullableString(row.created_at),
@@ -195,7 +204,8 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
     reportsSubmitted: numberValue(row.reports_submitted),
     reportsReceived: numberValue(row.reports_received),
     activeRestrictions:
-      (row.active_restrictions as string | null)?.split(",").filter(Boolean) ?? [],
+      (row.active_restrictions as string | null)?.split(",").filter(Boolean) ??
+      [],
   }));
 
   return json({ data: users }, 200, cors);
@@ -234,19 +244,25 @@ async function adminAuditLogs(request: Request, env: AdminEnv, cors: Headers) {
 
 function parseAuditMetadata(value: unknown): Record<string, unknown> {
   if (value === null || value === undefined) return {};
-  if (typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (typeof value === "object" && !Array.isArray(value))
+    return value as Record<string, unknown>;
   if (typeof value !== "string") return {};
   if (!value.length) return {};
   try {
     const parsed = JSON.parse(value);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      return parsed;
   } catch {
     // malformed JSON, fall through to fallback
   }
   return {};
 }
 
-async function adminPendingListings(request: Request, env: AdminEnv, cors: Headers) {
+async function adminPendingListings(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -287,7 +303,11 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
   return json({ data: listings }, 200, cors);
 }
 
-async function adminModerationListings(request: Request, env: AdminEnv, cors: Headers) {
+async function adminModerationListings(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -328,7 +348,11 @@ async function adminModerationListings(request: Request, env: AdminEnv, cors: He
   return json({ data: listings }, 200, cors);
 }
 
-async function adminModerateListing(request: Request, env: AdminEnv, cors: Headers) {
+async function adminModerateListing(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -343,7 +367,10 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
   const extendDays = body.data.extendDays ?? null;
 
   if (!listingId || !expectedUpdatedAt) {
-    return validation(cors, "Listing id and expected update timestamp are required.");
+    return validation(
+      cors,
+      "Listing id and expected update timestamp are required.",
+    );
   }
   if (!action) {
     return json(
@@ -362,19 +389,31 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     return validation(cors, "A rejection reason is required.");
   }
 
-  const listing = await env.DB.prepare("SELECT status, updated_at FROM listings WHERE id = ?")
+  const listing = await env.DB.prepare(
+    "SELECT status, updated_at FROM listings WHERE id = ?",
+  )
     .bind(listingId)
     .first<{ status: string; updated_at: string }>();
   if (!listing) {
     return json(
-      { error: { code: "listing_not_found", message: "The listing to moderate was not found." } },
+      {
+        error: {
+          code: "listing_not_found",
+          message: "The listing to moderate was not found.",
+        },
+      },
       404,
       cors,
     );
   }
   if (listing.updated_at !== expectedUpdatedAt) {
     return json(
-      { error: { code: "stale_review", message: "Listing changed since loaded." } },
+      {
+        error: {
+          code: "stale_review",
+          message: "Listing changed since loaded.",
+        },
+      },
       409,
       cors,
     );
@@ -384,7 +423,12 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     listing.status !== "pending_review"
   ) {
     return json(
-      { error: { code: "invalid_transition", message: "Listing is not pending review." } },
+      {
+        error: {
+          code: "invalid_transition",
+          message: "Listing is not pending review.",
+        },
+      },
       409,
       cors,
     );
@@ -402,21 +446,39 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     case "approve":
       nextStatus = "approved";
       updateSql = `UPDATE listings SET status = ?, published_at = COALESCE(?, published_at), updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, timestamp, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        timestamp,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "approve";
       auditAction = "listing_approve";
       break;
     case "reject":
       nextStatus = "rejected";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "reject";
       auditAction = "listing_reject";
       break;
     case "request_changes":
       nextStatus = "rejected";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "request_changes";
       auditAction = "listing_request_changes";
       auditMetadata = { reason };
@@ -424,41 +486,72 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     case "suspend":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "suspend";
       auditAction = "listing_suspend";
       break;
     case "unpublish":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "unpublish";
       auditAction = "listing_unpublish";
       break;
     case "archive":
       nextStatus = "archived";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "archive";
       auditAction = "listing_archive";
       break;
     case "expire_now":
       nextStatus = "expired";
       updateSql = `UPDATE listings SET status = ?, published_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [nextStatus, null, timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        nextStatus,
+        null,
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "expire_now";
       auditAction = "listing_expire_now";
       break;
     case "extend_expiry": {
       const days =
-        Number.isInteger(extendDays) && typeof extendDays === "number" && extendDays > 0
+        Number.isInteger(extendDays) &&
+        typeof extendDays === "number" &&
+        extendDays > 0
           ? extendDays
           : 30;
       const newExpires = new Date();
       newExpires.setDate(newExpires.getDate() + days);
       nextStatus = listing.status;
       updateSql = `UPDATE listings SET expires_at = ?, updated_at = ? WHERE id = ? AND updated_at = ?`;
-      updateParams = [newExpires.toISOString(), timestamp, listingId, expectedUpdatedAt];
+      updateParams = [
+        newExpires.toISOString(),
+        timestamp,
+        listingId,
+        expectedUpdatedAt,
+      ];
       moderationAction = "extend_expiry";
       auditAction = "listing_extend_expiry";
       auditMetadata = { extendDays: days };
@@ -545,14 +638,24 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
       audit_ok: number;
     }>();
 
-  if (!persisted || persisted.status !== nextStatus || persisted.updated_at !== timestamp) {
+  if (
+    !persisted ||
+    persisted.status !== nextStatus ||
+    persisted.updated_at !== timestamp
+  ) {
     return json(
-      { error: { code: "stale_review", message: "Listing changed since loaded." } },
+      {
+        error: {
+          code: "stale_review",
+          message: "Listing changed since loaded.",
+        },
+      },
       409,
       cors,
     );
   }
-  if (!persisted.moderation_ok || !persisted.audit_ok) return databaseError(cors);
+  if (!persisted.moderation_ok || !persisted.audit_ok)
+    return databaseError(cors);
 
   return json(
     {
@@ -590,7 +693,13 @@ const NOTIFICATION_EVENT_TYPES = new Set([
   "support_created",
   "report_created",
 ]);
-const NOTIFICATION_ENTITY_TYPES = new Set(["users", "listings", "feedback", "support", "reports"]);
+const NOTIFICATION_ENTITY_TYPES = new Set([
+  "users",
+  "listings",
+  "feedback",
+  "support",
+  "reports",
+]);
 
 export async function ensureAdminNotification(
   env: AdminEnv,
@@ -633,7 +742,11 @@ export async function ensureAdminNotification(
   }
 }
 
-async function adminNotificationsSummary(request: Request, env: AdminEnv, cors: Headers) {
+async function adminNotificationsSummary(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -666,7 +779,11 @@ async function adminNotificationsSummary(request: Request, env: AdminEnv, cors: 
   return json({ data: { unreadTotal, byType } }, 200, cors);
 }
 
-async function adminListNotifications(request: Request, env: AdminEnv, cors: Headers) {
+async function adminListNotifications(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -676,7 +793,9 @@ async function adminListNotifications(request: Request, env: AdminEnv, cors: Hea
   const limit = integerParam(request, 50, 1, 200);
 
   const whereClause =
-    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType) ? "WHERE an.entity_type = ?" : null;
+    entityType && NOTIFICATION_ENTITY_TYPES.has(entityType)
+      ? "WHERE an.entity_type = ?"
+      : null;
   const statement = env.DB.prepare(
     `SELECT an.id, an.event_type, an.entity_type, an.entity_id, an.title, an.body,
             an.event_key, an.created_at,
@@ -710,7 +829,11 @@ async function adminListNotifications(request: Request, env: AdminEnv, cors: Hea
   return json({ data: items }, 200, cors);
 }
 
-async function adminCreateNotification(request: Request, env: AdminEnv, cors: Headers) {
+async function adminCreateNotification(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!requireAdminRole(auth, "admin")) return forbidden(cors);
@@ -750,7 +873,11 @@ async function adminCreateNotification(request: Request, env: AdminEnv, cors: He
   return json({ data: { eventKey } }, 201, cors);
 }
 
-async function adminMarkNotificationsReadByEntity(request: Request, env: AdminEnv, cors: Headers) {
+async function adminMarkNotificationsReadByEntity(
+  request: Request,
+  env: AdminEnv,
+  cors: Headers,
+) {
   const auth = await requireMutationAuth(request, asAuthEnv(env), cors);
   if (auth instanceof Response) return auth;
   if (!requireAdminRole(auth, "moderator")) return forbidden(cors);
@@ -816,10 +943,17 @@ function clean(value: unknown, max: number) {
     : null;
 }
 
-function integerParam(request: Request, fallback: number, min: number, max: number): number {
+function integerParam(
+  request: Request,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
   const value = new URL(request.url).searchParams.get("limit");
   const parsed = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+  return Number.isFinite(parsed)
+    ? Math.max(min, Math.min(max, parsed))
+    : fallback;
 }
 
 function now() {
@@ -831,20 +965,37 @@ function validation(cors: Headers, message: string) {
 }
 
 function unauthorized(cors: Headers) {
-  return json({ error: { code: "auth_required", message: "Authentication required." } }, 401, cors);
+  return json(
+    { error: { code: "auth_required", message: "Authentication required." } },
+    401,
+    cors,
+  );
 }
 
 function forbidden(cors: Headers) {
-  return json({ error: { code: "permission_denied", message: "Permission denied." } }, 403, cors);
+  return json(
+    { error: { code: "permission_denied", message: "Permission denied." } },
+    403,
+    cors,
+  );
 }
 
 function notFound(cors: Headers) {
-  return json({ error: { code: "not_found", message: "Resource not found." } }, 404, cors);
+  return json(
+    { error: { code: "not_found", message: "Resource not found." } },
+    404,
+    cors,
+  );
 }
 
 function databaseError(cors: Headers) {
   return json(
-    { error: { code: "database_unavailable", message: "Data service unavailable." } },
+    {
+      error: {
+        code: "database_unavailable",
+        message: "Data service unavailable.",
+      },
+    },
     503,
     cors,
   );
@@ -852,7 +1003,10 @@ function databaseError(cors: Headers) {
 
 const windows1256Decoder = new TextDecoder("windows-1256");
 const windows1256Reverse = new Map<string, number>(
-  Array.from({ length: 256 }, (_, byte) => [windows1256Decoder.decode(Uint8Array.of(byte)), byte]),
+  Array.from({ length: 256 }, (_, byte) => [
+    windows1256Decoder.decode(Uint8Array.of(byte)),
+    byte,
+  ]),
 );
 
 function repairWindows1256Mojibake(value: string): string {
@@ -863,6 +1017,8 @@ function repairWindows1256Mojibake(value: string): string {
     if (byte === undefined) return value;
     bytes.push(byte);
   }
-  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(Uint8Array.from(bytes));
+  const repaired = new TextDecoder("utf-8", { fatal: false }).decode(
+    Uint8Array.from(bytes),
+  );
   return repaired.includes("\uFFFD") ? value : repaired;
 }
