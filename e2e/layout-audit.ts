@@ -245,7 +245,9 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
           const largeText = fontSize >= 24 || (fontSize >= 18.66 && fontWeight >= 700);
           const required = largeText ? 3 : 4.5;
           return ratio + 0.01 < required
-            ? [`${describe(element)} [${ratio.toFixed(2)}:1 < ${required}:1; fg=${style.color}; bg=rgb(${Math.round(background.r)},${Math.round(background.g)},${Math.round(background.b)})]`]
+            ? [
+                `${describe(element)} [${ratio.toFixed(2)}:1 < ${required}:1; fg=${style.color}; bg=rgb(${Math.round(background.r)},${Math.round(background.g)},${Math.round(background.b)})]`,
+              ]
             : [];
         })
         .slice(0, 30);
