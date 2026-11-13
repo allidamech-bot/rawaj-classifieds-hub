@@ -147,7 +147,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--background);
 }
 

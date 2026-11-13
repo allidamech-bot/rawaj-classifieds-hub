@@ -507,7 +507,7 @@ body
   background: transparent;
   box-shadow: none;
   caret-color: var(--rawaj-text-primary);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"]
