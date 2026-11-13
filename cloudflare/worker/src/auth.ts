@@ -43,6 +43,7 @@ type Authenticated = {
   email: string;
   displayName: string | null;
   roles: string[];
+  accountStatus: string;
 };
 
 type VerifiedIdentity = {
@@ -68,7 +69,7 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
 
   const userId = await ensureApplicationIdentity(env, identity);
   const user = await env.DB.prepare(
-    `SELECT u.id, u.email, u.disabled_at, p.display_name
+    `SELECT u.id, u.email, u.disabled_at, p.display_name, p.account_status
        FROM auth_users u
        JOIN public_profiles p ON p.id = u.id
       WHERE u.id = ? AND u.auth_provider = 'firebase' AND u.auth_user_id = ?`,
@@ -88,6 +89,7 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
     email: typeof user.email === "string" ? user.email : identity.email,
     displayName: typeof user.display_name === "string" ? user.display_name : null,
     roles: (rolesResult.results ?? []).map((item) => item.role),
+    accountStatus: typeof user.account_status === "string" ? user.account_status : "disabled",
   };
 }
 
@@ -106,11 +108,69 @@ export async function requireMutationAuth(
   }
 
   const path = normalizeApiPath(new URL(request.url).pathname);
+  const isSafetyAppeal = /^\\/v1\\/account\\/support-requests(?:\\/|$)/.test(path);
+  if (auth.accountStatus !== "active" && !isSafetyAppeal) {
+    return json(
+      { error: { code: "account_restricted", message: "Account is not active." } },
+      403,
+      cors,
+    );
+  }
+  // The owner must be able to switch off a global emergency freeze.
   if (path === "/v1/admin/system-controls") return auth;
 
   const blocked = await blockedMutationControl(request, env);
   if (blocked) return systemControlResponse(blocked, cors);
+
+  const restrictions = restrictedActionTypes(path, request.method);
+  if (restrictions.length > 0 && !isSafetyAppeal) {
+    const at = new Date().toISOString();
+    const placeholders = restrictions.map(() => "?").join(", ");
+    const restriction = await env.DB.prepare(
+      "SELECT 1 FROM user_restrictions WHERE user_id = ? " +
+      "AND restriction_type IN (" + placeholders + ") " +
+      "AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1",
+    )
+      .bind(auth.userId, ...restrictions, at, at)
+      .first<{ 1: number }>();
+    if (restriction) {
+      return json(
+        { error: { code: "account_restricted", message: "This action is restricted." } },
+        403,
+        cors,
+      );
+    }
+  }
   return auth;
+}
+
+function restrictedActionTypes(path: string, method: string): string[] {
+  const result: string[] = [];
+  const upper = method.toUpperCase();
+  if (upper === "GET" || upper === "HEAD") return result;
+  if (
+    (path === "/v1/listings" && upper === "POST") ||
+    (/^\\/v1\\/listings\\/[^/]+$/.test(path) && ["PATCH", "PUT", "DELETE"].includes(upper)) ||
+    /^\\/v1\\/listings\\/[^/]+\\/(?:lifecycle|attributes|taxonomy|images)$/.test(path) ||
+    /^\\/v1\\/listing-images\\/[^/]+$/.test(path)
+  ) result.push("posting");
+  if (
+    (path === "/v1/conversations" && upper === "POST") ||
+    /^\\/v1\\/conversations\\/[^/]+\\/(?:messages|attachments|offers)$/.test(path) ||
+    /^\\/v1\\/offers\\/[^/]+$/.test(path)
+  ) result.push("messaging");
+  if (
+    (upper === "POST" && /^\\/v1\\/sellers\\/[^/]+\\/reviews$/.test(path)) ||
+    /^\\/v1\\/reviews\\/[^/]+\\/response$/.test(path)
+  ) result.push("reviews");
+  if (/^\\/v1\\/account\\/(?:promotions|search-boosts)(?:\\/|$)/.test(path)) result.push("promotions");
+  if (
+    (upper === "POST" && path === "/v1/profile/media") ||
+    (upper === "POST" && /^\\/v1\\/listings\\/[^/]+\\/images$/.test(path)) ||
+    (upper === "POST" && /^\\/v1\\/conversations\\/[^/]+\\/attachments$/.test(path)) ||
+    (upper === "POST" && path === "/v1/account/verifications")
+  ) result.push("uploads");
+  return result;
 }
 
 type MutationControlKey =
