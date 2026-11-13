@@ -72,3 +72,10 @@
   background-color: #103f42 !important;
   background-image: none !important;
 }
+
+/* The safety note in the authenticated chat surface measured 4.48:1.
+ * This small text correction leaves card geometry and content unchanged.
+ */
+.rawaj-app-shell .rawaj-communication-safety p {
+  color: #e2e8de !important;
+}

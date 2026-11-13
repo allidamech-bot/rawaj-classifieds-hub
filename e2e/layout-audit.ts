@@ -28,9 +28,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
   await page.waitForFunction(
     () => {
       const styles = Array.from(
-        document.querySelectorAll<HTMLLinkElement>(
-          'link[data-rawaj-audited-override="true"]',
-        ),
+        document.querySelectorAll<HTMLLinkElement>('link[data-rawaj-audited-override="true"]'),
       );
       return styles.length > 0 && styles.every((sheet) => sheet.sheet !== null);
     },
