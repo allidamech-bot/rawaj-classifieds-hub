@@ -32,7 +32,7 @@ export function OfflineNotice() {
       const result = await cloudflareApiRequest<PublicSystemStatus>("/v1/system-status");
       if (result.ok) {
         setMaintenanceMode(result.data.maintenanceMode);
-      } else if (result.error.code === "rate_limited") {
+      } else if (result.code === "rate_limited") {
         // A Cloudflare 429 must not trigger more background pressure.
         nextAllowedCheckAtRef.current = Date.now() + SYSTEM_STATUS_RATE_LIMIT_BACKOFF_MS;
       }
