@@ -29,8 +29,6 @@ const rawajDisableRemoteMedia =
   process.env.VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA === "1" || process.env.GITHUB_ACTIONS === "true";
 
 const rawajE2eUseFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
-const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
-const rawajE2eApiProxyPath = "/v1";
 const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
 export default defineConfig({
@@ -47,17 +45,6 @@ export default defineConfig({
           createRawajE2eApiFixturePlugin(),
         ]
       : [],
-    server: rawajE2eApiProxyTarget
-      ? {
-          proxy: {
-            [rawajE2eApiProxyPath]: {
-              target: rawajE2eApiProxyTarget,
-              changeOrigin: true,
-              secure: true,
-            },
-          },
-        }
-      : undefined,
     resolve: {
       alias: [
         ...(rawajE2eUseFixtures
