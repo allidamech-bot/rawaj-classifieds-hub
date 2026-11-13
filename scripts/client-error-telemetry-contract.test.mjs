@@ -102,7 +102,7 @@ test("browser reporter caps telemetry at three events per minute", () => {
 });
 
 test("the Worker endpoint routes through abuse limits and logs only fixed safe fields", () => {
-  assert.match(entry, /path === "\/v1\/telemetry\/client-errors"/);
+  assert.match(entry, /pathname === "\/v1\/telemetry\/client-errors"/);
   assert.match(security, /path === "\/v1\/telemetry\/client-errors"/);
   assert.match(telemetryHandler, /MAX_BODY_BYTES = 1_024/);
   assert.match(telemetryHandler, /corsHeadersForOrigin/);
