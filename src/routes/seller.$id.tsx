@@ -1,22 +1,23 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
-import { MessageSquare, ShieldAlert, Star } from "lucide-react";
+import { Clock3, MapPin, MessageSquare, ShieldAlert, Star } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { MyStoreHeader } from "@/features/storefront/MyStoreHeader";
+import { MyStoreIdentity } from "@/features/storefront/MyStoreIdentity";
+import "@/features/storefront/my-store.css";
 import { SellerReviewCard } from "@/features/reviews/SellerReviewCard";
-import { AdaptiveListingCard } from "@/features/listings/cards/AdaptiveListingCard";
-import {
-  StorefrontIdentityHero,
-  StorefrontNotice,
-  StorefrontSectionHeader,
-} from "@/features/storefront/StorefrontIdentityHero";
+import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
+import { StorefrontNotice } from "@/features/storefront/StorefrontIdentityHero";
 import {
   createSellerReview,
   fetchPublicSellerProfile,
+  fetchSellerFollowSummary,
   fetchSellerReviewEligibility,
   SELLER_REVIEW_TRAITS,
   sellerReviewTraitLabel,
 } from "@/lib/classifieds-api";
-import type { PublicSellerProfile } from "@/lib/classifieds-types";
+import type { ClassifiedListing, PublicSellerProfile } from "@/lib/classifieds-types";
+import { formatPriceLocalized, governorateName } from "@/lib/i18n";
 import { readableProfileLabel } from "@/lib/readable-profile-text";
 import { absoluteUrl, createSeo, jsonLdScript, plainText } from "@/lib/seo";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -58,87 +59,193 @@ function SellerPage() {
   const seller = Route.useLoaderData();
   const router = useRouter();
   const retrySections = () => void router.invalidate();
+  const [followerCount, setFollowerCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setFollowerCount(null);
+    void fetchSellerFollowSummary(seller.id)
+      .then((result) => {
+        if (active && result.ok) setFollowerCount(result.data.followerCount);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [seller.id]);
 
   return (
-    <div className="rawaj-storefront-v2 min-h-dvh" dir={language === "ar" ? "rtl" : "ltr"}>
-      <PageHeader title={text("واجهة البائع", "Seller storefront")} />
-      <main className="container-wide rawaj-seller-premium-v3 mobile-page-bottom pb-10 pt-3 sm:pt-5">
-        <div className="space-y-7">
-          <StorefrontIdentityHero
-            mode="public"
-            sellerId={seller.id}
-            displayName={seller.businessName || seller.displayName}
-            secondaryName={seller.businessName ? seller.displayName : null}
-            avatarUrl={seller.avatarUrl}
-            coverUrl={seller.coverUrl}
-            bio={seller.bio}
-            location={readableProfileLabel(seller.locationAr)}
-            verified={seller.verified}
-            joinedAt={seller.joinedAt}
-            ratingAverage={seller.ratingSummary?.average}
-            ratingCount={seller.ratingSummary?.count}
-            approvedCount={seller.approvedListingCount}
-          />
+    <div className="my-store-public-page" dir={language === "ar" ? "rtl" : "ltr"}>
+      <MyStoreHeader />
+      <main className="my-store my-store-public">
+        <MyStoreIdentity
+          mode="public"
+          sellerId={seller.id}
+          displayName={seller.businessName || seller.displayName}
+          secondaryName={seller.businessName ? seller.displayName : null}
+          avatarUrl={seller.avatarUrl}
+          coverUrl={seller.coverUrl}
+          bio={seller.bio}
+          location={readableProfileLabel(seller.locationAr)}
+          verified={seller.verified}
+          ratingAverage={seller.ratingSummary?.average}
+          ratingCount={seller.ratingSummary?.count}
+          followerCount={followerCount}
+          approvedCount={seller.approvedListingCount}
+        />
 
-          <section className="rawaj-storefront-v2__layout">
-            <div className="rawaj-storefront-v2__main">
-              <StorefrontSectionHeader
-                title={text("إعلانات المتجر", "Store listings")}
-                count={seller.approvedListingCount ?? undefined}
+        {seller.verified ? (
+          <p className="my-store-public-verification">
+            {text(
+              "تعني شارة التوثيق أن بيانات الملف خضعت لمراجعة المنصة، ولا تضمن المنتج أو الدفع أو التسليم.",
+              "Verification means the profile was reviewed by the platform, not that a product, payment, or delivery is guaranteed.",
+            )}
+          </p>
+        ) : null}
+
+        <section
+          className="ms-owner-inventory my-store-public-inventory"
+          aria-labelledby="storefront-listings-title"
+        >
+          <nav
+            className="ms-approved-tabs my-store-public-tabs"
+            aria-label={text("أقسام المتجر", "Store sections")}
+          >
+            <a href="#storefront-listings" aria-current="page">
+              {text("الإعلانات", "Listings")} ({seller.approvedListingCount ?? "—"})
+            </a>
+            <a href="#seller-about">{text("نبذة", "About")}</a>
+            <a href="#seller-reviews">
+              {text("التقييمات", "Reviews")} ({seller.ratingSummary?.count ?? 0})
+            </a>
+          </nav>
+
+          <div id="storefront-listings" className="my-store-public-section">
+            <h2 id="storefront-listings-title" className="sr-only">
+              {text("إعلانات المتجر", "Store listings")}
+            </h2>
+            {seller.inventoryStatus === "ready" &&
+            seller.approvedListingCount != null &&
+            seller.approvedListingCount > seller.listings.length ? (
+              <p className="my-store-public-note">
+                {text(
+                  `نعرض أحدث ${seller.listings.length} من ${seller.approvedListingCount} إعلاناً عاماً معتمداً.`,
+                  `Showing ${seller.listings.length} of ${seller.approvedListingCount} approved public listings.`,
+                )}
+              </p>
+            ) : null}
+            {seller.inventoryStatus !== "ready" ? (
+              <StorefrontNotice
+                title={text("تعذر تحميل الإعلانات مؤقتاً", "Listings are temporarily unavailable")}
+                description={text(
+                  "تم الحفاظ على معلومات المتجر العامة. حاول تحميل الإعلانات مرة أخرى.",
+                  "The public storefront information remains available. Try loading listings again.",
+                )}
+                action={
+                  <button type="button" onClick={retrySections} className="underline">
+                    {text("إعادة المحاولة", "Try again")}
+                  </button>
+                }
               />
+            ) : seller.listings.length === 0 ? (
+              <StorefrontNotice
+                tone="empty"
+                title={text("لا توجد إعلانات عامة الآن", "No public listings right now")}
+                description={text(
+                  "ستظهر هنا الإعلانات المعتمدة عند نشر البائع عروضاً جديدة.",
+                  "Approved listings will appear here when the seller publishes new offers.",
+                )}
+              />
+            ) : (
+              <div className="ms-storefront-owner-grid my-store-public-grid">
+                {seller.listings.map((listing) => (
+                  <PublicStoreListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+          </div>
 
-              {seller.inventoryStatus === "ready" &&
-              seller.approvedListingCount != null &&
-              seller.approvedListingCount > seller.listings.length ? (
-                <p className="mb-3 text-xs text-muted-foreground">
-                  {text(
-                    `نعرض أحدث ${seller.listings.length} من ${seller.approvedListingCount} إعلانًا عامًا معتمدًا.`,
-                    `Showing the newest ${seller.listings.length} of ${seller.approvedListingCount} approved public listings.`,
-                  )}
-                </p>
-              ) : null}
-
-              {seller.inventoryStatus !== "ready" ? (
-                <StorefrontNotice
-                  title={text("تعذر تحميل الإعلانات مؤقتًا", "Listings are temporarily unavailable")}
-                  description={text(
-                    "تم الحفاظ على هوية البائع العامة. حاول تحميل الإعلانات مرة أخرى.",
-                    "The public seller identity remains available. Try loading the listings again.",
-                  )}
-                  action={
-                    <button type="button" onClick={retrySections} className="underline">
-                      {text("إعادة المحاولة", "Try again")}
-                    </button>
-                  }
-                />
-              ) : seller.listings.length === 0 ? (
-                <StorefrontNotice
-                  tone="empty"
-                  title={text("لا توجد إعلانات عامة الآن", "No public listings right now")}
-                  description={text(
-                    "ستظهر هنا الإعلانات المعتمدة عندما ينشر البائع عروضاً جديدة.",
-                    "Approved listings will appear here when the seller publishes new offers.",
-                  )}
-                />
-              ) : (
-                <div id="storefront-listings" className="rawaj-storefront-v2__product-grid">
-                  {seller.listings.map((listing) => (
-                    <AdaptiveListingCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="rawaj-storefront-v2__aside">
-              <ReviewsPanel seller={seller} retrySections={retrySections} />
-              <SafetyPanel />
-            </div>
+          <section
+            id="seller-about"
+            className="my-store-public-about"
+            aria-label={text("نبذة عن المتجر", "About the store")}
+          >
+            <h2>{text("عن المتجر", "About this store")}</h2>
+            <p dir="auto">
+              {seller.bio ||
+                text(
+                  "يعرض هذا المتجر معلومات البائع العامة وإعلاناته المعتمدة فقط.",
+                  "This store shows only the seller's public details and approved listings.",
+                )}
+            </p>
           </section>
 
-          <script {...jsonLdScript(buildSellerStructuredData(seller))} />
-        </div>
+          <div className="my-store-public-details">
+            <ReviewsPanel seller={seller} retrySections={retrySections} />
+            <SafetyPanel />
+          </div>
+        </section>
+        <script {...jsonLdScript(buildSellerStructuredData(seller))} />
       </main>
     </div>
+  );
+}
+
+function PublicStoreListingCard({ listing }: { listing: ClassifiedListing }) {
+  const { language, text } = useUiPreferences();
+  const negotiableWithAmount = listing.priceType === "negotiable" && listing.price != null;
+  const date = new Date(listing.publishedAt || listing.updatedAt);
+  const validDate = Number.isFinite(date.getTime());
+
+  return (
+    <Link
+      to="/listings/$id"
+      params={{ id: listing.id }}
+      className="ms-owner-listing-card my-store-public-card"
+      aria-label={listing.title}
+    >
+      <div className="ms-product-media">
+        <ListingCardImage
+          src={listing.primaryImageUrl}
+          alt=""
+          placeholder={listing.categoryPlaceholder ?? "misc"}
+          placeholderAspect="wide"
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="ms-owner-listing-card__summary">
+        <h3 dir="auto">{listing.title}</h3>
+        <p className="ms-store-card-price">
+          <bdi>
+            {formatPriceLocalized(
+              listing.price ?? 0,
+              negotiableWithAmount ? "fixed" : listing.priceType,
+              language,
+              listing.currency,
+            )}
+          </bdi>
+          {negotiableWithAmount ? <small>{text("قابل للتفاوض", "Negotiable")}</small> : null}
+        </p>
+      </div>
+      <div className="my-store-card-meta">
+        <span>
+          <MapPin aria-hidden="true" />
+          {governorateName(listing.governorateId, listing.governorateNameAr, language)}
+        </span>
+        {validDate ? (
+          <span>
+            <Clock3 aria-hidden="true" />
+            <time dateTime={date.toISOString()}>
+              {date.toLocaleDateString(language === "ar" ? "ar-SY" : "en-GB", {
+                day: "numeric",
+                month: "short",
+              })}
+            </time>
+          </span>
+        ) : null}
+      </div>
+    </Link>
   );
 }
 
@@ -343,7 +450,7 @@ function ReviewsPanel({
   }
 
   return (
-    <section id="seller-reviews" className="rawaj-storefront-v2__reviews">
+    <section id="seller-reviews" className="my-store-public-reviews">
       <div className="relative z-10">
         <span className="rawaj-signature-kicker">{text("صوت العملاء", "Customer voice")}</span>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -580,7 +687,7 @@ function ReviewsPanel({
 function SafetyPanel() {
   const { text } = useUiPreferences();
   return (
-    <section className="rawaj-storefront-safety">
+    <section className="my-store-public-safety">
       <div className="absolute -end-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
       <div className="relative z-10 flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[0.95rem] bg-brand-orange text-white">

@@ -126,6 +126,24 @@ test("approved store composition and owner interactions", async ({ page }, testI
   await expect(page.locator(".my-store-owner-menu")).not.toHaveAttribute("open", "");
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("dialog").getByText("Drafts & edits")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator(".my-store-dialog .ms-storefront-owner-tabs")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgba(0, 0, 0, 0)");
+  await expect
+    .poll(() =>
+      page
+        .locator(".my-store-dialog .ms-storefront-owner-tabs > button[aria-pressed='true']")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgb(16, 63, 66)");
+  await page.screenshot({
+    path: testInfo.outputPath("store-management-390.png"),
+    fullPage: false,
+  });
   await page.keyboard.press("Escape");
   await expect(page.locator(".my-store-add")).toHaveAttribute("href", "/add-listing");
   await page.locator(".my-store-topbar .my-store-nav summary").click();
@@ -145,4 +163,62 @@ test("approved store composition and owner interactions", async ({ page }, testI
     (await page.locator(".ms-product-media").first().boundingBox())!.height,
   ).toBeLessThanOrEqual(180);
   await page.screenshot({ path: testInfo.outputPath("store-missing-image.png"), fullPage: true });
+});
+
+test("public seller has owner-level visual fidelity without owner actions", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(180000);
+  await page.addInitScript(() => {
+    localStorage.setItem("rawaj-language", "en");
+  });
+  await page.goto("/seller/00000000-0000-4000-8000-000000000010");
+  await expect(page.locator("main.my-store-public")).toBeVisible();
+  await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
+  await expect(page.locator(".my-store-identity h1")).toBeVisible();
+  await expect(page.locator(".my-store-owner-menu")).toHaveCount(0);
+  await expect(page.locator(".my-store-public .my-store-add")).toHaveAttribute(
+    "href",
+    "#storefront-listings",
+  );
+  await expect(page.locator("#seller-reviews")).toBeVisible();
+  await expect(page.locator(".my-store-public-reviews")).toBeVisible();
+  await expect(page.locator(".my-store-public-safety")).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator("#seller-about")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
+    )
+    .toBe("rgb(255, 253, 250)");
+  for (const selector of [".my-store-public-reviews", ".my-store-public-safety"]) {
+    await expect
+      .poll(() =>
+        page.locator(selector).evaluate((element) => getComputedStyle(element).backgroundColor),
+      )
+      .toBe("rgb(255, 253, 250)");
+  }
+  await expect(page.locator(".my-store-public-grid .my-store-public-card").first()).toBeVisible();
+  for (const width of [390, 430, 1440]) {
+    await page.setViewportSize({ width, height: width === 1440 ? 1050 : 950 });
+    await page.evaluate(() => document.fonts.ready);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    await expect
+      .poll(() =>
+        page
+          .locator("main.my-store-public")
+          .evaluate((element) => getComputedStyle(element).backgroundColor),
+      )
+      .toBe("rgb(252, 250, 247)");
+    await page.screenshot({
+      path: testInfo.outputPath("buyer-store-" + width + ".png"),
+      fullPage: true,
+    });
+  }
+  await page.setViewportSize({ width: 390, height: 950 });
+  await expect(page.locator(".my-store-public .my-store-public-follow")).toBeVisible();
+  await page.locator(".my-store-public-card").first().click();
+  await expect(page).toHaveURL(/\/listings\//);
 });

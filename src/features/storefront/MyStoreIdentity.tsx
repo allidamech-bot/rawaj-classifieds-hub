@@ -16,8 +16,10 @@ import {
 import { useRef, useState } from "react";
 
 import { useUiPreferences } from "@/lib/ui-preferences";
+import { SellerFollowButton } from "@/features/retention/SellerFollowButton";
 
 interface MyStoreIdentityProps {
+  mode?: "owner" | "public";
   sellerId: string;
   displayName: string;
   secondaryName?: string | null;
@@ -26,15 +28,16 @@ interface MyStoreIdentityProps {
   bio?: string | null;
   location?: string | null;
   verified?: boolean;
-  completeness: number;
-  onManage: () => void;
-  approvedCount?: number;
+  completeness?: number;
+  onManage?: () => void;
+  approvedCount?: number | null;
   ratingAverage?: number | null;
   ratingCount?: number;
   followerCount?: number | null;
 }
 
 export function MyStoreIdentity({
+  mode = "owner",
   sellerId,
   onManage,
   displayName,
@@ -43,13 +46,14 @@ export function MyStoreIdentity({
   bio,
   location,
   verified,
-  completeness,
+  completeness = 0,
   approvedCount = 0,
   ratingAverage,
   ratingCount = 0,
   followerCount,
 }: MyStoreIdentityProps) {
   const { text } = useUiPreferences();
+  const isPublic = mode === "public";
   const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   const [failedCover, setFailedCover] = useState<string | null>(null);
   const showCover = Boolean(coverUrl && failedCover !== coverUrl);
@@ -72,7 +76,7 @@ export function MyStoreIdentity({
   }
 
   return (
-    <section className="my-store-hero" aria-labelledby="my-store-title">
+    <section className="my-store-hero" data-store-view={mode} aria-labelledby="my-store-title">
       <div className="my-store-cover" data-has-cover={showCover}>
         {showCover ? (
           <img src={coverUrl!} alt="" onError={() => setFailedCover(coverUrl ?? null)} />
@@ -92,7 +96,9 @@ export function MyStoreIdentity({
             fillOpacity=".7"
           />
         </svg>
-        <span className="my-store-cover-title">{text("متجري", "My Store")}</span>
+        <span className="my-store-cover-title">
+          {isPublic ? text("المتجر", "Store") : text("متجري", "My Store")}
+        </span>
         <svg
           className="my-store-cover-wave"
           viewBox="0 0 1100 60"
@@ -139,10 +145,17 @@ export function MyStoreIdentity({
           ) : null}
         </div>
         <div className="my-store-actions">
-          <Link to="/add-listing" className="my-store-add">
-            <Plus aria-hidden="true" />
-            {text("إضافة إعلان", "Add Listing")}
-          </Link>
+          {isPublic ? (
+            <a href="#storefront-listings" className="my-store-add">
+              <Store aria-hidden="true" />
+              {text("تصفح الإعلانات", "Browse listings")}
+            </a>
+          ) : (
+            <Link to="/add-listing" className="my-store-add">
+              <Plus aria-hidden="true" />
+              {text("إضافة إعلان", "Add Listing")}
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => void shareStore()}
@@ -150,36 +163,44 @@ export function MyStoreIdentity({
           >
             <Share2 />
           </button>
-          <details className="my-store-owner-menu" ref={ownerMenuRef}>
-            <summary aria-label={text("خيارات المتجر", "Store options")}>
-              <MoreHorizontal />
-            </summary>
-            <div>
-              <Link to="/profile">
-                <Pencil />
-                {text("تعديل الملف", "Edit profile")}
-              </Link>
-              <Link to="/seller/$id" params={{ id: sellerId }}>
-                <ArrowUpRight />
-                {text("معاينة المتجر", "View store")}
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  ownerMenuRef.current?.removeAttribute("open");
-                  onManage();
-                }}
-              >
-                <Settings />
-                {text("إدارة المتجر", "Manage store")}
-              </button>
-              {completeness < 100 ? (
-                <small>
-                  {text("اكتمال الملف", "Profile completeness")}: {completeness}%
-                </small>
-              ) : null}
-            </div>
-          </details>
+          {isPublic ? (
+            <SellerFollowButton
+              sellerId={sellerId}
+              showCount={false}
+              className="my-store-public-follow"
+            />
+          ) : (
+            <details className="my-store-owner-menu" ref={ownerMenuRef}>
+              <summary aria-label={text("خيارات المتجر", "Store options")}>
+                <MoreHorizontal />
+              </summary>
+              <div>
+                <Link to="/profile">
+                  <Pencil />
+                  {text("تعديل الملف", "Edit profile")}
+                </Link>
+                <Link to="/seller/$id" params={{ id: sellerId }}>
+                  <ArrowUpRight />
+                  {text("معاينة المتجر", "View store")}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    ownerMenuRef.current?.removeAttribute("open");
+                    onManage?.();
+                  }}
+                >
+                  <Settings />
+                  {text("إدارة المتجر", "Manage store")}
+                </button>
+                {completeness < 100 ? (
+                  <small>
+                    {text("اكتمال الملف", "Profile completeness")}: {completeness}%
+                  </small>
+                ) : null}
+              </div>
+            </details>
+          )}
         </div>
       </div>
       {feedback ? (
@@ -191,7 +212,7 @@ export function MyStoreIdentity({
         <div>
           <Package aria-hidden="true" />
           <dt>{text("الإعلانات", "Listings")}</dt>
-          <dd>{approvedCount}</dd>
+          <dd>{approvedCount ?? "—"}</dd>
         </div>
         <div>
           <Users aria-hidden="true" />
