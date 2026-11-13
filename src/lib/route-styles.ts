@@ -13,7 +13,6 @@ import "../rawaj-listing-studio-system-v5.css";
 import "../rawaj-personal-space-system-v5.css";
 import "../rawaj-final-site-system-v6.css";
 import "../rawaj-page-by-page-recovery-v7.css";
-import "../rawaj-page-by-page-recovery-v7b.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -160,9 +159,8 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
 
   return {
     home: normalizedPathname === "/",
-    // The category atlas styles intentionally live in search-filters-v1.css.
-    // Keep that discovery bundle active on /categories so its hero, search,
-    // and directory cards do not fall back to unstyled utility-only rows.
+    // Categories share results/filter styles for the discovery feed.
+    // The current directory cards are owned by category-directory.module.css.
     listingResults: ["/listings", "/categories"].includes(normalizedPathname),
     listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
     offers: normalizedPathname === "/offers",

@@ -67,8 +67,7 @@ const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.al
   readFile(new URL("../src/footer-contrast-system-v13.css", import.meta.url), "utf8"),
 ]);
 
-test("audited component corrections load after legacy recovery layers", () => {
-  const recoveryIndex = routeStyles.indexOf('import "../rawaj-page-by-page-recovery-v7b.css";');
+test("audited component corrections load without the retired dark recovery layer", () => {
   const correctionIndex = routeStyles.indexOf("auditCorrectionsV8Css,");
   const homeIndex = routeStyles.indexOf("homeAuditV8Css,");
   const categoriesIndex = routeStyles.indexOf("categoriesDiscoveryV8Css,");
@@ -82,7 +81,6 @@ test("audited component corrections load after legacy recovery layers", () => {
   const authIndex = routeStyles.indexOf("authFeedbackSystemV12Css,");
 
   for (const index of [
-    recoveryIndex,
     correctionIndex,
     homeIndex,
     categoriesIndex,
@@ -97,7 +95,7 @@ test("audited component corrections load after legacy recovery layers", () => {
   ]) {
     assert.notEqual(index, -1);
   }
-  assert.ok(correctionIndex > recoveryIndex);
+  assert.doesNotMatch(routeStyles, /rawaj-page-by-page-recovery-v7b[.]css/);
   assert.ok(homeIndex > correctionIndex);
   assert.ok(categoriesIndex > correctionIndex);
   assert.ok(ownerIndex > categoriesIndex);
@@ -134,15 +132,16 @@ test("footer and personal-space corrections retain readable semantic contrast", 
   assert.match(corrections, /rawaj-account-section\[data-tone="muted"\]/);
 });
 
-test("retired light-theme tokens cannot override the final dark semantic palette", () => {
+test("canonical light semantic tokens replace the retired dark theme", () => {
   assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
-  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-primary:\s*#18352f/);
-  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-secondary:\s*#536b63/);
-  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
-  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#d0d6cc/);
-  assert.match(semanticTokens, /--rawaj-text-muted:\s*#adbab0/);
+  assert.match(semanticTokens, /--rawaj-canvas:\s*#ffffff/);
+  assert.match(semanticTokens, /--rawaj-ink-primary:\s*#152322/);
+  assert.match(semanticTokens, /--rawaj-ink-secondary:\s*#53615e/);
+  assert.match(semanticTokens, /--rawaj-brand-primary:\s*#103f42/);
+  assert.match(semanticTokens, /--rawaj-text-primary:\s*var\(--rawaj-ink-primary\)/);
+  assert.match(semanticTokens, /--rawaj-text-secondary:\s*var\(--rawaj-ink-secondary\)/);
+  assert.doesNotMatch(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
 });
-
 test("footer renders one responsive variant and reserves the mobile dock", () => {
   assert.match(footerContrast, /\.rawaj-site-footer__mobile\s*{[\s\S]*display:\s*none !important/);
   assert.match(footerContrast, /\.rawaj-site-footer__desktop\s*{[\s\S]*display:\s*none !important/);

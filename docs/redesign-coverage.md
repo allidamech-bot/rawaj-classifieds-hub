@@ -4,6 +4,8 @@ Source inventory for the local redesign based on main edc31c8. Acceptance requir
 
 ## Active remediation in PR #857
 
+- Removed runtime loading of the historical dark recovery stylesheet (V7B), the source of broad route-wide `main` and `main :is(section, article, form)` dark/flattening selectors. Restored component-level ownership without introducing new overrides. A full rendered acceptance pass remains required.
+
 - The canonical light canvas is now applied to the application shell, browser theme color, contextual header, and footer at their existing ownership points; no new late-loaded override stylesheet was added.
 - Shared card, badge, menu, dialog, and data-table legacy dark values have been replaced with semantic surface/foreground tokens in the original shared component stylesheet.
 - The Categories acceptance contract now targets the new directory components rather than retired atlas classes.
