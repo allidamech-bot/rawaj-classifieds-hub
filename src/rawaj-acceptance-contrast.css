@@ -102,3 +102,66 @@
   color: #fff !important;
   opacity: 1 !important;
 }
+
+/* Final measured content-page AA fixes: legacy text on dark informational
+ * surfaces repeatedly measured 4.36–4.47:1 against the 4.5:1 requirement.
+ * Changes are route-scoped: no owner/buyer storefront layout or data changes.
+ */
+
+/* The notification panel has many small text labels at exactly 4.46:1;
+ * target the text itself, not merely inherited custom properties.
+ */
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  .rawaj-communication-v2 :is(p, small) {
+  color: #eef2ed !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"]
+  .rawaj-communication-v2 .rawaj-communication-hero__copy > p {
+  color: #fff1e8 !important;
+}
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/notifications"],
+    [data-resolved-pathname="/activity"]
+  ) .rawaj-communication-signed-out p {
+  color: #eef2ed !important;
+}
+
+/* Legal and support copy must remain legible without brightening the page
+ * itself or altering warning semantics.
+ */
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"],
+    [data-resolved-pathname="/safety"],
+    [data-resolved-pathname="/support"]
+  ) main .text-muted-foreground {
+  color: #e9eee8 !important;
+}
+.rawaj-app-shell:is(
+    [data-resolved-pathname="/terms"],
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/prohibited"]
+  ) main .text-warning {
+  color: #ffdc9d !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/safety"] main .text-destructive {
+  color: #ffb6a8 !important;
+}
+
+/* Category descriptions and small overlines were at 4.47:1. */
+.rawaj-app-shell[data-resolved-pathname^="/category/"] main .rawaj-eyebrow {
+  color: #ffcfb8 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/category/"] main p.text-muted-foreground {
+  color: #e8efe7 !important;
+}
+
+/* Offers: eliminate unnecessary text translucency; preserve the hero color. */
+.rawaj-app-shell[data-resolved-pathname="/offers"] main p.text-muted-foreground {
+  color: #e8efe7 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/offers"] main p[class*="text-[#fffaf0]/72"] {
+  color: #fffaf0 !important;
+  opacity: 1 !important;
+}
