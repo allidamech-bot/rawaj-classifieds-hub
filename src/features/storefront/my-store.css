@@ -1510,3 +1510,13 @@
     padding: 16px !important;
   }
 }
+
+/* The fixed iPhone dock must never cover the last storefront footer link. */
+@media (max-width: 1023.99px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-site-footer .rawaj-site-footer__mobile {
+    padding-bottom: calc(7rem + var(--safe-bottom)) !important;
+  }
+}
