@@ -180,7 +180,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 
 [data-ui="card"][data-variant="default"] {
   background: var(--rawaj-card-background);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.045);
 }
 
 [data-ui="card"][data-variant="flat"] {
@@ -201,7 +201,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 [data-ui="card"][data-variant="elevated"] {
   border-color: var(--rawaj-border-strong);
   background: var(--rawaj-card-background);
-  box-shadow: var(--shadow-raised);
+  box-shadow: 0 6px 20px rgba(21, 35, 34, 0.09);
 }
 
 .tap-card,
@@ -218,7 +218,7 @@ html[dir="ltr"] .rawaj-app-header::before {
   [data-ui="card"][data-interactive="true"]:hover {
     transform: translateY(-2px);
     border-color: var(--rawaj-border-active);
-    box-shadow: var(--shadow-raised);
+    box-shadow: 0 6px 20px rgba(21, 35, 34, 0.09);
   }
 }
 
@@ -246,7 +246,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 .rawaj-app-shell [data-ui="input"]:focus-visible,
 .rawaj-app-shell .input:focus-visible {
   border-color: #a9c8bb !important;
-  box-shadow: 0 0 0 3px rgba(169, 200, 187, 0.14) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-brand-primary) 18%, transparent) !important;
 }
 
 /* Shared buttons */
