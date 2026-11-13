@@ -76,6 +76,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     });
 
     let approvedCard = ownerCard(page, APPROVED_TITLE);
+    const approvedDialog = ownerDialog(page, APPROVED_TITLE);
     await expect(approvedCard).toBeVisible({ timeout: 30_000 });
 
     await page.locator(".my-store-owner-menu summary").click();
@@ -101,8 +102,8 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
 
     await page.keyboard.press("Escape");
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
-    await ownerDialog(page, APPROVED_TITLE).locator(".ms-shop-listing-health summary").click();
-    const listingPerformance = ownerDialog(page, APPROVED_TITLE).locator(
+    await approvedDialog.locator(".ms-shop-listing-health summary").click();
+    const listingPerformance = approvedDialog.locator(
       '[data-owner-listing-performance="true"]',
     );
     await expect(listingPerformance.locator('[data-owner-metric="views"]')).toContainText("24");
@@ -112,12 +113,12 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     );
     await expect(listingPerformance.locator('[data-owner-metric="unread"]')).toContainText("2");
 
-    const markReservedButton = ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+    const markReservedButton = approvedDialog.getByRole("button", {
       name: /وضع محجوز|Mark reserved/i,
     });
     await clickTwiceInSameTick(markReservedButton);
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
@@ -127,27 +128,27 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
 
     await clickTwiceInSameTick(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     );
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /وضع محجوز|Mark reserved/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
     await expectActionCount(lifecycleActions, "unreserve", 1);
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    const priceInput = ownerDialog(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i);
+    const priceInput = approvedDialog.getByLabel(/السعر الجديد|New price/i);
     await priceInput.fill(REDUCED_PRICE);
-    const dropPriceButton = ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+    const dropPriceButton = approvedDialog.getByRole("button", {
       name: /خفض|Reduce/i,
     });
     await clickTwiceInSameTick(dropPriceButton);
@@ -155,10 +156,10 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(dropPriceButton).toBeEnabled({ timeout: 30_000 });
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    await ownerDialog(page, APPROVED_TITLE)
+    await approvedDialog
       .getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i)
       .selectOption("90");
-    const applyExpiryButton = ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+    const applyExpiryButton = approvedDialog.getByRole("button", {
       name: /تطبيق|Apply/i,
     });
     await clickTwiceInSameTick(applyExpiryButton);
@@ -169,17 +170,17 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(page, approvedCard, APPROVED_TITLE);
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i),
+      approvedDialog.getByLabel(/السعر الجديد|New price/i),
     ).toHaveValue(REDUCED_PRICE, { timeout: 30_000 });
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i),
+      approvedDialog.getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i),
     ).toHaveValue("90");
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", { name: /وضع محجوز|Mark reserved/i }),
+      approvedDialog.getByRole("button", { name: /وضع محجوز|Mark reserved/i }),
     ).toBeVisible();
 
     await clickTwiceInSameTick(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", { name: /تم البيع|Sold|Mark sold/i }),
+      approvedDialog.getByRole("button", { name: /تم البيع|Sold|Mark sold/i }),
     );
     const soldDialog = page.getByRole("dialog", {
       name: /تأكيد إغلاق الإعلان كمباع|Mark this listing as sold/i,
@@ -196,7 +197,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(closedCard).toBeVisible({ timeout: 30_000 });
     await openListingManagement(page, closedCard, APPROVED_TITLE);
     await expect(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /إعادة التفعيل للمراجعة|Reactivate for review/i,
       }),
     ).toBeVisible();
@@ -206,7 +207,7 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(closedCard).toBeVisible({ timeout: 30_000 });
     await openListingManagement(page, closedCard, APPROVED_TITLE);
     await clickTwiceInSameTick(
-      ownerDialog(page, APPROVED_TITLE).getByRole("button", {
+      approvedDialog.getByRole("button", {
         name: /إعادة التفعيل للمراجعة|Reactivate for review/i,
       }),
     );
@@ -247,7 +248,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
       ownerDialog(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
     );
 
-    const deleteDialog = page.getByRole("dialog", { name: /حذف المسودة|Delete draft/i }).last();
+    const deleteDialog = page
+      .getByRole("dialog", { name: /حذف المسودة|Delete draft/i })
+      .last();
     await expect(deleteDialog).toBeVisible();
     await clickTwiceInSameTick(
       deleteDialog.getByRole("button", { name: /حذف المسودة|Delete draft/i }),
