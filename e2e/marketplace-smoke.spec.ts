@@ -71,7 +71,7 @@ test("home shell renders one header and one responsive dock", async ({ page }, t
 
   await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(1);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(1);
 
   const dock = page.locator("[data-shell-region=bottom-dock-region]");
   await expect(dock).toHaveCount(1);
@@ -102,7 +102,7 @@ test("home search submits trimmed queries", async ({ page }) => {
   await search.fill("  iPhone 15  ");
   // Activate the real submit button by keyboard: CSS transitions can scroll
   // the visible submit out of the pointer viewport during a Playwright click.
-  const submit = page.locator(".rawaj-signature-search button[type='submit']");
+  const submit = page.locator("[data-marketplace-home] form[role=search] button[type='submit']");
   await expect(submit).toBeEnabled();
   await submit.focus();
   await submit.press("Enter");
@@ -165,7 +165,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   expect(ratio).toBeGreaterThan(2.2);
   expect(ratio).toBeLessThan(2.38);
 
-  await page.locator(".rawaj-discovery-actions a[href^='/listings']").click();
+  await page.locator("[data-marketplace-home] a[href*='open_filters']").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   const listingsSlot = page.locator('[data-placement-page="search_results"]');
   await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
@@ -177,7 +177,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
 
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
-  const listingsLink = page.locator(".rawaj-discovery-actions a[href^='/listings']");
+  const listingsLink = page.locator("[data-marketplace-home] a[href*='open_filters']");
   await expect(listingsLink).toBeVisible();
   await listingsLink.click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -193,7 +193,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   const pageContent = page.locator('[data-shell-region="page-content"]');
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
-  await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
+  await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
 
   let releaseRequest = () => {};
   const requestGate = new Promise<void>((resolve) => {
@@ -207,7 +207,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await route.continue();
   });
 
-  const listingsLink = page.locator(".rawaj-discovery-actions a[href^='/listings']");
+  const listingsLink = page.locator("[data-marketplace-home] a[href*='open_filters']");
 
   try {
     await listingsLink.dispatchEvent("click");
@@ -219,7 +219,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
     await expect(pageContent).toBeVisible();
     await expect(pageContent).toHaveCSS("pointer-events", "none");
-    await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
+    await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
     await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
   } finally {
     releaseRequest();
@@ -229,7 +229,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
   await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
   await page.unroute(delayedListingsRequest);
 });
@@ -271,7 +271,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
     await expect(pageContent).toBeVisible();
     await expect(pageContent).toHaveCSS("pointer-events", "none");
     await expect(page.locator("main:visible")).toHaveCount(1);
-    await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
+    await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
   } finally {
     releaseRequest();
   }
@@ -279,7 +279,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   await expect(page).toHaveURL(/\/categories(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
+  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
   await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
   await page.unroute(delayedReferenceRequest);
 });
@@ -313,9 +313,9 @@ test("home stays within the viewport at audited mobile and desktop widths", asyn
     expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
     await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
     await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-    await expect(page.locator(".rawaj-signature-category-chip").first()).toBeVisible();
+    await expect(page.locator("[data-marketplace-home] a[href^='/category/'], [data-marketplace-home] a[href^='/categories?']").first()).toBeVisible();
 
-    const searchSubmit = page.locator(".rawaj-signature-search button");
+    const searchSubmit = page.locator("[data-marketplace-home] form[role=search] button");
     const submitBounds = await searchSubmit.boundingBox();
     expect(submitBounds?.height ?? 0).toBeGreaterThanOrEqual(44);
 
