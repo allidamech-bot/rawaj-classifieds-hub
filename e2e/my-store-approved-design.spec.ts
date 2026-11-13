@@ -123,6 +123,7 @@ test("approved store composition and owner interactions", async ({ page }, testI
   await page.keyboard.press("Escape");
   await page.locator(".my-store-owner-menu summary").click();
   await page.getByRole("button", { name: "Manage store", exact: true }).click();
+  await expect(page.locator(".my-store-owner-menu")).not.toHaveAttribute("open", "");
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("dialog").getByText("Drafts & edits")).toBeVisible();
   await page.keyboard.press("Escape");
