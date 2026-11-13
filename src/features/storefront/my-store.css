@@ -845,7 +845,6 @@
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store,
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
   .my-store-hero,
-  .my-store-identity-row,
   .ms-owner-inventory,
   .ms-owner-workspace-sticky
 ) {
