@@ -1221,8 +1221,8 @@ function ManageListingPage() {
               >
                 {text("إعادة المحاولة", "Try again")}
               </button>
-              <Link to="/profile" className="rawaj-chip px-4 py-2">
-                {text("العودة لحسابي", "Back to my account")}
+              <Link to="/profile/listings" className="rawaj-chip px-4 py-2">
+                {text("العودة لمتجري", "Back to my store")}
               </Link>
             </div>
           </div>
@@ -1233,7 +1233,7 @@ function ManageListingPage() {
 
   return (
     <>
-      <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
+      <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile/listings" />
       <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <ListingStudioHero
           eyebrow={text("إدارة الإعلان", "Listing management")}
