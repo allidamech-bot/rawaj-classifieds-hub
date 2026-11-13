@@ -445,7 +445,12 @@ function MyListingsPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
+        <PageHeader
+          title={text("متجري", "My store")}
+          titleIsPageHeading={false}
+          to="/profile"
+          backMode="history"
+        />
         <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             title={text("تسجيل الدخول مطلوب", "Login required")}
@@ -480,8 +485,13 @@ function MyListingsPage() {
 
   return (
     <>
-      <PageHeader title={text("متجري", "My store")} to="/profile" backMode="history" />
-      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <PageHeader
+        title={text("متجري", "My store")}
+        titleIsPageHeading={false}
+        to="/profile"
+        backMode="history"
+      />
+      <main className="rawaj-storefront-v2 rawaj-storefront-v2--owner rawaj-account-store-v3 rawaj-owner-control-center rawaj-store-workspace container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <StorefrontIdentityHero
           mode="owner"
           sellerId={profileId ?? ""}
@@ -522,31 +532,9 @@ function MyListingsPage() {
 
         <OwnerWorkspaceInsights listings={listings} onTabChange={(tab) => setActiveTab(tab)} />
 
-        <OwnerPerformanceOverview
-          summary={performanceSummary}
-          scopeNote={text(
-            performanceWindow === "all"
-              ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
-              : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
-            performanceWindow === "all"
-              ? "Metrics are lifetime totals for all tracked listings."
-              : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
-          )}
-        />
-
         <section className="rawaj-owner-inventory" aria-labelledby="rawaj-owner-inventory-title">
           <header className="rawaj-owner-inventory__header">
-            <div>
-              <p>{text("المخزون", "Inventory")}</p>
-              <h2 id="rawaj-owner-inventory-title">{text("إدارة الإعلانات", "Manage listings")}</h2>
-              <span>
-                {text(
-                  "اختر الحالة، ثم ابحث أو افتح الأدوات عند الحاجة.",
-                  "Choose a status, then search or open tools when needed.",
-                )}
-              </span>
-            </div>
-            <strong>{listings.length}</strong>
+            <h2 id="rawaj-owner-inventory-title">{text("إعلانات المتجر", "Store listings")}</h2>
           </header>
 
           <div className="rawaj-owner-workspace-sticky">
@@ -570,7 +558,7 @@ function MyListingsPage() {
               />
               <TabButton
                 active={activeTab === "needs_edit"}
-                label={text("تعديل", "Edit")}
+                label={text("مسودات وتعديلات", "Drafts & edits")}
                 count={grouped.needs_edit.length}
                 onClick={() => setActiveTab("needs_edit")}
               />
@@ -688,13 +676,30 @@ function MyListingsPage() {
                 />
               ) : null}
               {filteredListings.length === 0 ? (
-                <Panel
-                  title={text("لا توجد عناصر في هذا القسم", "Nothing in this section")}
-                  body={text(
-                    "ستظهر الإعلانات هنا حسب حالتها الحقيقية من قاعدة البيانات.",
-                    "Listings appear here according to their current lifecycle status.",
-                  )}
-                />
+                <div className="rawaj-store-empty">
+                  <Panel
+                    title={
+                      listingSearch.trim()
+                        ? text("لا نتائج مطابقة", "No matching listings")
+                        : listings.length === 0
+                          ? text(
+                              "متجرك جاهز لأول إعلان",
+                              "Your store is ready for its first listing",
+                            )
+                          : text("ما في إعلانات بهالحالة", "No listings in this status")
+                    }
+                    actionLabel={
+                      listingSearch.trim() ? text("مسح البحث", "Clear search") : undefined
+                    }
+                    onAction={listingSearch.trim() ? () => setListingSearch("") : undefined}
+                  />
+                  {listings.length === 0 && !listingSearch.trim() ? (
+                    <Link to="/add-listing" className="rawaj-store-empty__action">
+                      <Plus aria-hidden="true" size={18} />
+                      {text("أضف أول إعلان", "Post your first listing")}
+                    </Link>
+                  ) : null}
+                </div>
               ) : (
                 <>
                   <div className="rawaj-storefront-owner-grid">
@@ -735,6 +740,18 @@ function MyListingsPage() {
             </>
           )}
         </section>
+
+        <OwnerPerformanceOverview
+          summary={performanceSummary}
+          scopeNote={text(
+            performanceWindow === "all"
+              ? "الأرقام تراكمية لكل الإعلانات المتتبعة."
+              : `الأرقام تراكمية للإعلانات المنشورة خلال آخر ${performanceWindow} يوماً، وليست سجلاً يومياً لوقت حدوث التفاعل.`,
+            performanceWindow === "all"
+              ? "Metrics are lifetime totals for all tracked listings."
+              : `Metrics are lifetime totals for listings published in the last ${performanceWindow} days, not event-by-event history.`,
+          )}
+        />
       </main>
     </>
   );
@@ -828,7 +845,6 @@ function OwnerPerformanceOverview({
           <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
           <span>
             <strong>{text("أداء إعلاناتك", "Your listing performance")}</strong>
-            <small>{text("ملخص سريع", "Quick snapshot")}</small>
           </span>
         </span>
         <button
@@ -1369,7 +1385,7 @@ function StoreListingCard({
             />
           </div>
           <div className="rawaj-owner-listing-card__summary">
-            <h2>{listing.title}</h2>
+            <h3 dir="auto">{listing.title}</h3>
             <div className="rawaj-owner-listing-card__facts">
               <strong>
                 {formatPriceLocalized(
@@ -1843,11 +1859,7 @@ function StoreListingCard({
               onClick={() => void handleConfirmDelete()}
               className="flex-1 rounded-xl bg-destructive px-4 py-2.5 text-xs font-bold text-white disabled:opacity-60"
             >
-              {deleting
-                ? "جارٍ الحذف…"
-                : listing.status === "draft"
-                  ? "حذف المسودة"
-                  : "حذف الإعلان"}
+              {deleting ? "جارٍ الحذف…" : listing.status === "draft" ? "حذف المسودة" : "حذف الإعلان"}
             </button>
             <button
               type="button"

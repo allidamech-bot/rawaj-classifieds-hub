@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Smartphone,
   Sofa,
-  Sparkles,
   Store,
   Wrench,
   type LucideIcon,
@@ -155,10 +154,6 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
   return (
     <section className="rawaj-signature-hero" aria-labelledby="rawaj-signature-home-title">
       <div className="rawaj-signature-hero__content">
-        <span className="rawaj-signature-hero__kicker">
-          <Sparkles aria-hidden="true" />
-          {text("السوق السوري الأقرب إليك", "Your closest Syrian marketplace")}
-        </span>
         <h1 id="rawaj-signature-home-title">
           {text("كل ما تبحث عنه… في رواج", "Everything you are looking for… on RAWAJ")}
         </h1>

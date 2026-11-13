@@ -577,7 +577,7 @@ body
   padding: 0.2rem 0 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__summary h2 {
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-listing-card__summary h3 {
   display: -webkit-box !important;
   overflow: hidden !important;
   margin: 0 !important;
