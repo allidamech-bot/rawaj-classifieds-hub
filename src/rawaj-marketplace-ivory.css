@@ -367,3 +367,13 @@
   overflow-wrap: anywhere;
   text-overflow: clip;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-option,
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-option
+  .rawaj-taxonomy-option__title {
+  color: #17362f !important;
+}
