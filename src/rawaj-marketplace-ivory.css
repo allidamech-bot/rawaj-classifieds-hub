@@ -441,3 +441,21 @@
   p {
   color: #684720 !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/more"]
+  main.rawaj-account-command-v3
+  .rawaj-more-v2__sections
+  .rawaj-account-section
+  :is(a, button)
+  .rawaj-settings-row-title:not(.text-destructive) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/more"]
+  main.rawaj-account-command-v3
+  .rawaj-more-v2__sections
+  .rawaj-account-section
+  :is(a, button)
+  .rawaj-settings-row-hint {
+  color: var(--market-muted) !important;
+}

@@ -290,14 +290,6 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:first-child {
-  color: #f4f0e8 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:last-child {
-  color: #9299a2 !important;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > svg {
   color: #8d939b !important;
 }
