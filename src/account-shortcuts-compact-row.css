@@ -1,13 +1,13 @@
 /* B3.1 /more only: readable two-column shortcuts on narrow phones.
    The protected My Store rules below this block are carried forward unchanged. */
 @media (max-width: 559px) {
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     align-items: stretch;
     gap: 0.65rem !important;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
     display: flex !important;
     flex-direction: row !important;
     justify-content: flex-start !important;
@@ -19,26 +19,26 @@
     gap: 0.55rem !important;
     text-align: start !important;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
     font-size: 0.81rem !important;
     line-height: 1.4 !important;
     white-space: normal !important;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card svg {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card svg {
     width: 1.2rem !important;
     height: 1.2rem !important;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
     width: 2.4rem !important;
     height: 2.4rem !important;
     flex: 0 0 auto;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-boost-shortcut__hint {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-boost-shortcut__hint {
     display: none !important;
   }
 }
 @media (min-width: 560px) and (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 0.6rem !important;
