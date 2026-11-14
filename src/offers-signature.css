@@ -9,7 +9,7 @@
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 {
   color: var(--rawaj-identity-ink);
-  background: var(--rawaj-identity-ivory);
+  background: var(--rawaj-identity-ivory) !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage {
   position: relative;
@@ -17,7 +17,7 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-champagne) 26%, transparent);
   border-radius: clamp(1.1rem, 3vw, 1.65rem);
   color: var(--rawaj-identity-ivory);
-  background: var(--rawaj-identity-petrol);
+  background: var(--rawaj-identity-petrol) !important;
   box-shadow: 0 12px 32px color-mix(in srgb, var(--rawaj-identity-petrol) 13%, transparent);
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage::before {
@@ -101,4 +101,20 @@
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* Harmonize contrast against both the dark hero and the ivory results surface. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 > :is(h1, h2, h3, p),
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 :is(section, header) > :is(h2, h3) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-signature-kicker:not(.text-gold) {
+  color: #245a50 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-offers-empty :is(p, span) {
+  color: #435650 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-offers-empty button.bg-primary {
+  color: white !important;
+  background: #075d52 !important;
 }
