@@ -601,6 +601,8 @@
 }
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 :is(.bg-muted-surface, .bg-card) {
   color: var(--rawaj-identity-ink) !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 70%, white) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 18%, transparent) !important;
 }
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 :is(a, button).bg-primary {
   color: var(--rawaj-identity-ivory) !important;
