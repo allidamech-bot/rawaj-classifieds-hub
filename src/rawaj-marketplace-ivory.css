@@ -1,0 +1,295 @@
+/* The two storefronts and the owner listing editor keep their own presentation. */
+.rawaj-app-shell.rawaj-marketplace-ivory {
+  --market-ink: #17362f;
+  --market-muted: #496058;
+  --market-paper: #fbf3e7;
+  --market-card: #fffaf1;
+  --market-line: #decab1;
+  --market-petrol: #073836;
+  --market-teal: #07564e;
+  --market-gold: #f1d1a1;
+  --rawaj-page-background: var(--market-paper);
+  --rawaj-card-background: var(--market-card);
+  --rawaj-surface-inset: #fffcf7;
+  --rawaj-text-primary: var(--market-ink);
+  --rawaj-text-secondary: var(--market-muted);
+  --rawaj-text-muted: var(--market-muted);
+  --rawaj-border: var(--market-line);
+  --rawaj-border-strong: #bfa98a;
+  --rawaj-border-active: #27796b;
+  --rawaj-link: var(--market-teal);
+  --rawaj-action-primary: var(--market-teal);
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(.rawaj-app-shell__page, .rawaj-app-shell__content) {
+  background: var(--market-paper) !important;
+  color: var(--market-ink);
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname] .rawaj-app-shell__content main {
+  min-width: 0;
+  color: var(--market-ink) !important;
+  background-color: transparent !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(.rawaj-app-header, .rawaj-site-footer, .rawaj-bottom-nav-shell) {
+  background:
+    radial-gradient(ellipse at 80% 0%, #1a675e, transparent 75%), var(--market-petrol) !important;
+  border-color: #bda679 !important;
+  color: #fff5e5 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname] .rawaj-floating-header-shell {
+  background: transparent !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(.rawaj-app-header, .rawaj-site-footer, .rawaj-bottom-nav-shell)
+  :is(
+    .rawaj-brand-lockup__name,
+    .rawaj-brand-lockup__latin,
+    .rawaj-dock-item,
+    .rawaj-dock-icon,
+    a,
+    p
+  ) {
+  color: #fff5e5 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  .rawaj-dock-item[data-active="true"] {
+  background: #226b60 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname] .rawaj-dock-create {
+  background: var(--market-gold) !important;
+  color: var(--market-petrol) !important;
+}
+
+/* Destination headers share the homepage's teal shapes and champagne edge. */
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-categories-v2__hero,
+    .rawaj-trust-hero,
+    .rawaj-communication-hero,
+    .rawaj-studio-hero,
+    .rawaj-detail-summary
+  ) {
+  --rawaj-text-primary: #fff6e8;
+  --rawaj-text-secondary: #ecdfc9;
+  --rawaj-text-muted: #ecdfc9;
+  color: #fff6e8 !important;
+  background:
+    radial-gradient(ellipse at 10% 100%, #23766a, transparent 64%), var(--market-petrol) !important;
+  border: 1px solid #ae9470 !important;
+  border-radius: 1.5rem 1.5rem 1.5rem 2.35rem !important;
+  box-shadow: 0 8px 20px #123c3328 !important;
+}
+
+[dir="rtl"]
+  .rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-categories-v2__hero,
+    .rawaj-trust-hero,
+    .rawaj-communication-hero,
+    .rawaj-studio-hero,
+    .rawaj-detail-summary
+  ) {
+  border-radius: 1.5rem 1.5rem 2.35rem 1.5rem !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-categories-v2__hero,
+    .rawaj-trust-hero,
+    .rawaj-communication-hero,
+    .rawaj-studio-hero,
+    .rawaj-detail-summary
+  )
+  :is(h1, h2, p, small) {
+  color: var(--rawaj-text-primary) !important;
+}
+
+/* Keep existing card structure and route-specific actions. */
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-category-directory-card,
+    .rawaj-color-card,
+    .rawaj-account-card,
+    .rawaj-account-section,
+    .rawaj-trust-link-card,
+    .rawaj-support-panel,
+    .rawaj-support-topics,
+    .rawaj-support-topic,
+    .rawaj-support-faq,
+    .rawaj-support-requests,
+    .rawaj-notification-panel,
+    .rawaj-activity-panel,
+    .rawaj-detail-section,
+    .rawaj-detail-reference,
+    .rawaj-auth-card,
+    .rawaj-product-card,
+    .rawaj-surface,
+    .rawaj-message-panel,
+    .rawaj-studio-media-card,
+    .rawaj-studio-section,
+    .rawaj-studio-preview,
+    .rawaj-studio-quality,
+    .rawaj-studio-completion,
+    .rawaj-listing-studio-v4 form fieldset,
+    [data-ui="card"]
+  ) {
+  color: var(--market-ink) !important;
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+  box-shadow: 0 4px 14px #79583716 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-category-directory-card,
+    .rawaj-color-card,
+    .rawaj-account-section,
+    .rawaj-trust-link-card,
+    .rawaj-detail-section,
+    .rawaj-auth-card,
+    .rawaj-product-card
+  )
+  :is(h2, h3, strong, p) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(.rawaj-categories-v2__hero-search, .rawaj-search-toolbar, .rawaj-studio-action-bar) {
+  color: var(--market-ink) !important;
+  border-color: var(--market-line) !important;
+  background: var(--market-card) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+    textarea,
+    select,
+    [data-ui="select-trigger"]
+  ) {
+  min-width: 0;
+  color: var(--market-ink) !important;
+  border-color: #b9a68a !important;
+  background: #fffcf7 !important;
+  color-scheme: light;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(input, textarea)::placeholder {
+  color: var(--market-muted) !important;
+  opacity: 1;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(.rawaj-button-primary, [data-ui="button"][data-variant="default"], button[type="submit"]) {
+  color: #fffaf0 !important;
+  background: var(--market-teal) !important;
+  border-color: var(--market-teal) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid #27796b;
+  outline-offset: 2px;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(
+    main .rawaj-categories-v2__hero-search label,
+    main .rawaj-category-directory-card,
+    main .rawaj-account-section,
+    main .rawaj-more-v2__command .rawaj-color-card,
+    main .rawaj-more-v2__secondary > a,
+    main .rawaj-support-topic,
+    main .rawaj-support-topics
+  ) {
+  color: var(--market-ink) !important;
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(
+    .rawaj-category-directory-card,
+    .rawaj-more-v2__secondary,
+    .rawaj-account-section,
+    .rawaj-support-topics
+  )
+  :is(.text-foreground, .text-muted-foreground, .text-brand-orange, strong, small, h2, h3, p) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  :is(
+    .rawaj-account-command-v3 > .rawaj-trust-hero,
+    .rawaj-trust-v2 .rawaj-trust-hero,
+    .rawaj-studio-hero
+  ) {
+  background:
+    radial-gradient(ellipse at 10% 100%, #23766a, transparent 64%), var(--market-petrol) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(
+    .rawaj-categories-v2__hero .category-tile,
+    .rawaj-category-directory-card .category-tile,
+    .rawaj-trust-hero__symbol,
+    .rawaj-account-section a > span > span:first-child
+  ) {
+  color: var(--market-petrol) !important;
+  background: var(--market-gold) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  main
+  .rawaj-categories-v2__hero-search
+  input {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname]
+  :is(
+    main a.rawaj-button-primary,
+    main button.rawaj-button-primary,
+    .rawaj-contact-dock .rawaj-contact-dock__primary
+  ) {
+  background: var(--market-teal) !important;
+  color: #fffaf0 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname] .rawaj-contact-dock {
+  background: var(--market-petrol) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname] .rawaj-header-login-cta::before {
+  background: var(--market-teal);
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  main
+  > .rawaj-surface {
+  background: var(--market-card) !important;
+  color: var(--market-ink) !important;
+}
