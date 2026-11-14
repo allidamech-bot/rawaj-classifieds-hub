@@ -52,6 +52,7 @@
     .rawaj-brand-lockup__latin,
     .rawaj-dock-item,
     .rawaj-dock-icon,
+    .text-primary-foreground\/65,
     a,
     p
   ) {
@@ -532,6 +533,39 @@
 
 .rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/support"]
   main.rawaj-support-v2
+  a.bg-primary.text-primary-foreground {
+  background: var(--market-teal) !important;
+  color: #fffaf0 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/safety"]
+  main.rawaj-safety-v2
+  .rawaj-safety-guide {
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/safety"]
+  main.rawaj-safety-v2
+  .rawaj-safety-guide[data-warning="true"] {
+  background: #f8ead3 !important;
+  border-color: #ddc29a !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/safety"]
+  main.rawaj-safety-v2
+  :is(.rawaj-safety-guide h2, .rawaj-safety-guide li, section.bg-card > p) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/safety"]
+  main.rawaj-safety-v2
+  strong.text-destructive {
+  color: #923223 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/safety"]
+  main.rawaj-safety-v2
   a.bg-primary.text-primary-foreground {
   background: var(--market-teal) !important;
   color: #fffaf0 !important;
