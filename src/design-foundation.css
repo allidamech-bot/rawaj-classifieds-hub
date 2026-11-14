@@ -1,5 +1,14 @@
 :root,
 .dark {
+  /* Approved homepage identity. Values are additive until route migration is accepted.
+   * Keep historical dark semantics unchanged during this safe first slice. */
+  --rawaj-identity-ivory: #f9f0e4;
+  --rawaj-identity-champagne: #ffe3b0;
+  --rawaj-identity-ink: #132724;
+  --rawaj-identity-petrol: #073836;
+  --rawaj-identity-teal: #08635e;
+  --rawaj-identity-gold: #eac38f;
+
   --rawaj-page-background: #242529;
   --rawaj-card-background: #2d2f34;
   --rawaj-elevated-background: #34363c;
