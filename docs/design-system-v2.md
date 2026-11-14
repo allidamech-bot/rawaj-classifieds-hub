@@ -88,3 +88,18 @@ exact commit SHA, affected paths, before/after screenshots, RTL/LTR and role
 coverage, contrast/touch/overflow review, relevant functional regression, and
 CI result on the same SHA. No automatic production deployment; the owner
 publishes manually.
+
+## Phase 1 update — shared semantic status primitives
+
+`Badge` accent/success/warning/gold/destructive variants now consume
+central `--rawaj-badge-*-{border,surface,ink}` roles rather than embedding the
+retired pink/purple colors in the component. The legacy/default palette retains
+its existing appearance. A scoped `data-design-palette="ivory"` token contract
+is available for **future, explicitly reviewed** route migration; it is not yet
+enabled on the application shell or My Store. The light badge colors pass
+WCAG AA 4.5:1 for opaque foreground/background pairs, but still require
+actual rendered contrast checks when a route opts in.
+
+Do not activate the new route palette on `/profile/listings`, `/seller/:id`,
+or `/` as an unreviewed shortcut. Route visual acceptance and an explicit
+sign-off are prerequisites.
