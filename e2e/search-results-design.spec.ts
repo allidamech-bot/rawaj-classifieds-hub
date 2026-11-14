@@ -9,6 +9,7 @@ for (const language of ["ar", "en"]) {
       await page.goto("/listings", { waitUntil: "domcontentloaded" });
       await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
       await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
+      await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#073836");
       await page.evaluate(() => document.fonts.ready);
       const main = page.locator("main.rawaj-search-results-v1");
       await expect(main).toHaveCSS("background-color", "rgb(249, 240, 228)");
