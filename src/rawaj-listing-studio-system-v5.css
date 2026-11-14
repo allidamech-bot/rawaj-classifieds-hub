@@ -143,8 +143,8 @@
   min-height: 2.15rem !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 999px !important;
-  background: rgba(24, 25, 30, 0.34) !important;
-  color: rgba(244, 241, 237, 0.78) !important;
+  background: rgba(7, 56, 54, 0.75) !important;
+  color: var(--rawaj-identity-ivory) !important;
   padding-inline: 0.72rem !important;
   font-size: 0.64rem !important;
   font-weight: 700 !important;
@@ -159,8 +159,8 @@
   min-height: 2.45rem !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 0.78rem !important;
-  background: var(--rawaj-muted-surface) !important;
-  color: rgba(244, 241, 237, 0.76) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--rawaj-identity-ivory) !important;
   font-size: 0.68rem !important;
   box-shadow: none !important;
 }
@@ -431,7 +431,7 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.018),
     0 7px 18px rgba(0, 0, 0, 0.08) !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .rawaj-listing-studio-v4 textarea.input {
@@ -571,7 +571,7 @@
   background:
     radial-gradient(circle at 50% 22%, rgba(104, 173, 255, 0.1), transparent 36%),
     radial-gradient(circle at 78% 82%, rgba(223, 73, 181, 0.08), transparent 33%),
-    rgba(25, 26, 31, 0.58) !important;
+    var(--rawaj-muted-surface) !important;
   color: var(--studio-v5-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
@@ -581,7 +581,7 @@
   background:
     radial-gradient(circle at 50% 22%, rgba(104, 173, 255, 0.15), transparent 38%),
     radial-gradient(circle at 78% 82%, rgba(223, 73, 181, 0.11), transparent 34%),
-    rgba(25, 26, 31, 0.66) !important;
+    var(--rawaj-surface-selected) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
 }
 
