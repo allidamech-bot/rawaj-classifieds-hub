@@ -43,7 +43,13 @@ interface Props {
   identity?: boolean;
 }
 
-export function PlaceholderArt({ type, label, className = "", aspect = "wide", identity = false }: Props) {
+export function PlaceholderArt({
+  type,
+  label,
+  className = "",
+  aspect = "wide",
+  identity = false,
+}: Props) {
   const Icon = glyphs[type] ?? Sparkles;
   const gradientId = `rawaj-placeholder-${useId().replace(/:/g, "")}`;
   const paletteClass = identity
