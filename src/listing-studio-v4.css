@@ -1,3 +1,20 @@
+/* B2.3: only create/edit listing routes opt into the existing approved design
+ * foundation. Reuse existing tokens; all other routes retain their prior theme.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) {
+  --rawaj-shell-canvas: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  --rawaj-shell-primary-surface: var(--rawaj-identity-teal);
+  --rawaj-shell-primary-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-active-surface: var(--rawaj-identity-champagne);
+  --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
+}
+
 /* RAWAJ Listing Studio V4 — premium correction pass.
  * Presentation only: publishing, drafts, uploads, taxonomy, validation,
  * permissions, and category-specific fields remain unchanged.

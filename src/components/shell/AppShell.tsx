@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveBrowserChrome } from "@/lib/browser-chrome";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
-import { auditedOverrideStyleHrefs } from "@/lib/route-styles";
+import { auditedOverrideStyleHrefs, resolveRouteStyleScope } from "@/lib/route-styles";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface AppShellProps {
@@ -192,6 +192,7 @@ export function AppShell({
   pendingPathname,
 }: AppShellProps) {
   const config = resolveAppShellConfig(pathname);
+  const useApprovedStudioIdentity = resolveRouteStyleScope(pathname).listingStudio;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
@@ -213,6 +214,7 @@ export function AppShell({
         data-keyboard-open={keyboardOpen}
         data-route-state={isRouteNavigating ? "pending" : "idle"}
         data-resolved-pathname={pathname}
+        data-design-palette={useApprovedStudioIdentity ? "ivory" : undefined}
         data-pending-pathname={isRouteNavigating ? pendingPathname : undefined}
         aria-busy={isRouteNavigating}
       >

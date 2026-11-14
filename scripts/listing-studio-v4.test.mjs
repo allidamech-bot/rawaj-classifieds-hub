@@ -196,3 +196,13 @@ test("B2.3 uses one accessible route-owned gate for publishing and editor recove
   assert.match(editor, /onClick=\{\(\) => void loadSetup\(\)\}/);
   assert.match(route, /actionSearch=\{\{ returnTo: "\/add-listing" \}\}/);
 });
+
+
+test("B2.3 studio palette opt-in is route-scoped at the shared shell", async () => {
+  const appShell = await readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8");
+  assert.match(appShell, /resolveRouteStyleScope\(pathname\)\.listingStudio/);
+  assert.match(appShell, /data-design-palette=\{useApprovedStudioIdentity \? "ivory" : undefined\}/);
+  assert.match(css, /data-resolved-pathname="\/add-listing"/);
+  assert.match(css, /data-resolved-pathname\^="\/profile\/listings\/"/);
+  assert.match(css, /--rawaj-shell-canvas: var\(--rawaj-identity-ivory\)/);
+});
