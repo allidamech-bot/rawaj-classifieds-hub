@@ -43,10 +43,12 @@ these solid-color calculations.
   related historical layers are still loaded in main. Their presence is a
   known migration dependency, not authorization to delete them without
   selector/dependency audits and rendered regression checks.
-- **PR #867**: remained a draft with failed browser and rendered-visual
-  gates at the 14 November audit. Do not mistake its blanket ivory stylesheet
-  for completed route migration; integrate or retire changes only after
-  exact-file review and proven acceptance.
+- **PR #867**: merged as `5a55344931652a7373f8f763bd9a624d30ef28db`.
+  Categories use the reconciled petrol/ivory directory design. The rejected
+  blanket ivory stylesheet must not be restored.
+- **Verified merged foundation**: #866 (`8e18e03f210c6ea4b18810c39582759aa1c32bfd`)
+  and #868 (`bceb5f8a3fa3f8d45d63053ae576e6a815681abd`).
+
 
 ## Component and page rules
 
@@ -65,23 +67,17 @@ these solid-color calculations.
 6. Retain existing API/data/permissions/business rules; any nonvisual
    concern belongs in its own engineering track.
 
-## Nine execution batches and acceptance gates
+## Expanded execution batches and acceptance gates
 
-1. **Foundation** — canonical palette, component ownership, inherited
-   stylesheet audit, design regression safeguards. **In progress**.
-2. **Homepage** — final polish and iPhone visual acceptance. Pending.
-3. **Categories and search** — category hierarchy, search, filters, results.
-   Pending.
-4. **Listing detail and posting** — details, photos, contact, publish form.
-   Pending.
-5. **Account and settings** — profile, more, auth, favorites, saved searches.
-   Pending.
-6. **Messaging and notifications** — chats, alerts, activity. Pending.
-7. **Trust and support** — support, safety, verification, legal, promotion.
-   Pending.
-8. **Administration** — moderation, users, audit, campaigns. Pending.
-9. **Final integration** — cascade cleanup, route inventory, browsers, iPhone
-   acceptance and release-readiness. Pending.
+1. **B1 — Foundation and entry experiences**: substantially completed through
+   #866, #868 and #867. Preserve homepage, categories and My Store; physical
+   iPhone acceptance remains pending.
+2. **B2 — Discovery and listings**: B2.1 search/results in progress, followed
+   sequentially by B2.2 listing detail and B2.3 listing studio. Not accepted yet.
+3. **B3 — Personal and operational experiences**: account, communication,
+   trust/support and administration, each independently tested and merged. Pending.
+4. **B4 — Integration**: audited legacy retirement, actual route inventory,
+   responsive RTL/LTR browser acceptance and owner handoff. Pending.
 
 **A batch is not accepted by a passing source check alone.** Required evidence:
 exact commit SHA, affected paths, before/after screenshots, RTL/LTR and role

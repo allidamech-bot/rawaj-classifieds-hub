@@ -39,15 +39,14 @@
 }
 
 .rawaj-search-toolbar__heading h1 {
-  overflow: hidden;
+  overflow-wrap: anywhere;
   margin-top: 0.22rem;
   color: var(--color-primary);
   font-family: var(--font-display, inherit);
   font-size: clamp(1.05rem, 4vw, 1.5rem);
   font-weight: 850;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .rawaj-search-toolbar__heading div > span {

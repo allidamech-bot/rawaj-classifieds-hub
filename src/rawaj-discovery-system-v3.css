@@ -121,11 +121,10 @@
 }
 
 .rawaj-search-toolbar__search input {
-  direction: inherit;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
   caret-color: var(--rawaj-discovery-accent);
   font-family: inherit;
-  font-size: 0.8rem !important;
+  font-size: 1rem !important;
   font-weight: 550 !important;
   text-align: start;
 }

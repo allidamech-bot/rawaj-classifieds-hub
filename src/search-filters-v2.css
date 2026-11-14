@@ -35,6 +35,12 @@
   font-weight: 850;
 }
 
+/* The keyboard hint is decorative; the clear action needs a full touch target. */
+.rawaj-search-toolbar__clear-query {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
 .rawaj-search-toolbar__clear-query svg {
   width: 0.8rem;
   height: 0.8rem;
