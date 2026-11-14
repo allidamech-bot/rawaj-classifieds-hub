@@ -52,6 +52,25 @@
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges svg {
   color: var(--rawaj-identity-champagne) !important;
 }
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__signin {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--account-line);
+  border-radius: 0.95rem;
+  color: var(--account-teal) !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
+  font-size: 0.875rem;
+  font-weight: 750;
+}
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__signin > span {
+  flex: 1;
+  min-width: 0;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header {
   padding: 0;
 }
@@ -71,7 +90,7 @@
   border: 1px solid var(--account-line) !important;
   border-radius: 1.1rem !important;
   color: var(--account-ink) !important;
-  background: #fffaf3 !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: 0 8px 25px color-mix(in srgb, var(--account-petrol) 8%, transparent) !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:first-child {
@@ -99,7 +118,7 @@
   border: 1px solid var(--account-line) !important;
   border-radius: 1rem !important;
   color: var(--account-teal) !important;
-  background: #fffaf3 !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card :is(svg, strong, small) {
@@ -125,7 +144,7 @@
   border: 1px solid var(--account-line) !important;
   border-radius: 1.15rem !important;
   overflow: hidden;
-  background: #fffaf3 !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > h2 {
