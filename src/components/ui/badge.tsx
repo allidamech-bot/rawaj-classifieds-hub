@@ -13,12 +13,12 @@ const badgeVariants = cva(
         secondary:
           "border-[var(--rawaj-border)] bg-[var(--rawaj-surface-active)] text-[var(--rawaj-text-primary)]",
         accent:
-          "border-[#e164b4]/30 bg-[rgba(155,40,111,0.2)] text-[#f6cfe5]",
+          "border-[var(--rawaj-badge-accent-border)] bg-[var(--rawaj-badge-accent-surface)] text-[var(--rawaj-badge-accent-ink)]",
         success:
-          "border-emerald-trust/25 bg-emerald-trust/10 text-[#bcebd9]",
-        warning: "border-warning/25 bg-warning/10 text-[#ecd6ac]",
-        gold: "border-gold/25 bg-gold/10 text-[#ecd6ac]",
-        destructive: "border-destructive/30 bg-destructive/14 text-[#ffd4d0]",
+          "border-[var(--rawaj-badge-success-border)] bg-[var(--rawaj-badge-success-surface)] text-[var(--rawaj-badge-success-ink)]",
+        warning: "border-[var(--rawaj-badge-warning-border)] bg-[var(--rawaj-badge-warning-surface)] text-[var(--rawaj-badge-warning-ink)]",
+        gold: "border-[var(--rawaj-badge-gold-border)] bg-[var(--rawaj-badge-gold-surface)] text-[var(--rawaj-badge-gold-ink)]",
+        destructive: "border-[var(--rawaj-badge-destructive-border)] bg-[var(--rawaj-badge-destructive-surface)] text-[var(--rawaj-badge-destructive-ink)]",
         outline:
           "border-[var(--rawaj-border-strong)] bg-transparent text-[var(--rawaj-text-primary)]",
       },
