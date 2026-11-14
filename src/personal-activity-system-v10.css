@@ -873,7 +873,7 @@
   padding: 0.9rem 1rem !important;
   background:
     radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-identity-teal) 5%, transparent), transparent 42%),
-    linear-gradient(150deg, #fffaf3, #fffaf3) !important;
+    #fffaf3 !important;
   box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
@@ -885,7 +885,7 @@
   border-color: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
   background:
     radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-identity-teal) 5%, transparent), transparent 42%),
-    linear-gradient(150deg, #fffaf3, #fffaf3) !important;
+    #fffaf3 !important;
 }
 
 .rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
@@ -915,7 +915,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
-  background: linear-gradient(155deg, #fffaf3, #fffaf3) !important;
+  background: #fffaf3 !important;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
@@ -985,7 +985,7 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
   padding: 0.75rem !important;
-  background: linear-gradient(155deg, #fffaf3, #fffaf3) !important;
+  background: #fffaf3 !important;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
@@ -1024,7 +1024,7 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
   padding: 0.8rem !important;
-  background: linear-gradient(155deg, #fffaf3, #fffaf3) !important;
+  background: #fffaf3 !important;
   box-shadow: 0 9px 22px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
