@@ -459,3 +459,65 @@
   .rawaj-settings-row-hint {
   color: var(--market-muted) !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  .rawaj-account-identity {
+  background: linear-gradient(145deg, #19655a, #073836 68%), #073836 !important;
+  border-color: #ae9470 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  .rawaj-account-identity__copy
+  :is(h1, p, small),
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  .rawaj-account-identity__actions
+  :is(a, button) {
+  color: #fff6e8 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  .rawaj-account-identity__actions
+  :is(a, button) {
+  background: #07564e !important;
+  border-color: #61968b !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  :is(.rawaj-account-section__body, .rawaj-account-card)
+  :is(h2, h3, p, label) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  :is(.rawaj-account-section__body label:has(input[type="file"]), .rawaj-account-card a) {
+  color: var(--market-teal) !important;
+  background: #f1e8d9 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  .rawaj-account-identity__copy
+  > span {
+  color: #fff6e8 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  :is(#account-info, .rawaj-account-overview-grid)
+  .bg-muted-surface {
+  background: #f1e8d9 !important;
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/profile"]
+  main.rawaj-account-hub-v3
+  #account-info
+  :is(h3, p, label:has(input[type="file"])) {
+  color: var(--market-ink) !important;
+}
