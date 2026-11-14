@@ -395,7 +395,8 @@
 
 .rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/categories"]
   main
-  .rawaj-category-directory-card {
+  .rawaj-category-directory-grid
+  > .rawaj-category-directory-card {
   background:
     radial-gradient(ellipse at 100% 100%, #e9dfc5, transparent 60%),
     linear-gradient(145deg, #fffaf1, #f7ead8), #fffaf1 !important;
