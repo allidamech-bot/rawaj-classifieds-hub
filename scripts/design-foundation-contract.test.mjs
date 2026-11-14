@@ -187,3 +187,16 @@ test("approved identity text pairs meet WCAG AA normal-text contrast", () => {
     );
   }
 });
+
+test("shared button shadows follow semantic color roles, not retired chromatic constants", () => {
+  for (const token of [
+    "--rawaj-button-shadow-primary",
+    "--rawaj-button-shadow-primary-hover",
+    "--rawaj-button-shadow-accent",
+    "--rawaj-button-shadow-brand",
+  ]) {
+    assert.ok(foundation.includes(`${token}:`), `${token} must be owned by canonical tokens`);
+    assert.ok(button.includes(`var(${token})`), `${token} must be used by shared Button`);
+  }
+  assert.doesNotMatch(button, /rgba\\((?:155,40,111|194,68,49|96,64,168),/);
+});
