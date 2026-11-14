@@ -738,3 +738,12 @@
     transition: none !important;
   }
 }
+
+/* Deletion safety explanation remains dark and readable on a soft warning panel. */
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body section.bg-destructive\\/5 {
+  color: var(--rawaj-identity-ink) !important;
+  background: #fff2ee !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body section.bg-destructive\\/5 p.text-muted-foreground {
+  color: #435650 !important;
+}
