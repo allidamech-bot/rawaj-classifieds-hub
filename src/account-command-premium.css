@@ -248,3 +248,55 @@
   border-color: color-mix(in srgb, var(--rawaj-identity-champagne) 20%, transparent) !important;
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 7%, var(--rawaj-identity-petrol)) !important;
 }
+
+/* Signed-in viewing-history accordion: dark-era inherited text on an ivory surface. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 .rawaj-account-section button[aria-controls="rawaj-account-recent-panel"] {
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 button[aria-controls="rawaj-account-recent-panel"] .text-foreground {
+  color: #173d38 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 button[aria-controls="rawaj-account-recent-panel"] .text-muted-foreground {
+  color: #435650 !important;
+}
+
+/* Referral reward panel is a distinct dark hero followed by readable light data.
+   Presentation only: keep reward, retry and redemption mechanics unchanged. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) {
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+  border-color: rgba(7, 92, 82, 0.2) !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section > div.bg-gradient-to-br {
+  color: #fffaf3 !important;
+  background: #083d38 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section > div.bg-gradient-to-br :is(h2, p.text-primary-foreground\/75) {
+  color: #fffaf3 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section > div.bg-gradient-to-br p.text-brand-gold {
+  color: #f5d8a4 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) > div.p-4 {
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+  --foreground: #173d38;
+  --muted-foreground: #435650;
+  --background: #fffaf3;
+  --card: #ffffff;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) > div.p-4 :is(.text-foreground, .text-muted-foreground) {
+  color: #173d38 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) > div.p-4 p.text-muted-foreground {
+  color: #435650 !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) [role="alert"] {
+  color: #902b2e !important;
+  background: #fff0ed !important;
+  border-color: rgba(144, 43, 46, 0.22) !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 section:has(> div.bg-gradient-to-br) [role="alert"] :is(span, button) {
+  color: #902b2e !important;
+}
