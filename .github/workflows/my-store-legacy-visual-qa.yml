@@ -1,0 +1,34 @@
+name: Isolated My Store Visual QA — old RAWAJ baseline
+on:
+  push:
+    branches:
+      - qa/my-store-only-visual-86ced72
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Typecheck and build isolated storefront
+        run: |
+          npm run typecheck
+          npm run build
+      - name: Render owner and buyer stores against local fixtures
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          VITE_PUBLIC_DATA_API_BASE_URL: http://127.0.0.1:4173
+        run: npx playwright test e2e/my-store-approved-design.spec.ts --project=desktop-chromium
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: isolated-store-visual-screenshots
+          path: test-results
+          retention-days: 7
