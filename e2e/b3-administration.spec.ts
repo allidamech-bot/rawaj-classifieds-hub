@@ -178,3 +178,46 @@ test("B3.4 reporting sends the expected version and prevents a second decision d
     allowReload();
   }
 });
+
+test("B3.4 private evidence stays behind the protected document action and can retry", async ({
+  page,
+}) => {
+  await setFixtureRole(page, "admin");
+  const recordId = "00000000-0000-4000-8000-000000000041";
+  const documentPath = "fixture-private-evidence";
+  let documentRequests = 0;
+  await page.route("**/v1/admin/verifications", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    await route.fulfill({
+      json: {
+        data: [
+          {
+            id: recordId,
+            legalName: "Fixture reviewer request",
+            documentPath,
+            status: "pending_review",
+          },
+        ],
+      },
+    });
+  });
+  await page.route(`**/v1/admin/verifications/${recordId}/document`, async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().headers().authorization).toBe("Bearer rawaj-e2e-firebase-token");
+    documentRequests += 1;
+    await route.fulfill({
+      status: documentRequests === 1 ? 503 : 200,
+      contentType: "application/pdf",
+      body: "%PDF-1.4\nDeterministic test fixture",
+    });
+  });
+  await page.goto("/admin/verifications");
+  const open = page.getByRole("link", { name: "Open document" });
+  await expect(open).toHaveCount(0);
+  await page.getByRole("button", { name: "Load secure document" }).click();
+  await expect(open).toHaveCount(0);
+  await page.getByRole("button", { name: "Retry secure document" }).click();
+  await expect(open).toHaveAttribute("href", /^blob:http:\/\/127\.0\.0\.1:/);
+  await expect(page.locator(`[href*="${documentPath}"]`)).toHaveCount(0);
+  expect(documentRequests).toBe(2);
+});
