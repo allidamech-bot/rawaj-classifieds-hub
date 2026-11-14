@@ -1,6 +1,9 @@
 /* B3.1 offers: source-owned presentation for recorded price drops only.
    The API contract, calculation and public eligibility logic remain unchanged. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] {
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent);
   color: var(--rawaj-identity-ink) !important;
   background: var(--rawaj-identity-ivory) !important;
 }
