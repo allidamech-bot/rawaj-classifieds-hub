@@ -932,6 +932,16 @@
   box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
+/* Saved-searches recovery CTA matches the ivory empty-state panel. */
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > div.text-center a.bg-muted-surface {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  color: #075c52 !important;
+  background: #e9f1e9 !important;
+  border: 1px solid rgba(7, 92, 82, 0.22) !important;
+}
+
 /* Compact listing content must use a foreground matching its ivory card surface. */
 .rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact :is(.rawaj-adaptive-card__price, .rawaj-adaptive-card__title) {
   color: #173d38 !important;
