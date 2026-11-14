@@ -361,3 +361,9 @@ test("B2.2 removes inherited V11/V18/V22 dark listing skins at their original so
   assert.ok(detail.includes("aspect-ratio: 4 / 3"));
   assert.ok(detail.includes("safe-area-inset-bottom"));
 });
+
+test("B2.2 route no longer inherits old V6 dark listing layers", async () => {
+  const v6 = await readFile(new URL("../src/rawaj-final-site-system-v6.css", import.meta.url), "utf8");
+  assert.ok(!v6.includes(".rawaj-detail-"));
+  assert.ok(v6.includes(".rawaj-storefront-identity"));
+});

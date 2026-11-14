@@ -162,3 +162,5 @@ selector arm was retained. The V22 media aspect ratio and safe-area dock contrac
 are now route-owned, including two-column mobile action reflow. Existing source
 contract tests were aligned to the approved replacement, without removing their
 coverage of seller identity, contact behavior or safe-area reservations.
+
+The last V6 detail-specific dark selectors were also retired at source; shared and storefront V6 selectors remain protected.
