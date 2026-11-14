@@ -869,3 +869,11 @@
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 }
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta {
+  background-color: #f1dec1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
+  color: #102c29 !important;
+}
