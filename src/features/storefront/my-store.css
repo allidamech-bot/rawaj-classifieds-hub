@@ -2,31 +2,31 @@
 .my-store,
 .my-store-topbar,
 .my-store-dialog {
-  --background: var(--rawaj-canvas, #fff);
+  --background: #fcfaf7;
   --foreground: #152322;
-  --card: var(--rawaj-canvas, #fff);
+  --card: #fcfaf7;
   --card-foreground: #152322;
-  --primary: var(--rawaj-brand-primary, #103f42);
+  --primary: #103f42;
   --primary-foreground: #fff;
   --muted: #f1eeea;
   --muted-surface: #f1eeea;
   --muted-foreground: #53615e;
   --border: #dedbd5;
-  --popover: var(--rawaj-canvas, #fff);
+  --popover: #fcfaf7;
   --popover-foreground: #152322;
   --gold: #bd984b;
-  --brand-orange: var(--rawaj-brand-primary, #103f42);
+  --brand-orange: #103f42;
   --warning: #805d18;
   --destructive: #a52c2c;
   color: #152322;
-  background: var(--rawaj-canvas, #fff);
+  background: #fcfaf7;
   color-scheme: light;
   font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"],
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-app-shell__page,
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-app-shell__content {
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   padding-top: 0 !important;
 }
 .my-store {
@@ -72,7 +72,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--rawaj-brand-primary, #103f42);
+  color: #103f42;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -98,9 +98,6 @@
   position: relative;
 }
 .my-store-nav summary,
-.my-store-owner-menu[open] {
-  z-index: 40;
-}
 .my-store-owner-menu summary {
   display: grid;
   place-items: center;
@@ -122,7 +119,7 @@
   gap: 4px;
   min-width: 205px;
   padding: 10px;
-  background: var(--rawaj-canvas, #fff);
+  background: #fcfaf7;
   border: 1px solid #dedbd5;
   border-radius: 16px;
   box-shadow: 0 8px 30px #183e3b22;
@@ -215,9 +212,9 @@
   position: relative;
   width: 136px;
   height: 136px;
-  border: 6px solid var(--rawaj-canvas, #fff);
+  border: 6px solid #fcfaf7;
   border-radius: 50%;
-  background: var(--rawaj-brand-primary, #103f42);
+  background: #103f42;
   box-shadow: 0 4px 9px #0002;
   display: grid;
   place-items: center;
@@ -298,14 +295,14 @@
   height: 44px;
   border-radius: 50%;
   border: 1px solid #dedbd5;
-  background: var(--rawaj-canvas, #fff);
+  background: #fcfaf7;
   color: #152322;
   box-shadow: 0 2px 4px #00000008;
   display: grid;
   place-items: center;
 }
 .my-store .my-store-add {
-  background: var(--rawaj-brand-primary, #103f42);
+  background: #103f42;
   color: #fff;
   border-radius: 28px;
   display: flex;
@@ -373,7 +370,7 @@
   white-space: nowrap;
 }
 .ms-approved-tabs button[aria-pressed="true"] {
-  color: var(--rawaj-brand-primary, #103f42);
+  color: #103f42;
   font-weight: 800;
 }
 .ms-approved-tabs button[aria-pressed="true"]:after {
@@ -382,7 +379,7 @@
   bottom: -1px;
   inset-inline: 0;
   height: 3px;
-  background: var(--rawaj-brand-primary, #103f42);
+  background: #103f42;
   border-radius: 4px;
 }
 .ms-approved-filters {
@@ -402,7 +399,7 @@
   min-width: 0;
   border: 1px solid #dedbd5;
   border-radius: 24px;
-  background: var(--rawaj-canvas, #fff);
+  background: #fcfaf7;
   color: #152322;
   padding: 0 14px;
   font-size: 14px;
@@ -494,7 +491,7 @@
   margin: 0 0 4px;
 }
 .ms-store-card-price {
-  color: var(--rawaj-brand-primary, #103f42);
+  color: #103f42;
   font-size: 18px;
   font-weight: 800;
   line-height: 1.35;
@@ -564,7 +561,7 @@
   max-height: 85dvh;
   overflow-y: auto;
   border-radius: 20px !important;
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   color: #152322 !important;
   max-width: 620px !important;
 }
@@ -803,16 +800,16 @@
   --rawaj-text-primary: #152322;
   --rawaj-text-secondary: #384442;
   --rawaj-text-muted: #53615e;
-  --rawaj-page-background: var(--rawaj-canvas, #fff);
+  --rawaj-page-background: #fcfaf7;
   --rawaj-surface-inset: #f1eeea;
   --rawaj-surface-active: #e6e5dc;
   --rawaj-border-strong: #dedbd5;
   --font-display: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
   color: #152322;
-  background-color: var(--rawaj-canvas, #fff);
+  background-color: #fcfaf7;
 }
 .my-store-dialog[role="dialog"] {
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   color: #152322 !important;
   border-color: #dedbd5 !important;
 }
@@ -826,7 +823,7 @@
   color: #fff !important;
 }
 .my-store-dialog .bg-primary {
-  background: var(--rawaj-brand-primary, #103f42) !important;
+  background: #103f42 !important;
 }
 .my-store-dialog .rawaj-color-card {
   background: #f1eeea !important;
@@ -851,7 +848,7 @@
   .ms-owner-inventory,
   .ms-owner-workspace-sticky
 ) {
-  background-color: var(--rawaj-canvas, #fff) !important;
+  background-color: #fcfaf7 !important;
   color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card,
@@ -875,10 +872,10 @@
   color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-tabs button[aria-pressed="true"] {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-store-card-price {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-filters > select,
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
@@ -886,7 +883,7 @@
   .my-store-search-toggle,
   .my-store-sort
 ) {
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   border-color: #dedbd5 !important;
   color: #152322 !important;
 }
@@ -899,7 +896,7 @@
   opacity: 1;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-sort select {
-  background-color: var(--rawaj-canvas, #fff) !important;
+  background-color: #fcfaf7 !important;
   color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-product-media {
@@ -930,13 +927,13 @@
   .rawaj-app-shell__page,
   .rawaj-app-shell__content
 ) {
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
 }
 
 .my-store-public-page,
 .my-store-public,
 .my-store-public :is(.my-store-hero, .ms-owner-inventory) {
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   color: #152322 !important;
   color-scheme: light;
 }
@@ -984,9 +981,9 @@
   min-height: 44px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid var(--rawaj-brand-primary, #103f42) !important;
+  border: 1px solid #103f42 !important;
   background: #fffdfa !important;
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
   font-weight: 750;
   font-size: 12px;
   text-decoration: none;
@@ -1033,8 +1030,8 @@
 
 .my-store-public-tabs a[aria-current="page"],
 .my-store-public-tabs a:focus-visible {
-  border-bottom-color: var(--rawaj-brand-primary, #103f42);
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  border-bottom-color: #103f42;
+  color: #103f42 !important;
 }
 
 .my-store-public-section,
@@ -1093,7 +1090,7 @@
   align-items: baseline;
   gap: 6px;
   margin: 4px 0 0;
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
   font-weight: 800;
 }
 
@@ -1117,7 +1114,7 @@
 }
 
 .my-store-public-about h2 {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
   font-size: 18px;
   font-weight: 800;
 }
@@ -1165,7 +1162,7 @@
 }
 
 .my-store-public-details .bg-primary {
-  background-color: var(--rawaj-brand-primary, #103f42) !important;
+  background-color: #103f42 !important;
 }
 
 .my-store-public-details .text-primary-foreground {
@@ -1254,7 +1251,7 @@
   [data-resolved-pathname="/profile/listings"],
   [data-resolved-pathname^="/seller/"]
 ) .rawaj-site-footer :is(.rawaj-brand-lockup, .rawaj-brand-lockup *, h2, p, span, li a) {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 
 .rawaj-app-shell:is(
@@ -1276,7 +1273,7 @@
   [data-resolved-pathname^="/seller/"]
 ) .rawaj-site-footer .rawaj-site-footer__mobile nav a {
   background: #fffdfa !important;
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
   border: 1px solid #dedbd5 !important;
   box-shadow: none !important;
 }
@@ -1307,7 +1304,7 @@
   overflow-x: hidden !important;
   overflow-y: auto !important;
   padding: clamp(16px, 3vw, 24px) !important;
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
   border: 1px solid #dedbd5 !important;
   border-radius: 24px !important;
   color: #152322 !important;
@@ -1358,8 +1355,8 @@
 }
 
 .my-store-dialog .ms-storefront-owner-tabs > button[aria-pressed="true"] {
-  border-color: var(--rawaj-brand-primary, #103f42) !important;
-  background: var(--rawaj-brand-primary, #103f42) !important;
+  border-color: #103f42 !important;
+  background: #103f42 !important;
   color: #fff !important;
 }
 
@@ -1442,7 +1439,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 8px;
-  background: var(--rawaj-canvas, #fff) !important;
+  background: #fcfaf7 !important;
 }
 
 .my-store-dialog .rawaj-owner-listings-toolbar__count {
@@ -1475,7 +1472,7 @@
 
 .my-store-dialog :is(.rawaj-owner-smart-insights__item, .ms-shop-tools) svg {
   flex: 0 0 auto;
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 
 .my-store-dialog [data-owner-performance-overview="true"] .ms-owner-performance__header {
@@ -1491,7 +1488,7 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
   background: transparent !important;
 }
 
@@ -1535,7 +1532,7 @@
   .my-store-public-section,
   .ms-approved-tabs
 ) {
-  background-color: var(--rawaj-canvas, #fff) !important;
+  background-color: #fcfaf7 !important;
   color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-identity h1,
@@ -1557,14 +1554,14 @@
   color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card .ms-store-card-price {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a {
   color: #152322 !important;
   background-color: transparent !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a[aria-current="page"] {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 
 /* Public reviews and safety no longer inherit the legacy charcoal cards. */
@@ -1601,7 +1598,7 @@
   a.bg-primary,
   button.bg-primary
 ) {
-  background-color: var(--rawaj-brand-primary, #103f42) !important;
+  background-color: #103f42 !important;
   color: #fff !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-safety .text-primary-foreground\/72 {
@@ -1610,7 +1607,7 @@
 
 /* Public stores without an uploaded cover still need an intentional petrol hero. */
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] {
-  background: linear-gradient(125deg, var(--rawaj-brand-primary, #103f42) 0%, #215451 60%, #446461 100%) !important;
+  background: linear-gradient(125deg, #103f42 0%, #215451 60%, #446461 100%) !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] .my-store-cover-placeholder {
   color: #cfb476 !important;
@@ -1621,8 +1618,173 @@
   border-color: #e7e2d9 !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about h2 {
-  color: var(--rawaj-brand-primary, #103f42) !important;
+  color: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about p {
   color: #384442 !important;
 }
+
+/* Approved storefront-only mobile compatibility rules from 7ff51b7.
+ * Scoped to the owner and public seller routes; all other RAWAJ pages retain legacy styles.
+ */
+/*
+ * Storefront-only visual contract: remove the legacy floating dock's
+ * full-viewport glass backdrop, keep one solid floating navigation surface,
+ * and make in-page store sections feel like tabs instead of boxed links.
+ * Do not apply to /, discovery, listing detail, or other app routes.
+ */
+@media (max-width: 1023.98px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock {
+    background: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock::before,
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-mobile-dock .rawaj-bottom-nav-shell {
+    background: #143b39 !important;
+    background-image: none !important;
+    color: #f9f7f0 !important;
+    border: 1px solid rgba(247, 242, 229, 0.18) !important;
+    box-shadow: 0 10px 24px rgba(16, 63, 66, 0.18) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* The footer itself reserves dock clearance; the generic shell reserve was
+ * adding a second, conspicuous empty stripe after the store footer. */
+@media (max-width: 1023.98px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-app-shell__page {
+    padding-bottom: 0 !important;
+    /* The empty safe-area tail after the footer is part of the same surface. */
+    background: #f1eeea !important;
+  }
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store {
+    padding-bottom: 56px !important;
+  }
+}
+
+/* In-page public store links are not generic app-wide current-route cards. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .ms-approved-tabs.my-store-public-tabs {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid #dedbd5 !important;
+  box-shadow: none !important;
+  gap: clamp(6px, 2vw, 22px) !important;
+  align-items: stretch;
+  justify-content: space-between;
+  overflow: visible;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .my-store-public-tabs > a {
+  display: inline-flex;
+  flex: 0 1 auto;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
+  padding: 9px clamp(1px, 1.5vw, 12px) 12px;
+  border: 0 !important;
+  border-bottom: 3px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #384442 !important;
+  font-weight: 650;
+  text-decoration: none !important;
+  white-space: nowrap;
+  font-size: clamp(12px, 3.45vw, 15px);
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public
+  .my-store-public-tabs > a[aria-current="location"] {
+  border-bottom-color: #103f42 !important;
+  color: #103f42 !important;
+  font-weight: 800;
+}
+
+/* Same clean underlined navigation in the owner's own store. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store
+  .ms-approved-tabs > button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Public store: browse + share should be adjacent, never two stranded rows. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px !important;
+  gap: 10px !important;
+  align-items: center;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > .my-store-add {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > .my-store-public-follow {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  width: 100%;
+  min-height: 44px;
+  justify-self: stretch;
+}
+
+@media (min-width: 1024px) {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions {
+    grid-template-columns: minmax(0, 1fr) 48px !important;
+  }
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+    width: 48px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] .my-store-public-tabs > a {
+    transition: none !important;
+  }
+}
+

@@ -1,4 +1,3 @@
-import { sanitizePublicListingDetails } from "./public-listing-privacy";
 import { corsHeaders, json, type AuthEnv } from "./auth";
 
 type Value = string | number | null;
@@ -409,7 +408,7 @@ function mapListing(row: Row, origin: string): Row {
     districtAr: nullableString(row.district_ar),
     contactName: nullableString(row.contact_name),
     contactOptions: jsonObject(row.contact_options),
-    details: sanitizePublicListingDetails(jsonObject(row.details)),
+    details: jsonObject(row.details),
     isFeatured: booleanValue(row.is_featured),
     featuredUntil: nullableString(row.featured_until),
     reviewedBy: null,

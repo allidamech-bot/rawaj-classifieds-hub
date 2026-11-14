@@ -31,7 +31,7 @@
 .rawaj-contact-dock__inner .rawaj-contact-dock__primary {
   border-color: rgba(216, 174, 95, 0.28) !important;
   color: #17201e !important;
-  background: #e8ca8d !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
 }
 
 .rawaj-contact-dock__inner .rawaj-contact-dock__offer {
@@ -188,7 +188,7 @@
 .rawaj-header-store[data-active="true"] {
   border-color: rgba(232, 202, 141, 0.42) !important;
   color: #17201e !important;
-  background: #e8ca8d !important;
+  background: linear-gradient(135deg, #e8ca8d, #c69547) !important;
 }
 
 .rawaj-header-store:focus-visible {

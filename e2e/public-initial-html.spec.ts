@@ -17,7 +17,7 @@ test.describe("public initial HTML", () => {
 
     const html = await response.text();
     expect(html).toContain("<main");
-    expect(html).toContain("تصفّح الأقسام");
+    expect(html).toContain("اختر القسم المناسب");
     expect(html).not.toContain("جاري تحميل الأقسام");
   });
 

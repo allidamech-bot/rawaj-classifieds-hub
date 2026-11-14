@@ -40,7 +40,6 @@ interface ConversationContext {
   status: string;
   listing_status: string;
   archived_at: string | null;
-  expires_at: string | null;
   currency: string;
   listing_title: string;
 }
@@ -110,22 +109,16 @@ async function listOffers(
   if (!auth) return unauthorized(cors);
   const conversation = await conversationContext(env, conversationId, auth.userId);
   if (!conversation) return notFound(cors);
-  // GET must never commit expiry transitions: emergency read-only blocks all writes.
-  // Derive the public status at read time; POST/PATCH persist real transitions.
-  const timestamp = now();
+  await expirePendingOffers(env, conversationId);
   const result = await env.DB.prepare(
     `SELECT id, listing_id, conversation_id, buyer_id, seller_id, created_by,
-      parent_offer_id, amount, currency,
-      CASE WHEN status = 'pending' AND expires_at <= ? THEN 'expired' ELSE status END AS status,
-      expires_at,
-      CASE WHEN status = 'pending' AND expires_at <= ?
-        THEN COALESCE(responded_at, expires_at) ELSE responded_at END AS responded_at,
+      parent_offer_id, amount, currency, status, expires_at, responded_at,
       client_request_id, last_action_request_id, created_at, updated_at
      FROM listing_price_offers
      WHERE conversation_id = ?
      ORDER BY created_at ASC, id ASC`,
   )
-    .bind(timestamp, timestamp, conversationId)
+    .bind(conversationId)
     .all<OfferRow>();
   return result.success
     ? json(
@@ -136,8 +129,7 @@ async function listOffers(
             listingAvailable:
               conversation.status === "active" &&
               conversation.listing_status === "approved" &&
-              !conversation.archived_at &&
-              (!conversation.expires_at || conversation.expires_at > timestamp),
+              !conversation.archived_at,
           },
         },
         200,
@@ -187,7 +179,7 @@ async function createOffer(
     created_by: auth.userId,
     parent_offer_id: null,
     amount,
-    currency: "SYP",
+    currency: normalizeCurrency(conversation.currency),
     status: "pending",
     expires_at: new Date(Date.now() + OFFER_TTL_MS).toISOString(),
     responded_at: null,
@@ -260,10 +252,6 @@ async function transitionOffer(
     action === "accept" || action === "counter",
   );
   if (readiness) return json({ error: readiness.error }, readiness.status, cors);
-  // Never reinterpret a historical offer amount under a different currency.
-  if ((action === "accept" || action === "counter") && current.currency !== "SYP") {
-    return conflict(cors, "Offer currency does not match the Syria marketplace.");
-  }
 
   const isCreator = current.created_by === auth.userId;
   if (action === "withdraw" && !isCreator) {
@@ -412,22 +400,11 @@ async function mutationReadiness(
   }
   if (
     requireAvailableListing &&
-    (conversation.listing_status !== "approved" ||
-      conversation.archived_at ||
-      (conversation.expires_at && conversation.expires_at <= now()))
+    (conversation.listing_status !== "approved" || conversation.archived_at)
   ) {
     return {
       status: 409,
       error: { code: "status_mismatch", message: "Listing is not available for offers." },
-    };
-  }
-  if (requireAvailableListing && conversation.currency !== "SYP") {
-    return {
-      status: 409,
-      error: {
-        code: "currency_mismatch",
-        message: "Listing currency must be SYP before making price offers.",
-      },
     };
   }
   return null;
@@ -436,8 +413,7 @@ async function mutationReadiness(
 async function conversationContext(env: ListingOffersEnv, conversationId: string, userId: string) {
   return env.DB.prepare(
     `SELECT c.id, c.listing_id, c.buyer_id, c.seller_id, c.status,
-      l.status AS listing_status, l.archived_at, l.expires_at,
-      l.currency, l.title AS listing_title
+      l.status AS listing_status, l.archived_at, l.currency, l.title AS listing_title
      FROM conversations c
      JOIN listings l ON l.id = c.listing_id
      WHERE c.id = ? AND (c.buyer_id = ? OR c.seller_id = ?)`,
@@ -711,6 +687,11 @@ function mapOffer(row: OfferRow, userId: string) {
 function offerAmount(value: unknown): number | null {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isSafeInteger(number) && number > 0 && number <= MAX_AMOUNT ? number : null;
+}
+
+function normalizeCurrency(value: unknown): string {
+  const currency = clean(value, 8).toUpperCase();
+  return /^[A-Z]{3,8}$/.test(currency) ? currency : "SYP";
 }
 
 function clean(value: unknown, limit: number): string {

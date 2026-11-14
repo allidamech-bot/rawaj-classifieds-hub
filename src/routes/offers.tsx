@@ -54,10 +54,13 @@ function OffersPage() {
                 <span className="rawaj-signature-kicker text-gold">
                   {text("تخفيضات موثقة", "Recorded price drops")}
                 </span>
-                <h1 className="mt-3 max-w-xl text-[1.7rem] font-bold leading-[1.38] text-foreground sm:text-[2.3rem]">
-                  {text("السعر نزل فعلاً — وهنا يظهر.", "The price really dropped — it shows here.")}
+                <h1 className="mt-3 max-w-xl text-[1.7rem] font-extrabold leading-[1.38] text-[#fffaf0] sm:text-[2.3rem]">
+                  {text(
+                    "السعر نزل فعلاً — وهنا يظهر.",
+                    "The price really dropped — it shows here.",
+                  )}
                 </h1>
-                <p className="mt-3 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
+                <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
                     "نعرض فقط الإعلانات التي خفّض صاحبها السعر فعلياً. السعر السابق والجديد ونسبة التخفيض محفوظة في البيانات، ولا علاقة للإعلان المميز بهذه الصفحة.",
                     "Only listings with a real owner-recorded price reduction appear here. Old price, new price and discount percentage come from recorded data; featured promotion is separate.",
@@ -109,7 +112,7 @@ function OffersPage() {
 
               <Link
                 to="/listings"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground"
               >
                 {text("كل الإعلانات", "All listings")}
                 <ArrowUpLeft className="h-3.5 w-3.5 rtl:-rotate-90" />
@@ -159,12 +162,10 @@ function OfferSignal({
   value: string;
 }) {
   return (
-    <div className="rawaj-offers-signal rounded-2xl p-3">
-      <Icon className="h-5 w-5 text-primary" />
-      <span className="mt-2 block text-sm font-medium text-muted-foreground">{label}</span>
-      <strong className="mt-1 block text-sm font-semibold leading-6 text-foreground">
-        {value}
-      </strong>
+    <div className="rawaj-id-stat rounded-[1rem] p-3">
+      <Icon className="h-4 w-4 text-gold" />
+      <span className="mt-2 block text-xs font-semibold text-[#fffaf0]/80">{label}</span>
+      <strong className="mt-1 block text-xs leading-4 text-[#fffaf0]">{value}</strong>
     </div>
   );
 }
@@ -191,25 +192,25 @@ function PriceDropOfferCard({ offer }: { offer: ListingPriceDropOffer }) {
       </div>
 
       <div className="p-3.5">
-        <p className="text-sm font-medium text-muted-foreground">
+        <p className="text-[11px] font-bold text-muted-foreground">
           {categoryName(listing.categoryId, listing.categoryNameAr, language)}
         </p>
-        <h3 className="mt-1 line-clamp-2 text-base font-bold text-foreground">{listing.title}</h3>
+        <h3 className="mt-1 line-clamp-2 text-sm font-bold">{listing.title}</h3>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <strong className="text-lg font-extrabold text-primary">
+          <strong className="text-base font-extrabold text-primary">
             {formatPriceLocalized(offer.newPrice, listing.priceType, language, listing.currency)}
           </strong>
-          <span className="text-sm text-muted-foreground line-through decoration-destructive/60">
+          <span className="text-[11px] text-muted-foreground line-through decoration-destructive/60">
             {formatPriceLocalized(offer.oldPrice, listing.priceType, language, listing.currency)}
           </span>
         </div>
 
-        <p className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground">
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
           <MapPin className="h-3 w-3" />
           {governorateName(listing.governorateId, listing.governorateNameAr, language)}
         </p>
-        <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+        <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
           <Clock3 className="h-3 w-3" />
           {text("انخفض السعر", "Price dropped")} {formatDropDate(offer.droppedAt, language)}
         </p>
@@ -232,7 +233,7 @@ function OffersState({
   actionDisabled?: boolean;
 }) {
   return (
-    <section className="rawaj-offers-empty rawaj-secondary-state mt-5 overflow-hidden rounded-[1.5rem] text-center">
+    <section className="rawaj-offers-empty mt-5 overflow-hidden rounded-[1.5rem] p-6 text-center sm:p-8">
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-orange text-white">
         <BadgePercent className="h-5 w-5" />
       </span>
@@ -246,7 +247,7 @@ function OffersState({
           onClick={onAction}
           disabled={actionDisabled}
           aria-busy={actionDisabled}
-          className="rawaj-secondary-action mt-4 rounded-xl px-4 py-2 text-xs font-bold"
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
         >
           {actionLabel}
         </button>

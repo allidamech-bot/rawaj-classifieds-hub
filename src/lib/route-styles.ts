@@ -8,9 +8,12 @@ import "../rawaj-home-feedback-fixes.css";
 import "../rawaj-home-dock-spacing.css";
 import "../rawaj-global-dark-system.css";
 import "../rawaj-shell-system-v2.css";
+import "../rawaj-discovery-system-v3.css";
 import "../rawaj-listing-studio-system-v5.css";
 import "../rawaj-personal-space-system-v5.css";
 import "../rawaj-final-site-system-v6.css";
+import "../rawaj-page-by-page-recovery-v7.css";
+import "../rawaj-page-by-page-recovery-v7b.css";
 import activityMoreFoundationCss from "../activity-more-foundation.css?url";
 import communicationCenterV3Css from "../communication-center-v3.css?url";
 import messagingV4Css from "../messaging-v4.css?url";
@@ -60,13 +63,6 @@ import accountShortcutsCompactRowCss from "../account-shortcuts-compact-row.css?
 import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
 import stabilityAccessibilityFixesCss from "../stability-accessibility-fixes.css?url";
 import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
-
-import storeWorkspaceCss from "../rawaj-store-workspace.css?url";
-import marketplaceControlsCss from "../rawaj-marketplace-controls.css?url";
-import storefrontMobileConsistencyCss from "../storefront-mobile-consistency-v1.css?url";
-import notificationsContrastClosureCss from "../notifications-contrast-closure.css?url";
-import verificationContrastClosureCss from "../verification-contrast-closure.css?url";
-import promotionContrastClosureCss from "../promotion-contrast-closure.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -126,12 +122,6 @@ export const auditedOverrideStyleHrefs = [
   ownerStoreDarkRepairCss,
   stabilityAccessibilityFixesCss,
   uiConvergenceV25Css,
-  storeWorkspaceCss,
-  marketplaceControlsCss,
-  storefrontMobileConsistencyCss,
-  notificationsContrastClosureCss,
-  verificationContrastClosureCss,
-  promotionContrastClosureCss,
 ] as const;
 
 export interface RouteStyleScope {
@@ -157,8 +147,9 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
 
   return {
     home: normalizedPathname === "/",
-    // Categories share results/filter styles for the discovery feed.
-    // The current directory cards are owned by category-directory.module.css.
+    // The category atlas styles intentionally live in search-filters-v1.css.
+    // Keep that discovery bundle active on /categories so its hero, search,
+    // and directory cards do not fall back to unstyled utility-only rows.
     listingResults: ["/listings", "/categories"].includes(normalizedPathname),
     listingDetail: /^\/listings\/[^/]+$/.test(normalizedPathname),
     offers: normalizedPathname === "/offers",

@@ -60,10 +60,7 @@ export function ListingMediaExperience({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div
-          className="rawaj-detail-media__stage"
-          data-no-photo={!selectedUrl || selectedImageFailed}
-        >
+        <div className="rawaj-detail-media__stage">
           {selectedUrl && !selectedImageFailed ? (
             <>
               <div
@@ -88,11 +85,6 @@ export function ListingMediaExperience({
           ) : (
             <div className="rawaj-detail-media__placeholder">
               <PlaceholderArt type={placeholder} aspect="wide" />
-              <span>
-                {selectedImageFailed
-                  ? text("تعذر تحميل الصورة", "Image could not load")
-                  : text("لا توجد صور", "No photos")}
-              </span>
             </div>
           )}
 

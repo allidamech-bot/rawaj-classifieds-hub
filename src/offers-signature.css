@@ -1,78 +1,63 @@
-/* Offers share the marketplace's canonical light surface and petrol actions. */
 .rawaj-offers-stage {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 20px;
-  background: var(--rawaj-surface);
-  color: var(--rawaj-ink-primary);
-  box-shadow: none;
-}
-
-.rawaj-offers-stage::before,
-.rawaj-offers-stage::after {
-  display: none;
-}
-
-.rawaj-offers-stage .rawaj-signature-kicker {
-  color: var(--rawaj-gold-ink);
-}
-
-.rawaj-offers-signal {
-  display: grid;
-  min-width: 0;
-  align-content: start;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 16px;
-  background: var(--rawaj-surface-subtle);
-  color: var(--rawaj-ink-primary);
-  overflow-wrap: anywhere;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--rawaj-radius-surface);
+  background: radial-gradient(circle at 88% 0%, rgba(223, 105, 60, 0.22), transparent 36%), linear-gradient(140deg, #174b41 0%, #0d342c 72%, #123f36 100%);
+  box-shadow: 0 26px 68px rgba(13, 54, 45, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.11);
 }
 
 .rawaj-offers-premium-v3 .rawaj-product-card {
-  overflow: hidden;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 16px;
-  background: var(--rawaj-surface);
-  color: var(--rawaj-ink-primary);
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.05);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  border-color: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
+  background: linear-gradient(145deg, #fffefa, #f8f7f1);
+  box-shadow: 0 16px 38px rgba(16, 63, 53, 0.08);
+  transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .rawaj-offers-premium-v3 .rawaj-product-card:hover {
-    border-color: var(--rawaj-control-border);
-    box-shadow: 0 5px 16px rgba(21, 35, 34, 0.065);
-  }
+.rawaj-offers-premium-v3 .rawaj-product-card:hover {
+  border-color: color-mix(in srgb, var(--brand-orange) 30%, var(--color-border));
+  box-shadow: 0 22px 46px rgba(16, 63, 53, 0.12);
+  transform: translateY(-2px);
 }
 
 .rawaj-offers-premium-v3 a.bg-primary {
-  border: 1px solid var(--rawaj-brand-primary);
-  background: var(--rawaj-brand-primary);
-  color: #ffffff;
-  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--brand-orange) 76%, #98381d);
+  background: linear-gradient(145deg, #ee7a4c, #d75c32);
+  box-shadow: 0 12px 25px rgba(201, 78, 35, 0.23);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-offers-premium-v3 * { transition: none !important; }
+}
+
+.rawaj-offers-stage::before {
+  content: "";
+  position: absolute;
+  inset-inline: 10%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(197, 154, 74, 0.58), transparent);
+  pointer-events: none;
+}
+
+.rawaj-offers-stage::after {
+  content: none;
 }
 
 .rawaj-offers-empty {
   position: relative;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 16px;
-  background: var(--rawaj-surface);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: var(--rawaj-radius-surface);
+  background: var(--card);
   box-shadow: none;
 }
 
 .rawaj-offers-empty::before {
-  display: none;
+  content: none;
 }
 
 @media (max-width: 639px) {
   .rawaj-offers-stage {
-    border-radius: 16px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rawaj-offers-premium-v3 * {
-    transition: none !important;
+    border-radius: var(--rawaj-radius-surface);
   }
 }

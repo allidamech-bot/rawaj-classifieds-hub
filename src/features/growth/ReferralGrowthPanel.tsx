@@ -1,4 +1,3 @@
-import styles from "@/features/account/account-workspace.module.css";
 import { Gift, RefreshCw, Rocket, Share2, Sparkles, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -113,14 +112,15 @@ export function ReferralGrowthPanel() {
   }
 
   return (
-    <section className={styles.panel}>
-      <div className="border-b border-border pb-4">
+    <section className="overflow-hidden rounded-[1.6rem] border border-brand-orange/20 bg-card shadow-soft">
+      <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-br from-primary via-primary to-primary/90 p-5 text-primary-foreground sm:p-6">
+        <div className="absolute -end-16 -top-16 h-48 w-48 rounded-full bg-brand-orange/18 blur-2xl" />
         <div className="relative flex items-start gap-4">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-muted-surface text-primary">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-brand-orange text-white shadow-soft">
             <Rocket className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-black text-primary">
+            <p className="text-[11px] font-black text-brand-gold">
               {text("نمِّ رواج وارفع إعلانك", "Grow RAWAJ and boost your listing")}
             </p>
             <h2 className="mt-1 text-lg font-black sm:text-xl">
@@ -129,7 +129,7 @@ export function ReferralGrowthPanel() {
                 "Share your listing. Bring a new seller and earn a 24-hour boost",
               )}
             </h2>
-            <p className="mt-2 max-w-3xl text-xs leading-6 text-muted-foreground">
+            <p className="mt-2 max-w-3xl text-xs leading-6 text-primary-foreground/75">
               {text(
                 "لا تُحتسب المكافأة لمجرد فتح الرابط أو التسجيل. الشخص الجديد يجب أن يرسل أول إعلان حقيقي له للمراجعة ثم تعتمد الإدارة ذلك الإعلان.",
                 "A click or signup is not enough. The new user must submit their first real listing and that exact listing must be approved.",
@@ -139,7 +139,7 @@ export function ReferralGrowthPanel() {
         </div>
       </div>
 
-      <div className="pt-4">
+      <div className="p-4 sm:p-5">
         <div className="grid grid-cols-3 gap-2">
           <GrowthStat
             icon={Share2}
@@ -179,7 +179,7 @@ export function ReferralGrowthPanel() {
               type="button"
               onClick={() => void load()}
               disabled={loading}
-              className="rounded-lg border border-destructive/20 px-2.5 py-1.5 text-xs font-black disabled:opacity-50"
+              className="rounded-lg border border-destructive/20 px-2.5 py-1.5 text-[10px] font-black disabled:opacity-50"
             >
               {loading ? text("جارٍ التحديث...", "Refreshing...") : text("إعادة المحاولة", "Retry")}
             </button>
@@ -200,7 +200,7 @@ export function ReferralGrowthPanel() {
                   )}
                 </p>
               </div>
-              <span className="rounded-full bg-brand-orange/10 px-3 py-1 text-xs font-black text-brand-orange">
+              <span className="rounded-full bg-brand-orange/10 px-3 py-1 text-[10px] font-black text-brand-orange">
                 {availableRewards.length}
               </span>
             </div>
@@ -301,7 +301,7 @@ function GrowthStat({
     <div className="rounded-2xl border border-border/65 bg-background p-3 text-center">
       <Icon className="mx-auto h-4 w-4 text-brand-orange" aria-hidden="true" />
       <strong className="mt-2 block text-lg font-black text-foreground">{value}</strong>
-      <span className="mt-0.5 block text-xs font-semibold leading-4 text-muted-foreground">
+      <span className="mt-0.5 block text-[9px] font-semibold leading-4 text-muted-foreground">
         {label}
       </span>
     </div>

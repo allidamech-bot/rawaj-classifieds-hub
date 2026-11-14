@@ -1,4 +1,3 @@
-import styles from "@/features/home/marketplace-home.module.css";
 import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Briefcase,
@@ -7,6 +6,7 @@ import {
   ChevronLeft,
   Clock,
   Grid3X3,
+  Heart,
   Laptop,
   MapPin,
   Plus,
@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Smartphone,
   Sofa,
+  Sparkles,
   Store,
   Wrench,
   type LucideIcon,
@@ -90,33 +91,20 @@ function HomePage() {
   return (
     <>
       <AppHeader />
-      <main className={styles.page} data-marketplace-home>
+      <main className="rawaj-signature-home">
         <PageTransition>
-          <div className={styles.container}>
+          <div className="rawaj-signature-home__container">
             <HomeHero
               searchValue={searchValue}
               onSearchValueChange={setSearchValue}
               onSubmit={handleSearch}
               text={text}
             />
-
-            {categoryLoadFailed ? (
-              <EmptyState
-                className={styles.empty}
-                title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
-                description={text(
-                  "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة تصفح الأقسام.",
-                  "Listings remain available. Try again to restore category browsing.",
-                )}
-                action={retryAction}
-              />
-            ) : (
-              <HomeCategories worlds={categoryWorlds} language={language} text={text} />
-            )}
+            <HomeTrustRow text={text} />
 
             {listingLoadFailed ? (
               <EmptyState
-                className={styles.empty}
+                className="rawaj-signature-home__load-state"
                 title={text("تعذر تحميل إعلانات السوق", "Marketplace listings could not be loaded")}
                 description={text(
                   "أعد المحاولة لتحميل أحدث الإعلانات المعتمدة.",
@@ -128,12 +116,26 @@ function HomePage() {
               <>
                 <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <HomeLatestListings listings={latestListings} language={language} text={text} />
+                <div className="rawaj-signature-ad-placement">
+                  <PublicAdPlacementSlot placementPage="home" />
+                </div>
               </>
             )}
 
-            <div className="rawaj-signature-ad-placement">
-              <PublicAdPlacementSlot placementPage="home" />
-            </div>
+            {categoryLoadFailed ? (
+              <EmptyState
+                className="rawaj-signature-home__load-state"
+                title={text("تعذر تحميل أقسام السوق", "Marketplace categories could not be loaded")}
+                description={text(
+                  "الإعلانات ما زالت متاحة. أعد المحاولة لاستعادة تصفح الأقسام.",
+                  "Listings remain available. Try again to restore category browsing.",
+                )}
+                action={retryAction}
+              />
+            ) : (
+              <HomeCategories worlds={categoryWorlds} language={language} text={text} />
+            )}
+
             <HomeSafetyStrip text={text} />
           </div>
         </PageTransition>
@@ -151,14 +153,48 @@ interface HomeHeroProps {
 
 function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHeroProps) {
   return (
-    <section className={styles.hero} aria-labelledby="rawaj-signature-home-title">
+    <section className="rawaj-signature-hero" aria-labelledby="rawaj-signature-home-title">
+      <div className="rawaj-signature-hero__aurora" aria-hidden="true">
+        <span data-wave="one" />
+        <span data-wave="two" />
+        <span data-wave="three" />
+      </div>
+
       <div className="rawaj-signature-hero__content">
+        <span className="rawaj-signature-hero__kicker">
+          <Sparkles aria-hidden="true" />
+          {text("السوق السوري الأقرب إليك", "Your closest Syrian marketplace")}
+        </span>
         <h1 id="rawaj-signature-home-title">
           {text("كل ما تبحث عنه… في رواج", "Everything you are looking for… on RAWAJ")}
         </h1>
+        <p>
+          {text(
+            "إعلانات الأفراد والمتاجر والخدمات في مكان واحد.",
+            "Listings from people, stores, and service providers in one place.",
+          )}
+        </p>
+
+        <div className="rawaj-signature-hero__utility">
+          <Link
+            to="/listings"
+            search={{ open_filters: true }}
+            className="rawaj-signature-location"
+            aria-label={text("اختيار موقع التصفح", "Choose browse location")}
+          >
+            <MapPin aria-hidden="true" />
+            <span>{text("كل سوريا", "All Syria")}</span>
+            <ChevronLeft aria-hidden="true" />
+          </Link>
+
+          <Link to="/add-listing" className="rawaj-signature-hero__primary-action">
+            <Plus aria-hidden="true" />
+            {text("أضف إعلانًا", "Post a listing")}
+          </Link>
+        </div>
       </div>
 
-      <form className={styles.search} role="search" onSubmit={onSubmit}>
+      <form className="rawaj-signature-search" role="search" onSubmit={onSubmit}>
         <label htmlFor="rawaj-signature-search-input">
           <Search aria-hidden="true" />
           <input
@@ -177,25 +213,29 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
         </label>
         <button type="submit">{text("بحث", "Search")}</button>
       </form>
-      <div className={styles.shortcuts}>
-        <Link
-          to="/listings"
-          search={{ open_filters: true, q: searchValue.trim() || undefined }}
-          className={styles.shortcut}
-        >
-          <MapPin aria-hidden="true" />
-          <span>{text("الموقع: كل سوريا", "Location: All Syria")}</span>
-        </Link>
-        <Link to="/categories" className={styles.shortcut}>
-          <Grid3X3 aria-hidden="true" />
-          <span>{text("الأقسام", "Categories")}</span>
-        </Link>
-        <Link to="/add-listing" className={styles.shortcut}>
-          <Plus aria-hidden="true" />
-          <span>{text("أضف إعلانًا", "Post a listing")}</span>
-        </Link>
-      </div>
     </section>
+  );
+}
+
+function HomeTrustRow({ text }: { text: (ar: string, en: string) => string }) {
+  const items = [
+    { icon: Plus, ar: "نشر مجاني", en: "Free posting" },
+    { icon: Store, ar: "أفراد ومتاجر", en: "People and stores" },
+    { icon: MapPin, ar: "جميع المحافظات", en: "All governorates" },
+  ];
+
+  return (
+    <div className="rawaj-signature-trust-row" aria-label={text("مزايا رواج", "RAWAJ benefits")}>
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <span key={item.ar}>
+            <Icon aria-hidden="true" />
+            {text(item.ar, item.en)}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -212,7 +252,10 @@ function HomeFeaturedListings({
   const [lead, ...supporting] = listings;
 
   return (
-    <section className={styles.section} aria-labelledby="rawaj-signature-featured-title">
+    <section
+      className="rawaj-signature-section rawaj-signature-featured"
+      aria-labelledby="rawaj-signature-featured-title"
+    >
       <HomeSectionHeader
         title={
           <span id="rawaj-signature-featured-title">{text("مختارات رواج", "RAWAJ picks")}</span>
@@ -226,10 +269,10 @@ function HomeFeaturedListings({
         }
       />
 
-      <div className={styles.featuredGrid}>
+      <div className="rawaj-signature-featured__layout">
         <HomeLeadListingCard listing={lead} language={language} text={text} />
         {supporting.length > 0 ? (
-          <div className={styles.stack}>
+          <div className="rawaj-signature-featured__supporting">
             {supporting.slice(0, 2).map((listing) => (
               <HomeSupportingListingCard
                 key={listing.id}
@@ -255,9 +298,9 @@ function HomeLeadListingCard({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <article className={styles.lead}>
+    <article className="rawaj-signature-lead-card">
       <Link to="/listings/$id" params={{ id: listing.id }}>
-        <div className={styles.leadMedia}>
+        <div className="rawaj-signature-lead-card__media">
           <ListingCardImage
             src={listing.primaryImageUrl}
             alt={listing.title}
@@ -269,13 +312,16 @@ function HomeLeadListingCard({
             height={600}
           />
           {!listing.primaryImageUrl ? (
-            <span className={styles.imageLabel}>{text("لا توجد صورة", "No image")}</span>
+            <span className="rawaj-signature-no-image">{text("لا توجد صورة", "No image")}</span>
           ) : null}
-          <span className={styles.featuredBadge}>
+          <span className="rawaj-signature-favorite" aria-hidden="true">
+            <Heart />
+          </span>
+          <span className="rawaj-signature-featured-badge">
             {listing.isFeatured ? text("مميز", "Featured") : text("مختار", "Selected")}
           </span>
         </div>
-        <div className={styles.body}>
+        <div className="rawaj-signature-lead-card__body">
           <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
           <h3>{listing.title}</h3>
           <strong>
@@ -287,7 +333,7 @@ function HomeLeadListingCard({
             )}
           </strong>
           {listing.description ? <p>{listing.description}</p> : null}
-          <div className={styles.metadata}>
+          <div className="rawaj-signature-card-meta">
             <span>
               <MapPin aria-hidden="true" />
               {listingLocationDisplay(listing, language)}
@@ -313,8 +359,8 @@ function HomeSupportingListingCard({
   text: (ar: string, en: string) => string;
 }) {
   return (
-    <Link to="/listings/$id" params={{ id: listing.id }} className={styles.compact}>
-      <div className={styles.thumbnail}>
+    <Link to="/listings/$id" params={{ id: listing.id }} className="rawaj-signature-support-card">
+      <div className="rawaj-signature-support-card__media">
         <ListingCardImage
           src={listing.primaryImageUrl}
           alt={listing.title}
@@ -324,10 +370,10 @@ function HomeSupportingListingCard({
           height={340}
         />
         {!listing.primaryImageUrl ? (
-          <span className={styles.imageLabel}>{text("لا توجد صورة", "No image")}</span>
+          <span className="rawaj-signature-no-image">{text("لا توجد صورة", "No image")}</span>
         ) : null}
       </div>
-      <div className={styles.body}>
+      <div className="rawaj-signature-support-card__body">
         <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
         <strong>{listing.title}</strong>
         <b>
@@ -338,7 +384,7 @@ function HomeSupportingListingCard({
           {listingLocationDisplay(listing, language)}
         </small>
       </div>
-      <ChevronLeft className={styles.arrow} aria-hidden="true" />
+      <ChevronLeft className="rawaj-signature-support-card__arrow" aria-hidden="true" />
     </Link>
   );
 }
@@ -354,9 +400,8 @@ function HomeLatestListings({
 }) {
   return (
     <section
-      className={styles.section}
+      className="rawaj-signature-section rawaj-signature-latest"
       aria-labelledby="rawaj-signature-latest-title"
-      data-home-recent
     >
       <HomeSectionHeader
         title={<span id="rawaj-signature-latest-title">{text("وصل حديثًا", "Just arrived")}</span>}
@@ -370,15 +415,15 @@ function HomeLatestListings({
       />
 
       {listings.length > 0 ? (
-        <div className={styles.recentGrid}>
+        <div className="rawaj-signature-latest__list">
           {listings.map((listing) => (
             <Link
               key={listing.id}
               to="/listings/$id"
               params={{ id: listing.id }}
-              className={styles.compact}
+              className="rawaj-signature-latest-card"
             >
-              <div className={styles.thumbnail}>
+              <div className="rawaj-signature-latest-card__media">
                 <ListingCardImage
                   src={listing.primaryImageUrl}
                   alt={listing.title}
@@ -388,7 +433,7 @@ function HomeLatestListings({
                   height={300}
                 />
               </div>
-              <div className={styles.body}>
+              <div className="rawaj-signature-latest-card__body">
                 <span>{categoryName(listing.categoryId, listing.categoryNameAr, language)}</span>
                 <strong>{listing.title}</strong>
                 <b>
@@ -404,11 +449,14 @@ function HomeLatestListings({
                   {listingLocationDisplay(listing, language)}
                 </small>
               </div>
+              <span className="rawaj-signature-latest-card__favorite" aria-hidden="true">
+                <Heart />
+              </span>
             </Link>
           ))}
         </div>
       ) : (
-        <div className={styles.empty}>
+        <div className="rawaj-signature-home__empty">
           {text(
             "لا توجد إعلانات معتمدة للعرض الآن.",
             "No reviewed listings are available right now.",
@@ -431,7 +479,10 @@ function HomeCategories({
   if (worlds.length === 0) return null;
 
   return (
-    <section className={styles.section} aria-labelledby="rawaj-signature-categories-title">
+    <section
+      className="rawaj-signature-section rawaj-signature-categories"
+      aria-labelledby="rawaj-signature-categories-title"
+    >
       <HomeSectionHeader
         title={
           <span id="rawaj-signature-categories-title">
@@ -446,7 +497,7 @@ function HomeCategories({
           </Link>
         }
       />
-      <div className={styles.categoryGrid}>
+      <div className="rawaj-signature-categories__rail">
         {worlds.slice(0, 6).map((world) => (
           <HomeCategoryTile key={world.id} world={world} language={language} />
         ))}
@@ -472,16 +523,11 @@ function HomeCategoryTile({
       <strong>{label}</strong>
     </>
   );
-  const className = styles.category;
+  const className = "rawaj-signature-category-chip";
 
   if (world.target.kind === "legacy") {
     return (
-      <Link
-        to="/category/$slug"
-        params={{ slug: world.target.slug }}
-        className={className}
-        data-home-category
-      >
+      <Link to="/category/$slug" params={{ slug: world.target.slug }} className={className}>
         {content}
       </Link>
     );
@@ -489,19 +535,14 @@ function HomeCategoryTile({
 
   if (world.target.kind === "directory") {
     return (
-      <Link
-        to="/categories"
-        search={{ node: world.target.node }}
-        className={className}
-        data-home-category
-      >
+      <Link to="/categories" search={{ node: world.target.node }} className={className}>
         {content}
       </Link>
     );
   }
 
   return (
-    <Link to="/listings" search={world.target.search} className={className} data-home-category>
+    <Link to="/listings" search={world.target.search} className={className}>
       {content}
     </Link>
   );
@@ -509,7 +550,7 @@ function HomeCategoryTile({
 
 function HomeSafetyStrip({ text }: { text: (ar: string, en: string) => string }) {
   return (
-    <section className={styles.safety} aria-label={text("التعامل الآمن", "Safe trading")}>
+    <section className="rawaj-signature-safety" aria-label={text("التعامل الآمن", "Safe trading")}>
       <ShieldCheck aria-hidden="true" />
       <span>
         <strong>{text("تعامل بأمان", "Trade safely")}</strong>
@@ -535,7 +576,7 @@ function HomeSectionHeader({
   action: ReactNode;
 }) {
   return (
-    <header className={styles.sectionHeader}>
+    <header className="rawaj-signature-section-header">
       <div>
         <small>{eyebrow}</small>
         <h2>{title}</h2>

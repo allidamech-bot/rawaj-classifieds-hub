@@ -1,4 +1,3 @@
-import { sanitizePublicListingDetails } from "./public-listing-privacy";
 type Value = string | number | null;
 type Row = Record<string, unknown>;
 
@@ -253,7 +252,7 @@ function mapListing(row: Row, origin: string) {
     districtAr: nullableString(row.district_ar),
     contactName: nullableString(row.contact_name),
     contactOptions: jsonObject(row.contact_options),
-    details: sanitizePublicListingDetails(jsonObject(row.details)),
+    details: sanitizeDetails(jsonObject(row.details)),
     isFeatured: booleanValue(row.is_featured),
     featuredUntil: nullableString(row.featured_until),
     reviewedBy: null,
@@ -274,6 +273,18 @@ function mapListing(row: Row, origin: string) {
 function mediaUrl(origin: string, assetId: unknown): string | null {
   const id = nullableString(assetId);
   return id ? `${origin}/v1/media/assets/${encodeURIComponent(id)}` : null;
+}
+
+function sanitizeDetails(details: Row): Row {
+  const blocked = new Set([
+    "phone",
+    "mobile",
+    "contact_phone",
+    "whatsapp",
+    "whatsApp",
+    "contact_whatsapp",
+  ]);
+  return Object.fromEntries(Object.entries(details).filter(([key]) => !blocked.has(key)));
 }
 
 function cacheHeaders(env: PublicSellersEnv): Headers {

@@ -17,7 +17,11 @@
 .rawaj-trust-v2::before {
   height: 15rem;
   top: -4rem;
-  background: color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 62%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 62%, transparent),
+    transparent
+  );
 }
 
 /* Authentication: calmer split card, readable Arabic labels, less empty height. */
@@ -31,7 +35,7 @@
 }
 
 .rawaj-auth-aside {
-  background: #092d29;
+  background: linear-gradient(145deg, #092d29, #123f38 72%, #1b554a);
   padding: clamp(1.35rem, 3vw, 2rem);
 }
 
@@ -166,7 +170,7 @@
 /* Trust, support, safety, terms, and privacy: content-first hierarchy. */
 .rawaj-trust-hero {
   border-radius: var(--radius-hero, 1.25rem);
-  background: #092d29;
+  background: linear-gradient(145deg, #092d29, #123f38 74%, #1b554a);
   padding: clamp(1rem, 3vw, 1.45rem);
   box-shadow: 0 9px 28px rgba(9, 45, 41, 0.11);
 }

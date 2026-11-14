@@ -53,21 +53,17 @@ test.describe("premium listing workflow responsiveness", () => {
 
     await page.goto("/profile/listings", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
-    const ownerWorkspace = page.locator("main.my-store");
+    const ownerWorkspace = page.locator(".rawaj-owner-control-center");
     await expect(ownerWorkspace).toBeVisible({ timeout: 30_000 });
 
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       await page.waitForTimeout(75);
       await expectNoPageOverflow(page, `profile-listings:${viewport.width}`);
-      await expect(ownerWorkspace.locator(".my-store-identity h1")).toBeVisible();
-      await expect(ownerWorkspace.locator(".my-store-add")).toBeVisible();
-      const ownerSearch = ownerWorkspace.locator(".my-store-search input");
-      if (!(await ownerSearch.isVisible())) {
-        await ownerWorkspace.locator(".my-store-search-toggle").click();
-      }
-      await expect(ownerSearch).toBeVisible();
-      await expect(ownerWorkspace.locator(".my-store-sort select")).toBeVisible();
+      await expect(
+        ownerWorkspace.locator('.rawaj-owner-workspace-summary__actions [data-priority="primary"]'),
+      ).toBeVisible();
+      await expect(ownerWorkspace.locator('input[type="search"]')).toBeVisible();
     }
 
     await page.setViewportSize({ width: 390, height: 844 });

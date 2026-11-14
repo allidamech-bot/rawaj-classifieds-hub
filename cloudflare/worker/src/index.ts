@@ -1,4 +1,3 @@
-import { sanitizePublicListingDetails } from "./public-listing-privacy";
 type D1Value = string | number | null;
 
 interface D1Result<T> {
@@ -134,9 +133,7 @@ export async function handlePublicCore(
   } catch (error) {
     console.error("rawaj_public_api_unhandled", error);
     return json(
-      {
-        error: { code: "internal_error", message: "Unexpected service error." },
-      },
+      { error: { code: "internal_error", message: "Unexpected service error." } },
       500,
       cors,
     );
@@ -364,9 +361,7 @@ async function adPlacements(url: URL, env: PublicCoreEnv, cors: Headers): Promis
 
   if (!placementPage) {
     return json(
-      {
-        error: { code: "validation_error", message: "Missing placement page." },
-      },
+      { error: { code: "validation_error", message: "Missing placement page." } },
       400,
       cors,
     );
@@ -621,10 +616,7 @@ async function mediaAsset(
 
   const object = await env.MEDIA.get(stringValue(asset.object_key));
   if (!object) {
-    console.error("rawaj_media_object_missing", {
-      assetId,
-      objectKey: asset.object_key,
-    });
+    console.error("rawaj_media_object_missing", { assetId, objectKey: asset.object_key });
     return json({ error: { code: "not_found", message: "Media not found." } }, 404, cors);
   }
 
@@ -792,7 +784,15 @@ function mapListing(row: JsonRecord, requestUrl: URL): JsonRecord {
 }
 
 function sanitizePublicDetails(details: JsonRecord): JsonRecord {
-  return sanitizePublicListingDetails(details);
+  const blocked = new Set([
+    "phone",
+    "mobile",
+    "contact_phone",
+    "whatsapp",
+    "whatsApp",
+    "contact_whatsapp",
+  ]);
+  return Object.fromEntries(Object.entries(details).filter(([key]) => !blocked.has(key)));
 }
 
 function readListingFilters(params: URLSearchParams) {
@@ -947,12 +947,7 @@ function cacheHeaders(env: PublicCoreEnv, override?: number): Headers {
 function databaseFailure(cors: Headers, detail?: string): Response {
   if (detail) console.error("rawaj_public_api_database_error", detail);
   return json(
-    {
-      error: {
-        code: "database_unavailable",
-        message: "Data service unavailable.",
-      },
-    },
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
     503,
     cors,
   );

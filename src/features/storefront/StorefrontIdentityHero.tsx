@@ -84,6 +84,7 @@ export function StorefrontIdentityHero({
         location={location}
         verified={verified}
         completeness={completeness}
+        approvedCount={approvedCount ?? 0}
       />
     );
   }
@@ -252,7 +253,7 @@ export function StorefrontSectionHeader({
   count,
   action,
 }: {
-  eyebrow?: string;
+  eyebrow: string;
   title: string;
   description?: string;
   count?: number;
@@ -261,7 +262,7 @@ export function StorefrontSectionHeader({
   return (
     <header className="rawaj-storefront-section-header">
       <div>
-        {eyebrow ? <p>{eyebrow}</p> : null}
+        <p>{eyebrow}</p>
         <h2>{title}</h2>
         {description ? <span>{description}</span> : null}
       </div>

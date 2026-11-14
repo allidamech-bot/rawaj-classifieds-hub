@@ -94,23 +94,11 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         );
       }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = 1;
-      canvas.height = 1;
-      const colorContext = canvas.getContext("2d", { willReadFrequently: true });
-
       function parseColor(value: string) {
         const match = value.match(
           /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+))?\s*\)$/,
         );
-        if (!match) {
-          if (!colorContext || !CSS.supports("color", value)) return null;
-          colorContext.clearRect(0, 0, 1, 1);
-          colorContext.fillStyle = value;
-          colorContext.fillRect(0, 0, 1, 1);
-          const [r, g, b, a] = colorContext.getImageData(0, 0, 1, 1).data;
-          return { r, g, b, a: a / 255 };
-        }
+        if (!match) return null;
         return {
           r: Number(match[1]),
           g: Number(match[2]),
@@ -148,7 +136,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
           current = current.parentElement;
         }
 
-        let result = { r: 255, g: 255, b: 255, a: 1 };
+        let result = { r: 36, g: 37, b: 41, a: 1 };
         for (const layer of layers.reverse()) result = blend(layer, result);
         return result;
       }
@@ -245,9 +233,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
           const largeText = fontSize >= 24 || (fontSize >= 18.66 && fontWeight >= 700);
           const required = largeText ? 3 : 4.5;
           return ratio + 0.01 < required
-            ? [
-                `${describe(element)} [${ratio.toFixed(2)}:1 < ${required}:1; fg=${style.color}; bg=rgb(${Math.round(background.r)},${Math.round(background.g)},${Math.round(background.b)})]`,
-              ]
+            ? [`${describe(element)} [${ratio.toFixed(2)}:1 < ${required}:1]`]
             : [];
         })
         .slice(0, 30);
@@ -267,7 +253,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         .slice(0, 20);
 
       const footer = document.querySelector(".rawaj-site-footer");
-      const dock = document.querySelector("[data-shell-region=bottom-dock-region]");
+      const dock = document.querySelector(".rawaj-mobile-dock");
       let footerDockOverlap = false;
       if (footer && dock && visible(footer) && visible(dock)) {
         const footerBottomAtMaxScroll =

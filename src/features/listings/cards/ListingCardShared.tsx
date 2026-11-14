@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Clock, MapPin } from "lucide-react";
 import type { ReactNode } from "react";
 import type { ClassifiedListing } from "@/lib/classifieds-types";
-import { categoryName, formatListingPriceParts } from "@/lib/i18n";
+import { categoryName, formatPriceLocalized } from "@/lib/i18n";
 import { listingLocationDisplay } from "@/lib/listing-location-display";
 import { useIsListingViewed } from "@/lib/listing-history";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -80,18 +80,11 @@ export function ListingCardFrame({
 
 export function ListingCardHeading({ listing }: { listing: ClassifiedListing }) {
   const { language } = useUiPreferences();
-  const { amount, note } = formatListingPriceParts(
-    listing.price,
-    listing.priceType,
-    language,
-    listing.currency,
-  );
   return (
     <div className="rawaj-adaptive-card__heading">
       <strong className="rawaj-adaptive-card__price">
-        <bdi>{amount}</bdi>
+        {formatPriceLocalized(listing.price ?? 0, listing.priceType, language, listing.currency)}
       </strong>
-      {note ? <small className="rawaj-buyer-price-note">{note}</small> : null}
       <span className="rawaj-adaptive-card__category">
         {categoryName(listing.categoryId, listing.categoryNameAr, language)}
       </span>

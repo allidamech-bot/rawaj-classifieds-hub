@@ -89,7 +89,9 @@
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell {
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: #f2efeb !important;
-  background: #303137 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.08), transparent 42%),
+    linear-gradient(150deg, #303137, #292a30) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
 }
 
@@ -102,9 +104,9 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-shell > div:first-child > span {
-  border: 1px solid rgba(169, 200, 187, 0.18) !important;
-  color: #c6d7cf !important;
-  background: rgba(169, 200, 187, 0.09) !important;
+  border: 1px solid rgba(225, 100, 180, 0.18) !important;
+  color: #ef8bd3 !important;
+  background: rgba(225, 100, 180, 0.09) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button {
@@ -115,7 +117,7 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button:hover,
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-scroll-button:focus-visible {
-  border-color: rgba(169, 200, 187, 0.38) !important;
+  border-color: rgba(225, 100, 180, 0.38) !important;
   color: #f2efeb !important;
   background: #39343b !important;
 }
@@ -127,9 +129,9 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-nav-rail > a[aria-current="page"] {
-  border-color: rgba(169, 200, 187, 0.3) !important;
+  border-color: rgba(225, 100, 180, 0.3) !important;
   color: #f2efeb !important;
-  background: rgba(169, 200, 187, 0.11) !important;
+  background: rgba(225, 100, 180, 0.11) !important;
 }
 
 .rawaj-storefront-owner-tabs,

@@ -16,7 +16,7 @@ test("bottom dock exposes stable navigation and accessibility contracts", () => 
   assert.match(dock, /data-badge-count/);
   assert.match(dock, /data-primary=\{item\.primary === true\}/);
   assert.match(dock, /unread/);
-  assert.match(dock, /styles.item/);
+  assert.match(dock, /focus-visible:ring-2/);
 });
 
 test("bottom dock retains four core destinations plus one auth-aware account destination", () => {
@@ -32,6 +32,7 @@ test("bottom dock retains four core destinations plus one auth-aware account des
 });
 
 test("bottom dock keeps the primary action restrained", () => {
-  assert.match(dock, /styles.create/);
+  assert.match(dock, /-mt-3 h-11 w-11/);
+  assert.match(dock, /ring-\[3px\]/);
   assert.doesNotMatch(dock, /rawaj-dock-active-indicator/);
 });

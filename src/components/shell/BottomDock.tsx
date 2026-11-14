@@ -1,6 +1,5 @@
-import styles from "./BottomDock.module.css";
 import { Link } from "@tanstack/react-router";
-import { LayoutGrid, Home, MessagesSquare, Plus, CircleUserRound } from "lucide-react";
+import { Grid3X3, Home, MessageCircle, Plus, User } from "lucide-react";
 
 import {
   resolvePrimaryNavigationSection,
@@ -32,7 +31,7 @@ const coreItems: NavItem[] = [
     section: "categories",
     labelAr: "الأقسام",
     labelEn: "Categories",
-    icon: LayoutGrid,
+    icon: Grid3X3,
   },
   {
     to: "/add-listing",
@@ -47,7 +46,7 @@ const coreItems: NavItem[] = [
     section: "chats",
     labelAr: "المحادثات",
     labelEn: "Chats",
-    icon: MessagesSquare,
+    icon: MessageCircle,
   },
 ];
 
@@ -64,7 +63,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
       section: "account",
       labelAr: "حسابي",
       labelEn: "Account",
-      icon: CircleUserRound,
+      icon: User,
     },
   ];
 
@@ -72,11 +71,14 @@ export function BottomDock({ pathname }: BottomDockProps) {
 
   return (
     <nav
-      className={styles.dock}
+      className="rawaj-mobile-dock pointer-events-none fixed inset-x-0 z-40 lg:hidden"
       data-shell-region="bottom-dock-region"
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
-      <div className={styles.surface} data-dock-surface role="list">
+      <div
+        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid grid-cols-5 items-end"
+        role="list"
+      >
         {items.map((item) => {
           const active = activeSection === item.section;
           const Icon = item.icon;
@@ -106,7 +108,7 @@ export function BottomDock({ pathname }: BottomDockProps) {
               data-active={active}
               data-primary={item.primary === true}
               data-badge-count={badgeCount > 0 ? badgeCount : undefined}
-              className={styles.item}
+              className="rawaj-dock-item relative flex min-w-0 flex-col items-center justify-end active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               aria-label={accessibleLabel}
               aria-current={active ? "page" : undefined}
               onClick={(event) => {
@@ -118,25 +120,27 @@ export function BottomDock({ pathname }: BottomDockProps) {
               <span
                 data-active={active && !item.primary}
                 className={`relative grid place-items-center ${
-                  item.primary ? styles.create : styles.icon
+                  item.primary
+                    ? "rawaj-dock-create -mt-3 h-11 w-11 ring-[3px] ring-card"
+                    : "rawaj-dock-icon rounded-xl"
                 }`}
               >
                 <Icon
                   aria-hidden="true"
                   className={item.primary ? "h-6 w-6" : "h-5 w-5"}
-                  strokeWidth={active || item.primary ? 2.1 : 1.75}
+                  strokeWidth={active || item.primary ? 2.2 : 1.8}
                 />
                 {badgeCount > 0 ? (
                   <span
                     aria-hidden="true"
-                    className="rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card"
+                    className="rawaj-bottom-dock__badge rawaj-notification-badge absolute -end-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-bold leading-none ring-2 ring-card"
                   >
                     {badgeCount > 99 ? "99+" : badgeCount}
                   </span>
                 ) : null}
               </span>
               <span
-                className={`${styles.label} max-w-full truncate ${
+                className={`rawaj-bottom-dock__label max-w-full truncate ${
                   active || item.primary ? "font-bold" : "font-medium"
                 }`}
               >

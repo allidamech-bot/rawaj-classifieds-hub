@@ -6,26 +6,26 @@
 
 :root,
 .dark {
-  --rawaj-page-background: var(--rawaj-canvas) !important;
-  --rawaj-page-background-deep: var(--rawaj-canvas) !important;
-  --rawaj-card-background: var(--rawaj-surface) !important;
-  --rawaj-elevated-background: var(--rawaj-surface) !important;
-  --rawaj-subtle-background: var(--rawaj-surface-subtle) !important;
-  --rawaj-muted-surface: var(--rawaj-surface) !important;
-  --rawaj-surface-active: var(--rawaj-selected-surface) !important;
-  --rawaj-surface-selected: var(--rawaj-selected-surface) !important;
-  --rawaj-surface-inset: var(--rawaj-surface-subtle) !important;
-  --rawaj-surface-card: var(--rawaj-surface) !important;
-  --rawaj-surface-sage: var(--rawaj-surface-subtle) !important;
-  --rawaj-surface-sage-strong: var(--rawaj-surface-subtle) !important;
-  --rawaj-surface-warm: var(--rawaj-warning-surface-light) !important;
-  --rawaj-surface-gold: var(--rawaj-warning-surface-light) !important;
-  --rawaj-surface-elevated: var(--rawaj-surface) !important;
-  --card: var(--rawaj-surface) !important;
-  --card-warm: var(--rawaj-surface) !important;
-  --popover: var(--rawaj-surface) !important;
-  --secondary: var(--rawaj-surface) !important;
-  --muted: var(--rawaj-surface) !important;
+  --rawaj-page-background: #0b0e14 !important;
+  --rawaj-page-background-deep: #080b10 !important;
+  --rawaj-card-background: #141821 !important;
+  --rawaj-elevated-background: #191d27 !important;
+  --rawaj-subtle-background: #11151d !important;
+  --rawaj-muted-surface: #171b24 !important;
+  --rawaj-surface-active: #211d29 !important;
+  --rawaj-surface-selected: #251b2a !important;
+  --rawaj-surface-inset: #0d1118 !important;
+  --rawaj-surface-card: #141821 !important;
+  --rawaj-surface-sage: #151b22 !important;
+  --rawaj-surface-sage-strong: #1a2028 !important;
+  --rawaj-surface-warm: #1c171d !important;
+  --rawaj-surface-gold: #1d1a14 !important;
+  --rawaj-surface-elevated: #191d27 !important;
+  --card: #141821 !important;
+  --card-warm: #171b24 !important;
+  --popover: #191d27 !important;
+  --secondary: #171b24 !important;
+  --muted: #171b24 !important;
 }
 
 /* Brand artwork must float directly on the shell. */
@@ -51,15 +51,15 @@
   filter: drop-shadow(0 5px 11px rgba(0, 0, 0, 0.24)) !important;
 }
 
-/* Shared header surface and neutral navigation controls. */
+/* Shared shell: deep charcoal/navy glass rather than the old medium-grey band. */
 .rawaj-app-header,
 .rawaj-shell-header,
 .rawaj-shell-header--workspace,
 .rawaj-shell-header--context {
-  background: var(--rawaj-canvas) !important;
-  color: var(--rawaj-ink-primary) !important;
-  border-color: var(--rawaj-divider) !important;
-  box-shadow: none !important;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(74, 140, 255, 0.055), transparent 38%),
+    radial-gradient(circle at 8% 0%, rgba(198, 44, 120, 0.045), transparent 38%),
+    linear-gradient(180deg, rgba(19, 23, 32, 0.985), rgba(12, 16, 23, 0.97)) !important;
 }
 
 /* Only neutral/inactive shell controls are normalized. Active/current states keep
@@ -72,9 +72,9 @@
 .rawaj-home-menu-action:not([aria-current="page"]):not([data-active="true"]),
 .rawaj-shell-header__actions > .relative > button {
   border-color: rgba(216, 174, 95, 0.12) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface-subtle) !important;
-  box-shadow: none !important;
+  color: #ddd8d3 !important;
+  background: linear-gradient(145deg, #181d27, #10151d) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025), 0 8px 20px rgba(0, 0, 0, 0.19) !important;
 }
 
 /* My Store is an intentional capability accent, not a neutral utility control. */
@@ -94,7 +94,9 @@
   padding: 0.28rem 0.36rem 0.32rem !important;
   border: 1px solid rgba(246, 194, 76, 0.72) !important;
   color: #f5c95f !important;
-  background: rgba(115, 78, 16, 0.9) !important;
+  background:
+    radial-gradient(circle at 50% -28%, rgba(255, 231, 161, 0.18), transparent 60%),
+    linear-gradient(145deg, rgba(115, 78, 16, 0.9), rgba(48, 35, 16, 0.96)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 243, 203, 0.12),
     0 0 0 1px rgba(246, 194, 76, 0.05),
@@ -131,7 +133,9 @@
 .rawaj-app-header .rawaj-shell-header__actions .rawaj-header-store.rawaj-header-action[data-active="true"] {
   border-color: rgba(255, 216, 123, 0.9) !important;
   color: #ffe39a !important;
-  background: rgba(135, 92, 20, 0.94) !important;
+  background:
+    radial-gradient(circle at 50% -24%, rgba(255, 239, 190, 0.24), transparent 60%),
+    linear-gradient(145deg, rgba(135, 92, 20, 0.94), rgba(57, 40, 16, 0.98)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 248, 219, 0.14),
     0 0 0 1px rgba(255, 213, 111, 0.08),
@@ -154,8 +158,10 @@
 .rawaj-search-toolbar__saved,
 .rawaj-search-toolbar__views {
   border-color: rgba(216, 174, 95, 0.13) !important;
-  color: var(--rawaj-ink-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #d8d2cc !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
+    linear-gradient(145deg, #0f141d, #0a0f16) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
@@ -165,7 +171,7 @@
 .rawaj-search-overlay__field input,
 .rawaj-search-toolbar__search input,
 .rawaj-categories-v2__hero-search input {
-  color: var(--rawaj-ink-primary) !important;
+  color: #f7f3ed !important;
   background: transparent !important;
 }
 
@@ -174,7 +180,7 @@
 .rawaj-search-overlay__field input::placeholder,
 .rawaj-search-toolbar__search input::placeholder,
 .rawaj-categories-v2__hero-search input::placeholder {
-  color: var(--rawaj-ink-secondary) !important;
+  color: #8e969f !important;
 }
 
 .rawaj-header-search:is(:hover, :focus-visible),
@@ -195,8 +201,10 @@
 [data-ui="card"][data-variant="elevated"]:not([data-tone]),
 [data-ui="card"][data-variant="flat"]:not([data-tone]) {
   border-color: rgba(216, 174, 95, 0.105) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19), inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
@@ -207,26 +215,33 @@
 .rawaj-app-shell textarea.input,
 .rawaj-app-shell select.input {
   border-color: rgba(216, 174, 95, 0.105) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: #10151d !important;
 }
 
-/* Shared footer surface. */
+/* Footer canvas is unified, while its support/safety/privacy pills keep their
+ * individual red/blue/gold premium tones from the underlying design system. */
 .rawaj-site-footer,
 .rawaj-site-footer__mobile {
   border-color: rgba(216, 174, 95, 0.09) !important;
-  background: var(--rawaj-canvas) !important;
+  background:
+    radial-gradient(circle at 50% 100%, rgba(198, 44, 120, 0.045), transparent 42%),
+    linear-gradient(180deg, #0d1118, #090d13) !important;
 }
 
 /* Portal content is outside the route shell in older Radix primitives. */
 body :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *) {
   border-color: rgba(216, 174, 95, 0.13) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(116, 101, 239, 0.055), transparent 38%),
+    linear-gradient(155deg, #191d27, #10151d) !important;
 }
 
 /* Keep mobile dock aligned with the approved /more reference on every route. */
 .rawaj-bottom-nav-shell {
   border-color: rgba(216, 174, 95, 0.14) !important;
-  background: var(--rawaj-brand-primary) !important;
-  box-shadow: 0 8px 22px rgba(16, 63, 66, 0.18) !important;
+  background:
+    radial-gradient(circle at 50% -45%, rgba(219, 73, 179, 0.07), transparent 40%),
+    rgba(14, 18, 25, 0.97) !important;
+  box-shadow: 0 17px 40px rgba(0, 0, 0, 0.43), inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
 }

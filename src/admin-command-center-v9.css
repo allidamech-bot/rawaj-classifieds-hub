@@ -19,9 +19,13 @@
   border: 1px solid rgba(205, 162, 96, 0.22) !important;
   border-radius: 1.35rem !important;
   padding: clamp(1.05rem, 2.7vw, 1.45rem) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: none !important;
+  color: #fff !important;
+  background:
+    radial-gradient(circle at 8% 118%, rgba(255, 112, 84, 0.42), transparent 33%),
+    radial-gradient(circle at 50% -28%, rgba(220, 62, 182, 0.33), transparent 40%),
+    radial-gradient(circle at 100% 8%, rgba(63, 145, 255, 0.3), transparent 36%),
+    linear-gradient(145deg, #2f3036, #26272d 58%, #232429) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.23), inset 0 1px 0 rgba(255, 255, 255, 0.075) !important;
 }
 
 .rawaj-admin-command-hero::after {
@@ -30,7 +34,9 @@
   z-index: -1;
   inset: 0;
   pointer-events: none;
-  background-image: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.16) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle, rgba(225, 100, 180, 0.18) 0 0.65px, transparent 0.9px);
   background-position: 0 0, 8px 9px;
   background-size: 18px 18px, 24px 24px;
   opacity: 0.16;
@@ -51,9 +57,9 @@
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
-  color: var(--rawaj-brand-primary);
-  background: var(--rawaj-surface-subtle);
-  box-shadow: none;
+  color: #1f2024;
+  background: linear-gradient(145deg, #e7bf7b, #b98738);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
 .rawaj-admin-command-hero__icon svg {
@@ -67,14 +73,14 @@
 
 .rawaj-admin-command-hero__copy p {
   margin: 0;
-  color: var(--rawaj-gold-ink) !important;
-  font-size: 0.8125rem;
+  color: #e9c997 !important;
+  font-size: 0.7rem;
   font-weight: 800;
 }
 
 .rawaj-admin-command-hero__copy h2 {
   margin: 0.2rem 0 0;
-  color: var(--rawaj-ink-primary) !important;
+  color: #fff !important;
   font-size: clamp(1.15rem, 3vw, 1.65rem);
   font-weight: 900;
   line-height: 1.35;
@@ -84,8 +90,8 @@
   display: block;
   max-width: 68ch;
   margin-top: 0.4rem;
-  color: var(--rawaj-ink-secondary) !important;
-  font-size: 0.8125rem;
+  color: rgba(242, 239, 235, 0.76) !important;
+  font-size: 0.73rem;
   font-weight: 500;
   line-height: 1.7;
 }
@@ -98,9 +104,9 @@
   border: 1px solid rgba(205, 162, 96, 0.25);
   border-radius: 0.85rem;
   padding: 0.5rem 0.8rem;
-  color: var(--rawaj-gold-ink) !important;
+  color: #f0d6aa !important;
   background: rgba(205, 162, 96, 0.08);
-  font-size: 0.8125rem;
+  font-size: 0.7rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -113,9 +119,9 @@
   border: 1px solid rgba(234, 113, 104, 0.2);
   border-radius: 1rem;
   padding: 0.75rem 0.85rem;
-  color: var(--rawaj-danger);
+  color: #f2aaa4;
   background: rgba(234, 113, 104, 0.055);
-  font-size: 0.8125rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -129,9 +135,9 @@
   border: 1px solid rgba(234, 113, 104, 0.18);
   border-radius: 0.78rem;
   padding: 0.45rem 0.7rem;
-  color: var(--rawaj-danger);
+  color: #f5c1bd;
   background: rgba(234, 113, 104, 0.07);
-  font-size: 0.8125rem;
+  font-size: 0.68rem;
   font-weight: 800;
 }
 
@@ -141,18 +147,22 @@
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.2rem !important;
   padding: clamp(0.85rem, 2vw, 1.05rem) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="pulse"] {
-  border-color: rgba(98, 139, 128, 0.16) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  border-color: rgba(63, 145, 255, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.08), transparent 36%),
+    linear-gradient(150deg, #2e333c, #292b31) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="queues"] {
   border-color: rgba(227, 160, 75, 0.16) !important;
-  background: var(--rawaj-warning-surface-light) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.07), transparent 36%),
+    linear-gradient(150deg, #34312d, #2b2b30) !important;
 }
 
 .rawaj-admin-section-title {
@@ -170,7 +180,7 @@
   border: 1px solid var(--rawaj-border);
   border-radius: 0.72rem;
   color: var(--rawaj-accent-pink);
-  background: rgba(169, 200, 187, 0.065);
+  background: rgba(225, 100, 180, 0.065);
 }
 
 .rawaj-admin-section-title > span svg {
@@ -212,7 +222,7 @@
 
 .rawaj-admin-metric-card span {
   color: var(--rawaj-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.66rem;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -223,7 +233,7 @@
 }
 
 .rawaj-admin-metric-card[data-attention="true"] strong {
-  color: var(--rawaj-gold-ink);
+  color: #efca91;
 }
 
 .rawaj-admin-queue-grid {
@@ -245,13 +255,13 @@
   border-radius: 0.95rem !important;
   padding: 0.7rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
   box-shadow: none !important;
 }
 
 .rawaj-admin-queue-card:hover {
   border-color: var(--rawaj-border-active) !important;
-  background: rgba(169, 200, 187, 0.055) !important;
+  background: rgba(225, 100, 180, 0.055) !important;
   transform: translateY(-1px);
 }
 
@@ -263,7 +273,7 @@
   place-items: center;
   border-radius: 0.75rem;
   color: var(--rawaj-accent-blue);
-  background: rgba(98, 139, 128, 0.075);
+  background: rgba(63, 145, 255, 0.075);
 }
 
 .rawaj-admin-queue-card__icon svg {
@@ -283,7 +293,7 @@
   grid-area: label;
   margin: 0;
   color: var(--rawaj-text-secondary) !important;
-  font-size: 0.8125rem;
+  font-size: 0.65rem;
   font-weight: 800;
   line-height: 1.4;
 }
@@ -294,7 +304,7 @@
 }
 
 .rawaj-admin-queue-card[data-active="true"] .rawaj-admin-queue-card__icon {
-  color: var(--rawaj-gold-ink);
+  color: #efca91;
   background: rgba(227, 160, 75, 0.075);
 }
 
@@ -312,8 +322,8 @@
   border-radius: 1.15rem !important;
   padding: 0.95rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 .rawaj-admin-mini-metrics {
@@ -350,14 +360,14 @@
 
 .rawaj-admin-mini-metric span {
   color: var(--rawaj-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.62rem;
   font-weight: 700;
 }
 
 .rawaj-admin-command-card__description {
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.8125rem;
+  font-size: 0.69rem;
   line-height: 1.65;
 }
 
@@ -371,9 +381,9 @@
   border-radius: 0.82rem !important;
   padding: 0.5rem 0.8rem !important;
   color: #fff !important;
-  background: var(--rawaj-action-primary) !important;
-  box-shadow: none !important;
-  font-size: 0.8125rem;
+  background: var(--rawaj-gradient-action-short) !important;
+  box-shadow: 0 9px 20px rgba(155, 40, 111, 0.2) !important;
+  font-size: 0.69rem;
   font-weight: 800;
 }
 
@@ -393,13 +403,13 @@
   border-radius: 1rem !important;
   padding: 0.75rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
   box-shadow: none !important;
 }
 
 .rawaj-admin-quick-link:hover {
   border-color: var(--rawaj-border-active) !important;
-  background: rgba(169, 200, 187, 0.045) !important;
+  background: rgba(225, 100, 180, 0.045) !important;
   transform: translateY(-1px);
 }
 
@@ -411,7 +421,7 @@
   place-items: center;
   border-radius: 0.8rem;
   color: var(--rawaj-accent-pink);
-  background: rgba(169, 200, 187, 0.07);
+  background: rgba(225, 100, 180, 0.07);
 }
 
 .rawaj-admin-quick-link > span svg {
@@ -426,7 +436,7 @@
 .rawaj-admin-quick-link h3 {
   margin: 0;
   color: var(--rawaj-text-primary) !important;
-  font-size: 0.8125rem;
+  font-size: 0.76rem;
   font-weight: 850;
   line-height: 1.45;
 }
@@ -434,7 +444,7 @@
 .rawaj-admin-quick-link p {
   margin: 0.2rem 0 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.8125rem;
+  font-size: 0.62rem;
   line-height: 1.5;
 }
 
@@ -449,8 +459,8 @@
   padding: 1.5rem !important;
   text-align: center;
   color: var(--rawaj-text-secondary) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06) !important;
+  background: linear-gradient(150deg, #303137, #292a30) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 .rawaj-admin-dashboard-state > svg {
@@ -469,7 +479,7 @@
   max-width: 60ch;
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.8125rem;
+  font-size: 0.7rem;
   line-height: 1.65;
 }
 
@@ -479,8 +489,8 @@
   border-radius: 0.82rem;
   padding: 0.5rem 0.8rem;
   color: #fff;
-  background: var(--rawaj-action-primary);
-  font-size: 0.8125rem;
+  background: var(--rawaj-gradient-action-short);
+  font-size: 0.69rem;
   font-weight: 800;
 }
 

@@ -105,7 +105,10 @@
    ========================================================= */
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] {
-  background: var(--r16-page) !important;
+  background:
+    radial-gradient(circle at 88% 5%, rgba(216, 174, 95, 0.055), transparent 24rem),
+    radial-gradient(circle at 8% 24%, rgba(18, 63, 54, 0.14), transparent 30rem),
+    var(--r16-page) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-control-center {
@@ -121,7 +124,9 @@
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-owner-workspace-summary {
   border: 1px solid rgba(216, 174, 95, 0.2) !important;
   border-radius: var(--r16-radius-lg) !important;
-  background: #16483e !important;
+  background:
+    radial-gradient(circle at 92% 6%, rgba(232, 202, 141, 0.12), transparent 30%),
+    linear-gradient(145deg, #16483e 0%, var(--r16-forest) 50%, #182724 100%) !important;
   box-shadow: var(--r16-shadow) !important;
 }
 
@@ -385,7 +390,9 @@
 
 .rawaj-detail-v2 {
   color: var(--r16-text) !important;
-  background: var(--r16-page) !important;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(216, 174, 95, 0.05), transparent 26rem),
+    var(--r16-page) !important;
 }
 
 .rawaj-detail-v2 .rawaj-detail-media__stage {
@@ -514,7 +521,9 @@
   border: 1px solid rgba(216, 174, 95, 0.16) !important;
   border-radius: 1rem !important;
   color: var(--r16-text) !important;
-  background: #15463c !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.08), transparent 34%),
+    linear-gradient(145deg, #15463c, #102e29 72%) !important;
   box-shadow: none !important;
 }
 
@@ -567,9 +576,9 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor {
-  border-color: var(--rawaj-divider) !important;
+  border-color: var(--r16-line) !important;
   border-radius: 1rem !important;
-  background: var(--rawaj-surface) !important;
+  background: var(--r16-card) !important;
   box-shadow: none !important;
 }
 
@@ -578,25 +587,25 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor form > .rounded-2xl.bg-muted-surface {
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid var(--r16-line) !important;
   border-radius: 0.88rem !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: var(--r16-card-inset) !important;
   padding: 0.68rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rounded-xl.bg-card {
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid var(--r16-line) !important;
   border-radius: 0.78rem !important;
-  background: var(--rawaj-surface) !important;
+  background: var(--r16-card) !important;
   padding: 0.62rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface {
   height: 7.5rem !important;
   min-height: 7.5rem !important;
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid var(--r16-line) !important;
   border-radius: 0.72rem !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: #151819 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .grid.place-items-center.overflow-hidden.rounded-xl.bg-muted-surface.h-36 {
@@ -612,9 +621,9 @@
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor label.inline-flex.cursor-pointer,
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor button.inline-flex.items-center {
   min-height: 2.15rem !important;
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid var(--r16-line) !important;
   border-radius: 0.62rem !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: var(--r16-card-raised) !important;
   padding: 0.35rem 0.62rem !important;
   font-size: 0.65rem !important;
 }
@@ -641,12 +650,14 @@
 .rawaj-storefront-identity {
   border: 1px solid rgba(216, 174, 95, 0.18) !important;
   border-radius: 1.18rem !important;
-  background: #123f36 !important;
+  background: linear-gradient(145deg, #123f36, #0f332d 65%, #192622) !important;
   box-shadow: var(--r16-shadow) !important;
 }
 
 .rawaj-storefront-identity__scrim {
-  background: rgba(7, 26, 23, 0.16) !important;
+  background:
+    linear-gradient(180deg, rgba(7, 26, 23, 0.16), rgba(7, 26, 23, 0.9) 84%),
+    linear-gradient(90deg, rgba(7, 26, 23, 0.74), rgba(7, 26, 23, 0.2)) !important;
 }
 
 .rawaj-storefront-identity__content {
@@ -721,7 +732,7 @@
 .rawaj-storefront-identity__actions > a:first-child {
   border-color: rgba(216, 174, 95, 0.28) !important;
   color: #17201e !important;
-  background: var(--r16-gold-soft) !important;
+  background: linear-gradient(135deg, var(--r16-gold-soft), #c69547) !important;
 }
 
 .rawaj-storefront-v2__layout {

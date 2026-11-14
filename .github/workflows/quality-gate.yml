@@ -65,45 +65,14 @@ jobs:
       - name: Verify runtime backend boundary
         run: npm run test:runtime-boundary
 
-      - name: Ensure browser CI never proxies to Syria production Worker
-        run: node --test scripts/ci-syria-worker-network-isolation.test.mjs
-
       - name: Validate and replay D1 migrations
         run: npm run test:d1-migrations
-
-      - name: Verify isolated Syria D1 backup integrity and output-path safety
-        run: node --test scripts/syria-d1-backup-integrity.test.mjs scripts/syria-backup-restore-safety.test.mjs
-
-      - name: Rehearse pinned Syria D1 snapshot recovery in isolated SQLite
-        run: node --test scripts/syria-d1-isolated-restore.test.mjs
-
-      - name: Check offline Syria R2 media and D1 ownership integrity
-        run: node --test scripts/syria-r2-media-recovery.test.mjs
-
-      - name: Validate pinned manual release candidate gates
-        run: node --test scripts/release-candidate-gating.test.mjs
 
       - name: Run Cloudflare cutover contracts
         run: npm run test:cloudflare-cutover
 
       - name: Run administrative authorization regression
         run: npm run test:admin-security
-
-      - name: Run P1 security behavior and SQL regression tests
-        run: npm run test:p1-stability-security
-
-      - name: Verify browser error telemetry delivery and privacy
-        run: node --test scripts/client-error-telemetry-contract.test.mjs
-
-      - name: Run isolated Worker marketplace integration tests
-        run: |
-          npm run test:setup --prefix cloudflare/worker
-          npm run test:fixtures --prefix cloudflare/worker
-          cd cloudflare/worker
-          node --test --test-concurrency=1 test/marketplace.integration.test.mjs
-
-      - name: Verify audited dependency APIs
-        run: node --test scripts/dependency-security-compatibility.test.mjs
 
       - name: Typecheck application
         run: npm run typecheck

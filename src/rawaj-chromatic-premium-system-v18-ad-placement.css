@@ -14,21 +14,32 @@
 .rawaj-app-shell .rawaj-ad-placement__frame {
   border: 1px solid transparent !important;
   border-radius: 1.25rem !important;
-  border-color: var(--rawaj-border-strong) !important;
-  background: #10141b !important;
+  background:
+    linear-gradient(#10141b, #10141b) padding-box,
+    linear-gradient(
+      118deg,
+      rgba(216, 174, 95, 0.28),
+      rgba(219, 73, 179, 0.18),
+      rgba(116, 101, 239, 0.16),
+      rgba(74, 140, 255, 0.2)
+    ) border-box !important;
   box-shadow:
     0 16px 38px rgba(0, 0, 0, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
 .rawaj-app-shell .rawaj-ad-placement__scrim {
-  background: rgba(7, 10, 15, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(7, 10, 15, 0.08), transparent 34%, rgba(7, 10, 15, 0.18)),
+    linear-gradient(90deg, rgba(198, 44, 120, 0.035), transparent 35%, rgba(74, 140, 255, 0.035)) !important;
 }
 
 .rawaj-app-shell .rawaj-ad-placement__label {
   border: 1px solid rgba(216, 174, 95, 0.18) !important;
   color: #f8ead0 !important;
-  background: rgba(14, 18, 25, 0.88) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.12), transparent 62%),
+    rgba(14, 18, 25, 0.88) !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24) !important;
   backdrop-filter: blur(12px) saturate(120%) !important;
 }

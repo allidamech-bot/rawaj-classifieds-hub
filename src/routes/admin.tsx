@@ -330,7 +330,7 @@ function AdminLayout() {
         />
       </div>
       <main className="rawaj-admin-v3 container-wide pt-3 pb-[calc(env(safe-area-inset-bottom)+2rem)] sm:pt-4">
-        <div className="rawaj-secondary-notice rawaj-admin-access-notice mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] p-3">
+        <div className="rawaj-admin-access-notice mb-4 flex items-start gap-2 rounded-[var(--rawaj-radius-card)] p-3">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
           <p className="text-xs leading-6 text-foreground/90">
             {text(

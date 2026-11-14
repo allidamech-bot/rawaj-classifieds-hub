@@ -1,5 +1,5 @@
 /* RAWAJ Personal Space System V5
- * Shared light surfaces for authentication, account, favorites, notifications,
+ * Unified dark experience for authentication, account, favorites, notifications,
  * messaging, saved activity, and owner workspaces.
  * Presentation only: Firebase Auth and Cloudflare-backed behavior remain unchanged.
  */
@@ -13,14 +13,14 @@
     .rawaj-communication-v2,
     .rawaj-messaging-v4
   ) {
-  --personal-panel: var(--rawaj-surface);
-  --personal-panel-raised: var(--rawaj-surface);
-  --personal-inset: var(--rawaj-surface-subtle);
-  --personal-line: var(--rawaj-divider);
+  --personal-panel: rgba(47, 48, 54, 0.98);
+  --personal-panel-raised: rgba(53, 54, 61, 0.98);
+  --personal-inset: rgba(25, 26, 31, 0.72);
+  --personal-line: rgba(255, 255, 255, 0.08);
   --personal-line-strong: rgba(104, 173, 255, 0.24);
-  --personal-text: var(--rawaj-ink-primary);
-  --personal-text-soft: var(--rawaj-ink-secondary);
-  --personal-muted: var(--rawaj-ink-secondary);
+  --personal-text: #f4f1ed;
+  --personal-text-soft: #c7c7cd;
+  --personal-muted: #9697a0;
   --personal-coral: #ff7559;
   --personal-pink: #df49b5;
   --personal-blue: #68adff;
@@ -46,7 +46,10 @@
   display: block !important;
   height: 24rem;
   pointer-events: none;
-  background: transparent;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 117, 89, 0.07), transparent 27%),
+    radial-gradient(circle at 46% 2%, rgba(223, 73, 181, 0.065), transparent 29%),
+    radial-gradient(circle at 84% 16%, rgba(104, 173, 255, 0.07), transparent 30%);
   filter: blur(25px);
 }
 
@@ -60,14 +63,20 @@
   overflow: hidden;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.55rem !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: none !important;
+  background: linear-gradient(155deg, rgba(48, 49, 56, 0.99), rgba(38, 39, 45, 0.99)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 26px 66px rgba(0, 0, 0, 0.26) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside {
   isolation: isolate;
-  background: var(--rawaj-surface) !important;
-  color: var(--rawaj-ink-primary) !important;
+  background:
+    radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.46), transparent 34%),
+    radial-gradient(circle at 42% -15%, rgba(223, 73, 181, 0.37), transparent 38%),
+    radial-gradient(circle at 98% 22%, rgba(82, 145, 255, 0.34), transparent 39%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside::before {
@@ -77,9 +86,9 @@
   z-index: -1;
   pointer-events: none;
   opacity: 0.42;
-  background-image: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.48) 0 1px, transparent 1.35px);
   background-size: 19px 19px;
-  mask-image: none;
+  mask-image: linear-gradient(110deg, #000, rgba(0, 0, 0, 0.72) 54%, transparent 94%);
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside::after {
@@ -94,18 +103,18 @@
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__brand > span {
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  background: #ff7659 !important;
+  background: linear-gradient(145deg, #ff7659, #d948ad 58%, #5e9fff) !important;
   color: #fff !important;
   box-shadow: 0 14px 30px rgba(218, 67, 160, 0.2) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy > p {
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff9b86 !important;
   letter-spacing: 0 !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy h1 {
-  color: var(--rawaj-ink-primary) !important;
+  color: #fff !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
   font-size: clamp(1.8rem, 4vw, 2.8rem) !important;
   line-height: 1.28 !important;
@@ -113,36 +122,38 @@
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside__copy > span,
 .rawaj-auth-premium-v3 .rawaj-auth-aside__trust {
-  color: var(--rawaj-ink-secondary) !important;
+  color: rgba(255, 255, 255, 0.66) !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li {
-  border-color: var(--rawaj-divider) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  border-color: rgba(255, 255, 255, 0.095) !important;
+  background: rgba(24, 25, 30, 0.24) !important;
   backdrop-filter: blur(12px);
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > span {
-  background: var(--rawaj-selected-surface) !important;
-  color: var(--rawaj-brand-primary) !important;
+  background: rgba(104, 173, 255, 0.1) !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside li > svg {
-  color: var(--rawaj-brand-primary) !important;
+  color: #69dfb2 !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card {
-  background: transparent !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.045), transparent 33%),
+    transparent !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header > span {
   border: 1px solid rgba(104, 173, 255, 0.16) !important;
   background: rgba(104, 173, 255, 0.08) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header p {
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff927b !important;
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card__header h2 {
@@ -174,9 +185,9 @@
 .rawaj-auth-premium-v3 .input {
   min-height: 3.2rem !important;
   border: 1px solid var(--personal-line) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: light;
+  color-scheme: dark;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
 
@@ -203,8 +214,8 @@
 .rawaj-auth-premium-v3 .rawaj-button-primary,
 .rawaj-auth-premium-v3 button[type="submit"] {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
   box-shadow: 0 12px 26px rgba(218, 67, 160, 0.18) !important;
 }
 
@@ -227,9 +238,15 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.45rem !important;
-  background: var(--rawaj-surface) !important;
-  color: var(--rawaj-ink-primary) !important;
-  box-shadow: 0 2px 10px rgba(21, 35, 34, 0.06) !important;
+  background:
+    radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.44), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.35), transparent 38%),
+    radial-gradient(circle at 92% 18%, rgba(75, 139, 255, 0.32), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 54px rgba(0, 0, 0, 0.24) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity::before {
@@ -239,9 +256,9 @@
   z-index: 0;
   pointer-events: none;
   opacity: 0.34;
-  background-image: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.35px);
   background-size: 19px 19px;
-  mask-image: none;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.72) 52%, transparent 92%);
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__cover > img {
@@ -249,12 +266,14 @@
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__cover > div {
-  background: rgba(34, 35, 41, 0.18) !important;
+  background: linear-gradient(180deg, rgba(34, 35, 41, 0.18), rgba(34, 35, 41, 0.94)) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__avatar {
   border: 2px solid rgba(255, 255, 255, 0.18) !important;
-  background: #363842 !important;
+  background:
+    radial-gradient(circle at 42% 34%, rgba(104, 173, 255, 0.18), transparent 36%),
+    linear-gradient(145deg, #363842, #292a30) !important;
   color: #86bdff !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25) !important;
 }
@@ -262,7 +281,7 @@
 .rawaj-account-hub-v3 .rawaj-account-identity__avatar > span {
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: rgba(30, 31, 36, 0.84) !important;
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff927b !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__copy :is(h1, p, small, span),
@@ -271,24 +290,24 @@
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__copy > p {
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff9a85 !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__copy small,
 .rawaj-account-hub-v3 .rawaj-account-identity__copy > span {
-  color: var(--rawaj-ink-secondary) !important;
+  color: rgba(255, 255, 255, 0.66) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__badges b {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   background: rgba(24, 25, 30, 0.34) !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-identity__actions :is(a, button) {
   border: 1px solid rgba(255, 255, 255, 0.11) !important;
   background: rgba(24, 25, 30, 0.34) !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: rgba(255, 255, 255, 0.84) !important;
   box-shadow: none !important;
   backdrop-filter: blur(10px);
 }
@@ -296,7 +315,7 @@
 .rawaj-account-hub-v3 .rawaj-account-identity__actions :is(a, button):hover {
   border-color: rgba(104, 173, 255, 0.24) !important;
   background: rgba(104, 173, 255, 0.09) !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: #fff !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-quick-links {
@@ -307,20 +326,20 @@
   min-height: 4.6rem;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1rem !important;
-  background: var(--rawaj-surface) !important;
+  background: linear-gradient(150deg, rgba(50, 51, 58, 0.97), rgba(40, 41, 47, 0.97)) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-quick-links > a:hover {
   border-color: rgba(104, 173, 255, 0.2) !important;
-  background: var(--rawaj-selected-surface) !important;
+  background: linear-gradient(150deg, rgba(54, 55, 63, 0.98), rgba(42, 43, 49, 0.98)) !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-quick-links > a > span {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-quick-links strong {
@@ -335,7 +354,9 @@
   overflow: hidden;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.2rem !important;
-  background: var(--rawaj-surface) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.04), transparent 30%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
   color: var(--personal-text) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.024),
@@ -349,11 +370,11 @@
 .rawaj-account-hub-v3 .rawaj-account-section > header > span {
   border: 1px solid rgba(104, 173, 255, 0.15) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-section > header p {
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff927b !important;
 }
 
 .rawaj-account-hub-v3 .rawaj-account-section > header h2 {
@@ -368,16 +389,16 @@
 .rawaj-account-hub-v3 .rawaj-account-section__body .bg-card,
 .rawaj-account-hub-v3 .rawaj-account-section__body form.rounded-2xl {
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(24, 25, 30, 0.43) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: none !important;
 }
 
 .rawaj-account-hub-v3 :is(input, textarea, select).input {
   border: 1px solid var(--personal-line) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: light;
+  color-scheme: dark;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
 
@@ -393,16 +414,15 @@
 }
 
 .rawaj-account-hub-v3 :is(button, a).bg-primary,
-.rawaj-account-hub-v3 button[type="submit"],
-.rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 .rawaj-account-section__body button.bg-primary[type="submit"] {
+.rawaj-account-hub-v3 button[type="submit"] {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
   box-shadow: 0 10px 24px rgba(218, 67, 160, 0.16) !important;
 }
 
 .rawaj-account-hub-v3 .text-destructive {
-  color: var(--rawaj-danger) !important;
+  color: #ff939a !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -413,7 +433,10 @@
   overflow: hidden;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.15rem !important;
-  background: rgba(49, 50, 57, 0.985) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(223, 73, 181, 0.055), transparent 34%),
+    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
     0 14px 32px rgba(0, 0, 0, 0.15) !important;
@@ -421,7 +444,7 @@
 
 :is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child::after {
   width: 3px !important;
-  background: #ff7559 !important;
+  background: linear-gradient(180deg, #ff7559, #df49b5 58%, #68adff) !important;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-account-activity-v3) > section:first-child h2 {
@@ -435,7 +458,7 @@
 .rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface),
 .rawaj-account-activity-v3 :is(.rawaj-activity-panel, .rawaj-notification-panel, .rawaj-notification-preferences, .rawaj-communication-follow-up) {
   border-color: var(--personal-line) !important;
-  background: var(--rawaj-surface) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
@@ -458,8 +481,8 @@
 .rawaj-account-collection-v3 :is(button, a).bg-primary,
 .rawaj-account-activity-v3 :is(button, a).bg-primary {
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
   box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
 }
 
@@ -468,7 +491,7 @@
   border-color: var(--personal-line) !important;
   background: rgba(24, 25, 30, 0.7) !important;
   color: var(--personal-text) !important;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* --------------------------------------------------------------------------
@@ -480,8 +503,12 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   border-radius: 1.3rem !important;
-  background: var(--rawaj-surface) !important;
-  color: var(--rawaj-ink-primary) !important;
+  background:
+    radial-gradient(circle at 4% 112%, rgba(255, 117, 89, 0.42), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.34), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.31), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #fff !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
     0 20px 48px rgba(0, 0, 0, 0.22) !important;
@@ -494,9 +521,9 @@
   z-index: 0;
   pointer-events: none;
   opacity: 0.34;
-  background-image: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.35px);
   background-size: 19px 19px;
-  mask-image: none;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.7) 52%, transparent 92%);
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero > * {
@@ -505,44 +532,44 @@
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__copy > p {
-  color: var(--rawaj-brand-primary) !important;
+  color: #ff9a84 !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__copy :is(h1, h2) {
-  color: var(--rawaj-ink-primary) !important;
+  color: #fff !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__copy > span {
-  color: var(--rawaj-ink-secondary) !important;
+  color: rgba(255, 255, 255, 0.67) !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__metrics > div {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: var(--rawaj-surface-subtle) !important;
-  color: var(--rawaj-ink-primary) !important;
+  background: rgba(24, 25, 30, 0.28) !important;
+  color: #fff !important;
   box-shadow: none !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__metrics svg {
-  color: var(--rawaj-brand-primary) !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__metrics span {
-  color: var(--rawaj-ink-secondary) !important;
+  color: rgba(255, 255, 255, 0.64) !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__actions :is(a, button) {
   border: 1px solid rgba(255, 255, 255, 0.095) !important;
-  background: var(--rawaj-surface-subtle) !important;
-  color: var(--rawaj-ink-secondary) !important;
+  background: rgba(24, 25, 30, 0.28) !important;
+  color: rgba(255, 255, 255, 0.74) !important;
   box-shadow: none !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-hero__actions :is(a, button)[data-active="true"] {
   border-color: rgba(104, 173, 255, 0.23) !important;
-  background: var(--rawaj-selected-surface) !important;
-  color: var(--rawaj-brand-primary) !important;
+  background: rgba(104, 173, 255, 0.12) !important;
+  color: #fff !important;
 }
 
 .rawaj-communication-v2 .rawaj-notification-panel,
@@ -552,7 +579,7 @@
 .rawaj-communication-v2 .rawaj-communication-signed-out {
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.15rem !important;
-  background: var(--rawaj-surface) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
   color: var(--personal-text-soft) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
@@ -595,7 +622,7 @@
 .rawaj-communication-v2 .rawaj-notification-timeline__icon {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-communication-v2 .rawaj-notification-timeline__copy strong {
@@ -622,13 +649,13 @@
 .rawaj-communication-v2 .rawaj-communication-follow-up__grid > a > span {
   border: 1px solid rgba(104, 173, 255, 0.13) !important;
   background: rgba(104, 173, 255, 0.07) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out > span {
   border: 1px solid rgba(104, 173, 255, 0.15) !important;
   background: rgba(104, 173, 255, 0.075) !important;
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out h1 {
@@ -640,8 +667,8 @@
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out > a:first-of-type {
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
 }
 
 .rawaj-communication-v2 .rawaj-communication-signed-out > a + a {
@@ -661,7 +688,7 @@
 .rawaj-messaging-v4 {
   --message-border: var(--personal-line) !important;
   --message-muted: #2d2e34 !important;
-  --message-surface: var(--rawaj-surface) !important;
+  --message-surface: #292a30 !important;
   --message-ink: var(--personal-text) !important;
   --message-subtle: var(--personal-muted) !important;
 }
@@ -670,14 +697,14 @@
   min-height: min(75dvh, 50rem) !important;
   border: 1px solid var(--personal-line) !important;
   border-radius: 1.2rem !important;
-  background: var(--rawaj-surface) !important;
+  background: #292a30 !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.02),
     0 18px 42px rgba(0, 0, 0, 0.2) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar {
-  background: #303137 !important;
+  background: linear-gradient(180deg, #303137, #2b2c32) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 {
@@ -686,7 +713,7 @@
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 svg,
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  color: #a9c8bb !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
@@ -696,8 +723,8 @@
 
 .rawaj-messaging-v4 .rawaj-communication-search {
   border: 1px solid var(--personal-line) !important;
-  background: var(--rawaj-surface-subtle) !important;
-  color: #a9c8bb !important;
+  background: rgba(24, 25, 30, 0.72) !important;
+  color: #8fc2ff !important;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-search input {
@@ -734,9 +761,9 @@
 
 .rawaj-messaging-v4 .rawaj-participant-avatar {
   border-color: #303137 !important;
-  background: #393a42 !important;
-  color: #a9c8bb !important;
-  box-shadow: 0 0 0 1px var(--rawaj-divider) !important;
+  background: linear-gradient(145deg, #393a42, #2b2c32) !important;
+  color: #8fc2ff !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary__copy strong {
@@ -749,13 +776,13 @@
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary__meta b {
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa) !important;
+  color: #fff !important;
 }
 
 .rawaj-messaging-v4 .rawaj-message-panel {
   border-inline-start-color: rgba(255, 255, 255, 0.065) !important;
-  background: var(--rawaj-surface) !important;
+  background: #292a30 !important;
 }
 
 .rawaj-messaging-v4 .rawaj-message-header {
@@ -780,7 +807,10 @@
 }
 
 .rawaj-messaging-v4 .rawaj-message-stream {
-  background: var(--rawaj-surface-subtle) !important;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(104, 173, 255, 0.035), transparent 27%),
+    radial-gradient(circle at 85% 82%, rgba(223, 73, 181, 0.03), transparent 30%),
+    #24252a !important;
 }
 
 .rawaj-messaging-v4 .rawaj-message-bubble {
@@ -792,7 +822,7 @@
 
 .rawaj-messaging-v4 .rawaj-message-bubble[data-mine="true"] {
   border-color: rgba(104, 173, 255, 0.18) !important;
-  background: #3b5480 !important;
+  background: linear-gradient(145deg, #3b5480, #41456d 58%, #553f69) !important;
   color: #fff !important;
   box-shadow: 0 7px 18px rgba(29, 41, 68, 0.22) !important;
 }
@@ -817,9 +847,9 @@
 
 .rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea) {
   border: 1px solid var(--personal-line) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 .rawaj-messaging-v4 :is(.rawaj-message-composer__block-reason, .rawaj-message-composer textarea):focus-visible {
@@ -842,8 +872,8 @@
 
 .rawaj-messaging-v4 .rawaj-message-composer button[type="submit"] {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: var(--rawaj-action-primary) !important;
-  color: var(--rawaj-action-primary-foreground) !important;
+  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  color: #fff !important;
   box-shadow: 0 10px 22px rgba(218, 67, 160, 0.16) !important;
 }
 
@@ -859,7 +889,7 @@
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(section, article, form).rawaj-surface,
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main .bg-muted-surface {
   border-color: var(--personal-line) !important;
-  background: var(--rawaj-surface) !important;
+  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
   color: var(--personal-text-soft) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
@@ -874,9 +904,9 @@
 
 .rawaj-app-shell[data-resolved-pathname^="/profile/listings"] .rawaj-app-shell__content main :is(input, textarea, select) {
   border-color: var(--personal-line) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: rgba(24, 25, 30, 0.72) !important;
   color: var(--personal-text) !important;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 /* --------------------------------------------------------------------------

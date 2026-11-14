@@ -2,7 +2,8 @@
 
 main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child {
   border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
-  background: color-mix(in srgb, var(--color-card) 96%, white);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-card) 96%, white) 0%, var(--color-card) 100%);
   box-shadow: 0 14px 34px rgba(16, 43, 70, 0.08);
 }
 
