@@ -425,3 +425,19 @@
   color: #245843 !important;
   background-color: #e2efe5 !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  .rawaj-listing-studio-v4
+  .rawaj-studio-shell__aside
+  > :last-child:not(.rawaj-studio-quality, .rawaj-studio-preview, .rawaj-studio-completion) {
+  background: #f8ead3 !important;
+  border-color: #ddc29a !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  .rawaj-listing-studio-v4
+  .rawaj-studio-shell__aside
+  > :last-child
+  p {
+  color: #684720 !important;
+}
