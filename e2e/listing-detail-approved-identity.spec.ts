@@ -4,10 +4,7 @@ const widths = [320, 360, 390, 430, 768, 1024, 1440];
 
 for (const language of ["ar", "en"] as const) {
   for (const width of widths) {
-    test(`B2.2 listing detail identity, dock and responsive layout ${language} ${width}px`, async (
-      { page },
-      testInfo,
-    ) => {
+    test(`B2.2 detail ${language} ${width}px`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height: 900 });
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
       const response = await page.goto("/listings/e2e-listing-featured", {
