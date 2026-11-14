@@ -222,7 +222,7 @@ test("activity messages notifications favorites and saved searches share one cle
 });
 
 test("public listing seller offers and trust journeys use compact readable route ownership", () => {
-  assert.doesNotMatch(publicCorrections, /data-resolved-pathname\\^="\\/listings\\/"/);
+  assert.doesNotMatch(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
   assert.match(publicCorrections, /data-resolved-pathname\^="\/seller\/"/);
   assert.match(
     publicCorrections,

@@ -52,10 +52,10 @@ test("listing studio active step and preview count keep readable contrast", () =
 });
 
 test("listing detail retains mobile media and safe-area dock within canonical route ownership", () => {
-  assert.doesNotMatch(repairCss, /data-resolved-pathname\\^="\\/listings\\/"/);
-  assert.match(detailCss, /@media \\(max-width: 767px\\)/);
-  assert.match(detailCss, /aspect-ratio: 4 \\/ 3/);
-  assert.match(detailCss, /env\\(safe-area-inset-bottom, 0px\\)/);
-  assert.match(detailCss, /grid-template-columns: repeat\\(2, minmax\\(0, 1fr\\)\\)/);
+  assert.doesNotMatch(repairCss, /data-resolved-pathname\^="\/listings\/"/);
+  assert.match(detailCss, /@media \(max-width: 767px\)/);
+  assert.match(detailCss, /aspect-ratio: 4 \/ 3/);
+  assert.match(detailCss, /env\(safe-area-inset-bottom, 0px\)/);
+  assert.match(detailCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(foundationCss, /rawaj-shell-bottom-reserve/);
 });
