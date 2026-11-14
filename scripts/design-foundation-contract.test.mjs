@@ -14,6 +14,7 @@ const compatibilityLayer = await readFile(
 );
 const button = await readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8");
 const card = await readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8");
+const feedbackWidget = await readFile(new URL("../src/components/FeedbackWidget.tsx", import.meta.url), "utf8");
 const input = await readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8");
 const select = await readFile(new URL("../src/components/ui/select.tsx", import.meta.url), "utf8");
 const dialog = await readFile(new URL("../src/components/ui/dialog.tsx", import.meta.url), "utf8");
@@ -268,4 +269,19 @@ test("shared cards and dialogs respect reduced motion; select scroll buttons are
   assert.ok(dialog.includes("motion-reduce:animate-none"));
   const controls = select.match(/flex min-h-11 cursor-default items-center justify-center py-1/g) ?? [];
   assert.equal(controls.length, 2, "Both select scroll buttons must meet 44px minimum");
+});
+
+test("feedback trigger uses approved identity and no retired pink-purple gradient", () => {
+  for (const role of ["petrol", "ivory", "teal", "gold"]) {
+    assert.ok(
+      feedbackWidget.includes(`var(--rawaj-identity-${role})`),
+      `Feedback trigger must consume ${role} brand role`,
+    );
+  }
+  assert.ok(feedbackWidget.includes("rawaj-feedback-teaser"));
+  assert.ok(feedbackWidget.includes("rawaj-feedback-button"));
+  assert.ok(!feedbackWidget.includes("from-pink-500"));
+  assert.ok(!feedbackWidget.includes("via-fuchsia-500"));
+  assert.ok(!feedbackWidget.includes("to-purple-600"));
+  assert.ok(feedbackWidget.includes("motion-reduce:hover:transform-none"));
 });
