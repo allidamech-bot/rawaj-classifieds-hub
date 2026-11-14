@@ -48,6 +48,17 @@
  */
 
 .rawaj-listing-studio-v4 {
+  /* Explicit content tokens belong to the studio canvas, never shared pages. */
+  --rawaj-card-background: #fffaf3;
+  --rawaj-muted-surface: #f4ebde;
+  --rawaj-elevated-background: #fffdf9;
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #53645e;
+  --rawaj-surface-selected: #e0ece8;
+  --card: #fffaf3;
+  --color-card: #fffaf3;
+  --foreground: var(--rawaj-identity-ink);
   --studio-border: color-mix(in srgb, var(--rawaj-primary, #123f38) 15%, var(--rawaj-border, #d5ded8));
   --studio-muted: color-mix(in srgb, var(--rawaj-muted-surface, #e9efea) 68%, var(--rawaj-card-background, #fffdf8));
   overflow: visible;
@@ -474,5 +485,7 @@
 
 /* Hidden taxonomy labels remain accessible and have a deterministic color role. */
 .rawaj-listing-studio-v4 label.sr-only {
+  /* A clipped 1px label still gets an opaque semantic surface in a11y audits. */
   color: var(--rawaj-identity-ink);
+  background-color: var(--rawaj-card-background);
 }

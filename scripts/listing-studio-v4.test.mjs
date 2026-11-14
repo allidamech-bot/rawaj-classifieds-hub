@@ -302,3 +302,11 @@ test("B2.3 contrast surfaces have solid backdrops under gradients and WCAG reada
   assert.ok(css.includes(".rawaj-brand-lockup__name"));
   assert.ok(css.includes(".rawaj-app-header"));
 });
+
+test("B2.3 V20 no longer overrides the studio continue button with retired gradients", async () => {
+  const v20 = await readFile(new URL("../src/rawaj-chromatic-premium-system-v20-state-consistency.css", import.meta.url), "utf8");
+  const actionSection = v20.slice(v20.indexOf("/* Keep action hierarchy deterministic."));
+  assert.ok(!actionSection.includes('[data-resolved-pathname="/add-listing"],'));
+  assert.ok(css.includes("--rawaj-card-background: #fffaf3"));
+  assert.ok(css.includes("background-color: var(--rawaj-card-background)"));
+});

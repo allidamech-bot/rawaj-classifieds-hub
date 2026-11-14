@@ -212,3 +212,5 @@ Listing photo fallbacks now opt into an explicit `identity` mode on the shared `
 B2.3 removes the remaining forced-dark studio skins at original V7B and V18 owners, and keeps the approved listing studio Safari/PWA chrome petrol while leaving all unauthorised routes on the previous scheme.
 
 B2.3 browser acceptance correction: solid petrol background beneath decorative hero and action gradients, readable quality checklist states, 44px taxonomy breadcrumb touch targets, and route-scoped header-brand contrast. Preserves all create/edit data flows and B3 ownership. Await final-SHA browser/visual acceptance before merge.
+
+B2.3 follow-up: the retired V20 primary-gradient selector no longer targets `/add-listing`, leaving the approved petrol CTA owner authoritative; studio canvas owns its light card tokens and hidden taxonomy labels have an opaque inherited card surface for accessibility auditing. No other route was changed.
