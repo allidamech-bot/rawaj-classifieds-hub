@@ -206,6 +206,12 @@
   outline-offset: 1px;
 }
 
+/* Editor controls no longer rely on an inline, global .input style tag. */
+.rawaj-listing-studio-v4 .input:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
 .rawaj-listing-studio-v4 .rawaj-studio-category-grid {
   gap: 0.55rem;
 }

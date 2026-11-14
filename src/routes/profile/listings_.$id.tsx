@@ -1234,7 +1234,8 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
+        data-studio-workflow="edit">
         <ListingStudioHero
           eyebrow={text("إدارة الإعلان", "Listing management")}
           title={title || text("تعديل الإعلان", "Edit listing")}
@@ -1932,7 +1933,6 @@ function ManageListingPage() {
           </aside>
         </div>
       </main>
-      <style>{`.input{width:100%;min-height:2.75rem;border-radius:1rem;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--border);padding:.68rem .8rem;font-size:.875rem;color:var(--foreground);outline:none;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.input:focus{border-color:var(--brand-orange);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-orange) 12%,transparent)}.input:disabled{opacity:.62;cursor:not-allowed}`}</style>
     </>
   );
 }

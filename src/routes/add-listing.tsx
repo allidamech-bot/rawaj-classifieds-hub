@@ -1732,7 +1732,8 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
+        data-studio-workflow="create">
         <ListingStudioHero
           compact
           eyebrow={text("إضافة إعلان", "Post a listing")}

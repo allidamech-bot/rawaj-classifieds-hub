@@ -164,3 +164,22 @@ test("phase 4 contract runs in the standard precheck flow", () => {
   assert.match(parsed.scripts.precheck, /test:listing-studio-v4/);
   assert.match(parsed.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
 });
+
+
+test("B2.3 create and edit share one studio V4 UI without global inline inputs", async () => {
+  const editor = await readFile(new URL("../src/routes/profile/listings_.$id.tsx", import.meta.url), "utf8");
+  assert.match(route, /rawaj-listing-studio-v4[\s\S]*?data-studio-workflow="create"/);
+  assert.match(editor, /rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage/);
+  assert.match(editor, /data-studio-workflow="edit"/);
+  assert.doesNotMatch(editor, /<style>\{\x60\.input\{/);
+  assert.match(css, /\.rawaj-listing-studio-v4 \.input:disabled/);
+  for (const preserved of [
+    "submitOwnerListingForReview",
+    "deleteOwnerListing",
+    "deleteListingImage",
+    "ListingStudioPreview",
+    "ListingStudioCompletionCard",
+  ]) {
+    assert.ok(editor.includes(preserved), `Editor contract removed: ${preserved}`);
+  }
+});
