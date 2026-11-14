@@ -30,10 +30,7 @@ for (const language of ["ar", "en"] as const) {
     await expect(page.locator(".rawaj-app-shell")).toHaveAttribute("data-design-palette", "ivory");
     await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
     await expect(editor.locator(".rawaj-studio-hero h1")).toBeVisible();
-    await expect(editor.locator(".rawaj-studio-hero h1")).toHaveCSS(
-      "color",
-      "rgb(249, 240, 228)",
-    );
+    await expect(editor.locator(".rawaj-studio-hero h1")).toHaveCSS("color", "rgb(249, 240, 228)");
     await expect(editor.locator(".rawaj-studio-shell")).toBeVisible();
 
     await expectRenderedLayout(page, {
