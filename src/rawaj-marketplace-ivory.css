@@ -401,3 +401,27 @@
     radial-gradient(ellipse at 100% 100%, #e9dfc5, transparent 60%),
     linear-gradient(145deg, #fffaf1, #f7ead8), #fffaf1 !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  .rawaj-listing-studio-v4
+  :is(.rawaj-studio-quality, .rawaj-studio-completion)
+  :is(h2, p, strong, li, div > span:not([style])) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  .rawaj-listing-studio-v4
+  .rawaj-studio-quality
+  li[data-done="false"] {
+  color: #684720 !important;
+  background-color: #f8ead3 !important;
+  border-color: #ddc29a !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  .rawaj-listing-studio-v4
+  .rawaj-studio-quality
+  li[data-done="true"] {
+  color: #245843 !important;
+  background-color: #e2efe5 !important;
+}
