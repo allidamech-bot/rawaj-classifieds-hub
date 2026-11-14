@@ -1,0 +1,57 @@
+name: Security Dependency Remediation (isolated branch)
+
+on:
+  push:
+    branches: [security/20261115-audit-fixes]
+    paths:
+      - ".github/workflows/security-dependency-remediation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-dependency-remediation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    name: Refresh vulnerable lockfiles without forced breaking upgrades
+    if: github.ref == 'refs/heads/security/20261115-audit-fixes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install exact existing dependencies
+        run: |
+          npm ci --no-fund --no-audit
+          npm ci --prefix cloudflare/worker --no-fund --no-audit
+      - name: Apply safe npm audit remediations (without --force)
+        run: |
+          set +e
+          npm audit fix --no-fund --no-progress
+          echo "ROOT_AUDIT_FIX_EXIT=$?" >> "$GITHUB_ENV"
+          npm audit fix --prefix cloudflare/worker --no-fund --no-progress
+          echo "WORKER_AUDIT_FIX_EXIT=$?" >> "$GITHUB_ENV"
+          exit 0
+      - name: Summarize remaining security warnings
+        run: |
+          npm audit --audit-level=high || true
+          npm audit --prefix cloudflare/worker --audit-level=high || true
+      - name: Commit only dependency manifests and lockfiles to isolated security branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package.json package-lock.json cloudflare/worker/package.json cloudflare/worker/package-lock.json
+          if git diff --cached --quiet; then
+            echo "No safe dependency updates were available"
+          else
+            git commit -m "security: apply compatible npm audit fixes to root and worker"
+            git push origin HEAD:security/20261115-audit-fixes
+          fi
