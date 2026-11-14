@@ -6,16 +6,16 @@ for (const language of ["ar", "en"] as const) {
   test(`B3.1a account hub uses approved identity at seven widths: ${language}`, async ({
     page,
   }, testInfo) => {
-    await page.addInitScript((value) => window.localStorage.setItem("rawaj-language", value), language);
+    await page.addInitScript(
+      (value) => window.localStorage.setItem("rawaj-language", value),
+      language,
+    );
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
       const response = await page.goto("/more", { waitUntil: "domcontentloaded" });
       expect(response?.status() ?? 200).toBeLessThan(500);
       await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
-      await expect(page.locator("html")).toHaveAttribute(
-        "dir",
-        language === "ar" ? "rtl" : "ltr",
-      );
+      await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
 
       const hub = page.locator("main.rawaj-account-command-v3");
       const hero = hub.locator('.rawaj-trust-hero[data-mode="more"]');
@@ -26,9 +26,11 @@ for (const language of ["ar", "en"] as const) {
 
       const metrics = await page.evaluate(() => {
         const main = document.querySelector<HTMLElement>("main.rawaj-account-command-v3");
-        const cards = [...document.querySelectorAll<HTMLElement>(
-          ".rawaj-more-v2__secondary > a.rawaj-color-card",
-        )];
+        const cards = [
+          ...document.querySelectorAll<HTMLElement>(
+            ".rawaj-more-v2__secondary > a.rawaj-color-card",
+          ),
+        ];
         return {
           documentWidth: document.documentElement.scrollWidth,
           viewportWidth: document.documentElement.clientWidth,
@@ -65,5 +67,7 @@ test("B3.1a /more keyboard links and reduced motion remain accessible", async ({
   const outline = await shortcut.evaluate((element) => getComputedStyle(element).outlineStyle);
   expect(outline).not.toBe("none");
   await page.addStyleTag({ content: "html { font-size: 200%; }" });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+    true,
+  );
 });
