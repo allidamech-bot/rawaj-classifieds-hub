@@ -620,6 +620,55 @@
   background: var(--rawaj-identity-teal) !important;
   border-color: var(--rawaj-identity-teal) !important;
 }
+/* B3.1 profile overview and embedded account-media editor.
+   These independent cards were retaining charcoal-era text on ivory surfaces. */
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-overview-grid > .rawaj-account-card {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: #fffaf3 !important;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--rawaj-identity-petrol) 7%, transparent) !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-overview-grid > .rawaj-account-card :is(h2, h3, p, strong, span) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-overview-grid > .rawaj-account-card .text-muted-foreground {
+  color: #435650 !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-overview-grid > .rawaj-account-card :is(.bg-card, .bg-muted-surface) {
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: #f3ece1 !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-overview-grid > .rawaj-account-card a.bg-primary {
+  min-height: 2.75rem;
+  color: #fff !important;
+  background: var(--rawaj-identity-teal) !important;
+  border-color: var(--rawaj-identity-teal) !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body :is(.bg-card, .bg-muted-surface) {
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: #f3ece1 !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body :is(.bg-card, .bg-muted-surface) :is(h2, h3, label, p, span) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body :is(.bg-card, .bg-muted-surface) .text-muted-foreground {
+  color: #435650 !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body label.inline-flex.cursor-pointer {
+  min-height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 25%, transparent) !important;
+  border-radius: 0.7rem;
+  color: var(--rawaj-identity-teal) !important;
+  background: white !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body label.inline-flex.cursor-pointer:focus-within {
+  outline: 3px solid var(--rawaj-identity-teal) !important;
+  outline-offset: 2px;
+}
+
 @media (max-width: 47.99rem) {
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
     grid-template-columns: 1fr !important;
