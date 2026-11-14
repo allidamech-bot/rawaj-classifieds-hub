@@ -198,5 +198,7 @@ test("shared button shadows follow semantic color roles, not retired chromatic c
     assert.ok(foundation.includes(`${token}:`), `${token} must be owned by canonical tokens`);
     assert.ok(button.includes(`var(${token})`), `${token} must be used by shared Button`);
   }
-  assert.doesNotMatch(button, /rgba\\((?:155,40,111|194,68,49|96,64,168),/);
+  for (const legacy of ["rgba(155,40,111,", "rgba(194,68,49,", "rgba(96,64,168,"]) {
+    assert.ok(!button.includes(legacy), `Shared Button must not hard-code ${legacy}`);
+  }
 });
