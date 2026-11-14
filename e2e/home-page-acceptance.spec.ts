@@ -214,3 +214,12 @@ test("browser chrome follows the home and categories route colors", async ({ pag
   await expect(themeMeta).toHaveAttribute("content", "#242529");
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
 });
+
+test("signed-out My Store keeps approved light shell and sign-in affordance", async ({ page }) => {
+  await openHydrated(page, "/profile/listings");
+  await expect(page.locator("main.my-store.my-store-guest")).toBeVisible();
+  await expect(page.locator(".my-store-topbar")).toBeVisible();
+  await expect(page.locator(".my-store-guest .rawaj-feedback-state")).toBeVisible();
+  await expect(page.locator(".my-store-guest__action")).toBeVisible();
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#fcfaf7");
+});

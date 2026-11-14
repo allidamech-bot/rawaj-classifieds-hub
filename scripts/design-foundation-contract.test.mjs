@@ -18,6 +18,14 @@ const feedbackWidget = await readFile(
   new URL("../src/components/FeedbackWidget.tsx", import.meta.url),
   "utf8",
 );
+const ownerStoreRoute = await readFile(
+  new URL("../src/routes/profile/listings.tsx", import.meta.url),
+  "utf8",
+);
+const myStoreStyles = await readFile(
+  new URL("../src/features/storefront/my-store.css", import.meta.url),
+  "utf8",
+);
 const browserChrome = await readFile(
   new URL("../src/lib/browser-chrome.ts", import.meta.url),
   "utf8",
@@ -305,4 +313,14 @@ test("route-aware iPhone browser chrome uses actual approved route colors", () =
   assert.ok(browserChrome.includes('pathname.startsWith("/seller/")'));
   assert.ok(browserChrome.includes('"#fcfaf7"'));
   assert.ok(browserChrome.includes('"#242529"'));
+});
+
+test("signed-out My Store uses approved identity instead of retired guest workspace", () => {
+  assert.ok(ownerStoreRoute.includes('className="my-store my-store-guest"'));
+  assert.ok(ownerStoreRoute.includes('className="my-store-guest__action"'));
+  assert.ok(!ownerStoreRoute.includes("rawaj-store-workspace container-wide"));
+  assert.ok(!ownerStoreRoute.includes("<PageHeader"));
+  assert.ok(myStoreStyles.includes(".my-store-guest .rawaj-feedback-state"));
+  assert.ok(myStoreStyles.includes("background: var(--card) !important;"));
+  assert.ok(myStoreStyles.includes("color: var(--foreground) !important;"));
 });
