@@ -38,8 +38,8 @@ test("bottom dock keeps the primary action restrained", () => {
 });
 
 test("bottom dock grid is derived from actual navigation destinations", () => {
-  assert.match(dock, /data-item-count=\\{items\\.length\\}/);
-  assert.match(dock, /items\\.length === 6 \\? "grid-cols-6" : "grid-cols-5"/);
-  assert.match(dock, /pathname === "\/"/);
-  assert.match(dock, /section: "favorites"/);
+  assert.ok(dock.includes("data-item-count={items.length}"));
+  assert.ok(dock.includes('items.length === 6 ? "grid-cols-6" : "grid-cols-5"'));
+  assert.ok(dock.includes('pathname === "/"'));
+  assert.ok(dock.includes('section: "favorites"'));
 });
