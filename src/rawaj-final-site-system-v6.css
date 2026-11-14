@@ -502,7 +502,6 @@
    -------------------------------------------------------------------------- */
 
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"],
@@ -515,7 +514,6 @@
     [data-resolved-pathname^="/admin"]
   ) main > .rawaj-surface,
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"],

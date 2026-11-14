@@ -187,3 +187,9 @@ shared action controls to the retired visual palette. B2.2 removes only
 those listing-detail route arms from their original selectors; all other
 unmigrated routes keep their legacy behavior. Seller stats use the semantic
 muted surface instead of a retired dark warm panel.
+
+
+The B2.2 detail source contract now excludes the retired V17 forced-dark listing shell,
+V17 breadcrumb colors, and V6 listing recovery skins. Component-owned copy,
+price and seller heading roles are bound directly to approved identity tokens,
+with an explicit accessible report-action foreground. No unrelated route was re-themed.

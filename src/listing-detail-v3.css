@@ -417,22 +417,23 @@ main.rawaj-detail-v2[data-design-palette="ivory"] {
   /* Rebind legacy card aliases locally; similar/recent cards share the same
    * approved semantic palette as the listing without altering other routes. */
   --color-background: var(--rawaj-page-background);
-  --color-foreground: var(--rawaj-text-primary);
+  --color-foreground: var(--rawaj-identity-ink);
   --color-card: var(--rawaj-card-background);
   --color-muted: var(--rawaj-muted-surface);
   --color-muted-surface: var(--rawaj-muted-surface);
-  --color-muted-foreground: var(--rawaj-text-secondary);
-  --color-primary: var(--rawaj-action-primary);
+  --color-muted-foreground: #435650;
+  --color-primary: var(--rawaj-identity-petrol);
   --color-border: var(--rawaj-border);
   --rawaj-orange: var(--rawaj-identity-teal);
+  --rawaj-primary-deep: var(--rawaj-identity-teal);
   --detail-canvas: var(--rawaj-identity-ivory);
   --detail-surface: var(--rawaj-card-background);
   --detail-surface-muted: var(--rawaj-muted-surface);
   --detail-line: var(--rawaj-border);
   --detail-line-strong: var(--rawaj-border-strong);
-  --detail-ink: var(--rawaj-text-primary);
-  --detail-ink-soft: var(--rawaj-text-secondary);
-  --detail-ink-muted: var(--rawaj-text-muted);
+  --detail-ink: var(--rawaj-identity-ink);
+  --detail-ink-soft: #435650;
+  --detail-ink-muted: #53645e;
   --detail-green: var(--rawaj-identity-teal);
   --detail-gold: var(--rawaj-identity-gold);
   background: var(--detail-canvas);
@@ -510,7 +511,7 @@ main.rawaj-detail-v2[data-design-palette="ivory"] {
   background: #fff3dc;
 }
 
-.rawaj-detail-summary h1 {
+main.rawaj-detail-v2 .rawaj-detail-summary h1 {
   max-width: 28ch;
   margin-top: 0.8rem;
   color: var(--detail-ink);
@@ -613,7 +614,7 @@ main.rawaj-detail-v2[data-design-palette="ivory"] {
   margin-bottom: 0.85rem;
 }
 
-.rawaj-detail-section__heading h2 {
+main.rawaj-detail-v2 .rawaj-detail-section__heading h2 {
   color: var(--detail-ink);
   font-size: clamp(1.05rem, 2.4vw, 1.25rem);
 }
@@ -741,10 +742,15 @@ main.rawaj-detail-v2[data-design-palette="ivory"] {
   color: var(--detail-ink-soft) !important;
 }
 
-.rawaj-detail-safety__actions button {
+main.rawaj-detail-v2 .rawaj-detail-safety__actions button {
   border-color: #d9c79e;
   color: #684b1f;
   background: #fffaf0;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-safety__actions button[data-tone="report"] {
+  color: var(--rawaj-danger);
+  background: var(--rawaj-card-background);
 }
 
 .rawaj-demo-listing-notice,
@@ -766,15 +772,27 @@ main.rawaj-detail-v2[data-design-palette="ivory"] {
   color: var(--detail-ink);
 }
 
-.rawaj-detail-similar__heading :is(h2, p, a) {
-  color: inherit;
+main.rawaj-detail-v2 .rawaj-detail-similar__heading :is(h2, p, a) {
+  color: var(--rawaj-identity-ink);
 }
 
-.rawaj-detail-similar__item {
+main.rawaj-detail-v2 .rawaj-detail-similar__heading p {
+  color: #435650;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item {
   border-color: var(--detail-line);
   color: var(--detail-ink);
   background: var(--detail-surface);
   box-shadow: none;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item .rawaj-adaptive-card__title {
+  color: var(--rawaj-identity-ink);
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item .rawaj-adaptive-card__price {
+  color: var(--rawaj-identity-teal);
 }
 
 .rawaj-detail-v2__message {

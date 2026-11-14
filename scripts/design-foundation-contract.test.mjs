@@ -419,3 +419,19 @@ test("B2.2 detail is excluded from V7B old page and action force-overrides", asy
   assert.ok(detail.includes(".rawaj-detail-seller__stats > div"));
   assert.ok(detail.includes("background: var(--rawaj-muted-surface)"));
 });
+
+
+test("B2.2 removes competing V17 shell and breadcrumb colors at their source", async () => {
+  const load = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
+  const [detail, shell, crumbs, fallback] = await Promise.all([
+    load("listing-detail-v3.css"),
+    load("rawaj-chromatic-premium-system-v17.css"),
+    load("rawaj-chromatic-premium-system-v17-corrections.css"),
+    load("rawaj-final-site-system-v6.css"),
+  ]);
+  assert.ok(!shell.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.ok(!fallback.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.ok(crumbs.includes(':not([data-resolved-pathname^="/listings/"]) nav[aria-label="breadcrumb"]'));
+  assert.ok(detail.includes("--detail-ink: var(--rawaj-identity-ink)"));
+  assert.ok(detail.includes(".rawaj-detail-similar__item .rawaj-adaptive-card__price"));
+});
