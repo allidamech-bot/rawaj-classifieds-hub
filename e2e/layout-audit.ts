@@ -266,9 +266,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
           0,
         );
         const bottomAtMaxScroll =
-          lastContentBottom +
-          window.scrollY -
-          Math.max(0, root.scrollHeight - window.innerHeight);
+          lastContentBottom + window.scrollY - Math.max(0, root.scrollHeight - window.innerHeight);
         footerDockOverlap =
           footerContent.length > 0 && bottomAtMaxScroll > dock.getBoundingClientRect().top + 1;
       }

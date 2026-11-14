@@ -112,11 +112,15 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(approvedCard);
     await expect(
-      listingManagement(page, APPROVED_TITLE).getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
+listingManagement(page, APPROVED_TITLE).getByRole("button", {
+        name: /إلغاء الحجز|Clear reservation/i,
+      }),
     ).toBeVisible({ timeout: 30_000 });
 
     await clickTwiceInSameTick(
-      listingManagement(page, APPROVED_TITLE).getByRole("button", { name: /إلغاء الحجز|Clear reservation/i }),
+listingManagement(page, APPROVED_TITLE).getByRole("button", {
+        name: /إلغاء الحجز|Clear reservation/i,
+      }),
     );
     await expect(
       listingManagement(page, APPROVED_TITLE).getByRole("button", {
@@ -126,7 +130,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expectActionCount(lifecycleActions, "unreserve", 1);
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    const priceInput = listingManagement(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i);
+    const priceInput = listingManagement(page, APPROVED_TITLE).getByLabel(
+      /السعر الجديد|New price/i,
+    );
     await priceInput.fill(REDUCED_PRICE);
     const dropPriceButton = listingManagement(page, APPROVED_TITLE).getByRole("button", {
       name: /خفض|Reduce/i,
@@ -136,7 +142,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(dropPriceButton).toBeEnabled({ timeout: 30_000 });
 
     approvedCard = ownerCard(page, APPROVED_TITLE);
-    await listingManagement(page, APPROVED_TITLE).getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i).selectOption("90");
+    await listingManagement(page, APPROVED_TITLE)
+      .getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i)
+      .selectOption("90");
     const applyExpiryButton = listingManagement(page, APPROVED_TITLE).getByRole("button", {
       name: /تطبيق|Apply/i,
     });
@@ -147,18 +155,24 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await reloadCurrentPage(page);
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(approvedCard);
-    await expect(listingManagement(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i)).toHaveValue(REDUCED_PRICE, {
-      timeout: 30_000,
-    });
     await expect(
-      listingManagement(page, APPROVED_TITLE).getByLabel(/مدة صلاحية الإعلان|Listing expiry duration/i),
+      listingManagement(page, APPROVED_TITLE).getByLabel(/السعر الجديد|New price/i),
+    ).toHaveValue(REDUCED_PRICE, { timeout: 30_000 });
+    await expect(
+      listingManagement(page, APPROVED_TITLE).getByLabel(
+        /مدة صلاحية الإعلان|Listing expiry duration/i,
+      ),
     ).toHaveValue("90");
     await expect(
-      listingManagement(page, APPROVED_TITLE).getByRole("button", { name: /وضع محجوز|Mark reserved/i }),
+listingManagement(page, APPROVED_TITLE).getByRole("button", {
+        name: /وضع محجوز|Mark reserved/i,
+      }),
     ).toBeVisible();
 
     await clickTwiceInSameTick(
-      listingManagement(page, APPROVED_TITLE).getByRole("button", { name: /تم البيع|Sold|Mark sold/i }),
+listingManagement(page, APPROVED_TITLE).getByRole("button", {
+        name: /تم البيع|Sold|Mark sold/i,
+      }),
     );
     const soldDialog = page.getByRole("dialog", {
       name: /تأكيد إغلاق الإعلان كمباع|Mark this listing as sold/i,
@@ -211,7 +225,9 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     await expect(draftCard).toBeVisible({ timeout: 30_000 });
     await openListingManagement(draftCard);
     await clickTwiceInSameTick(
-      listingManagement(page, DRAFT_TITLE).getByRole("button", { name: /حذف المسودة|Delete draft/i }),
+listingManagement(page, DRAFT_TITLE).getByRole("button", {
+        name: /حذف المسودة|Delete draft/i,
+      }),
     );
 
     const deleteDialog = page.getByRole("dialog", { name: /حذف المسودة|Delete draft/i });
