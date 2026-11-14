@@ -1,0 +1,1625 @@
+/* This route owns its presentation. Legacy shop/workspace selectors are intentionally absent. */
+.my-store,
+.my-store-topbar,
+.my-store-dialog {
+  --background: #fcfaf7;
+  --foreground: #152322;
+  --card: #fcfaf7;
+  --card-foreground: #152322;
+  --primary: #103f42;
+  --primary-foreground: #fff;
+  --muted: #f1eeea;
+  --muted-surface: #f1eeea;
+  --muted-foreground: #53615e;
+  --border: #dedbd5;
+  --popover: #fcfaf7;
+  --popover-foreground: #152322;
+  --gold: #bd984b;
+  --brand-orange: #103f42;
+  --warning: #805d18;
+  --destructive: #a52c2c;
+  color: #152322;
+  background: #fcfaf7;
+  color-scheme: light;
+  font-family: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"],
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-app-shell__page,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-app-shell__content {
+  background: #fcfaf7 !important;
+  padding-top: 0 !important;
+}
+.my-store {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 0 110px;
+  min-height: 100dvh;
+}
+.my-store svg,
+.my-store-topbar svg,
+.my-store-dialog svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.my-store button,
+.my-store select,
+.my-store input,
+.my-store summary,
+.my-store-topbar button,
+.my-store-topbar summary {
+  font: inherit;
+  cursor: pointer;
+}
+.my-store :is(button, a, select, input, summary):focus-visible,
+.my-store-topbar :focus-visible {
+  outline: 3px solid #ba9344;
+  outline-offset: 3px;
+}
+.my-store-topbar {
+  height: 76px;
+  padding: 12px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1440px;
+  margin: auto;
+  position: relative;
+  z-index: 20;
+}
+.my-store-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #103f42;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.my-store-brand img {
+  width: 34px;
+  height: 38px;
+  object-fit: contain;
+}
+.my-store-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.my-store-topbar-actions button {
+  background: transparent !important;
+  color: #152322 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.my-store-nav,
+.my-store-owner-menu {
+  position: relative;
+}
+.my-store-nav summary,
+.my-store-owner-menu summary {
+  display: grid;
+  place-items: center;
+  list-style: none;
+  width: 44px;
+  height: 44px;
+}
+.my-store summary::-webkit-details-marker,
+.my-store-topbar summary::-webkit-details-marker {
+  display: none;
+}
+.my-store-nav nav,
+.my-store-owner-menu > div {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 100%;
+  z-index: 30;
+  display: grid;
+  gap: 4px;
+  min-width: 205px;
+  padding: 10px;
+  background: #fcfaf7;
+  border: 1px solid #dedbd5;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px #183e3b22;
+}
+.my-store-nav nav a,
+.my-store-nav nav button,
+.my-store-owner-menu > div a,
+.my-store-owner-menu > div button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  text-align: start;
+  color: #152322;
+  background: none;
+  border: 0;
+  font-size: 14px;
+  min-height: 44px;
+}
+.my-store-owner-menu small {
+  padding: 8px;
+  font-size: 12px;
+}
+.my-store-cover {
+  height: 190px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  background: #d9e0da;
+}
+.my-store-cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.my-store-cover svg.my-store-cover-curve {
+  position: absolute;
+  inset: 0;
+  width: 145%;
+  height: 100%;
+  z-index: 1;
+}
+.my-store[dir="rtl"] .my-store-cover-curve {
+  transform: scaleX(-1);
+  inset-inline-start: 0;
+}
+.my-store-cover-title {
+  position: absolute;
+  inset-inline-start: 28px;
+  top: 22px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  z-index: 2;
+  line-height: 1.3;
+}
+.my-store-cover-title:after {
+  content: "";
+  display: block;
+  width: 58px;
+  height: 3px;
+  background: #c4a35b;
+  margin-top: 13px;
+  border-radius: 2px;
+}
+.my-store-cover svg.my-store-cover-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  z-index: 2;
+}
+.my-store-cover svg.my-store-cover-placeholder {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  inset-inline-end: 30px;
+  top: 60px;
+  color: #6d8278;
+}
+.my-store-identity-row {
+  padding: 0 26px;
+  position: relative;
+  margin-top: -74px;
+  z-index: 3;
+}
+.my-store-avatar {
+  position: relative;
+  width: 136px;
+  height: 136px;
+  border: 6px solid #fcfaf7;
+  border-radius: 50%;
+  background: #103f42;
+  box-shadow: 0 4px 9px #0002;
+  display: grid;
+  place-items: center;
+  color: #d3b270;
+  font-size: 42px;
+}
+.my-store-avatar > img {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.my-store-avatar svg.my-store-avatar-badge {
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 32px;
+  height: 32px;
+  fill: #087ce5;
+  color: white;
+}
+.my-store-identity {
+  margin-top: 10px;
+  min-width: 0;
+}
+.my-store-identity h1 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+  color: #101716;
+  overflow-wrap: anywhere;
+}
+.my-store-identity h1 svg {
+  fill: #087ce5;
+  color: white;
+}
+.my-store-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin: 9px 0;
+}
+.my-store-meta > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.my-store-meta svg {
+  width: 17px;
+  height: 17px;
+}
+.my-store-rating-star {
+  fill: #c99c32;
+  color: #c99c32;
+}
+.my-store-bio {
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 10px 0 0;
+  color: #152322;
+}
+.my-store-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  gap: 14px;
+  align-items: center;
+  margin-top: 17px;
+}
+.my-store-actions > button,
+.my-store-owner-menu summary {
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #dedbd5;
+  background: #fcfaf7;
+  color: #152322;
+  box-shadow: 0 2px 4px #00000008;
+  display: grid;
+  place-items: center;
+}
+.my-store .my-store-add {
+  background: #103f42;
+  color: #fff;
+  border-radius: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 16px;
+}
+.my-store-stats {
+  margin: 16px 26px 0;
+  padding: 13px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-radius: 20px;
+  background: #f1eeea;
+}
+.my-store-stats > div {
+  display: grid;
+  grid-template-rows: 26px 23px 18px;
+  justify-items: center;
+  position: relative;
+}
+.my-store-stats > div + div {
+  border-inline-start: 1px solid #dfdbd4;
+}
+.my-store-stats svg {
+  grid-row: 1;
+  width: 24px;
+  height: 24px;
+}
+.my-store-stats > div:last-child svg {
+  color: #b18b3b;
+}
+.my-store-stats dd {
+  grid-row: 2;
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 800;
+}
+.my-store-stats dt {
+  grid-row: 3;
+  font-size: 12px;
+}
+.ms-owner-inventory {
+  padding: 0 26px;
+}
+.ms-approved-tabs {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 18px;
+  border-bottom: 1px solid #dedbd5;
+}
+.ms-approved-tabs button {
+  position: relative;
+  min-height: 44px;
+  padding: 8px 2px 12px;
+  background: none;
+  color: #152322;
+  border: 0;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.ms-approved-tabs button[aria-pressed="true"] {
+  color: #103f42;
+  font-weight: 800;
+}
+.ms-approved-tabs button[aria-pressed="true"]:after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  inset-inline: 0;
+  height: 3px;
+  background: #103f42;
+  border-radius: 4px;
+}
+.ms-approved-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 20px;
+  flex-wrap: wrap;
+}
+.ms-approved-filters > select {
+  flex: 1;
+  max-width: 220px;
+}
+.ms-approved-filters select,
+.my-store-search {
+  height: 44px;
+  min-width: 0;
+  border: 1px solid #dedbd5;
+  border-radius: 24px;
+  background: #fcfaf7;
+  color: #152322;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.my-store-search {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.my-store-search input {
+  width: 100%;
+  min-width: 0;
+  outline: none;
+  background: transparent;
+  color: #152322;
+  border: 0;
+  font-size: 16px;
+}
+.my-store-search[data-open="true"] {
+  display: flex;
+  order: 4;
+  flex-basis: 100%;
+}
+.my-store-search-toggle {
+  margin-inline-start: auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dedbd5;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.my-store-sort {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dedbd5;
+  border-radius: 50%;
+}
+.my-store-sort select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.ms-storefront-owner-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.ms-owner-listing-card {
+  position: relative;
+  min-width: 0;
+  background: #fffdfa;
+  border-radius: 16px;
+  box-shadow: 0 3px 6px #00000012;
+  overflow: hidden;
+  border: 1px solid #ece8e1;
+}
+.ms-product-media {
+  height: 130px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #eeece6;
+}
+.ms-product-media > img,
+.ms-product-media > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+  object-fit: cover;
+}
+.ms-product-media .rawaj-listing-media--placeholder svg {
+  max-width: 60px;
+  max-height: 60px;
+}
+.ms-owner-listing-card__summary {
+  padding: 10px 13px 5px;
+}
+.ms-owner-listing-card__summary h3 {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #101716;
+  margin: 0 0 4px;
+}
+.ms-store-card-price {
+  color: #103f42;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.ms-store-card-price small {
+  font-size: 12px;
+  margin-inline-start: 6px;
+  font-weight: 500;
+}
+.ms-store-card-status {
+  display: inline-block;
+  font-size: 11px;
+  margin-top: 4px;
+  color: #765b28;
+}
+.ms-store-card-status[data-status="approved"],
+.ms-owner-listing-card__facts {
+  display: none;
+}
+.my-store-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 13px 12px;
+  font-size: 11px;
+  color: #384442;
+}
+.my-store-card-meta span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.my-store-card-meta svg {
+  width: 15px;
+  height: 15px;
+}
+.my-store-card-menu,
+.ms-owner-listing-select {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  border-radius: 50%;
+  background: #fffdfa;
+  color: #152322;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e7e2d9;
+  z-index: 2;
+}
+.ms-owner-listing-select {
+  inset-inline-start: 8px;
+  inset-inline-end: auto;
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+}
+.ms-owner-listing-card:hover .ms-owner-listing-select,
+.ms-owner-listing-select:focus-visible,
+.ms-owner-listing-select[data-selected="true"] {
+  opacity: 1;
+}
+.my-store-dialog {
+  max-height: 85dvh;
+  overflow-y: auto;
+  border-radius: 20px !important;
+  background: #fcfaf7 !important;
+  color: #152322 !important;
+  max-width: 620px !important;
+}
+.my-store-dialog :is(button, a, select, input) {
+  min-height: 44px;
+}
+.my-store-dialog .ms-owner-listing-card__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.my-store-dialog .ms-owner-listing-card__actions > a,
+.my-store-dialog .ms-owner-listing-card__actions > button {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid #dedbd5;
+  border-radius: 12px;
+}
+.my-store-dialog .ms-owner-listing-management__top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.my-store-dialog .ms-owner-listing-management__top-actions button {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.my-store-dialog .ms-owner-listing-card__content {
+  display: grid;
+  gap: 12px;
+}
+.my-store-dialog .ms-storefront-owner-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.my-store-dialog .ms-shop-desk__rail,
+.my-store-dialog .ms-shop-desk__secondary {
+  display: grid;
+  gap: 16px;
+}
+.ms-owner-load-more {
+  display: block;
+  margin: 24px auto;
+  padding: 10px 20px;
+  border: 1px solid #dedbd5;
+  border-radius: 24px;
+}
+.my-store-feedback {
+  margin: 10px 26px;
+  font-size: 13px;
+}
+@media (min-width: 640px) {
+  .ms-storefront-owner-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ms-product-media {
+    height: 180px;
+  }
+}
+@media (min-width: 1024px) {
+  .my-store-topbar {
+    height: 72px;
+    padding-inline: 30px;
+  }
+  .my-store-cover {
+    height: 285px;
+  }
+  .my-store-cover svg.my-store-cover-curve {
+    width: 100%;
+  }
+  .my-store-cover svg.my-store-cover-wave {
+    height: 48px;
+  }
+  .my-store-cover-title {
+    top: 44px;
+    inset-inline-start: 58px;
+    font-size: 44px;
+  }
+  .my-store-cover-title:after {
+    width: 78px;
+    height: 4px;
+    margin-top: 18px;
+  }
+  .my-store-identity-row {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) 264px;
+    align-items: center;
+    gap: 30px;
+    margin-top: -68px;
+    padding: 0 40px;
+  }
+  .my-store-avatar {
+    width: 190px;
+    height: 190px;
+    border-width: 8px;
+  }
+  .my-store-avatar svg.my-store-avatar-badge {
+    width: 40px;
+    height: 40px;
+  }
+  .my-store-identity {
+    padding-top: 40px;
+    margin: 0;
+  }
+  .my-store-identity h1 {
+    font-size: 30px;
+  }
+  .my-store-meta {
+    justify-content: flex-start;
+    gap: 32px;
+    font-size: 16px;
+    margin: 10px 0;
+  }
+  .my-store-bio {
+    font-size: 16px;
+    max-width: 440px;
+  }
+  .my-store-actions {
+    grid-template-columns: 1fr 76px 76px;
+    justify-items: center;
+    gap: 14px;
+    margin-top: 40px;
+  }
+  .my-store-add {
+    grid-column: 1/-1;
+    width: 100%;
+    min-height: 48px !important;
+  }
+  .my-store-actions > button {
+    grid-column: 2;
+    width: 76px;
+    border-radius: 28px;
+  }
+  .my-store-owner-menu summary {
+    width: 76px;
+    border-radius: 28px;
+  }
+  .my-store-stats {
+    width: 67%;
+    margin: 20px 28px 0;
+    border-radius: 45px;
+    padding: 17px 0;
+  }
+  .my-store-stats > div {
+    grid-template-columns: 50px auto;
+    grid-template-rows: 25px 21px;
+    justify-content: center;
+    column-gap: 14px;
+    justify-items: start;
+  }
+  .my-store-stats svg {
+    grid-row: 1/3;
+    align-self: center;
+    width: 36px;
+    height: 36px;
+    color: #6f5b36;
+  }
+  .my-store-stats dd {
+    grid-row: 1;
+    grid-column: 2;
+    font-size: 22px;
+  }
+  .my-store-stats dt {
+    grid-row: 2;
+    grid-column: 2;
+    font-size: 14px;
+  }
+  .ms-owner-inventory {
+    padding: 0 28px;
+  }
+  .ms-approved-tabs {
+    margin-top: 28px;
+    justify-content: flex-start;
+    gap: 40px;
+  }
+  .ms-approved-tabs button {
+    font-size: 16px;
+    padding-inline: 14px;
+  }
+  .ms-approved-filters {
+    flex-wrap: nowrap;
+    margin: 18px 0 28px;
+    gap: 28px;
+  }
+  .my-store-search,
+  .my-store-search[data-open="true"] {
+    display: flex;
+    order: 0;
+    flex: 0 1 290px;
+    margin-inline-start: auto;
+  }
+  .my-store-search-toggle {
+    display: none;
+  }
+  .my-store-sort {
+    width: 215px;
+    border: 0;
+    display: flex;
+    gap: 10px;
+  }
+  .my-store-sort > svg {
+    position: absolute;
+    inset-inline-start: 16px;
+    pointer-events: none;
+  }
+  .my-store-sort select {
+    position: static;
+    opacity: 1;
+    padding-inline-start: 46px;
+    width: 100%;
+  }
+  .ms-storefront-owner-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .ms-product-media {
+    height: 155px;
+  }
+  .ms-owner-listing-card__summary h3 {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-store * {
+    transition: none !important;
+  }
+}
+/* Bridge the global semantic token layer locally, including portal content. */
+.rawaj-app-shell main.my-store,
+.my-store-topbar,
+.my-store-dialog {
+  --rawaj-text-primary: #152322;
+  --rawaj-text-secondary: #384442;
+  --rawaj-text-muted: #53615e;
+  --rawaj-page-background: #fcfaf7;
+  --rawaj-surface-inset: #f1eeea;
+  --rawaj-surface-active: #e6e5dc;
+  --rawaj-border-strong: #dedbd5;
+  --font-display: "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+  color: #152322;
+  background-color: #fcfaf7;
+}
+.my-store-dialog[role="dialog"] {
+  background: #fcfaf7 !important;
+  color: #152322 !important;
+  border-color: #dedbd5 !important;
+}
+.my-store-dialog :is(.text-primary, .text-foreground) {
+  color: #152322 !important;
+}
+.my-store-dialog .text-muted-foreground {
+  color: #53615e !important;
+}
+.my-store-dialog .text-primary-foreground {
+  color: #fff !important;
+}
+.my-store-dialog .bg-primary {
+  background: #103f42 !important;
+}
+.my-store-dialog .rawaj-color-card {
+  background: #f1eeea !important;
+  color: #152322 !important;
+}
+.my-store-dialog [data-owner-metric],
+.my-store-dialog [data-owner-summary-metric] {
+  display: inline-flex;
+  gap: 6px;
+  padding: 8px;
+}
+
+/*
+ * Keep the owner storefront independent from legacy route and dark-surface
+ * rules. Visual QA on the actual route found charcoal backgrounds and
+ * low-contrast controls despite the intended ivory tokens above.
+ * These selectors are deliberately limited to /profile/listings.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-hero,
+  .ms-owner-inventory,
+  .ms-owner-workspace-sticky
+) {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__overview,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-identity h1,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-meta,
+  .my-store-bio,
+  .my-store-stats dt,
+  .my-store-stats dd,
+  .ms-approved-tabs button,
+  .my-store-card-meta
+) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-tabs button[aria-pressed="true"] {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-store-card-price {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-approved-filters > select,
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store :is(
+  .my-store-search,
+  .my-store-search-toggle,
+  .my-store-sort
+) {
+  background: #fcfaf7 !important;
+  border-color: #dedbd5 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-search input {
+  background: transparent !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-search input::placeholder {
+  color: #53615e !important;
+  opacity: 1;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-sort select {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-product-media {
+  background-color: #eeece6 !important;
+}
+
+/* Keep menu actions legible even when a global link/hover theme is active. */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .my-store-owner-menu > div a,
+  .my-store-owner-menu > div button,
+  .my-store-nav nav a,
+  .my-store-nav nav button
+) {
+  color: #152322 !important;
+  background-color: transparent !important;
+}
+
+/*
+ * Storefront parity (buyer + owner). These route-scoped rules deliberately
+ * leave the platform's dark navigation and every non-store route unchanged.
+ */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"],
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(
+  .rawaj-app-shell__page,
+  .rawaj-app-shell__content
+),
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] :is(
+  .rawaj-app-shell__page,
+  .rawaj-app-shell__content
+) {
+  background: #fcfaf7 !important;
+}
+
+.my-store-public-page,
+.my-store-public,
+.my-store-public :is(.my-store-hero, .ms-owner-inventory) {
+  background: #fcfaf7 !important;
+  color: #152322 !important;
+  color-scheme: light;
+}
+
+.my-store-public {
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.my-store-public .my-store-hero {
+  overflow: visible;
+}
+
+.my-store-public .my-store-cover {
+  overflow: hidden;
+}
+
+.my-store-public .my-store-cover-title {
+  color: #fff !important;
+}
+
+.my-store-public .my-store-identity h1,
+.my-store-public .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}
+
+.my-store-public :is(.my-store-meta, .my-store-bio, .my-store-stats dt, .my-store-stats dd, .my-store-card-meta) {
+  color: #152322 !important;
+}
+
+.my-store-public .my-store-stats {
+  color: #152322 !important;
+  background-color: #f1eeea !important;
+}
+
+.my-store-public .my-store-actions {
+  grid-template-columns: minmax(0, 1fr) 44px minmax(100px, auto);
+}
+
+.my-store-public .my-store-actions > .my-store-public-follow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #103f42 !important;
+  background: #fffdfa !important;
+  color: #103f42 !important;
+  font-weight: 750;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.my-store-public .my-store-public-follow svg {
+  width: 17px;
+  height: 17px;
+}
+
+.my-store-public .my-store-public-follow:disabled {
+  opacity: 0.65;
+}
+
+.my-store-public .my-store-actions > button {
+  width: 44px;
+  height: 44px;
+}
+
+.my-store-public-verification {
+  margin: 12px 26px 0;
+  max-width: 760px;
+  color: #53615e;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.my-store-public-tabs {
+  justify-content: flex-start;
+  gap: clamp(12px, 4vw, 48px);
+}
+
+.my-store-public-tabs a {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 4px 12px;
+  min-height: 44px;
+  color: #152322 !important;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.my-store-public-tabs a[aria-current="page"],
+.my-store-public-tabs a:focus-visible {
+  border-bottom-color: #103f42;
+  color: #103f42 !important;
+}
+
+.my-store-public-section,
+.my-store-public-details,
+.my-store-public-about {
+  scroll-margin-top: 90px;
+}
+
+.my-store-public-section {
+  padding-top: 20px;
+}
+
+.my-store-public-note {
+  margin-bottom: 12px;
+  color: #53615e !important;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.my-store-public-card {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  background: #fffdfa !important;
+  color: #152322 !important;
+  border: 1px solid #ece8e1 !important;
+  border-radius: 18px;
+  text-decoration: none !important;
+  box-shadow: 0 5px 20px rgba(16, 63, 66, 0.08);
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.my-store-public-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(16, 63, 66, 0.13);
+}
+
+.my-store-public-card:focus-visible {
+  outline: 3px solid #ba9344;
+  outline-offset: 3px;
+}
+
+.my-store-public-card .ms-product-media {
+  height: 180px;
+  background: #eeece6 !important;
+}
+
+.my-store-public-card .ms-owner-listing-card__summary {
+  padding: 13px 14px 8px;
+  background: #fffdfa !important;
+}
+
+.my-store-public-card .ms-store-card-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: #103f42 !important;
+  font-weight: 800;
+}
+
+.my-store-public-card .my-store-card-meta {
+  padding: 8px 14px 15px;
+  color: #53615e !important;
+}
+
+.my-store-public-about,
+.my-store-public-details > :is(section, aside) {
+  border: 1px solid #e7e2d9 !important;
+  border-radius: 22px;
+  background: #fffdfa !important;
+  color: #152322 !important;
+  box-shadow: 0 4px 14px rgba(16, 63, 66, 0.05);
+}
+
+.my-store-public-about {
+  margin-top: 30px;
+  padding: 20px;
+}
+
+.my-store-public-about h2 {
+  color: #103f42 !important;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.my-store-public-about p {
+  margin-top: 8px;
+  color: #384442 !important;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.my-store-public-details {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.my-store-public-details > :is(section, aside) {
+  padding: clamp(16px, 3vw, 25px);
+  min-width: 0;
+}
+
+.my-store-public-details :is(h2, h3, p, label, small) {
+  color: #152322;
+}
+
+.my-store-public-details .text-muted-foreground {
+  color: #53615e !important;
+}
+
+.my-store-public-details .rawaj-signature-kicker {
+  color: #8c743f !important;
+}
+
+.my-store-public-details :is(input, textarea, select) {
+  background: #fffdfa;
+  color: #152322;
+  border: 1px solid #dedbd5;
+}
+
+.my-store-public-details [class*="bg-white/"] {
+  background-color: #f1eeea !important;
+}
+
+.my-store-public-details .bg-primary {
+  background-color: #103f42 !important;
+}
+
+.my-store-public-details .text-primary-foreground {
+  color: #fff !important;
+}
+
+.my-store-public .rawaj-storefront-notice {
+  border-radius: 20px;
+  background: #f1eeea !important;
+  color: #152322 !important;
+  padding: 20px;
+}
+
+@media (min-width: 1024px) {
+  .my-store-public .my-store-actions {
+    grid-template-columns: 1fr 76px;
+  }
+  .my-store-public .my-store-actions .my-store-public-follow {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 48px;
+  }
+  .my-store-public .my-store-actions > button {
+    grid-column: 2;
+    width: 76px;
+  }
+  .my-store-public-card .ms-product-media {
+    height: 165px;
+  }
+  .my-store-public-details {
+    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .my-store-public .my-store-actions {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  .my-store-public .my-store-actions > .my-store-add {
+    grid-column: 1 / -1;
+  }
+  .my-store-public .my-store-actions > button {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .my-store-public .my-store-public-follow {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .my-store-public-tabs {
+    gap: 16px;
+  }
+  .my-store-public-card .ms-product-media {
+    height: clamp(170px, 45vw, 220px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-store-public-card {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+/* Store-only footer: preserve global footer on the rest of RAWAJ. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer {
+  margin-top: 0 !important;
+  border-top: 1px solid #dedbd5 !important;
+  background: #f1eeea !important;
+  color: #152322 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer::before {
+  background: #bd984b !important;
+  opacity: 0.6;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer :is(.rawaj-brand-lockup, .rawaj-brand-lockup *, h2, p, span, li a) {
+  color: #103f42 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer :is(.rawaj-site-footer__mobile, .rawaj-site-footer__desktop) {
+  background: #f1eeea !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer .rawaj-site-footer__mobile {
+  padding-block: 20px calc(1.5rem + var(--safe-bottom)) !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer .rawaj-site-footer__mobile nav a {
+  background: #fffdfa !important;
+  color: #103f42 !important;
+  border: 1px solid #dedbd5 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer .rawaj-site-footer__mobile-copy {
+  color: #53615e !important;
+  border-color: #dedbd5 !important;
+}
+
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/profile/listings"],
+  [data-resolved-pathname^="/seller/"]
+) .rawaj-site-footer .rawaj-brand-mark {
+  background: #fffdfa !important;
+  border-color: #dedbd5 !important;
+  box-shadow: none !important;
+}
+
+/* Owner management dialog: independent of the legacy charcoal segmented UI. */
+.my-store-dialog[role="dialog"] {
+  box-sizing: border-box;
+  width: min(94vw, 620px) !important;
+  max-width: 620px !important;
+  max-height: min(85dvh, 850px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: clamp(16px, 3vw, 24px) !important;
+  background: #fcfaf7 !important;
+  border: 1px solid #dedbd5 !important;
+  border-radius: 24px !important;
+  color: #152322 !important;
+  color-scheme: light;
+  overscroll-behavior: contain;
+  box-shadow: 0 24px 70px rgba(14, 31, 30, 0.22) !important;
+}
+
+.my-store-dialog :is(h2, h3, strong, label) {
+  color: #152322;
+}
+
+.my-store-dialog :is([class*="text-muted"], p, small) {
+  color: #53615e;
+}
+
+.my-store-dialog .ms-storefront-owner-tabs[data-rawaj-segmented-control="true"] {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+.my-store-dialog .ms-storefront-owner-tabs > button {
+  box-sizing: border-box;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px !important;
+  border: 1px solid #dedbd5 !important;
+  border-radius: 14px !important;
+  background: #fffdfa !important;
+  color: #152322 !important;
+  text-align: center;
+  white-space: normal !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.my-store-dialog .ms-storefront-owner-tabs > button[aria-pressed="true"] {
+  border-color: #103f42 !important;
+  background: #103f42 !important;
+  color: #fff !important;
+}
+
+.my-store-dialog .ms-storefront-owner-tabs > button :is(strong, span) {
+  color: inherit !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar,
+.my-store-dialog .ms-shop-desk__rail,
+.my-store-dialog .ms-shop-desk__secondary {
+  min-width: 0;
+  min-height: 0 !important;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: #152322 !important;
+  box-shadow: none !important;
+}
+
+.my-store-dialog .ms-shop-desk__rail:empty,
+.my-store-dialog .ms-shop-desk__secondary:empty {
+  display: none !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar__search {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px !important;
+  padding: 0 12px !important;
+  border: 1px solid #dedbd5 !important;
+  border-radius: 14px;
+  background: #fffdfa !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar__search input,
+.my-store-dialog .rawaj-owner-listings-toolbar select {
+  min-width: 0;
+  background: #fffdfa !important;
+  color: #152322 !important;
+  font-size: 16px !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar__search input::placeholder {
+  color: #53615e !important;
+  opacity: 1;
+}
+
+.my-store-dialog :is(
+  .rawaj-owner-listings-toolbar__filter-toggle,
+  .rawaj-owner-listings-toolbar__select-visible,
+  .rawaj-owner-listings-toolbar__add,
+  .ms-shop-tools,
+  [data-owner-performance-overview],
+  .rawaj-owner-smart-insights__item
+) {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px !important;
+  background: #f1eeea !important;
+  color: #152322 !important;
+  border: 1px solid #dedbd5 !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar__advanced {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 8px;
+  background: #fcfaf7 !important;
+}
+
+.my-store-dialog .rawaj-owner-listings-toolbar__count {
+  margin-inline-start: auto;
+  font-weight: 700;
+  color: #53615e !important;
+}
+
+.my-store-dialog :is(.rawaj-owner-smart-insights, .rawaj-owner-smart-insights__item, .ms-shop-tools) {
+  padding: 0 !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.my-store-dialog .rawaj-owner-smart-insights__item :is(a, button),
+.my-store-dialog .ms-shop-tools :is(summary, a) {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: #152322 !important;
+  background: transparent !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.my-store-dialog :is(.rawaj-owner-smart-insights__item, .ms-shop-tools) svg {
+  flex: 0 0 auto;
+  color: #103f42 !important;
+}
+
+.my-store-dialog [data-owner-performance-overview="true"] .ms-owner-performance__header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.my-store-dialog [data-owner-performance-overview="true"] .ms-owner-performance__header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #103f42 !important;
+  background: transparent !important;
+}
+
+.my-store-dialog [data-owner-performance-overview="true"] .ms-owner-performance__kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .my-store-dialog .ms-storefront-owner-tabs[data-rawaj-segmented-control="true"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .my-store-dialog[role="dialog"] {
+    width: calc(100vw - 20px) !important;
+    padding: 16px !important;
+  }
+}
+
+/* The fixed iPhone dock must never cover the last storefront footer link. */
+@media (max-width: 1023.99px) {
+  .rawaj-app-shell:is(
+    [data-resolved-pathname="/profile/listings"],
+    [data-resolved-pathname^="/seller/"]
+  ) .rawaj-site-footer .rawaj-site-footer__mobile {
+    padding-bottom: calc(7rem + var(--safe-bottom)) !important;
+  }
+}
+
+/*
+ * The app's legacy dark-theme canvas rules have higher specificity than the
+ * public .my-store class; isolate the buyer route exactly as the owner route.
+ */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public :is(
+  .my-store-hero,
+  .ms-owner-inventory,
+  .my-store-public-section,
+  .ms-approved-tabs
+) {
+  background-color: #fcfaf7 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-identity h1,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public :is(
+  .my-store-meta,
+  .my-store-bio,
+  .my-store-stats dt,
+  .my-store-stats dd,
+  .my-store-card-meta
+) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card .ms-owner-listing-card__summary {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-card .ms-store-card-price {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a {
+  color: #152322 !important;
+  background-color: transparent !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store.my-store-public .my-store-public-tabs a[aria-current="page"] {
+  color: #103f42 !important;
+}
+
+/* Public reviews and safety no longer inherit the legacy charcoal cards. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details > :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: block;
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+  border: 1px solid #e7e2d9 !important;
+  box-shadow: 0 4px 14px rgba(16, 63, 66, 0.05) !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) :is(h2, h3, strong, p, label, small) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-details :is(
+  .my-store-public-reviews,
+  .my-store-public-safety
+) .text-muted-foreground {
+  color: #53615e !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-reviews [class*="bg-white/"] {
+  background-color: #f1eeea !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-reviews :is(
+  a.bg-primary,
+  button.bg-primary
+) {
+  background-color: #103f42 !important;
+  color: #fff !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-public-safety .text-primary-foreground\/72 {
+  color: #53615e !important;
+}
+
+/* Public stores without an uploaded cover still need an intentional petrol hero. */
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] {
+  background: linear-gradient(125deg, #103f42 0%, #215451 60%, #446461 100%) !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-cover[data-has-cover="false"] .my-store-cover-placeholder {
+  color: #cfb476 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about {
+  background-color: #fffdfa !important;
+  color: #152322 !important;
+  border-color: #e7e2d9 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about h2 {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public #seller-about.my-store-public-about p {
+  color: #384442 !important;
+}
