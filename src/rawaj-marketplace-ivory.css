@@ -570,3 +570,78 @@
   background: var(--market-teal) !important;
   color: #fffaf0 !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3 {
+  max-width: 52rem;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  section.bg-card {
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  > section:first-child {
+  background: linear-gradient(145deg, #19655a, #073836 72%), #073836 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  :is(h1, h2, p) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  > section:first-child
+  :is(h1, p) {
+  color: #fff6e8 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  > section:nth-child(2) {
+  background: #f8ead3 !important;
+  border-color: #ddc29a !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  p.text-warning {
+  color: #684720 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory:is(
+    [data-resolved-pathname="/privacy"],
+    [data-resolved-pathname="/terms"]
+  )
+  main.rawaj-legal-v3
+  a.bg-primary.text-primary-foreground {
+  background: var(--market-teal) !important;
+  color: #fffaf0 !important;
+}
