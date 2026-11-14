@@ -226,3 +226,14 @@ test("B2.3 petrol header retains readable ivory text and champagne accent", asyn
   assert.match(audit, /\.rawaj-studio-hero__description \{[\s\S]*?color: var\(--rawaj-identity-ivory\) !important/);
   assert.doesNotMatch(audit, /rgba\(220, 62, 182, 0\.11\)/);
 });
+
+
+test("B2.3 source V5 uses canonical light panels and semantic text colors", async () => {
+  const system = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(system.includes("--studio-v5-panel: var(--rawaj-card-background)"));
+  assert.ok(system.includes("--studio-v5-text: var(--rawaj-identity-ink)"));
+  assert.ok(system.includes("linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal))"));
+  for (const old of ["#ff7559", "#df49b5", "#68adff", "#ff7f87", "#292a30"]) {
+    assert.ok(!system.includes(old), `V5 has retired color ${old}`);
+  }
+});
