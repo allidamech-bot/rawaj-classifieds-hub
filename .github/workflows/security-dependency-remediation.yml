@@ -28,23 +28,17 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install exact existing dependencies
+      - name: Generate lockfile for verified patched versions
         run: |
+          npm install --package-lock-only --ignore-scripts --no-fund --no-audit
           npm ci --no-fund --no-audit
           npm ci --prefix cloudflare/worker --no-fund --no-audit
-      - name: Apply safe npm audit remediations (without --force)
+      - name: Verify patched dependency graph has no high or critical vulnerabilities
         run: |
-          set +e
-          npm audit fix --no-fund --no-progress
-          echo "ROOT_AUDIT_FIX_EXIT=$?" >> "$GITHUB_ENV"
-          npm audit fix --prefix cloudflare/worker --no-fund --no-progress
-          echo "WORKER_AUDIT_FIX_EXIT=$?" >> "$GITHUB_ENV"
-          exit 0
-      - name: Summarize remaining security warnings
-        run: |
-          npm audit --audit-level=high || true
-          npm audit --prefix cloudflare/worker --audit-level=high || true
+          npm audit --audit-level=high
+          npm audit --prefix cloudflare/worker --audit-level=high
       - name: Commit only dependency manifests and lockfiles to isolated security branch
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -52,6 +46,11 @@ jobs:
           if git diff --cached --quiet; then
             echo "No safe dependency updates were available"
           else
-            git commit -m "security: apply compatible npm audit fixes to root and worker"
+            git commit -m "security: refresh audited Zod, gRPC and minimatch dependency graph"
             git push origin HEAD:security/20261115-audit-fixes
           fi
+      - name: Validate application types and production build
+        run: |
+          npm run typecheck
+          npx tsc -p cloudflare/worker/tsconfig.json --noEmit
+          npm run build
