@@ -139,21 +139,7 @@
     box-shadow 180ms ease;
 }
 
-/* Guest listing creation is a focused state, not an otherwise empty page. */
-.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide:not(.rawaj-listing-studio-v4) {
-  min-height: calc(100svh - var(--rawaj-header-height, 4rem));
-  padding-top: clamp(3.5rem, 11vh, 7rem) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/add-listing"] main.container-wide > .rawaj-surface {
-  width: min(100%, 42rem);
-  margin-inline: auto;
-  border-color: rgba(225, 100, 180, 0.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.07), transparent 42%),
-    linear-gradient(155deg, #303137, #292a30) !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16) !important;
-}
+/* B2.3: guest listing and editor fallback states own their ivory gate in listing-studio-v4.css. */
 
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity__metrics {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
