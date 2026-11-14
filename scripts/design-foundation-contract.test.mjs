@@ -443,3 +443,13 @@ test("B2.2 retires generic V17 dark control styles for the detail route", async 
   assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
   assert.ok(css.includes('[data-resolved-pathname="/add-listing"]'));
 });
+
+
+test("B2.2 loading and unavailable route states use the same approved palette", async () => {
+  const route = await readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.equal((route.match(/className="rawaj-detail-v2 rawaj-detail-recovery/g) || []).length, 2);
+  assert.ok(route.includes('className="rawaj-detail-recovery__card"'));
+  assert.ok(styles.includes(".rawaj-detail-recovery__description"));
+  assert.ok(styles.includes("main.rawaj-detail-recovery[data-design-palette=\"ivory\"]"));
+});

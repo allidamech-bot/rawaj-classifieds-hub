@@ -388,7 +388,10 @@ function ListingDetailsPage() {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
-        <main className="container-wide mobile-page-bottom pt-10">
+        <main
+          className="rawaj-detail-v2 rawaj-detail-recovery container-wide mobile-page-bottom pt-10"
+          data-design-palette="ivory"
+        >
           <StateCard
             title={text("جاري تحميل الإعلان", "Loading listing")}
             body={text("نجهز تفاصيل الإعلان للعرض.", "Preparing listing details.")}
@@ -402,7 +405,10 @@ function ListingDetailsPage() {
     return (
       <>
         <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
-        <main className="container-wide mobile-page-bottom pt-10">
+        <main
+          className="rawaj-detail-v2 rawaj-detail-recovery container-wide mobile-page-bottom pt-10"
+          data-design-palette="ivory"
+        >
           <StateCard
             title={text("لا يمكن عرض هذا الإعلان", "Listing cannot be shown")}
             body={text(
@@ -772,11 +778,11 @@ function StateCard({
   actionTo?: string;
 }) {
   return (
-    <div className="rawaj-surface rounded-3xl p-10 text-center">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{body}</p>
+    <div className="rawaj-detail-recovery__card">
+      <p className="rawaj-detail-recovery__title">{title}</p>
+      <p className="rawaj-detail-recovery__description">{body}</p>
       {actionLabel && actionTo ? (
-        <Link to={actionTo} className="rawaj-button-primary mt-4 px-4 py-2">
+        <Link to={actionTo} className="rawaj-button-primary rawaj-detail-recovery__action">
           {actionLabel}
         </Link>
       ) : null}

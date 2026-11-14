@@ -195,3 +195,8 @@ price and seller heading roles are bound directly to approved identity tokens,
 with an explicit accessible report-action foreground. No unrelated route was re-themed.
 
 B2.2 also excludes the detail pathname from V17 generic dark cards, primary/secondary actions, form controls, badges, overlays and status states directly at their selector ownership level. `/listings` and unrelated unmigrated routes retain their prior behavior; no new late-loaded stylesheet was added.
+
+
+B2.2 loading and unavailable API states share the approved detail canvas through
+`rawaj-detail-recovery` and a route-owned card rather than the retired global
+`rawaj-surface` dark skin. The existing messages and browse-listings action are unchanged.

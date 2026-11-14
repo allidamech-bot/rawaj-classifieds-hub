@@ -946,3 +946,55 @@ main.rawaj-detail-v2 .rawaj-detail-similar__item .rawaj-adaptive-card__price {
   .rawaj-contact-dock__secondary { width: auto; }
   .rawaj-contact-dock__inner :is(a, button) { min-height: 2.75rem; }
 }
+
+/* Listing detail loading/unavailable recovery — same surface, no legacy dark card. */
+main.rawaj-detail-recovery[data-design-palette="ivory"] {
+  display: grid;
+  min-height: min(72dvh, 44rem);
+  align-content: start;
+  padding-block: clamp(1.5rem, 5vw, 3.5rem);
+}
+
+.rawaj-detail-recovery__card {
+  width: min(100%, 38rem);
+  margin-inline: auto;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 1.2rem;
+  background: var(--rawaj-card-background);
+  box-shadow: var(--rawaj-shadow-soft);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  text-align: center;
+}
+
+.rawaj-detail-recovery__title {
+  color: var(--rawaj-identity-ink);
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.rawaj-detail-recovery__description {
+  margin-top: 0.55rem;
+  color: #435650;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+main.rawaj-detail-recovery .rawaj-detail-recovery__action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.1rem;
+  border-radius: 0.85rem;
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+  padding: 0.65rem 1.15rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+main.rawaj-detail-recovery .rawaj-detail-recovery__action:focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 3px;
+}
