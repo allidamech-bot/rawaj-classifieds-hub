@@ -461,7 +461,7 @@ function ListingDetailsPage() {
 
   return (
     <>
-      <main className="rawaj-detail-v2">
+      <main className="rawaj-detail-v2" data-design-palette="ivory">
         <ListingMediaExperience
           images={mediaImages}
           title={listing.title}

@@ -144,3 +144,13 @@ Additional historical source suites still fail identically on the reference main
 source suite expects retired Input/My Store markup. These assertions were not
 changed in this search migration. The required Quality Gate command set passes
 locally; do not confuse the historical optional suites with successful checks.
+
+
+## B2.2 listing detail — implementation candidate, pending acceptance
+The detail route and contact dock now opt into the existing canonical ivory theme,
+while the page-specific shell uses approved petrol chrome. Historical detail-only
+overrides in V7B/V14/V15/V16 are removed in their original stylesheets; My Store
+and other route ownership remain intact. Retain the existing SEO/SSR, gallery,
+contact, conversation, comparison, favorites, reports and offer workflows.
+This is not accepted until rendered RTL/LTR tests and final-SHA CI are green,
+the PR is verified mergeable and is merged into main.

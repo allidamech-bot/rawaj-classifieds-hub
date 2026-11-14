@@ -61,54 +61,7 @@
 
 /* 4. Listings and filters */
 
-/* 5. Listing detail */
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2 {
-  color: #f2efeb !important;
-  background: #242529 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__stage,
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-media__image {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  background: #1d1e23 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
-    .rawaj-detail-summary,
-    .rawaj-detail-section,
-    .rawaj-detail-seller,
-    .rawaj-detail-reference,
-    .rawaj-detail-safety,
-    .rawaj-detail-reserved
-  ) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(155deg, #303137, #282a2f) !important;
-  color: #c9c3bf !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2 :is(h1, h2, h3, strong) {
-  color: #f2efeb !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2 :is(p, small, time, .text-muted-foreground) {
-  color: #aaa39f !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price {
-  border-color: rgba(255, 117, 89, 0.18) !important;
-  background: rgba(24, 25, 30, 0.52) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > strong {
-  color: #ff917b !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div,
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-location {
-  border-color: rgba(255, 255, 255, 0.065) !important;
-  background: rgba(24, 25, 30, 0.43) !important;
-}
+/* 5. Listing detail moved to route-owned styles. */
 
 /* 6. Add/edit listing studio */
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-listing-studio-v4 {

@@ -1,3 +1,17 @@
+/* B2.2 route-owned shell colors: sibling routes keep their original chrome. */
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] {
+  --rawaj-shell-ambient-opacity: 0;
+  --rawaj-shell-canvas: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  --rawaj-shell-chrome-shadow: 0 4px 16px rgba(7, 56, 54, 0.12);
+  --rawaj-shell-primary-surface: var(--rawaj-identity-teal);
+  --rawaj-shell-primary-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-active-surface: var(--rawaj-identity-champagne);
+  --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
+}
+
 /* RAWAJ Listing Detail V3 — premium correction pass.
  * Presentation only. Media behavior, SSR data, seller actions, favorites,
  * reporting, contact flows, and related listings remain unchanged.
@@ -398,16 +412,16 @@
 
 /* V4 composition: dark media theatre, warm reading canvas, fewer repeated panels. */
 .rawaj-detail-v2 {
-  --detail-canvas: #f2efe7;
-  --detail-surface: #fffdf8;
-  --detail-surface-muted: #edf2ed;
-  --detail-line: #d5ded7;
-  --detail-line-strong: #bdccc3;
-  --detail-ink: #183630;
-  --detail-ink-soft: #50675f;
-  --detail-ink-muted: #6c7d76;
-  --detail-green: #0f433b;
-  --detail-gold: #b48742;
+  --detail-canvas: var(--rawaj-page-background);
+  --detail-surface: var(--rawaj-card-background);
+  --detail-surface-muted: var(--rawaj-muted-surface);
+  --detail-line: var(--rawaj-border);
+  --detail-line-strong: var(--rawaj-border-strong);
+  --detail-ink: var(--rawaj-text-primary);
+  --detail-ink-soft: var(--rawaj-text-secondary);
+  --detail-ink-muted: var(--rawaj-text-muted);
+  --detail-green: var(--rawaj-identity-teal);
+  --detail-gold: var(--rawaj-identity-gold);
   background: var(--detail-canvas);
   color: var(--detail-ink);
 }
@@ -419,12 +433,12 @@
 .rawaj-detail-media__stage {
   min-height: clamp(19rem, 52vw, 32rem);
   border: 0;
-  background: #061b18;
+  background: var(--rawaj-identity-petrol);
   box-shadow: 0 14px 38px rgba(0, 22, 19, 0.24);
 }
 
 .rawaj-detail-media__image {
-  background: #061b18;
+  background: var(--rawaj-identity-petrol);
 }
 
 .rawaj-detail-v2__container {
@@ -563,7 +577,7 @@
   margin-top: 1.1rem;
   border: 0;
   border-radius: 0.85rem;
-  background: #edf4ef;
+  background: var(--rawaj-surface-selected);
   padding: 0.9rem 1rem;
 }
 
@@ -675,12 +689,12 @@
 .rawaj-detail-seller__actions :is(a, button) {
   border-color: var(--detail-line);
   color: var(--detail-ink-soft);
-  background: #f7f9f7;
+  background: var(--rawaj-elevated-background);
 }
 
 .rawaj-detail-seller__actions > a:first-child {
   border-color: transparent;
-  color: #fff;
+  color: var(--rawaj-action-primary-foreground);
   background: var(--detail-green);
 }
 
@@ -703,7 +717,7 @@
 
 .rawaj-detail-safety {
   color: var(--detail-ink);
-  background: #f7f3e9;
+  background: var(--rawaj-subtle-background);
 }
 
 .rawaj-detail-safety :is(h2, strong) {
@@ -794,4 +808,66 @@
   .rawaj-detail-specs > div:last-child {
     border-bottom: 0;
   }
+}
+
+/* Existing contact flow, now using the approved route palette. */
+.rawaj-contact-dock {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.rawaj-contact-dock__inner {
+  width: min(100%, 46rem);
+  min-width: 0;
+  gap: 0.4rem;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 1.1rem;
+  background: var(--rawaj-card-background);
+  box-shadow: var(--rawaj-shadow-overlay);
+}
+.rawaj-contact-dock__inner :is(a, button) {
+  min-width: 0;
+  min-height: 2.75rem;
+  border-radius: 0.8rem;
+  box-shadow: none;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.rawaj-contact-dock__primary {
+  flex: 1.2 1 0;
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+}
+.rawaj-contact-dock__offer {
+  flex: 1 1 0;
+  background: var(--rawaj-identity-champagne);
+  color: var(--rawaj-identity-petrol);
+}
+.rawaj-contact-dock__secondary {
+  flex: 0 0 auto;
+  background: var(--rawaj-muted-surface);
+  color: var(--rawaj-identity-petrol);
+}
+.rawaj-contact-dock__secondary[data-tone="whatsapp"] {
+  background: #14583c;
+  color: #ffffff;
+}
+.rawaj-contact-dock__inner :is(a, button):focus-visible,
+.rawaj-detail-v2 :is(a, button):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 2px;
+}
+.rawaj-detail-v2 {
+  padding-bottom: max(5.5rem, var(--rawaj-shell-bottom-reserve));
+}
+@media (max-width: 430px) {
+  .rawaj-contact-dock { padding-inline: 0.5rem; }
+  .rawaj-contact-dock__inner { gap: 0.3rem; padding: 0.4rem; }
+  .rawaj-contact-dock__inner :is(a, button) { min-height: 2.75rem; padding-inline: 0.4rem; font-size: 0.73rem; }
+  .rawaj-contact-dock__secondary { width: 2.75rem; padding-inline: 0; }
+  .rawaj-detail-price > strong { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-contact-dock__inner :is(a, button) { transition: none; }
 }

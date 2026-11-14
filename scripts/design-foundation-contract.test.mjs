@@ -324,3 +324,27 @@ test("signed-out My Store uses approved identity instead of retired guest worksp
   assert.ok(myStoreStyles.includes("background: var(--card) !important;"));
   assert.ok(myStoreStyles.includes("color: var(--foreground) !important;"));
 });
+
+test("B2.2 detail uses canonical palette and no legacy forced theme", async () => {
+  const load = (p) => readFile(new URL(`../src/${p}`, import.meta.url), "utf8");
+  const [detail, route, dock, v7b, v14, v15, v16, actions] = await Promise.all([
+    load("listing-detail-v3.css"),
+    load("routes/listings.$id.tsx"),
+    load("features/listing-detail/ListingContactDock.tsx"),
+    load("rawaj-page-by-page-recovery-v7b.css"),
+    load("rawaj-marketplace-premium-v14.css"),
+    load("rawaj-marketplace-final-polish-v15.css"),
+    load("rawaj-marketplace-unified-v16.css"),
+    load("rawaj-marketplace-unified-v16-actions.css"),
+  ]);
+  assert.match(foundation, /\\.rawaj-detail-v2\\[data-design-palette="ivory"\\]/);
+  assert.match(route, /data-design-palette="ivory"/);
+  assert.match(dock, /data-design-palette="ivory"/);
+  for (const token of ["ivory", "teal", "petrol", "champagne"]) {
+    assert.ok(detail.includes(`var(--rawaj-identity-${token})`));
+  }
+  for (const old of [v7b, v14, v15, v16, actions]) {
+    assert.doesNotMatch(old, /\\.rawaj-detail-(?:v2|summary|section|seller|price)|\\.rawaj-contact-dock/);
+  }
+  assert.ok(browserChrome.includes("listings"));
+});
