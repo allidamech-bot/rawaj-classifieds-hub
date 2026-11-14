@@ -1,5 +1,9 @@
 /* B3.1 offers: source-owned presentation for recorded price drops only.
    The API contract, calculation and public eligibility logic remain unchanged. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] {
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 {
   color: var(--rawaj-identity-ink);
   background: var(--rawaj-identity-ivory);
