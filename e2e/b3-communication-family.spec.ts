@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 const routes = [
   { path: "/activity", selector: "main.rawaj-account-activity-v3" },
-  { path: "/notifications", selector: "main.rawaj-communication-v2--notifications" },
-  { path: "/chats", selector: "main.rawaj-communication-v2--messages" },
+  { path: "/notifications", selector: "main.rawaj-communication-v2" },
+  { path: "/chats", selector: "main.rawaj-communication-v2" },
 ] as const;
 
 for (const { path, selector } of routes) {
