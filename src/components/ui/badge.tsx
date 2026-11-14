@@ -16,9 +16,11 @@ const badgeVariants = cva(
           "border-[var(--rawaj-badge-accent-border)] bg-[var(--rawaj-badge-accent-surface)] text-[var(--rawaj-badge-accent-ink)]",
         success:
           "border-[var(--rawaj-badge-success-border)] bg-[var(--rawaj-badge-success-surface)] text-[var(--rawaj-badge-success-ink)]",
-        warning: "border-[var(--rawaj-badge-warning-border)] bg-[var(--rawaj-badge-warning-surface)] text-[var(--rawaj-badge-warning-ink)]",
+        warning:
+          "border-[var(--rawaj-badge-warning-border)] bg-[var(--rawaj-badge-warning-surface)] text-[var(--rawaj-badge-warning-ink)]",
         gold: "border-[var(--rawaj-badge-gold-border)] bg-[var(--rawaj-badge-gold-surface)] text-[var(--rawaj-badge-gold-ink)]",
-        destructive: "border-[var(--rawaj-badge-destructive-border)] bg-[var(--rawaj-badge-destructive-surface)] text-[var(--rawaj-badge-destructive-ink)]",
+        destructive:
+          "border-[var(--rawaj-badge-destructive-border)] bg-[var(--rawaj-badge-destructive-surface)] text-[var(--rawaj-badge-destructive-ink)]",
         outline:
           "border-[var(--rawaj-border-strong)] bg-transparent text-[var(--rawaj-text-primary)]",
       },
