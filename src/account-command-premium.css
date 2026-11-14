@@ -212,3 +212,35 @@
     transform: none !important;
   }
 }
+
+/* B3.1 shell surfaces: the approved ivory page needs opaque petrol chrome.
+   Fix contrast at the account route itself, without changing the shared header
+   or footer on any protected route. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] :is(
+  .rawaj-app-header,
+  .rawaj-site-footer,
+  .rawaj-site-footer__mobile
+) {
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-petrol) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent) !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header :is(
+  .rawaj-brand-lockup__name,
+  .rawaj-brand-lockup__latin,
+  .rawaj-header-login-cta__label,
+  .rawaj-shell-header__title
+),
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-site-footer :is(
+  .rawaj-brand-lockup__name,
+  .rawaj-brand-lockup__latin,
+  .rawaj-site-footer__mobile-brand p,
+  .rawaj-site-footer__mobile-copy
+) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-site-footer__mobile nav a {
+  color: var(--rawaj-identity-ivory) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-champagne) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 7%, var(--rawaj-identity-petrol)) !important;
+}
