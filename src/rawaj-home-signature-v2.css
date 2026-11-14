@@ -77,7 +77,7 @@
   min-height: 44px;
   border-radius: 999px !important;
   color: #102c29 !important;
-  background: linear-gradient(155deg, #fffaf0, #f1dec1) !important;
+  background: linear-gradient(155deg, #fffaf0, #f1dec1), #f1dec1 !important;
   box-shadow: 0 4px 10px #001b1c44;
 }
 
@@ -868,10 +868,6 @@
   .rawaj-signature-categories__rail {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta {
-  background-color: #f1dec1 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
