@@ -17,6 +17,7 @@ test("categories direct load keeps its designed atlas and active production ad t
     timeout: 15_000,
   });
 
+  await expect(placement).toHaveCount(1);
   const image = placement.locator("img.rawaj-ad-placement__image");
   await expect(image).toHaveCount(1);
   await expect
@@ -36,6 +37,12 @@ test("categories direct load keeps its designed atlas and active production ad t
       cardRadius: Number.parseFloat(getComputedStyle(card).borderRadius),
     };
   });
+
+  const search = await page.getByRole("searchbox").first().boundingBox();
+  const ad = await placement.boundingBox();
+  expect(search).not.toBeNull();
+  expect(ad).not.toBeNull();
+  if (search && ad) expect(ad.y).toBeGreaterThanOrEqual(search.y + search.height);
 
   expect(categoryVisuals).not.toBeNull();
   expect(categoryVisuals?.heroBackground).toContain("linear-gradient");

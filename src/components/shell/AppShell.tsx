@@ -6,7 +6,7 @@ import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
-import { auditedOverrideStyleHrefs } from "@/lib/route-styles";
+import { auditedOverrideStyleHrefs, routeStyleHrefs } from "@/lib/route-styles";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface AppShellProps {
@@ -198,11 +198,21 @@ export function AppShell({
   useDarkBrowserChrome();
   useAccessibleFieldNameFallbacks(pathname);
 
+  const useMarketplaceIvory =
+    pathname !== "/" && !/^\/(?:seller(?:\/|$)|profile\/listings(?:\/|$))/.test(pathname);
+
   return (
     <>
       <AuditedOverrideStyles />
+      {useMarketplaceIvory ? (
+        <link
+          rel="stylesheet"
+          href={routeStyleHrefs.marketplaceIvory}
+          precedence="rawaj-audited-overrides"
+        />
+      ) : null}
       <div
-        className={`rawaj-app-shell ${routeClassName}`.trim()}
+        className={`rawaj-app-shell ${useMarketplaceIvory ? "rawaj-marketplace-ivory" : ""} ${routeClassName}`.trim()}
         data-shell-mode={config.mode}
         data-shell-dock={config.showDock}
         data-shell-footer={config.showFooter}

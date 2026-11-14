@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
 import { PageHeader } from "@/components/PageHeader";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { CategoriesListingDiscovery } from "@/features/categories/CategoriesListingDiscovery";
@@ -168,7 +169,11 @@ function CategoriesPage() {
 
   return (
     <>
-      <PageHeader title={text("الأقسام", "Categories")} titleIsPageHeading={false} />
+      <PageHeader
+        title={text("الأقسام", "Categories")}
+        titleIsPageHeading={false}
+        placementPage={null}
+      />
       <main className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
         <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
@@ -250,6 +255,8 @@ function CategoriesPage() {
             text={text}
           />
         )}
+
+        <PublicAdPlacementSlot placementPage="categories" />
 
         {!hasInvalidNode ? (
           <CategoriesListingDiscovery

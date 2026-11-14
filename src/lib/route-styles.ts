@@ -61,7 +61,10 @@ import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
 import stabilityAccessibilityFixesCss from "../stability-accessibility-fixes.css?url";
 import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
 
+import marketplaceIvoryCss from "../rawaj-marketplace-ivory.css?url";
+
 export const routeStyleHrefs = {
+  marketplaceIvory: marketplaceIvoryCss,
   homeSignature: homeSignatureCss,
   homeMarketplaceV2: homeMarketplaceV2Css,
   homeDiscoveryV3: homeDiscoveryV3Css,
