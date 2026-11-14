@@ -202,3 +202,32 @@ test("shared button shadows follow semantic color roles, not retired chromatic c
     assert.ok(!button.includes(legacy), `Shared Button must not hard-code ${legacy}`);
   }
 });
+
+const ivoryBadgePairs = [
+  ["accent", "#073836", "#dcefe8"],
+  ["success", "#14583c", "#e7f5ed"],
+  ["warning", "#714900", "#fff1d1"],
+  ["gold", "#6e4919", "#f8ead0"],
+  ["destructive", "#942a36", "#ffe9e8"],
+];
+
+test("shared badge variants use central status tokens, never embedded colors", () => {
+  const badge = await readFile(new URL("../src/components/ui/badge.tsx", import.meta.url), "utf8");
+  for (const [role] of ivoryBadgePairs) {
+    for (const property of ["border", "surface", "ink"]) {
+      const token = `--rawaj-badge-${role}-${property}`;
+      assert.ok(foundation.includes(`${token}:`), `Missing badge token: ${token}`);
+      assert.ok(badge.includes(`var(${token})`), `Badge must consume ${token}`);
+    }
+  }
+  assert.doesNotMatch(badge, /#[0-9a-f]{3,8}/i);
+  assert.ok(foundation.includes('.rawaj-app-shell[data-design-palette="ivory"]'));
+  assert.ok(!appShell.includes('data-design-palette='), "Do not opt in other routes before visual acceptance");
+});
+
+test("ivory badge labels meet normal-text AA contrast", () => {
+  for (const [name, ink, surface] of ivoryBadgePairs) {
+    const ratio = contrastRatio(ink, surface);
+    assert.ok(ratio >= 4.5, `${name} badge contrast must meet 4.5:1; got ${ratio.toFixed(2)}`);
+  }
+});
