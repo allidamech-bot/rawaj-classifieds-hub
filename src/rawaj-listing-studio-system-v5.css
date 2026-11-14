@@ -11,8 +11,8 @@
   --studio-v5-border: var(--rawaj-border);
   --studio-v5-border-strong: var(--rawaj-border-active);
   --studio-v5-text: var(--rawaj-identity-ink);
-  --studio-v5-text-soft: var(--rawaj-text-secondary);
-  --studio-v5-muted: var(--rawaj-text-muted);
+  --studio-v5-text-soft: #435650;
+  --studio-v5-muted: #53645e;
   --studio-v5-orange: var(--rawaj-identity-teal);
   --studio-v5-pink: var(--rawaj-identity-teal);
   --studio-v5-blue: var(--rawaj-identity-teal);
@@ -57,6 +57,7 @@
     radial-gradient(circle at 38% -12%, rgba(8, 99, 94, 0.14), transparent 38%),
     radial-gradient(circle at 82% 18%, rgba(255, 227, 176, 0.06), transparent 36%),
     linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
+  background-color: var(--rawaj-identity-petrol) !important;
   padding: clamp(1.15rem, 3.2vw, 2rem) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
@@ -811,8 +812,9 @@
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar .rawaj-button-primary {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
+  background-color: var(--rawaj-identity-petrol) !important;
   color: #fff !important;
-  box-shadow: 0 12px 25px rgba(218, 67, 160, 0.18) !important;
+  box-shadow: 0 8px 18px rgba(7, 56, 54, 0.16) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar button.bg-emerald-trust {

@@ -289,3 +289,16 @@ test("B2.3 opaque canvas roles preserve AA audit under gradients", async () => {
   assert.ok(action.includes("background-color: var(--rawaj-identity-petrol) !important"));
   assert.ok(css.includes('.rawaj-shell-header__title :is(h1, p)'));
 });
+
+test("B2.3 contrast surfaces have solid backdrops under gradients and WCAG readable checks", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  const v5 = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(audit.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(audit.includes("min-height: 2.75rem !important"));
+  assert.ok(audit.includes("color: #684b1f !important"));
+  assert.ok(audit.includes("background: #fff3dc !important"));
+  assert.ok(audit.includes("color: #14583c !important"));
+  assert.ok(v5.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(css.includes(".rawaj-brand-lockup__name"));
+  assert.ok(css.includes(".rawaj-app-header"));
+});

@@ -15,6 +15,23 @@
   --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
 }
 
+/* B2.3: the public header has an opaque petrol canvas even when it carries
+ * visual decoration; bind the desktop brand name to its light foreground.
+ * No global header changes and no changes to the accepted My Store.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-app-header {
+  background-color: var(--rawaj-identity-petrol) !important;
+}
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-brand-lockup__name {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 /* B2.3: page heading lives above the petrol shell, not on the ivory content.
  * Do not change the global header, My Store or the shared type hierarchy.
  */

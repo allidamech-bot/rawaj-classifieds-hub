@@ -210,3 +210,5 @@ The related `PriceChangeBanner` is also outside the main route canvas; it now op
 Listing photo fallbacks now opt into an explicit `identity` mode on the shared `PlaceholderArt` primitive, limiting the petrol/champagne glyph and glow to the B2.2 gallery and viewer. Default placeholder rendering in all other routes remains unchanged, and missing images remain honestly represented.
 
 B2.3 removes the remaining forced-dark studio skins at original V7B and V18 owners, and keeps the approved listing studio Safari/PWA chrome petrol while leaving all unauthorised routes on the previous scheme.
+
+B2.3 browser acceptance correction: solid petrol background beneath decorative hero and action gradients, readable quality checklist states, 44px taxonomy breadcrumb touch targets, and route-scoped header-brand contrast. Preserves all create/edit data flows and B3 ownership. Await final-SHA browser/visual acceptance before merge.
