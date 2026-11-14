@@ -47,8 +47,11 @@
   margin-bottom: 0.7rem !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar__heading h2 {
-  color: var(--chat-ink) !important;
+/* Stronger than the retired personal-space heading selector in either
+ * stylesheet order; no changes to conversation semantics. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar .rawaj-conversation-sidebar__heading h2 {
+  color: #173d38 !important;
   font-size: 0.95rem !important;
 }
 
