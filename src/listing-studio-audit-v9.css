@@ -19,8 +19,8 @@
   border: 1px solid var(--rawaj-border-strong) !important;
   border-radius: 1.35rem !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.16), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.11), transparent 38%),
+    radial-gradient(circle at 100% 0%, rgba(255, 227, 176, 0.11), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(8, 99, 94, 0.14), transparent 38%),
     linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
   box-shadow: 0 15px 34px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
@@ -31,7 +31,7 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__eyebrow {
   margin: 0 0 0.25rem !important;
-  color: var(--rawaj-identity-teal) !important;
+  color: var(--rawaj-identity-champagne) !important;
   font-size: 0.72rem !important;
   font-weight: 800 !important;
 }
@@ -39,7 +39,7 @@
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero h1 {
   max-width: 34ch;
   margin: 0 !important;
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-identity-ivory) !important;
   font-size: clamp(1.05rem, 3vw, 1.45rem) !important;
   line-height: 1.45 !important;
 }
@@ -47,7 +47,8 @@
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__description {
   max-width: 64ch !important;
   margin: 0.35rem 0 0 !important;
-  color: var(--rawaj-text-secondary) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  opacity: 0.87;
   font-size: 0.76rem !important;
   line-height: 1.7 !important;
 }
@@ -148,7 +149,7 @@
   border-color: var(--rawaj-identity-teal) !important;
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-teal) !important;
-  box-shadow: 0 8px 18px rgba(155, 40, 111, 0.2) !important;
+  box-shadow: 0 8px 18px rgba(7, 56, 54, 0.14) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps li[data-state="done"] button {

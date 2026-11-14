@@ -217,3 +217,12 @@ test("B2.3 retires direct dark gradients in studio visual owners", async () => {
   assert.ok(audit.includes("background: var(--rawaj-surface-selected) !important"));
   assert.ok(css.includes("background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal))"));
 });
+
+
+test("B2.3 petrol header retains readable ivory text and champagne accent", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  assert.match(audit, /\.rawaj-studio-hero h1 \{[\s\S]*?color: var\(--rawaj-identity-ivory\) !important/);
+  assert.match(audit, /\.rawaj-studio-hero__eyebrow \{[\s\S]*?color: var\(--rawaj-identity-champagne\) !important/);
+  assert.match(audit, /\.rawaj-studio-hero__description \{[\s\S]*?color: var\(--rawaj-identity-ivory\) !important/);
+  assert.doesNotMatch(audit, /rgba\(220, 62, 182, 0\.11\)/);
+});
