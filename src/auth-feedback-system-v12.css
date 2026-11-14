@@ -6,12 +6,12 @@
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
 ) {
-  --auth-v12-surface: var(--rawaj-identity-ivory);
-  --auth-v12-surface-soft: #fffaf3;
-  --auth-v12-border: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent);
-  --auth-v12-border-active: var(--rawaj-identity-teal);
-  --auth-v12-copy: color-mix(in srgb, var(--rawaj-identity-ink) 82%, white);
-  --auth-v12-muted: #536660;
+  --auth-v12-surface: var(--rawaj-identity-ivory) !important;
+  --auth-v12-surface-soft: #fffaf3 !important;
+  --auth-v12-border: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
+  --auth-v12-border-active: var(--rawaj-identity-teal) !important;
+  --auth-v12-copy: color-mix(in srgb, var(--rawaj-identity-ink) 82%, white) !important;
+  --auth-v12-muted: #536660 !important;
 }
 
 .rawaj-app-shell[data-shell-mode]:is(
