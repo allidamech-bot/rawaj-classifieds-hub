@@ -337,14 +337,14 @@ test("B2.2 detail uses canonical palette and no legacy forced theme", async () =
     load("rawaj-marketplace-unified-v16.css"),
     load("rawaj-marketplace-unified-v16-actions.css"),
   ]);
-  assert.match(foundation, /\\.rawaj-detail-v2\\[data-design-palette="ivory"\\]/);
+  assert.ok(foundation.includes('.rawaj-detail-v2[data-design-palette="ivory"]'));
   assert.match(route, /data-design-palette="ivory"/);
   assert.match(dock, /data-design-palette="ivory"/);
   for (const token of ["ivory", "teal", "petrol", "champagne"]) {
     assert.ok(detail.includes(`var(--rawaj-identity-${token})`));
   }
   for (const old of [v7b, v14, v15, v16, actions]) {
-    assert.doesNotMatch(old, /\\.rawaj-detail-(?:v2|summary|section|seller|price)|\\.rawaj-contact-dock/);
+    assert.ok(!old.includes(".rawaj-detail-") && !old.includes(".rawaj-contact-dock"));
   }
   assert.ok(browserChrome.includes("listings"));
 });
