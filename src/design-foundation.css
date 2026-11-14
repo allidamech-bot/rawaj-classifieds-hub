@@ -153,6 +153,12 @@
   --rawaj-button-shadow-primary-hover: 0 10px 24px color-mix(in srgb, var(--rawaj-action-primary) 24%, transparent);
   --rawaj-button-shadow-accent: 0 10px 24px color-mix(in srgb, var(--rawaj-action-coral) 20%, transparent);
   --rawaj-button-shadow-brand: 0 10px 24px color-mix(in srgb, var(--rawaj-action-brand) 22%, transparent);
+  /* Component roles stay semantic across legacy and opt-in palettes. */
+  --rawaj-card-interactive-border: var(--rawaj-border-active);
+  --rawaj-card-interactive-shadow: var(--shadow-raised);
+  --rawaj-control-hover-border: var(--rawaj-border-active);
+  --rawaj-control-focus-border: var(--ring);
+  --rawaj-dialog-overlay-background: color-mix(in srgb, var(--primary) 45%, transparent);
   --shadow-card: var(--shadow-soft);
 
   --motion-fast: 150ms;

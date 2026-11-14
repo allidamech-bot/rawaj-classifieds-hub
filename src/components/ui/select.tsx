@@ -20,7 +20,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     data-ui="select-trigger"
     className={cn(
-      "flex h-[var(--rawaj-control-height-lg)] w-full cursor-pointer items-center justify-between whitespace-nowrap rounded-[var(--rawaj-radius-input)] border border-[var(--rawaj-border-strong)] bg-[var(--rawaj-surface-inset)] px-3.5 py-2 text-sm font-medium text-foreground shadow-none transition-[border-color,box-shadow,background-color] duration-[var(--motion-fast)] data-[placeholder]:text-muted-foreground hover:border-[var(--rawaj-border-active)] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/15 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/15 disabled:cursor-not-allowed disabled:bg-muted-surface disabled:text-muted-foreground disabled:opacity-70 [&>span]:line-clamp-1",
+      "flex h-[var(--rawaj-control-height-lg)] w-full cursor-pointer items-center justify-between whitespace-nowrap rounded-[var(--rawaj-radius-input)] border border-[var(--rawaj-border-strong)] bg-[var(--rawaj-surface-inset)] px-3.5 py-2 text-sm font-medium text-foreground shadow-none transition-[border-color,box-shadow,background-color] duration-[var(--motion-fast)] data-[placeholder]:text-muted-foreground hover:border-[var(--rawaj-control-hover-border)] focus:border-[var(--rawaj-control-focus-border)] focus:outline-none focus:ring-2 focus:ring-ring/15 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/15 disabled:cursor-not-allowed disabled:bg-muted-surface disabled:text-muted-foreground disabled:opacity-70 [&>span]:line-clamp-1",
       className,
     )}
     {...props}
@@ -39,7 +39,7 @@ const SelectScrollUpButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollUpButton
     ref={ref}
-    className={cn("flex min-h-9 cursor-default items-center justify-center py-1", className)}
+    className={cn("flex min-h-11 cursor-default items-center justify-center py-1", className)}
     {...props}
   >
     <ChevronUp className="h-4 w-4" />
@@ -53,7 +53,7 @@ const SelectScrollDownButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollDownButton
     ref={ref}
-    className={cn("flex min-h-9 cursor-default items-center justify-center py-1", className)}
+    className={cn("flex min-h-11 cursor-default items-center justify-center py-1", className)}
     {...props}
   >
     <ChevronDown className="h-4 w-4" />

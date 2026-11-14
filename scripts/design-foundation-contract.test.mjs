@@ -14,6 +14,9 @@ const compatibilityLayer = await readFile(
 );
 const button = await readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8");
 const card = await readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8");
+const input = await readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8");
+const select = await readFile(new URL("../src/components/ui/select.tsx", import.meta.url), "utf8");
+const dialog = await readFile(new URL("../src/components/ui/dialog.tsx", import.meta.url), "utf8");
 const appShell = await readFile(
   new URL("../src/components/shell/AppShell.tsx", import.meta.url),
   "utf8",
@@ -230,4 +233,39 @@ test("ivory badge labels meet normal-text AA contrast", () => {
     const ratio = contrastRatio(ink, surface);
     assert.ok(ratio >= 4.5, `${name} badge contrast must meet 4.5:1; got ${ratio.toFixed(2)}`);
   }
+});
+
+test("shared Card and form controls consume canonical interaction roles", () => {
+  const roles = [
+    "--rawaj-card-interactive-border",
+    "--rawaj-card-interactive-shadow",
+    "--rawaj-control-hover-border",
+    "--rawaj-control-focus-border",
+    "--rawaj-dialog-overlay-background",
+  ];
+  for (const role of roles) {
+    assert.ok(foundation.includes(`${role}:`), `Missing canonical component role: ${role}`);
+  }
+  for (const role of ["--rawaj-card-interactive-border", "--rawaj-card-interactive-shadow"]) {
+    assert.ok(card.includes(`var(${role})`), `Card must consume ${role}`);
+  }
+  for (const role of ["--rawaj-control-hover-border", "--rawaj-control-focus-border"]) {
+    assert.ok(input.includes(`var(${role})`), `Input must consume ${role}`);
+    assert.ok(select.includes(`var(${role})`), `Select must consume ${role}`);
+  }
+  assert.ok(dialog.includes("bg-[var(--rawaj-dialog-overlay-background)]"));
+  assert.ok(
+    foundation.includes(
+      "--rawaj-dialog-overlay-background: color-mix(in srgb, var(--primary) 45%, transparent);",
+    ),
+    "Legacy dialog overlay must retain 45% primary opacity",
+  );
+});
+
+test("shared cards and dialogs respect reduced motion; select scroll buttons are touch-sized", () => {
+  assert.ok(card.includes("motion-reduce:transition-none"));
+  assert.ok(card.includes("motion-reduce:hover:transform-none"));
+  assert.ok(dialog.includes("motion-reduce:animate-none"));
+  const controls = select.match(/flex min-h-11 cursor-default items-center justify-center py-1/g) ?? [];
+  assert.equal(controls.length, 2, "Both select scroll buttons must meet 44px minimum");
 });

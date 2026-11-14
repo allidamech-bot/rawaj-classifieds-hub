@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-[var(--rawaj-radius-card)] border text-[var(--rawaj-text-primary)] transition-[border-color,box-shadow,transform] duration-[var(--motion-fast)]",
+  "rounded-[var(--rawaj-radius-card)] border text-[var(--rawaj-text-primary)] transition-[border-color,box-shadow,transform] duration-[var(--motion-fast)] motion-reduce:transition-none",
   {
     variants: {
       variant: {
@@ -35,7 +35,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       className={cn(
         cardVariants({ variant }),
         interactive &&
-          "hover:-translate-y-0.5 hover:border-[var(--rawaj-border-active)] hover:shadow-[var(--shadow-raised)] focus-within:border-[var(--rawaj-border-active)]",
+          "hover:-translate-y-0.5 hover:border-[var(--rawaj-card-interactive-border)] hover:shadow-[var(--rawaj-card-interactive-shadow)] focus-within:border-[var(--rawaj-card-interactive-border)] motion-reduce:hover:transform-none",
         className,
       )}
       {...props}
