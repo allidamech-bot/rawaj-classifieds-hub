@@ -211,8 +211,12 @@ test("browser chrome follows the home and categories route colors", async ({ pag
   await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
 
   await openHydrated(page, "/categories");
-  await expect(themeMeta).toHaveAttribute("content", "#242529");
-  await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
+  await expect(themeMeta).toHaveAttribute("content", "#073836");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+  await expect(page.locator("main.rawaj-categories-v2")).toHaveAttribute(
+    "data-design-palette",
+    "ivory",
+  );
 });
 
 test("signed-out My Store keeps approved light shell and sign-in affordance", async ({ page }) => {

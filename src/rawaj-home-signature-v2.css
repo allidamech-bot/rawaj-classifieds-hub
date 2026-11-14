@@ -565,7 +565,8 @@
 
 .rawaj-signature-latest .rawaj-signature-section-header__title {
   color: #222925;
-  background-color: transparent;
+  /* Match the existing cream artwork with an opaque surface for readable text at 200% scaling. */
+  background-color: #f6e5cc;
 }
 
 .rawaj-signature-latest .rawaj-signature-section-header__title::before {

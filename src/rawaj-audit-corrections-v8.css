@@ -149,40 +149,94 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
    selectors to turn the entire directory into one repeated grey panel.
    -------------------------------------------------------------------------- */
 
+/* The categories route uses the approved identity without a site-wide CSS override. */
+.rawaj-app-shell[data-resolved-pathname="/categories"] {
+  background: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] :is(.rawaj-app-shell__page, .rawaj-app-shell__content) {
+  background: var(--rawaj-identity-ivory) !important;
+}
+
+/* Real opaque foundation beneath navigation and header artwork. */
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  :is(.rawaj-app-header, .rawaj-shell-header, .rawaj-site-footer, .rawaj-bottom-nav-shell) {
+  background-color: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 nav a.rawaj-chip {
+  background-color: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+/* Secondary footer copy meets AA contrast on the petrol navigation/footer. */
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  .rawaj-site-footer :is(.rawaj-site-footer__mobile-copy, .rawaj-site-footer__mobile-brand p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border: 1px solid rgba(255, 227, 176, 0.56) !important;
   background:
-    radial-gradient(circle at 8% 112%, rgba(255, 117, 89, 0.32), transparent 31%),
-    radial-gradient(circle at 46% -16%, rgba(223, 73, 181, 0.25), transparent 38%),
-    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.22), transparent 36%),
-    linear-gradient(145deg, #2d2e34, #26272c 58%, #23242a) !important;
-  color: var(--rawaj-text-primary) !important;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2) !important;
+    radial-gradient(ellipse at 10% 110%, rgba(35, 118, 106, 0.6), transparent 63%),
+    linear-gradient(145deg, var(--rawaj-identity-petrol), #0c534e) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  box-shadow: 0 14px 38px rgba(7, 56, 54, 0.14) !important;
+  background-color: var(--rawaj-identity-petrol) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero .rawaj-eyebrow {
+  color: var(--rawaj-identity-champagne) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero :is(h1, p:not(.rawaj-eyebrow)) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero > div:first-child > .flex > span:first-child {
+  color: var(--rawaj-identity-petrol) !important;
+  background: var(--rawaj-identity-champagne) !important;
+  box-shadow: 0 8px 20px rgba(0, 22, 20, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label {
+  border-color: #e4d5bb !important;
+  background: #fffaf3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input,
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input::placeholder {
+  color: var(--rawaj-identity-ink) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card {
   border: 1px solid var(--rawaj-border) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 32%),
-    linear-gradient(150deg, #303137, #292a30) !important;
-  color: var(--rawaj-text-secondary) !important;
-  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.12) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-identity-ink) !important;
+  box-shadow: 0 5px 18px rgba(7, 56, 54, 0.06) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/categories"]
-  .rawaj-category-directory-card
-  .text-brand-orange {
-  color: var(--rawaj-text-coral) !important;
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card :is(.text-foreground, h2, h3) {
+  color: var(--rawaj-identity-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card .text-muted-foreground {
+  color: #435650 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card :is(.text-brand-orange, .text-gold) {
+  color: var(--rawaj-identity-teal) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 2) .category-tile {
-  background: rgba(223, 73, 181, 0.1) !important;
-  color: #ef8bd3 !important;
+  background: #f8ead0 !important;
+  color: #76552c !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:nth-child(3n + 3) .category-tile {
-  background: rgba(104, 173, 255, 0.1) !important;
-  color: #8fc2ff !important;
+  background: #dcefe8 !important;
+  color: #10554b !important;
 }
 
 /* Keep the editorial accents, but avoid masonry gaps when a category level has

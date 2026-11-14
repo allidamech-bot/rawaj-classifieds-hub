@@ -18,6 +18,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
+import { PublicAdPlacementSlot } from "@/components/PublicAdPlacementSlot";
 import { PlaceholderArt } from "@/components/PlaceholderArt";
 import { CategoriesListingDiscovery } from "@/features/categories/CategoriesListingDiscovery";
 import { loadPublicCategoriesPageData } from "@/features/categories/public-categories-page-data";
@@ -168,8 +169,15 @@ function CategoriesPage() {
 
   return (
     <>
-      <PageHeader title={text("الأقسام", "Categories")} titleIsPageHeading={false} />
-      <main className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <PageHeader
+        title={text("الأقسام", "Categories")}
+        titleIsPageHeading={false}
+        placementPage={null}
+      />
+      <main
+        data-design-palette="ivory"
+        className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5"
+      >
         <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
           <div className="p-4 sm:p-6">
             <div className="flex items-start gap-3">
@@ -250,6 +258,8 @@ function CategoriesPage() {
             text={text}
           />
         )}
+
+        <PublicAdPlacementSlot placementPage="categories" />
 
         {!hasInvalidNode ? (
           <CategoriesListingDiscovery

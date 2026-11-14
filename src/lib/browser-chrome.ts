@@ -7,6 +7,9 @@ export function resolveBrowserChrome(pathname: string) {
   if (pathname === "/") {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
+  if (pathname === "/categories") {
+    return { colorScheme: "light", themeColor: "#073836" } as const;
+  }
   if (pathname === "/profile/listings" || pathname.startsWith("/seller/")) {
     return { colorScheme: "light", themeColor: "#fcfaf7" } as const;
   }
