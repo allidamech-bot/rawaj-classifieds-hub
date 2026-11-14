@@ -119,6 +119,11 @@
   background: #075d52 !important;
 }
 
+/* On the petrol stage, avoid a 4.44:1 translucent caption at narrow widths. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage p.mt-3 {
+  color: #f7f5ed !important;
+}
+
 /* Results headline is nested inside a layout div; prevent old white-on-ivory text tokens. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 section.mt-7 h2.text-primary {
   color: var(--rawaj-identity-ink) !important;
