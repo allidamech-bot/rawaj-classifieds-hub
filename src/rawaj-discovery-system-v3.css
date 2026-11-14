@@ -155,7 +155,7 @@
   padding-top: 0;
 }
 
-.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   border: 1px solid rgba(255, 255, 255, 0.075) !important;
   border-radius: 1.15rem !important;
   background: linear-gradient(155deg, rgba(49, 50, 56, 0.98), rgba(39, 40, 46, 0.98)) !important;
@@ -164,7 +164,7 @@
     0 12px 28px rgba(0, 0, 0, 0.16) !important;
 }
 
-.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *)):hover {
+.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)):hover {
   transform: translateY(-2px) !important;
   border-color: rgba(100, 169, 255, 0.18) !important;
   box-shadow:
@@ -172,14 +172,14 @@
     0 18px 36px rgba(0, 0, 0, 0.22) !important;
 }
 
-.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *)):focus-within {
+.rawaj-adaptive-card:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)):focus-within {
   border-color: rgba(100, 169, 255, 0.32) !important;
   box-shadow:
     0 0 0 3px rgba(100, 169, 255, 0.09),
     0 18px 36px rgba(0, 0, 0, 0.22) !important;
 }
 
-.rawaj-adaptive-card__media:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__media:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   background:
     radial-gradient(circle at 42% 38%, rgba(223, 73, 181, 0.09), transparent 32%),
     linear-gradient(145deg, #2b2c32, #222329) !important;
@@ -189,7 +189,7 @@
   object-fit: cover;
 }
 
-.rawaj-listing-media--placeholder:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-listing-media--placeholder:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   border: 0 !important;
   border-radius: 0 !important;
   background:
@@ -198,43 +198,43 @@
     linear-gradient(145deg, #2b2d33, #212228) !important;
 }
 
-.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   min-height: 1.65rem !important;
   border-color: rgba(255, 255, 255, 0.13) !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2) !important;
 }
 
-.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *))[data-tone="featured"] {
+.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *))[data-tone="featured"] {
   background: linear-gradient(135deg, rgba(255, 115, 87, 0.94), rgba(218, 67, 160, 0.92)) !important;
 }
 
-.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *))[data-tone="reserved"] {
+.rawaj-adaptive-card__status:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *))[data-tone="reserved"] {
   background: rgba(203, 150, 62, 0.92) !important;
 }
 
-.rawaj-adaptive-card__action:where(:not(.rawaj-search-results-v1 *)) > * {
+.rawaj-adaptive-card__action:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) > * {
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: rgba(31, 32, 37, 0.82) !important;
   color: #9bc7ff !important;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22) !important;
 }
 
-.rawaj-adaptive-card__body:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__body:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   padding: 0.82rem !important;
 }
 
-.rawaj-adaptive-card__heading:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__heading:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   gap: 0.3rem 0.45rem !important;
 }
 
-.rawaj-adaptive-card__price:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__price:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   color: #ff8a72 !important;
   font-size: clamp(0.82rem, 3vw, 0.98rem) !important;
   font-weight: 800 !important;
 }
 
-.rawaj-adaptive-card__category:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__category:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   max-width: 7.5rem !important;
   border: 1px solid rgba(255, 255, 255, 0.055);
   background: rgba(255, 255, 255, 0.035) !important;
@@ -243,7 +243,7 @@
   font-weight: 650 !important;
 }
 
-.rawaj-adaptive-card__title:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__title:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   min-height: 2.35rem !important;
   color: var(--rawaj-text-primary, #f3f0ec) !important;
   font-size: clamp(0.75rem, 2.8vw, 0.88rem) !important;
@@ -251,33 +251,33 @@
   line-height: 1.55 !important;
 }
 
-.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   gap: 0.34rem !important;
   margin-top: 0.55rem !important;
 }
 
-.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *)) > div {
+.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) > div {
   border: 1px solid rgba(255, 255, 255, 0.045);
   border-radius: 0.68rem !important;
   background: rgba(255, 255, 255, 0.027) !important;
   padding: 0.4rem 0.28rem !important;
 }
 
-.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *)) dt {
+.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) dt {
   color: var(--rawaj-text-muted, #92949d) !important;
 }
 
-.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *)) dd {
+.rawaj-adaptive-card__facts:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) dd {
   color: var(--rawaj-text-secondary, #c3c4c9) !important;
   font-weight: 700 !important;
 }
 
-.rawaj-adaptive-card__meta:where(:not(.rawaj-search-results-v1 *)) {
+.rawaj-adaptive-card__meta:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) {
   border-top-color: rgba(255, 255, 255, 0.055) !important;
   color: var(--rawaj-text-muted, #92949d) !important;
 }
 
-.rawaj-adaptive-card__meta:where(:not(.rawaj-search-results-v1 *)) svg {
+.rawaj-adaptive-card__meta:where(:not(.rawaj-search-results-v1 *):not(.rawaj-detail-v2 *)) svg {
   color: #75b2ff !important;
 }
 

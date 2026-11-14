@@ -21,15 +21,18 @@ export function ViewedBeforeBanner({ listingId }: { listingId: string }) {
       <PriceChangeBanner listingId={listingId} />
       {previousViewAt && (
         <div className="container-wide pt-3">
-          <section className="flex items-center gap-3 rounded-[1.1rem] border border-border/70 bg-card/90 p-3 shadow-soft">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted-surface text-primary">
+          <section
+            className="rawaj-detail-viewed-before flex items-center gap-3 rounded-[1.1rem] border p-3 shadow-soft"
+            data-design-palette="ivory"
+          >
+            <span className="rawaj-detail-viewed-before__icon grid h-9 w-9 shrink-0 place-items-center rounded-xl">
               <Clock3 className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-extrabold">
+              <p className="rawaj-detail-viewed-before__title text-xs font-extrabold">
                 {text("شاهدت هذا الإعلان من قبل", "You viewed this listing before")}
               </p>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
+              <p className="rawaj-detail-viewed-before__timestamp mt-0.5 text-[10px]">
                 {text("آخر مشاهدة", "Last viewed")}: {formatViewedAt(previousViewAt, language)}
               </p>
             </div>

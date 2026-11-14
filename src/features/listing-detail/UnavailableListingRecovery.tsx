@@ -11,7 +11,10 @@ export function UnavailableListingRecovery() {
   return (
     <>
       <PageHeader title={text("تفاصيل الإعلان", "Listing details")} />
-      <main className="container-wide mobile-page-bottom pt-8 sm:pt-10">
+      <main
+        className="rawaj-detail-v2 rawaj-detail-recovery container-wide mobile-page-bottom pt-8 sm:pt-10"
+        data-design-palette="ivory"
+      >
         <FeedbackState
           title={text("هذا الإعلان لم يعد متاحاً", "This listing is no longer available")}
           description={text(

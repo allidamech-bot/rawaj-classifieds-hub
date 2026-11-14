@@ -129,36 +129,4 @@
   line-height: 1.8 !important;
 }
 
-/* On narrow detail screens the price and specification rows must adapt to the
- * available width instead of clipping or breaking Arabic one character per line. */
-@media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.25rem !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > :is(span, small, strong) {
-    grid-column: 1 !important;
-    grid-row: auto !important;
-    min-width: 0 !important;
-    justify-self: start !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-price > strong {
-    max-width: 100% !important;
-    font-size: clamp(1.05rem, 5.8vw, 1.4rem) !important;
-    line-height: 1.35 !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs > div {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.2rem !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-specs dd {
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-  }
-}
+/* B2.2: mobile listing detail layout moved into listing-detail-v3.css. */

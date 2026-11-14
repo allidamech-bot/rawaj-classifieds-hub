@@ -84,7 +84,7 @@ export function ListingMediaExperience({
             </>
           ) : (
             <div className="rawaj-detail-media__placeholder">
-              <PlaceholderArt type={placeholder} aspect="wide" />
+              <PlaceholderArt type={placeholder} aspect="wide" identity />
             </div>
           )}
 
@@ -175,7 +175,7 @@ export function ListingMediaExperience({
                   aria-label={text(`عرض الصورة ${index + 1}`, `View image ${index + 1}`)}
                 >
                   {failedUrls.has(imageUrl) ? (
-                    <PlaceholderArt type={placeholder} aspect="standard" />
+                    <PlaceholderArt type={placeholder} aspect="standard" identity />
                   ) : (
                     <img
                       src={imageUrl}

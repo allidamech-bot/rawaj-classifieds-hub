@@ -663,7 +663,7 @@
 }
 .rawaj-detail-seller__stats > div {
   border-radius: 0.9rem;
-  background: var(--rawaj-surface-warm);
+  background: var(--rawaj-muted-surface);
   padding: 0.65rem;
 }
 .rawaj-detail-seller__stats svg {

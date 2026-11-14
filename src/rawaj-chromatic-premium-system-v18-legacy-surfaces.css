@@ -257,43 +257,11 @@
   border-color: rgba(216,174,95,.48) !important;
   box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
 }
-
-/* -------------------------------------------------------------------------- */
-/* Listing detail + seller storefront                                         */
-/* -------------------------------------------------------------------------- */
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2,
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-v2 {
   background:
     radial-gradient(circle at 92% 2%, rgba(74,140,255,.065), transparent 28rem),
     radial-gradient(circle at 4% 55%, rgba(198,44,120,.055), transparent 30rem),
     linear-gradient(180deg, #0f131a, #0b0e14) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(
-  .rawaj-detail-summary,
-  .rawaj-detail-section,
-  .rawaj-detail-seller,
-  .rawaj-detail-reference,
-  .rawaj-detail-safety
-) {
-  border-color: rgba(216,174,95,.14) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216,174,95,.045), transparent 38%),
-    linear-gradient(150deg, #191d26, #12161d) !important;
-  box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-summary {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(219,73,179,.095), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(74,140,255,.06), transparent 38%),
-    linear-gradient(150deg, #1d1c26, #141820) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-contact-dock {
-  border-top-color: rgba(216,174,95,.11) !important;
-  background: rgba(15,18,25,.95) !important;
-  box-shadow: 0 -12px 32px rgba(0,0,0,.34) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] .rawaj-storefront-identity {
