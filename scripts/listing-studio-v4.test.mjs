@@ -164,3 +164,160 @@ test("phase 4 contract runs in the standard precheck flow", () => {
   assert.match(parsed.scripts.precheck, /test:listing-studio-v4/);
   assert.match(parsed.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
 });
+
+
+test("B2.3 create and edit share one studio V4 UI without global inline inputs", async () => {
+  const editor = await readFile(new URL("../src/routes/profile/listings_.$id.tsx", import.meta.url), "utf8");
+  assert.match(route, /rawaj-listing-studio-v4[\s\S]*?data-studio-workflow="create"/);
+  assert.match(editor, /rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage/);
+  assert.match(editor, /data-studio-workflow="edit"/);
+  assert.doesNotMatch(editor, /<style>\{\x60\.input\{/);
+  assert.match(css, /\.rawaj-listing-studio-v4 \.input:disabled/);
+  for (const preserved of [
+    "submitOwnerListingForReview",
+    "deleteOwnerListing",
+    "deleteListingImage",
+    "ListingStudioPreview",
+    "ListingStudioCompletionCard",
+  ]) {
+    assert.ok(editor.includes(preserved), `Editor contract removed: ${preserved}`);
+  }
+});
+
+
+test("B2.3 uses one accessible route-owned gate for publishing and editor recovery", async () => {
+  const editor = await readFile(new URL("../src/routes/profile/listings_.$id.tsx", import.meta.url), "utf8");
+  assert.equal((route.match(/className="rawaj-studio-gate container-wide/g) || []).length, 2);
+  assert.equal((editor.match(/className="rawaj-studio-gate container-wide/g) || []).length, 2);
+  assert.match(route, /className="rawaj-studio-success rawaj-studio-gate__card/);
+  assert.match(editor, /rawaj-studio-gate__description/);
+  assert.match(css, /\.rawaj-studio-gate > \.rawaj-studio-gate__card/);
+  assert.match(css, /\.rawaj-studio-gate :is\(a, button\):focus-visible/);
+  assert.match(editor, /onClick=\{\(\) => void loadSetup\(\)\}/);
+  assert.match(route, /actionSearch=\{\{ returnTo: "\/add-listing" \}\}/);
+});
+
+
+test("B2.3 studio palette opt-in is route-scoped at the shared shell", async () => {
+  const appShell = await readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8");
+  assert.match(appShell, /resolveRouteStyleScope\(pathname\)\.listingStudio/);
+  assert.match(appShell, /data-design-palette=\{useApprovedStudioIdentity \? "ivory" : undefined\}/);
+  assert.match(css, /data-resolved-pathname="\/add-listing"/);
+  assert.match(css, /data-resolved-pathname\^="\/profile\/listings\/"/);
+  assert.match(css, /--rawaj-shell-canvas: var\(--rawaj-identity-ivory\)/);
+});
+
+
+test("B2.3 retires direct dark gradients in studio visual owners", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  for (const retired of ["#303138", "#303137", "#2a2b31", "#292a30", "#343039", "#2c2b31", "#2d333d"]) {
+    assert.ok(!audit.includes(retired), `Retired dark surface survives: ${retired}`);
+  }
+  assert.ok(audit.includes("background: var(--rawaj-card-background) !important"));
+  assert.ok(audit.includes("background: var(--rawaj-surface-selected) !important"));
+  assert.ok(css.includes("background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal))"));
+});
+
+
+test("B2.3 petrol header retains readable ivory text and champagne accent", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  assert.match(audit, /\.rawaj-studio-hero h1 \{[\s\S]*?color: var\(--rawaj-identity-ivory\) !important/);
+  assert.match(audit, /\.rawaj-studio-hero__eyebrow \{[\s\S]*?color: var\(--rawaj-identity-champagne\) !important/);
+  assert.match(audit, /\.rawaj-studio-hero__description \{[\s\S]*?color: var\(--rawaj-identity-ivory\) !important/);
+  assert.doesNotMatch(audit, /rgba\(220, 62, 182, 0\.11\)/);
+});
+
+
+test("B2.3 source V5 uses canonical light panels and semantic text colors", async () => {
+  const system = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(system.includes("--studio-v5-panel: var(--rawaj-card-background)"));
+  assert.ok(system.includes("--studio-v5-text: var(--rawaj-identity-ink)"));
+  assert.ok(system.includes("linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal))"));
+  for (const old of ["#ff7559", "#df49b5", "#68adff", "#ff7f87", "#292a30"]) {
+    assert.ok(!system.includes(old), `V5 has retired color ${old}`);
+  }
+});
+
+
+test("B2.3 excludes create/edit from V7 and V17 forced dark shells at source", async () => {
+  const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
+  const v17 = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
+  for (const css of [v7, v17]) {
+    assert.ok(css.includes(':not([data-resolved-pathname="/add-listing"])'));
+    assert.ok(css.includes(':not([data-resolved-pathname^="/profile/listings/"])'));
+    assert.ok(css.includes(':not([data-resolved-pathname^="/listings/"])'));
+    assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  }
+  assert.ok(!v17.includes('.rawaj-app-shell[data-resolved-pathname="/add-listing"],\\n.rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] {'));
+  assert.ok(v7.includes('[data-resolved-pathname="/more"]'));
+});
+
+test("B2.3 has no dark V7B/V18 studio owner and has matching mobile chrome", async () => {
+  const read = (p) => readFile(new URL("../src/"+p,import.meta.url),"utf8");
+  const [v7b,v18,chrome]=await Promise.all([
+    read("rawaj-page-by-page-recovery-v7b.css"),
+    read("rawaj-chromatic-premium-system-v18-legacy-surfaces.css"),
+    read("lib/browser-chrome.ts"),
+  ]);
+  assert.ok(!v7b.includes("/* 6. Add/edit listing studio */"));
+  assert.ok(!v18.includes("Listing studio: add/edit/manage"));
+  assert.ok(v7b.includes(':not([data-design-palette="ivory"])'));
+  assert.ok(chrome.includes('pathname === "/add-listing"'));
+  assert.ok(chrome.includes('themeColor: "#073836"'));
+});
+
+test("B2.3 V8 no longer forces charcoal cards over the studio's ivory panels", async () => {
+  const css = await readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8");
+  assert.ok(!css.includes("Listing studio: compact hierarchy"));
+  assert.ok(!css.includes(".rawaj-studio-quality"));
+  assert.ok(css.includes("Admin: readable semantic surfaces"));
+});
+
+
+test("B2.3 ivory legacy exclusion preserves accepted My Store selector specificity", async () => {
+  const legacy = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7b.css", import.meta.url), "utf8");
+  assert.ok(legacy.includes('.rawaj-app-shell:where(:not([data-design-palette="ivory"]))'));
+  assert.ok(!legacy.includes('.rawaj-app-shell:not([data-design-palette="ivory"])'));
+  assert.ok(legacy.includes('[data-resolved-pathname="/profile/listings"]'));
+});
+
+test("B2.3 opaque canvas roles preserve AA audit under gradients", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  const action = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(audit.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(audit.includes("background-color: var(--rawaj-card-background) !important"));
+  assert.ok(action.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(css.includes('.rawaj-shell-header__title :is(h1, p)'));
+});
+
+test("B2.3 contrast surfaces have solid backdrops under gradients and WCAG readable checks", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  const v5 = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(audit.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(audit.includes("min-height: 2.75rem !important"));
+  assert.ok(audit.includes("color: #684b1f !important"));
+  assert.ok(audit.includes("background: #fff3dc !important"));
+  assert.ok(audit.includes("color: #14583c !important"));
+  assert.ok(v5.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(css.includes(".rawaj-brand-lockup__name"));
+  assert.ok(css.includes(".rawaj-app-header"));
+});
+
+test("B2.3 V20 no longer overrides the studio continue button with retired gradients", async () => {
+  const v20 = await readFile(new URL("../src/rawaj-chromatic-premium-system-v20-state-consistency.css", import.meta.url), "utf8");
+  const actionSection = v20.slice(v20.indexOf("/* Keep action hierarchy deterministic."));
+  assert.ok(!actionSection.includes('[data-resolved-pathname="/add-listing"],'));
+  assert.ok(css.includes("--rawaj-card-background: #fffaf3"));
+  assert.ok(css.includes("background-color: var(--rawaj-card-background)"));
+});
+
+test("B2.3 form labels, selected taxonomy and clipped search label meet approved foreground contract", async () => {
+  const v5 = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  assert.ok(v5.includes("label > span.text-muted-foreground"));
+  assert.ok(v5.includes("color: #435650 !important"));
+  assert.ok(audit.includes(".rawaj-taxonomy-selection :is(p, small)"));
+  assert.ok(audit.includes("background-color: #e0ece8 !important"));
+  assert.ok(css.includes('label.sr-only[for="listing-taxonomy-search"]'));
+  assert.ok(css.includes("background-color: #fffaf3 !important"));
+});

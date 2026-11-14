@@ -241,7 +241,15 @@ test("shared badge variants use central status tokens, never embedded colors", a
   }
   assert.doesNotMatch(badge, /#[0-9a-f]{3,8}/i);
   assert.ok(foundation.includes('.rawaj-app-shell[data-design-palette="ivory"]'));
-  assert.ok(!appShell.includes('data-design-palette='), "Do not opt in other routes before visual acceptance");
+  assert.ok(
+    appShell.includes('data-design-palette={useApprovedStudioIdentity ? "ivory" : undefined}'),
+    "Only an explicitly approved route may opt into the ivory foundation",
+  );
+  assert.ok(
+    appShell.includes("resolveRouteStyleScope(pathname).listingStudio"),
+    "The opt-in must be limited to the listing studio route scope",
+  );
+  assert.ok(!appShell.includes('data-design-palette="ivory"'), "Never force ivory across the whole app");
 });
 
 test("ivory badge labels meet normal-text AA contrast", () => {
@@ -440,7 +448,7 @@ test("B2.2 removes competing V17 shell and breadcrumb colors at their source", a
 test("B2.2 retires generic V17 dark control styles for the detail route", async () => {
   const css = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
   assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]))'));
-  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
   assert.ok(css.includes('[data-resolved-pathname="/add-listing"]'));
 });
 
@@ -458,7 +466,7 @@ test("B2.2 loading and unavailable route states use the same approved palette", 
 test("B2.2 excludes listing detail from V7 forced-dark inherited headings", async () => {
   const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
   assert.doesNotMatch(v7, /:where\(:not\(\[data-resolved-pathname="\/listings"\]\)\)/);
-  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
   assert.ok(v7.includes('.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"])'));
 });
 

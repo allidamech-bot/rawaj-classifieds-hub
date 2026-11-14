@@ -1191,8 +1191,8 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide mobile-page-bottom pt-10">
-          <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground hairline">
+        <main className="rawaj-studio-gate container-wide mobile-page-bottom pt-10">
+          <div className="rawaj-studio-gate__card rawaj-studio-gate__description p-8 text-center text-sm">
             {text("جارٍ تحميل بيانات الإعلان.", "Loading listing data.")}
           </div>
         </main>
@@ -1204,12 +1204,12 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide mobile-page-bottom pt-10">
-          <div className="rawaj-surface rounded-[1.5rem] p-10 text-center">
-            <p className="text-sm font-semibold text-foreground">
+        <main className="rawaj-studio-gate container-wide mobile-page-bottom pt-10">
+          <div className="rawaj-studio-gate__card p-6 text-center sm:p-10">
+            <p className="rawaj-studio-gate__title text-base font-semibold">
               {text("الإعلان غير متاح", "Listing unavailable")}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="rawaj-studio-gate__description mt-2 text-sm leading-7">
               {setupError?.message ??
                 text("تعذر تحميل هذا الإعلان.", "Could not load this listing.")}
             </p>
@@ -1234,7 +1234,10 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main
+        className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
+        data-studio-workflow="edit"
+      >
         <ListingStudioHero
           eyebrow={text("إدارة الإعلان", "Listing management")}
           title={title || text("تعديل الإعلان", "Edit listing")}
@@ -1932,7 +1935,6 @@ function ManageListingPage() {
           </aside>
         </div>
       </main>
-      <style>{`.input{width:100%;min-height:2.75rem;border-radius:1rem;background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--border);padding:.68rem .8rem;font-size:.875rem;color:var(--foreground);outline:none;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}.input:focus{border-color:var(--brand-orange);background:var(--card);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-orange) 12%,transparent)}.input:disabled{opacity:.62;cursor:not-allowed}`}</style>
     </>
   );
 }

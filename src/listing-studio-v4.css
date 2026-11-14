@@ -1,9 +1,64 @@
+/* B2.3: only create/edit listing routes opt into the existing approved design
+ * foundation. Reuse existing tokens; all other routes retain their prior theme.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) {
+  --rawaj-shell-canvas: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  --rawaj-shell-primary-surface: var(--rawaj-identity-teal);
+  --rawaj-shell-primary-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-active-surface: var(--rawaj-identity-champagne);
+  --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
+}
+
+/* B2.3: the public header has an opaque petrol canvas even when it carries
+ * visual decoration; bind the desktop brand name to its light foreground.
+ * No global header changes and no changes to the accepted My Store.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-app-header {
+  background-color: var(--rawaj-identity-petrol) !important;
+}
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-brand-lockup__name {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+/* B2.3: page heading lives above the petrol shell, not on the ivory content.
+ * Do not change the global header, My Store or the shared type hierarchy.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-shell-header__title :is(h1, p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 /* RAWAJ Listing Studio V4 — premium correction pass.
  * Presentation only: publishing, drafts, uploads, taxonomy, validation,
  * permissions, and category-specific fields remain unchanged.
  */
 
 .rawaj-listing-studio-v4 {
+  /* Explicit content tokens belong to the studio canvas, never shared pages. */
+  --rawaj-card-background: #fffaf3;
+  --rawaj-muted-surface: #f4ebde;
+  --rawaj-elevated-background: #fffdf9;
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #53645e;
+  --rawaj-surface-selected: #e0ece8;
+  --card: #fffaf3;
+  --color-card: #fffaf3;
+  --foreground: var(--rawaj-identity-ink);
   --studio-border: color-mix(in srgb, var(--rawaj-primary, #123f38) 15%, var(--rawaj-border, #d5ded8));
   --studio-muted: color-mix(in srgb, var(--rawaj-muted-surface, #e9efea) 68%, var(--rawaj-card-background, #fffdf8));
   overflow: visible;
@@ -18,7 +73,7 @@
   grid-template-columns: minmax(0, 1fr) 5.5rem;
   margin-bottom: 0.75rem;
   border-radius: var(--radius-hero, 1.25rem);
-  background: linear-gradient(135deg, #092d29, #123f38 72%, #1b554a);
+  background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal));
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 
@@ -201,9 +256,15 @@
 }
 
 .rawaj-listing-studio-v4 .input:focus-visible {
-  border-color: var(--rawaj-accent-orange, #e9663c);
-  outline: 3px solid color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 16%, transparent);
+  border-color: var(--rawaj-identity-teal);
+  outline: 3px solid color-mix(in srgb, var(--rawaj-identity-teal) 22%, transparent);
   outline-offset: 1px;
+}
+
+/* Editor controls no longer rely on an inline, global .input style tag. */
+.rawaj-listing-studio-v4 .input:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-category-grid {
@@ -368,4 +429,71 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+
+/* B2.3 account gates, submission and recovery states are owned by the studio.
+ * They render without a draft, so their canvas must not inherit retired dark cards.
+ */
+.rawaj-studio-gate {
+  display: grid;
+  min-height: min(68dvh, 42rem);
+  align-content: start;
+  background: var(--rawaj-identity-ivory);
+  color: var(--rawaj-identity-ink);
+  padding-block: clamp(1.5rem, 5vw, 3.5rem);
+}
+
+.rawaj-studio-gate > .rawaj-studio-gate__card {
+  width: min(100%, 36rem);
+  margin-inline: auto;
+  border: 1px solid #dfd3c1;
+  border-radius: 1.2rem;
+  background: #fffaf3;
+  box-shadow: 0 8px 28px rgba(19, 39, 36, 0.08);
+}
+
+.rawaj-app-shell .rawaj-studio-gate .rawaj-studio-gate__title {
+  color: var(--rawaj-identity-ink) !important;
+  line-height: 1.55;
+}
+
+.rawaj-app-shell .rawaj-studio-gate .rawaj-studio-gate__description {
+  color: #435650 !important;
+}
+
+.rawaj-studio-gate :is(a, button).rawaj-button-primary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-color: var(--rawaj-identity-petrol);
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+}
+
+.rawaj-studio-gate :is(a, button):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 3px;
+}
+
+@media (max-width: 430px) {
+  .rawaj-studio-gate > .rawaj-studio-gate__card {
+    border-radius: 1rem;
+  }
+}
+
+/* Hidden taxonomy labels remain accessible and have a deterministic color role. */
+.rawaj-listing-studio-v4 label.sr-only {
+  /* A clipped 1px label still gets an opaque semantic surface in a11y audits. */
+  color: var(--rawaj-identity-ink);
+  background-color: var(--rawaj-card-background);
+}
+ 
+/* Visually clipped taxonomy search label retains an opaque readable color
+ * during WCAG audits; do not alter the input or its accessible name. */
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  [data-listing-taxonomy-selector="true"] label.sr-only[for="listing-taxonomy-search"] {
+  color: #132724 !important;
+  background-color: #fffaf3 !important;
 }

@@ -1,15 +1,16 @@
 .rawaj-listing-studio-v4 .rawaj-studio-hero {
-  border-color: #d7e6de;
-  background: linear-gradient(135deg, #fffaf1 0%, #eef8f2 56%, #fff0e7 100%);
-  color: #173b34;
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal));
+  color: var(--rawaj-identity-ivory);
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-hero :is(h1, p, span, a, button) {
   color: inherit !important;
 }
 
-.rawaj-listing-studio-v4 .rawaj-studio-hero__description {
-  color: #526b62 !important;
+.rawaj-listing-studio-v4 .rawaj-studio-hero .rawaj-studio-hero__description {
+  color: var(--rawaj-identity-ivory) !important;
+  opacity: 0.88;
 }
 
 .rawaj-listing-studio-v4 :is(
@@ -18,9 +19,9 @@
   .rawaj-studio-hero__actions a,
   .rawaj-studio-hero__actions button
 ) {
-  border-color: #d5e5dc;
-  background: rgb(255 255 255 / 78%);
-  color: #173b34 !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 24%, transparent);
+  background: color-mix(in srgb, var(--rawaj-identity-ivory) 9%, transparent);
+  color: var(--rawaj-identity-ivory) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar {

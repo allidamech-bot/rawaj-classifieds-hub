@@ -173,7 +173,6 @@
     [data-resolved-pathname="/saved-searches"],
     [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
-    [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/profile/listings"]
   )
   main.container-wide
@@ -259,8 +258,7 @@
       [data-resolved-pathname="/favorites"],
       [data-resolved-pathname="/saved-searches"],
       [data-resolved-pathname="/verification"],
-      [data-resolved-pathname="/promotion"],
-      [data-resolved-pathname="/add-listing"]
+      [data-resolved-pathname="/promotion"]
     )
     main.container-wide
     :is(.rawaj-button-primary, a.bg-primary, button.bg-primary):hover,

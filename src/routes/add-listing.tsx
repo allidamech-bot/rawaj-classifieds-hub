@@ -1685,10 +1685,10 @@ function AddListingPage() {
     return (
       <>
         <PageHeader title={text("تم إرسال الإعلان", "Listing submitted")} />
-        <main className="container-wide mobile-page-bottom pb-10 pt-6 sm:pt-10">
+        <main className="rawaj-studio-gate container-wide mobile-page-bottom pb-10 pt-6 sm:pt-10">
           <section
             role="status"
-            className="rawaj-studio-success mx-auto max-w-2xl rounded-[2rem] border border-emerald-500/20 bg-card p-6 text-center shadow-soft sm:p-10"
+            className="rawaj-studio-success rawaj-studio-gate__card mx-auto max-w-2xl p-6 text-center sm:p-10"
           >
             <span className="sr-only">
               {text("تم إرسال الإعلان للمراجعة", "Listing sent for review")}
@@ -1699,10 +1699,10 @@ function AddListingPage() {
             <p className="mt-5 text-xs font-bold text-emerald-600">
               {text("تمت الخطوة الرابعة بنجاح", "Step four completed successfully")}
             </p>
-            <h1 className="mt-2 text-2xl font-black text-foreground sm:text-3xl">
+            <h1 className="rawaj-studio-gate__title mt-2 text-2xl font-black sm:text-3xl">
               {text("تم إرسال إعلانك للمراجعة بنجاح", "Your listing was submitted for review")}
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-muted-foreground">
+            <p className="rawaj-studio-gate__description mx-auto mt-3 max-w-xl text-sm leading-7">
               {text(
                 "سنراجع الإعلان، وسيظهر للعامة بعد موافقة الإدارة. يمكنك متابعة حالته من صفحة إعلاناتي.",
                 "We will review the listing, and it will become public after admin approval. You can track its status from My listings.",
@@ -1732,7 +1732,10 @@ function AddListingPage() {
   return (
     <>
       <PageHeader title={text("أضف إعلاناً", "Post a listing")} />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main
+        className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
+        data-studio-workflow="create"
+      >
         <ListingStudioHero
           compact
           eyebrow={text("إضافة إعلان", "Post a listing")}
@@ -2450,10 +2453,10 @@ function PageState({
   return (
     <>
       <PageHeader title={title} />
-      <main className="container-wide mobile-page-bottom pt-10">
-        <div className="rawaj-surface rounded-[1.5rem] p-10 text-center">
-          <p className="text-sm font-bold text-foreground">{heading}</p>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">{body}</p>
+      <main className="rawaj-studio-gate container-wide mobile-page-bottom pt-10">
+        <div className="rawaj-studio-gate__card p-6 text-center sm:p-10">
+          <p className="rawaj-studio-gate__title text-base font-bold">{heading}</p>
+          <p className="rawaj-studio-gate__description mt-2 text-sm leading-7">{body}</p>
           {actionLabel && actionTo && (
             <Link
               to={actionTo}

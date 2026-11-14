@@ -424,49 +424,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   font-size: 0.72rem !important;
 }
 
-/* --------------------------------------------------------------------------
-   Listing studio: compact hierarchy with distinct completion, preview, quality,
-   and note surfaces instead of four identical grey cards.
-   -------------------------------------------------------------------------- */
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero {
-  min-height: 0 !important;
-  padding: clamp(1rem, 3vw, 1.45rem) !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__visual span {
-  width: 4.9rem !important;
-  height: 4.9rem !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion {
-  border-color: rgba(112, 213, 177, 0.18) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(112, 213, 177, 0.08), transparent 38%),
-    linear-gradient(155deg, #303735, #292f2f) !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-preview {
-  border-color: rgba(104, 173, 255, 0.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.08), transparent 38%),
-    linear-gradient(155deg, #30343b, #292c32) !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality {
-  border-color: rgba(223, 73, 181, 0.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.075), transparent 38%),
-    linear-gradient(155deg, #353038, #2d2a31) !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-shell__aside > :last-child:not(.rawaj-studio-quality) {
-  border-color: rgba(227, 160, 75, 0.2) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 38%),
-    linear-gradient(155deg, #373229, #2f2c28) !important;
-  color: var(--rawaj-text-secondary) !important;
-}
+/* B2.3: studio visual ownership moved to studio V5/V9 approved light surfaces. */
 
 /* --------------------------------------------------------------------------
    Admin: readable semantic surfaces and visible horizontal navigation controls.

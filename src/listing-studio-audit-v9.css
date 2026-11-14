@@ -19,9 +19,10 @@
   border: 1px solid var(--rawaj-border-strong) !important;
   border-radius: 1.35rem !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.16), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(220, 62, 182, 0.11), transparent 38%),
-    linear-gradient(145deg, #303138, #292a30 66%, #27282d) !important;
+    radial-gradient(circle at 100% 0%, rgba(255, 227, 176, 0.11), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(8, 99, 94, 0.14), transparent 38%),
+    linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
+  background-color: var(--rawaj-identity-petrol) !important;
   box-shadow: 0 15px 34px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
 }
 
@@ -31,7 +32,7 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__eyebrow {
   margin: 0 0 0.25rem !important;
-  color: var(--rawaj-accent-pink) !important;
+  color: var(--rawaj-identity-champagne) !important;
   font-size: 0.72rem !important;
   font-weight: 800 !important;
 }
@@ -39,7 +40,7 @@
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero h1 {
   max-width: 34ch;
   margin: 0 !important;
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-identity-ivory) !important;
   font-size: clamp(1.05rem, 3vw, 1.45rem) !important;
   line-height: 1.45 !important;
 }
@@ -47,7 +48,8 @@
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero__description {
   max-width: 64ch !important;
   margin: 0.35rem 0 0 !important;
-  color: var(--rawaj-text-secondary) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  opacity: 0.87;
   font-size: 0.76rem !important;
   line-height: 1.7 !important;
 }
@@ -64,7 +66,7 @@
   border-radius: 999px !important;
   padding: 0.3rem 0.55rem !important;
   color: var(--rawaj-text-muted) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
   font-size: 0.65rem !important;
   font-weight: 700 !important;
 }
@@ -91,7 +93,7 @@
   border-radius: 0.8rem !important;
   padding: 0.45rem 0.7rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
   font-size: 0.69rem !important;
   font-weight: 800 !important;
 }
@@ -109,7 +111,7 @@
   border-radius: 0.95rem !important;
   padding: 0.65rem 0.75rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-trust-strip strong {
@@ -125,7 +127,7 @@
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.1rem !important;
   padding: 0.45rem !important;
-  background: rgba(37, 38, 44, 0.9) !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
 }
 
@@ -145,15 +147,15 @@
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps li[data-state="active"] button {
-  border-color: rgba(225, 100, 180, 0.26) !important;
-  color: #fff !important;
-  background: linear-gradient(135deg, rgba(194, 68, 49, 0.82), rgba(155, 40, 111, 0.88)) !important;
-  box-shadow: 0 8px 18px rgba(155, 40, 111, 0.2) !important;
+  border-color: var(--rawaj-identity-teal) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
+  box-shadow: 0 8px 18px rgba(7, 56, 54, 0.14) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps li[data-state="done"] button {
   color: var(--rawaj-success) !important;
-  background: rgba(112, 213, 177, 0.055) !important;
+  background: var(--rawaj-surface-selected) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps__copy strong {
@@ -174,19 +176,19 @@
   border-radius: 0.85rem !important;
   padding: 0.5rem 0.75rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
   font-size: 0.69rem !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-autosave[data-state="saved"] {
   border-color: rgba(112, 213, 177, 0.18) !important;
   color: var(--rawaj-success) !important;
-  background: rgba(112, 213, 177, 0.05) !important;
+  background: var(--rawaj-success-surface) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-autosave[data-state="failed"] {
   border-color: rgba(234, 113, 104, 0.2) !important;
-  color: #f0a29c !important;
+  color: var(--rawaj-danger) !important;
   background: rgba(234, 113, 104, 0.06) !important;
 }
 
@@ -212,7 +214,7 @@
   border-radius: 1.15rem !important;
   padding: clamp(0.9rem, 2vw, 1.15rem) !important;
   color: var(--rawaj-text-secondary) !important;
-  background: linear-gradient(150deg, #303137, #2a2b31) !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
@@ -250,12 +252,12 @@
   grid-template-columns: auto minmax(0, 1fr) auto !important;
   gap: 0.65rem !important;
   align-items: center !important;
-  border: 1px solid rgba(225, 100, 180, 0.2) !important;
+  border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.05rem !important;
   padding: 0.8rem !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(225, 100, 180, 0.1), transparent 38%),
-    linear-gradient(145deg, #343039, #2c2b31) !important;
+    var(--rawaj-card-background) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
 }
 
@@ -263,7 +265,7 @@
   border-color: rgba(112, 213, 177, 0.22) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(112, 213, 177, 0.1), transparent 38%),
-    linear-gradient(145deg, #2d3935, #292f2d) !important;
+    var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion__icon {
@@ -272,8 +274,8 @@
   height: 2.35rem !important;
   place-items: center;
   border-radius: 0.75rem !important;
-  color: var(--rawaj-accent-pink) !important;
-  background: rgba(225, 100, 180, 0.09) !important;
+  color: var(--rawaj-identity-teal) !important;
+  background: var(--rawaj-muted-surface) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion h2 {
@@ -290,7 +292,7 @@
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-completion > strong {
-  color: #f1b7dc !important;
+  color: var(--rawaj-identity-teal) !important;
   font-size: 1.05rem !important;
 }
 
@@ -299,16 +301,17 @@
   overflow: hidden;
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.05rem !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality {
   padding: 0.85rem !important;
-  border-color: rgba(63, 145, 255, 0.18) !important;
+  border-color: var(--rawaj-border) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.1), transparent 38%),
-    linear-gradient(150deg, #2d333d, #292c32) !important;
+    var(--rawaj-card-background) !important;
+  background-color: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality__score {
@@ -316,7 +319,7 @@
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality__score p {
-  color: var(--rawaj-accent-blue) !important;
+  color: var(--rawaj-identity-teal) !important;
   font-size: 0.66rem !important;
   font-weight: 800 !important;
 }
@@ -340,20 +343,20 @@
   border: 1px solid transparent;
   border-radius: 0.65rem;
   padding: 0.35rem 0.45rem !important;
-  color: var(--rawaj-text-secondary) !important;
-  font-size: 0.66rem !important;
-  line-height: 1.35 !important;
+  color: var(--rawaj-identity-ink) !important;
+  font-size: 0.7rem !important;
+  line-height: 1.45 !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality li[data-done="true"] {
-  color: var(--rawaj-success) !important;
-  background: rgba(112, 213, 177, 0.035);
+  color: #14583c !important;
+  background: #e6f2eb !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-quality li[data-done="false"] {
-  border-color: rgba(227, 160, 75, 0.13);
-  color: #e8c795 !important;
-  background: rgba(227, 160, 75, 0.045);
+  border-color: #dfc69d;
+  color: #684b1f !important;
+  background: #fff3dc !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-shell__aside > :last-child:not(.rawaj-studio-quality):not(.rawaj-studio-preview):not(.rawaj-studio-completion) {
@@ -363,7 +366,7 @@
   color: var(--rawaj-text-secondary) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.09), transparent 38%),
-    linear-gradient(150deg, #373129, #2f2c29) !important;
+    var(--rawaj-subtle-background) !important;
   box-shadow: none !important;
 }
 
@@ -378,7 +381,7 @@
   border: 1px solid var(--rawaj-border-strong) !important;
   border-radius: 1rem !important;
   padding: 0.55rem !important;
-  background: rgba(38, 39, 44, 0.94) !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24) !important;
   backdrop-filter: blur(18px);
 }
@@ -497,7 +500,9 @@
   margin-bottom: 0.6rem !important;
   padding: 0.8rem 1rem !important;
   border-radius: 1rem !important;
-  background: linear-gradient(145deg, #303138, #292a30) !important;
+  background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
+  /* Browser contrast audit uses the solid color under the decorative gradient. */
+  background-color: var(--rawaj-identity-petrol) !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14) !important;
 }
 
@@ -609,11 +614,11 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/add-listing"] [data-listing-taxonomy-selector="true"] {
-  --taxonomy-line: rgba(255, 255, 255, 0.09);
-  --taxonomy-line-strong: rgba(104, 173, 255, 0.3);
-  --taxonomy-surface-root: rgba(255, 255, 255, 0.055);
-  --taxonomy-surface-branch: rgba(255, 255, 255, 0.035);
-  --taxonomy-surface-deep: rgba(20, 21, 26, 0.36);
+  --taxonomy-line: var(--rawaj-border);
+  --taxonomy-line-strong: var(--rawaj-identity-teal);
+  --taxonomy-surface-root: var(--rawaj-card-background);
+  --taxonomy-surface-branch: var(--rawaj-muted-surface);
+  --taxonomy-surface-deep: var(--rawaj-elevated-background);
   display: grid;
   gap: 0.75rem;
 }
@@ -631,7 +636,7 @@
   min-height: 3rem !important;
   border: 1px solid var(--taxonomy-line) !important;
   border-radius: 0.82rem !important;
-  background: rgba(20, 21, 26, 0.64) !important;
+  background: var(--rawaj-card-background) !important;
   color: var(--rawaj-text-primary) !important;
   font-size: 0.82rem !important;
   box-shadow: none !important;
@@ -699,13 +704,13 @@
   .rawaj-taxonomy-option[data-taxonomy-kind="leaf"] {
   min-height: 2.75rem !important;
   border-color: rgba(85, 216, 164, 0.16) !important;
-  background: rgba(85, 216, 164, 0.04) !important;
+  background: var(--rawaj-surface-selected) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/add-listing"]
   .rawaj-taxonomy-option[data-selected="true"] {
-  border-color: rgba(85, 216, 164, 0.32) !important;
-  background: rgba(85, 216, 164, 0.09) !important;
+  border-color: var(--rawaj-identity-teal) !important;
+  background: var(--rawaj-surface-selected) !important;
 }
 
 .rawaj-taxonomy-option__copy {
@@ -768,7 +773,7 @@
   padding: 0.32rem;
   border: 1px solid var(--taxonomy-line);
   border-radius: 0.78rem;
-  background: rgba(20, 21, 26, 0.38);
+  background: var(--rawaj-elevated-background);
   scrollbar-width: thin;
 }
 
@@ -783,7 +788,7 @@
 .rawaj-taxonomy-breadcrumb__segment button {
   display: block;
   max-width: 11rem;
-  min-height: 2.25rem !important;
+  min-height: 2.75rem !important;
   overflow: hidden;
   border-radius: 0.58rem;
   padding-inline: 0.52rem;
@@ -796,7 +801,7 @@
 
 .rawaj-taxonomy-breadcrumb__segment button[data-current="true"] {
   color: var(--rawaj-text-primary) !important;
-  background: rgba(104, 173, 255, 0.08);
+  background: var(--rawaj-surface-selected);
 }
 
 .rawaj-taxonomy-breadcrumb__segment > svg {
@@ -807,6 +812,10 @@
 }
 
 .rawaj-taxonomy-selection {
+  /* Light selected-category surface is independent from dark legacy aliases. */
+  --rawaj-text-primary: #132724;
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #53645e;
   display: flex;
   min-height: 3rem;
   align-items: center;
@@ -815,7 +824,7 @@
   border-radius: 0.82rem;
   padding: 0.6rem 0.72rem;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(85, 216, 164, 0.065) !important;
+  background: var(--rawaj-surface-selected) !important;
 }
 
 .rawaj-taxonomy-selection__icon {
@@ -825,7 +834,7 @@
   flex: 0 0 1.9rem;
   place-items: center;
   border-radius: 0.58rem;
-  color: #72e2b9 !important;
+  color: var(--rawaj-success) !important;
   background: rgba(85, 216, 164, 0.13) !important;
 }
 
@@ -935,4 +944,16 @@
   .rawaj-taxonomy-breadcrumb__segment button {
     max-width: 8.5rem;
   }
+}
+
+/* B2.3 selected-category copy and search label have stable foregrounds in
+ * the actual route owner, regardless of the old global utility cascade. */
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-selection {
+  background-color: #e0ece8 !important;
+  color: #132724 !important;
+}
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-selection :is(p, small) {
+  color: #132724 !important;
 }

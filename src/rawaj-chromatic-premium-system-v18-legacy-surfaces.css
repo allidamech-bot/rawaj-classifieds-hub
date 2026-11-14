@@ -136,66 +136,10 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* Listing studio: add/edit/manage                                             */
-/* -------------------------------------------------------------------------- */
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) :is(.rawaj-studio-hero, .rawaj-studio-section, .rawaj-studio-completion, .rawaj-studio-preview-card) {
-  border-color: rgba(216,174,95,.14) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(219,73,179,.075), transparent 38%),
-    radial-gradient(circle at 0% 100%, rgba(116,101,239,.055), transparent 42%),
-    linear-gradient(150deg, #1c1b26, #141820 62%, #11151c) !important;
-  box-shadow: 0 14px 32px rgba(0,0,0,.21), inset 0 1px 0 rgba(255,255,255,.03) !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) .rawaj-studio-hero {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(219,73,179,.11), transparent 38%),
-    linear-gradient(145deg, #1d202a, #151922) !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) .rawaj-studio-steps {
-  border-color: rgba(216,174,95,.12) !important;
-  background: #10141b !important;
-  box-shadow: 0 10px 24px rgba(0,0,0,.2) !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) .rawaj-studio-steps li[data-state="active"] button {
-  border-color: rgba(255,255,255,.1) !important;
-  background: linear-gradient(135deg, #d83658, #c12b84 55%, #7465ef) !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) :is(input, textarea, select, .input) {
-  border-color: rgba(216,174,95,.13) !important;
-  color: #f7f3ed !important;
-  background: #0f131a !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"]
-) :is(input, textarea, select, .input):focus-visible {
-  border-color: rgba(216,174,95,.48) !important;
-  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
-}
+/* B2.3: retired the V18 dark add/edit studio presentation. */
 
 /* -------------------------------------------------------------------------- */
+
 /* Authentication                                                             */
 /* -------------------------------------------------------------------------- */
 .rawaj-app-shell:is(
@@ -370,8 +314,6 @@
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"],
-  [data-resolved-pathname="/add-listing"],
-  [data-resolved-pathname^="/profile/listings/"],
   [data-resolved-pathname^="/admin"]
 ) [class*="bg-muted-surface"] {
   border-color: rgba(255,255,255,.065) !important;
