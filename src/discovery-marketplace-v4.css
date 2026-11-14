@@ -1,19 +1,17 @@
 /* RAWAJ Discovery Marketplace V4
  * One calm, commercial presentation layer for home, categories, results,
- * adaptive listing cards, and public listing detail.
+ * and adaptive listing cards.
  */
 
 .rawaj-home-v3-main,
 .rawaj-categories-v2,
-.rawaj-search-results-v1,
-.rawaj-detail-v2 {
+.rawaj-search-results-v1 {
   color: var(--rawaj-text-primary);
 }
 
 .rawaj-home-v3,
 .rawaj-categories-v2,
-.rawaj-search-results-v1,
-.rawaj-detail-v2__container {
+.rawaj-search-results-v1 {
   width: min(100%, var(--rawaj-page-max));
 }
 
