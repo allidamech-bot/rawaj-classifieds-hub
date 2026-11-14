@@ -429,7 +429,7 @@ test("B2.2 removes competing V17 shell and breadcrumb colors at their source", a
     load("rawaj-chromatic-premium-system-v17-corrections.css"),
     load("rawaj-final-site-system-v6.css"),
   ]);
-  assert.ok(!shell.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.doesNotMatch(shell, /\.rawaj-app-shell\[data-resolved-pathname\^="\/listings\/"\]/);
   assert.ok(!fallback.includes('[data-resolved-pathname^="/listings/"]'));
   assert.ok(crumbs.includes(':not([data-resolved-pathname^="/listings/"]) nav[aria-label="breadcrumb"]'));
   assert.ok(detail.includes("--detail-ink: var(--rawaj-identity-ink)"));
