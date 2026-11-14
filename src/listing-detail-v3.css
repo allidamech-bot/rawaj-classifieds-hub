@@ -998,3 +998,21 @@ main.rawaj-detail-recovery .rawaj-detail-recovery__action:focus-visible {
   outline: 3px solid var(--rawaj-identity-teal);
   outline-offset: 3px;
 }
+
+/* Listing history is outside the main detail canvas and must own its palette. */
+.rawaj-detail-viewed-before[data-design-palette="ivory"] {
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-identity-ink);
+  box-shadow: var(--shadow-soft);
+}
+.rawaj-detail-viewed-before__icon {
+  background: var(--rawaj-muted-surface);
+  color: var(--rawaj-identity-teal);
+}
+.rawaj-detail-viewed-before__title {
+  color: var(--rawaj-identity-ink);
+}
+.rawaj-detail-viewed-before__timestamp {
+  color: var(--rawaj-text-secondary);
+}

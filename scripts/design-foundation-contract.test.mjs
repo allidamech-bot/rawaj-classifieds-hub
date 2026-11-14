@@ -461,3 +461,14 @@ test("B2.2 excludes listing detail from V7 forced-dark inherited headings", asyn
   assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
   assert.ok(v7.includes('.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"])'));
 });
+
+
+test("B2.2 viewed-before banner outside main owns readable ivory semantics", async () => {
+  const banner = await readFile(new URL("../src/features/listing-detail/ViewedBeforeBanner.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.match(banner, /className="rawaj-detail-viewed-before /);
+  assert.match(banner, /data-design-palette="ivory"/);
+  assert.ok(foundation.includes('.rawaj-detail-viewed-before[data-design-palette="ivory"]'));
+  assert.ok(styles.includes(".rawaj-detail-viewed-before__timestamp"));
+  assert.ok(styles.includes("color: var(--rawaj-text-secondary)"));
+});
