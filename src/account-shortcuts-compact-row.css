@@ -1,58 +1,47 @@
-/* Compact account shortcuts — four equal square cards in one mobile row. */
-@media (max-width: 639px) {
+/* B3.1 /more only: readable two-column shortcuts on narrow phones.
+   The protected My Store rules below this block are carried forward unchanged. */
+@media (max-width: 559px) {
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0.42rem !important;
-    align-items: stretch !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: stretch;
+    gap: 0.65rem !important;
   }
-
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
-    grid-column: auto !important;
-    grid-row: auto !important;
-    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    width: 100%;
     min-width: 0 !important;
-    min-height: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    padding: 0.42rem 0.22rem !important;
-    gap: 0.34rem !important;
-    border-radius: 0.9rem !important;
+    min-height: 4.4rem !important;
+    aspect-ratio: auto !important;
+    padding: 0.75rem !important;
+    gap: 0.55rem !important;
+    text-align: start !important;
   }
-
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card > svg,
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card > span:first-child svg {
-    width: 1.12rem !important;
-    height: 1.12rem !important;
-  }
-
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
-    font-size: 0.67rem !important;
-    line-height: 1.25 !important;
-    white-space: nowrap !important;
+    font-size: 0.81rem !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
   }
-
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card svg {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+  }
   .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
-    width: 2rem !important;
-    height: 2rem !important;
-    border-radius: 0.68rem !important;
+    width: 2.4rem !important;
+    height: 2.4rem !important;
+    flex: 0 0 auto;
   }
-
-  .rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__hint {
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-boost-shortcut__hint {
     display: none !important;
   }
 }
-
-@media (max-width: 359px) {
+@media (min-width: 560px) and (max-width: 639px) {
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
-    gap: 0.32rem !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
-    padding-inline: 0.12rem !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
-    font-size: 0.61rem !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.6rem !important;
   }
 }
 
