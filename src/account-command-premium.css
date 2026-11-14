@@ -1,7 +1,7 @@
 /* B3.1 /more presentation ownership.
    Replaces the retired charcoal/pink/purple command-center skin in place.
    Other routes, including My Store and the B2 listing studio, are intentionally untouched. */
-.rawaj-app-shell[data-resolved-pathname="/more"] {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] {
   --account-canvas: var(--rawaj-identity-ivory);
   --account-ink: var(--rawaj-identity-ink);
   --account-petrol: var(--rawaj-identity-petrol);
@@ -10,16 +10,24 @@
   color: var(--account-ink);
   background: var(--account-canvas) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2 {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2 {
   color: var(--account-ink);
   background: transparent;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #536660;
+  --foreground: var(--rawaj-identity-ink);
+  --muted-foreground: #536660;
+  --card: #fffaf3;
+  --primary: var(--rawaj-identity-teal);
+  --primary-foreground: white;
   width: min(100%, 68rem);
   gap: clamp(1.1rem, 2.5vw, 1.65rem) !important;
   padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
   min-height: 0;
   padding: clamp(1.2rem, 3vw, 2rem);
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent) !important;
@@ -28,32 +36,32 @@
   background: var(--account-petrol) !important;
   box-shadow: 0 16px 36px color-mix(in srgb, var(--account-petrol) 16%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity > div:last-child > :is(p, strong, small),
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity > div:last-child > :is(p, strong, small),
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
   color: color-mix(in srgb, var(--rawaj-identity-ivory) 84%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__identity h1 {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity h1 {
   color: var(--rawaj-identity-ivory) !important;
   overflow-wrap: anywhere;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar {
   border: 2px solid color-mix(in srgb, var(--rawaj-identity-champagne) 70%, transparent);
   color: var(--rawaj-identity-champagne);
   background: var(--account-teal);
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
   border-inline-start-color: var(--rawaj-identity-gold) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
   border-color: color-mix(in srgb, var(--rawaj-identity-champagne) 27%, transparent) !important;
   color: var(--rawaj-identity-champagne) !important;
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 8%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges svg {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges svg {
   color: var(--rawaj-identity-champagne) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__signin {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__signin {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -66,21 +74,21 @@
   font-size: 0.875rem;
   font-weight: 750;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__signin > span {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__signin > span {
   flex: 1;
   min-width: 0;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-section-header {
   padding: 0;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header :is(p, h2) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-section-header :is(p, h2) {
   color: var(--account-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-section-header span {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-section-header span {
   color: color-mix(in srgb, var(--account-ink) 76%, var(--account-canvas)) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -93,27 +101,27 @@
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: 0 8px 25px color-mix(in srgb, var(--account-petrol) 8%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:first-child {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:first-child {
   color: var(--rawaj-identity-ivory) !important;
   background: var(--account-teal) !important;
   border: 0 !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:nth-child(2) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:nth-child(2) {
   margin: 0 !important;
   color: var(--account-ink) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:last-of-type {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > span:last-of-type {
   color: var(--account-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > svg {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card > svg {
   margin: 0 !important;
   color: var(--account-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
   gap: 0.75rem;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
   min-height: 5.6rem !important;
   border: 1px solid var(--account-line) !important;
   border-radius: 1rem !important;
@@ -121,15 +129,15 @@
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card :is(svg, strong, small) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card :is(svg, strong, small) {
   color: var(--account-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
   overflow-wrap: anywhere;
   white-space: normal !important;
   line-height: 1.45 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
   display: grid;
   place-items: center;
   color: var(--rawaj-identity-champagne) !important;
@@ -137,17 +145,17 @@
   background: var(--account-petrol) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
   gap: 0.9rem;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section {
   border: 1px solid var(--account-line) !important;
   border-radius: 1.15rem !important;
   overflow: hidden;
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 44%, white) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > h2 {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > h2 {
   margin: 0 !important;
   padding: 0.85rem 1.1rem !important;
   border-bottom: 1px solid var(--account-line) !important;
@@ -155,51 +163,51 @@
   background: color-mix(in srgb, var(--account-canvas) 80%, white) !important;
   font-size: 0.82rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div {
   border-color: var(--account-line) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) {
   min-height: 3.7rem !important;
   border-radius: 0 !important;
   color: var(--account-ink) !important;
   background: transparent !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button):is(:hover, :focus-visible) {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button):is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--account-teal) 6%, white) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:first-child {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:first-child {
   color: var(--account-teal) !important;
   border: 0 !important;
   background: color-mix(in srgb, var(--account-teal) 9%, white) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:first-child {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:first-child {
   color: var(--account-ink) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:last-child,
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > svg {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > span:first-child > span:last-child > span:last-child,
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > svg {
   color: color-mix(in srgb, var(--account-ink) 68%, white) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__sections button:has(.text-destructive) .text-destructive {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections button:has(.text-destructive) .text-destructive {
   color: #a32e31 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/more"] :is(a, button):focus-visible {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] :is(a, button):focus-visible {
   outline: 3px solid var(--account-teal) !important;
   outline-offset: 3px;
 }
 @media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
     padding-inline: max(0.9rem, env(safe-area-inset-left)) !important;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
     padding: 1.05rem;
   }
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
     min-height: 5.2rem !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-app-shell[data-resolved-pathname="/more"] :is(a, button) {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] :is(a, button) {
     transition: none !important;
     transform: none !important;
   }
