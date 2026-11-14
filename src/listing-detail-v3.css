@@ -1016,3 +1016,21 @@ main.rawaj-detail-recovery .rawaj-detail-recovery__action:focus-visible {
 .rawaj-detail-viewed-before__timestamp {
   color: var(--rawaj-text-secondary);
 }
+
+/* Price change also sits before the gallery, outside the detail main. */
+.rawaj-detail-price-change[data-design-palette="ivory"] {
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-identity-ink);
+  box-shadow: var(--shadow-soft);
+}
+.rawaj-detail-price-change__title { color: var(--rawaj-identity-ink); }
+.rawaj-detail-price-change__previous { color: var(--rawaj-text-secondary); }
+.rawaj-detail-price-change__icon[data-tone="down"] {
+  background: var(--rawaj-badge-success-surface);
+  color: var(--rawaj-badge-success-ink);
+}
+.rawaj-detail-price-change__icon[data-tone="up"] {
+  background: var(--rawaj-badge-warning-surface);
+  color: var(--rawaj-badge-warning-ink);
+}

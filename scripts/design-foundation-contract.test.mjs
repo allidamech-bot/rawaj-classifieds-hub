@@ -472,3 +472,14 @@ test("B2.2 viewed-before banner outside main owns readable ivory semantics", asy
   assert.ok(styles.includes(".rawaj-detail-viewed-before__timestamp"));
   assert.ok(styles.includes("color: var(--rawaj-text-secondary)"));
 });
+
+
+test("B2.2 price change outside main uses accessible semantic identity roles", async () => {
+  const banner = await readFile(new URL("../src/features/listing-detail/PriceChangeBanner.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.ok(banner.includes('className="rawaj-detail-price-change '));
+  assert.ok(banner.includes('data-design-palette="ivory"'));
+  assert.ok(banner.includes('data-tone={decreased ? "down" : "up"}'));
+  assert.ok(foundation.includes('.rawaj-detail-price-change[data-design-palette="ivory"]'));
+  assert.ok(styles.includes(".rawaj-detail-price-change__previous"));
+});

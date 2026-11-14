@@ -204,3 +204,5 @@ B2.2 loading and unavailable API states share the approved detail canvas through
 B2.2 CSS cascade verification also excluded `/listings/:id` from the original V7 broad dark token/heading class selectors. Search, categories, homepage and all still-unmigrated routes retain their existing V7 contract. This addresses the observed rendered white-on-ivory heading failure without changing contrast assertions.
 
 B2.2 rendered contrast audit also includes the `ViewedBeforeBanner`, which appears outside the main detail canvas. Its root now opts into the same canonical ivory tokens, with explicit dark title and secondary timestamp roles rather than inheriting the legacy shell text colors.
+
+The related `PriceChangeBanner` is also outside the main route canvas; it now opts into the canonical palette directly, preserving the existing fetch logic and rise/drop semantics while adopting accessible success/warning badges and legible prices.
