@@ -29,7 +29,7 @@ const [
 ] = await Promise.all([
   readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/rawaj-home-audit-v8.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-home-signature-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-categories-discovery-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8"),
@@ -70,7 +70,6 @@ const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.al
 test("audited component corrections load after legacy recovery layers", () => {
   const recoveryIndex = routeStyles.indexOf('import "../rawaj-page-by-page-recovery-v7b.css";');
   const correctionIndex = routeStyles.indexOf("auditCorrectionsV8Css,");
-  const homeIndex = routeStyles.indexOf("homeAuditV8Css,");
   const categoriesIndex = routeStyles.indexOf("categoriesDiscoveryV8Css,");
   const ownerIndex = routeStyles.indexOf("ownerListingsWorkspaceV9Css,");
   const studioIndex = routeStyles.indexOf("listingStudioAuditV9Css,");
@@ -84,7 +83,6 @@ test("audited component corrections load after legacy recovery layers", () => {
   for (const index of [
     recoveryIndex,
     correctionIndex,
-    homeIndex,
     categoriesIndex,
     ownerIndex,
     studioIndex,
@@ -98,7 +96,10 @@ test("audited component corrections load after legacy recovery layers", () => {
     assert.notEqual(index, -1);
   }
   assert.ok(correctionIndex > recoveryIndex);
-  assert.ok(homeIndex > correctionIndex);
+  assert.doesNotMatch(
+    routeStyles,
+    /homeAuditV8Css|rawaj-home-feedback-fixes|rawaj-home-dock-spacing/,
+  );
   assert.ok(categoriesIndex > correctionIndex);
   assert.ok(ownerIndex > categoriesIndex);
   assert.ok(studioIndex > ownerIndex);
@@ -319,7 +320,7 @@ test("home advertisement inventory supports two unique records without cloning o
   assert.match(adSlot, /placementPage === "home" \? 2 : 1/);
   assert.match(adSlot, /visiblePlacements\.map/);
   assert.doesNotMatch(adSlot, /placement: result\.data\[0\]/);
-  assert.match(homeCorrections, /\.rawaj-signature-ad-placement[\s\S]*order: 30/);
+  assert.match(homeCorrections, /\.rawaj-signature-ad-placement[\s\S]*data-placement-loading/);
 });
 
 test("categories directory continues into promoted and latest approved inventory", () => {

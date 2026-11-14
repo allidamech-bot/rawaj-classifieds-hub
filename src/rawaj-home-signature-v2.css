@@ -1,51 +1,111 @@
-@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap");
-
-/* RAWAJ signature homepage v2.
-   The visual hierarchy is intentionally ad-first and the color system supports content. */
-
+/* The route selector also scopes the shared header and dock across client navigation. */
 .rawaj-app-shell[data-resolved-pathname="/"] {
-  --rawaj-signature-bg: #26272b;
-  --rawaj-signature-bg-deep: #202126;
-  --rawaj-signature-surface: #2d2f34;
-  --rawaj-signature-surface-raised: #34363c;
-  --rawaj-signature-surface-soft: #292b30;
-  --rawaj-signature-text: #f2efeb;
-  --rawaj-signature-text-soft: #d7d2cd;
-  --rawaj-signature-muted: #aaa5a0;
-  --rawaj-signature-faint: #817d79;
-  --rawaj-signature-border: rgba(255, 255, 255, 0.09);
-  --rawaj-signature-border-strong: rgba(255, 255, 255, 0.145);
-  --rawaj-signature-coral: #ff7054;
-  --rawaj-signature-pink: #dc3eb6;
-  --rawaj-signature-violet: #8c63f4;
-  --rawaj-signature-blue: #3f91ff;
-  --rawaj-signature-cyan: #69d9ec;
-  --rawaj-signature-success: #70d5b1;
-  color: var(--rawaj-signature-text);
+  --home-ivory: #f9f0e4;
+  --home-champagne: #ffe3b0;
+  --home-ink: #132724;
+  --home-petrol: #073836;
+  --home-teal: #08635e;
+  --home-gold: #eac38f;
+  --home-gutter: clamp(0.75rem, 3.4vw, 2rem);
+  --home-width: 76rem;
+  color: var(--home-ink);
   background:
-    radial-gradient(circle at 88% 3%, rgba(86, 100, 148, 0.075), transparent 25rem),
-    radial-gradient(circle at 8% 42%, rgba(133, 65, 138, 0.035), transparent 26rem),
-    linear-gradient(180deg, #2f3034 0%, var(--rawaj-signature-bg) 38%, #232428 100%) !important;
+    radial-gradient(ellipse at 15% 50%, #fff9f2, transparent 65%), var(--home-ivory) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__page {
+  background:
+    linear-gradient(180deg, transparent 9rem, var(--home-ivory) 13.5rem),
+    url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat,
+    linear-gradient(#073836 0 8rem, transparent 14rem) !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content {
   background: transparent !important;
 }
 
-.rawaj-signature-home {
-  min-height: 100dvh;
-  overflow-x: clip;
-  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
-  color: var(--rawaj-signature-text);
-  background: transparent;
-  font-family: "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
+  position: relative;
+  top: auto;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none;
+  color: #fff7ea;
 }
 
-.rawaj-signature-home *,
-.rawaj-signature-home *::before,
-.rawaj-signature-home *::after {
-  box-sizing: border-box;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
+  width: min(100%, var(--home-width));
+  min-height: 5rem;
+  padding: 0.75rem var(--home-gutter);
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__name {
+  color: #fff0d7 !important;
+  font-size: clamp(1.4rem, 5vw, 2.3rem);
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
+  color: #fff0d7 !important;
+  font-size: 0.63rem;
+  letter-spacing: 0.24em;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:nth-child(2) {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-divider {
+  display: none;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"]
+  :is(
+    .rawaj-home-menu-action,
+    .rawaj-header-account,
+    .rawaj-header-store,
+    .rawaj-header-admin,
+    .rawaj-header-login-cta,
+    .rawaj-shell-header__actions > div > button[aria-haspopup="dialog"]
+  ) {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px !important;
+  color: #102c29 !important;
+  background: linear-gradient(155deg, #fffaf0, #f1dec1) !important;
+  box-shadow: 0 4px 10px #001b1c44;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"]
+  :is(
+    .rawaj-header-location,
+    .rawaj-header-search,
+    .rawaj-header-nav-item,
+    .rawaj-header-action
+  ):not(.rawaj-header-account, .rawaj-header-store) {
+  color: #fff5e4;
+}
+
+.rawaj-signature-home {
+  color: var(--home-ink) !important;
+  min-height: auto !important;
+  background: transparent !important;
+  padding-bottom: 1rem;
+}
+
+.rawaj-signature-ad-placement aside:is([aria-hidden="true"], [data-placement-loading="true"]) {
+  display: none !important;
+}
+
+.rawaj-signature-home__container {
+  max-width: var(--home-width);
+  margin-inline: auto;
+  padding-inline: var(--home-gutter);
 }
 
 .rawaj-signature-home a {
@@ -53,1163 +113,737 @@
   text-decoration: none;
 }
 
-.rawaj-signature-home__container {
-  width: min(100%, 76rem);
-  margin-inline: auto;
-  padding: 0.7rem 0.75rem 1.5rem;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta::before {
+  display: none;
 }
 
-/* Header: brand-first, compact, and visually continuous with the page. */
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
-  position: sticky;
-  top: 0;
-  z-index: 35;
-  border: 0 !important;
-  color: var(--rawaj-signature-text);
-  background: linear-gradient(180deg, rgba(43, 44, 48, 0.97), rgba(39, 40, 44, 0.91)) !important;
-  box-shadow: 0 9px 24px rgba(7, 8, 11, 0.14) !important;
-  backdrop-filter: blur(22px) saturate(110%);
-  -webkit-backdrop-filter: blur(22px) saturate(110%);
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta {
+  min-width: 44px !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
-  width: min(100%, 76rem);
-  min-height: 3.65rem !important;
-  margin-inline: auto;
-  padding: 0.42rem 0.75rem !important;
+.rawaj-signature-home :is(h2, h3) {
+  color: inherit !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup {
-  position: relative;
-  gap: 0.55rem !important;
+.rawaj-signature-section-header a {
+  color: #07534d !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-mark {
-  width: 2.35rem !important;
-  height: 2.35rem !important;
-  border: 0 !important;
-  border-radius: 12px;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-mark img {
-  width: 2rem !important;
-  height: auto !important;
-  filter: drop-shadow(0 5px 11px rgba(0, 0, 0, 0.24));
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:last-child {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.48rem !important;
-  white-space: nowrap;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__name {
-  display: inline !important;
-  color: var(--rawaj-signature-text) !important;
-  font-family: "Cairo", sans-serif !important;
-  font-size: 1.02rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.018em;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-divider {
-  display: block !important;
-  width: 1px !important;
-  height: 1rem !important;
-  background: linear-gradient(
-    var(--rawaj-signature-coral),
-    var(--rawaj-signature-pink),
-    var(--rawaj-signature-violet)
-  ) !important;
-  opacity: 0.66;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
-  display: inline !important;
-  color: #c8c2cd !important;
-  font-family: "Cairo", system-ui, sans-serif !important;
-  font-size: 0.66rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.13em !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-home-menu-action {
-  display: none !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button {
-  width: 2.45rem !important;
-  height: 2.45rem !important;
-  min-height: 2.45rem !important;
-  padding: 0 !important;
-  color: #d6d0cb !important;
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
-  border-radius: 13px !important;
-  background: rgba(255, 255, 255, 0.032) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.026) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action:hover,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account:hover,
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button:hover {
+.rawaj-signature-lead-card > a {
   color: #fff !important;
-  background: rgba(255, 255, 255, 0.065) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav {
-  border: 1px solid rgba(255, 255, 255, 0.065) !important;
-  background: rgba(255, 255, 255, 0.026) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav-item {
-  color: rgba(242, 239, 235, 0.7) !important;
-  font-family: "Cairo", sans-serif;
-  font-weight: 500 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-nav-item[data-active="true"] {
-  color: var(--rawaj-signature-text) !important;
-  background: rgba(255, 255, 255, 0.056) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-cta {
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink)) !important;
-  box-shadow: 0 10px 24px rgba(207, 55, 166, 0.2) !important;
-  font-family: "Cairo", sans-serif;
-  font-weight: 600 !important;
-}
-
-/* Hero: compact gateway to the listings, not a standalone advertisement. */
 .rawaj-signature-hero {
   position: relative;
-  isolation: isolate;
-  min-height: 21.25rem;
-  margin-bottom: 2.35rem;
-  overflow: visible;
-  border: 1px solid transparent;
-  border-radius: 26px;
-  background:
-    linear-gradient(155deg, rgba(9, 12, 39, 0.985), rgba(11, 12, 29, 0.985) 57%, rgba(18, 18, 26, 0.995)) padding-box,
-    linear-gradient(120deg, rgba(255, 112, 84, 0.42), rgba(220, 62, 182, 0.32), rgba(140, 99, 244, 0.32), rgba(63, 145, 255, 0.36)) border-box;
-  box-shadow:
-    0 24px 54px rgba(0, 0, 0, 0.29),
-    inset 0 1px 0 rgba(255, 255, 255, 0.065);
+  padding-block: 0.2rem 1.2rem;
 }
 
 .rawaj-signature-hero::before {
-  content: "";
   position: absolute;
-  z-index: -1;
-  inset: 19% 0 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse at 50% 40%, rgba(13, 15, 25, 0.18), transparent 42%),
-    linear-gradient(180deg, rgba(10, 11, 19, 0.01), rgba(12, 13, 20, 0.73) 53%, rgba(12, 13, 19, 0.97) 100%);
+  z-index: 0;
+  inset: auto calc(-1 * var(--home-gutter)) 0;
+  height: 5.4rem;
+  border-block-end: 1px solid #f2d19a;
+  border-end-start-radius: 52% 76%;
+  border-end-end-radius: 10% 24%;
+  background: linear-gradient(14deg, #102c2c81, #2868637a 50%, transparent 85%);
   pointer-events: none;
-}
-
-.rawaj-signature-hero__aurora {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-.rawaj-signature-hero__aurora::before {
   content: "";
-  position: absolute;
-  inset: -47% -17% 50%;
-  background:
-    radial-gradient(circle at 21% 72%, rgba(255, 73, 115, 0.84), transparent 19%),
-    radial-gradient(circle at 46% 73%, rgba(127, 63, 255, 0.86), transparent 25%),
-    radial-gradient(circle at 73% 45%, rgba(27, 151, 255, 0.86), transparent 24%),
-    radial-gradient(circle at 90% 80%, rgba(255, 105, 55, 0.7), transparent 18%);
-  filter: blur(23px) saturate(116%);
-  opacity: 0.83;
-  transform: rotate(-5deg) scale(1.1);
 }
 
-.rawaj-signature-hero__aurora span {
-  position: absolute;
-  display: block;
-  border-radius: 48% 52% 61% 39% / 54% 41% 59% 46%;
-  filter: blur(11px);
-  mix-blend-mode: screen;
-}
-
-.rawaj-signature-hero__aurora span[data-wave="one"] {
-  width: 79%;
-  height: 6.4rem;
-  inset: 4.4rem auto auto -24%;
-  background: linear-gradient(90deg, #ff7736, #ff2e88 36%, #7840f4 72%, transparent);
-  opacity: 0.72;
-  transform: rotate(9deg);
-  box-shadow: 0 0 26px rgba(238, 55, 168, 0.43);
-}
-
-.rawaj-signature-hero__aurora span[data-wave="two"] {
-  width: 79%;
-  height: 7rem;
-  inset: 2.6rem -28% auto auto;
-  background: linear-gradient(90deg, transparent, #2635e7 18%, #16b6ff 50%, #8e55ff 78%, #ff4c8d);
-  opacity: 0.75;
-  transform: rotate(-12deg);
-  box-shadow: 0 0 30px rgba(40, 138, 255, 0.44);
-}
-
-.rawaj-signature-hero__aurora span[data-wave="three"] {
-  width: 64%;
-  height: 5.8rem;
-  inset: 8.5rem -19% auto auto;
-  background: linear-gradient(110deg, #4434cb, #f33b9e 57%, #ff7b35 88%);
-  opacity: 0.55;
-  transform: rotate(14deg);
-}
-
-.rawaj-signature-hero__content {
+.rawaj-signature-hero__tagline {
   position: relative;
-  z-index: 1;
-  display: flex;
-  min-height: 21.25rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 5.4rem 1rem 4.25rem;
-  text-align: center;
-}
-
-.rawaj-signature-hero__kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.38rem;
-  margin-bottom: 0.45rem;
-  color: #ded9d5;
-  font-size: 0.66rem;
-  font-weight: 500;
-}
-
-.rawaj-signature-hero__kicker svg {
-  width: 0.92rem;
-  color: #ff8a66;
-}
-
-.rawaj-signature-hero h1 {
-  max-width: 20rem;
-  margin: 0;
-  color: #f5f1ed;
-  font-size: clamp(1.7rem, 7.4vw, 3.35rem);
+  margin: -0.65rem 0 0.5rem;
+  color: #fff5e4;
+  font-size: 0.7rem;
   font-weight: 700;
-  line-height: 1.24;
-  letter-spacing: -0.035em;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.72);
-}
-
-.rawaj-signature-hero__content > p {
-  max-width: 29rem;
-  margin: 0.62rem auto 0.85rem;
-  color: rgba(239, 235, 231, 0.79);
-  font-size: 0.77rem;
-  font-weight: 400;
-  line-height: 1.75;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.66);
 }
 
 .rawaj-signature-hero__utility {
+  position: relative;
   display: flex;
-  width: min(100%, 27rem);
-  align-items: center;
-  justify-content: center;
-  gap: 0.48rem;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-block-end: 0.55rem;
 }
 
-.rawaj-signature-location,
-.rawaj-signature-hero__primary-action {
+.rawaj-signature-hero__utility a {
   display: inline-flex;
-  min-height: 2.65rem;
+  min-height: 44px;
   align-items: center;
-  justify-content: center;
-  gap: 0.34rem;
-  border-radius: 14px;
-  font-size: 0.69rem;
-  font-weight: 600;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding-inline: 0.7rem;
+  font-size: 0.77rem;
+  font-weight: 750;
+  box-shadow: 0 4px 12px #032a2966;
+}
+
+.rawaj-signature-hero__utility svg,
+.rawaj-signature-section-header a svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
 }
 
 .rawaj-signature-location {
-  padding-inline: 0.72rem;
-  color: #ddd7d2;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(35, 36, 44, 0.7);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  background: linear-gradient(160deg, #fffcf4, #f3dfc2);
 }
 
-.rawaj-signature-location svg {
-  width: 0.9rem;
-  color: #ff8b6d;
-}
-
-.rawaj-signature-location svg:last-child {
-  width: 0.72rem;
-  color: #9b9692;
-}
-
-.rawaj-signature-hero__primary-action {
-  padding-inline: 0.9rem;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink));
-  box-shadow: 0 11px 25px rgba(210, 56, 170, 0.2);
-}
-
-.rawaj-signature-hero__primary-action svg {
-  width: 0.96rem;
+.rawaj-signature-hero__utility .rawaj-signature-hero__primary-action {
+  color: #fff5e2;
+  background: #063b39;
+  border: 1px solid #eccf9d84;
 }
 
 .rawaj-signature-search {
-  position: absolute;
-  z-index: 3;
-  inset-inline-start: 50%;
-  inset-block-end: -1.48rem;
-  display: grid;
-  width: calc(100% - 1.3rem);
-  max-width: 39rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.38rem;
-  padding: 0.36rem;
-  border: 1px solid transparent;
-  border-radius: 18px;
-  background:
-    linear-gradient(145deg, rgba(39, 40, 47, 0.99), rgba(29, 30, 36, 0.99)) padding-box,
-    linear-gradient(112deg, rgba(255, 112, 84, 0.5), rgba(220, 62, 182, 0.42), rgba(140, 99, 244, 0.4), rgba(63, 145, 255, 0.44)) border-box;
-  box-shadow:
-    0 18px 38px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transform: translateX(-50%);
-}
-
-.rawaj-signature-search label {
+  position: relative;
   display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.58rem;
-  padding-inline: 0.78rem;
+  min-height: 3.05rem;
+  border: 1px solid #fff9ed;
+  border-radius: 1rem;
+  background: linear-gradient(110deg, #f8e8d7f2, #fffaf0eb);
+  box-shadow:
+    0 8px 18px #132f2c43,
+    inset 0 1px 12px #fff9ed;
 }
 
-.rawaj-signature-search label > svg {
-  width: 1.08rem;
-  color: #a9a4aa;
-}
-
-.rawaj-signature-search input {
-  width: 100%;
+#rawaj-signature-search-input {
+  display: block;
+  flex: 1;
+  width: 0;
   min-width: 0;
-  border: 0;
-  outline: 0;
-  color: #f4f1ee;
-  background: transparent;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 400;
+  align-self: stretch;
+  min-height: 3rem;
+  padding-inline: 0.7rem;
+  border: 0 !important;
+  border-radius: inherit;
+  color: #102c29 !important;
+  background: transparent !important;
+  font-size: 16px !important;
 }
 
 .rawaj-signature-search input::placeholder {
-  color: #8f8b8f;
+  opacity: 1;
+  color: #475651 !important;
+  font-size: clamp(0.72rem, 3.2vw, 1rem);
+  font-weight: 700;
 }
 
 .rawaj-signature-search button {
-  min-height: 2.75rem;
-  padding-inline: 1.05rem;
-  border: 0;
-  border-radius: 14px;
-  color: #fff;
-  background: linear-gradient(115deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink));
-  box-shadow: 0 9px 22px rgba(210, 56, 170, 0.18);
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* Quiet value signals; no extra cards. */
-.rawaj-signature-trust-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: center;
-  margin: 0.25rem 0 1.35rem;
-  padding: 0.65rem 0.25rem;
-  border-block: 1px solid rgba(255, 255, 255, 0.055);
+  width: clamp(3.1rem, 14vw, 4.6rem);
+  flex: none;
+  place-items: center;
+  border: 1px solid #5ea79d;
+  border-radius: 1rem;
+  color: white;
+  background: linear-gradient(145deg, #0b625d, #032b2d 70%);
+  box-shadow:
+    inset 0 0 10px #30877a80,
+    0 3px 8px #0d44464a;
 }
 
-.rawaj-signature-trust-row span {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding-inline: 0.25rem;
-  color: #b9b3ae;
-  font-size: 0.6rem;
-  font-weight: 500;
-  white-space: nowrap;
+.rawaj-signature-search button svg {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
-.rawaj-signature-trust-row span + span {
-  border-inline-start: 1px solid rgba(255, 255, 255, 0.055);
-}
-
-.rawaj-signature-trust-row svg {
-  width: 0.88rem;
-  color: #72cede;
-}
-
-/* Shared section rhythm. */
 .rawaj-signature-section {
-  margin-top: 1.75rem;
-}
-
-.rawaj-signature-trust-row + .rawaj-signature-section {
-  margin-top: 0.9rem;
+  margin-block: 0 0.9rem;
 }
 
 .rawaj-signature-section-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  padding-inline: 0.1rem;
+  gap: 0.5rem;
+  margin-block-end: 0.52rem;
 }
 
-.rawaj-signature-section-header > div:first-child {
+.rawaj-signature-section-header__title {
+  isolation: isolate;
+  position: relative;
+  display: flex;
   min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.45rem;
+  margin-inline: calc(-1 * var(--home-gutter)) 0;
+  padding: 0.58rem var(--home-gutter) 0.58rem 0.65rem;
+  padding-inline: var(--home-gutter) 0.65rem;
+  color: #fff5e6;
 }
 
-.rawaj-signature-section-header small {
-  display: block;
-  margin-bottom: 0.14rem;
-  color: #e37c68;
-  font-size: 0.59rem;
-  font-weight: 500;
+.rawaj-signature-section-header__title::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-block-start: 1px solid var(--home-gold);
+  border-start-end-radius: 38% 100%;
+  border-end-start-radius: 2.4rem;
+  background:
+    radial-gradient(ellipse at 30% 125%, #388d7c, transparent 72%),
+    linear-gradient(140deg, #073533 8%, #0b5d54 52%, #053637 100%);
+  box-shadow: 0 5px 12px #29494127;
+  content: "";
+}
+
+.rawaj-signature-section-header__title > svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  color: var(--home-champagne);
 }
 
 .rawaj-signature-section-header h2 {
   margin: 0;
-  color: var(--rawaj-signature-text);
-  font-size: clamp(1.14rem, 4.8vw, 1.65rem);
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.025em;
+  font-size: clamp(1.01rem, 4vw, 1.65rem);
+  font-weight: 850;
+  line-height: 1.25;
 }
 
-.rawaj-signature-section-header > div:last-child a {
+.rawaj-signature-section-header small {
+  display: block;
+  margin-block-start: 0.15rem;
+  font-size: clamp(0.63rem, 2.55vw, 0.9rem);
+  line-height: 1.3;
+}
+
+.rawaj-signature-section-header a {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 0.18rem;
-  color: #b6b0ab;
-  font-size: 0.65rem;
-  font-weight: 500;
-  white-space: nowrap;
+  color: #07534d;
+  font-size: clamp(0.66rem, 2.8vw, 0.9rem);
+  font-weight: 800;
 }
 
-.rawaj-signature-section-header > div:last-child svg {
-  width: 0.8rem;
+[dir="ltr"] .rawaj-signature-section-header a svg,
+[dir="ltr"] .rawaj-signature-location svg:last-child {
+  transform: scaleX(-1);
 }
 
-/* Featured editorial hierarchy. */
-.rawaj-signature-featured__layout {
+.rawaj-signature-categories__rail {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.8rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.37rem, 1.7vw, 0.85rem);
+}
+
+.rawaj-signature-category-chip {
+  display: flex;
+  min-height: clamp(3.85rem, 16vw, 6.25rem);
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14rem;
+  padding: 0.3rem 0.16rem;
+  border: 1px solid #fff9f0;
+  border-radius: clamp(0.75rem, 3.8vw, 1.5rem);
+  background:
+    radial-gradient(ellipse at 100% 103%, #c2c9af95, transparent 55%),
+    linear-gradient(145deg, #e7dccb, #fff5e7 61%, #eee4d4);
+  box-shadow:
+    0 5px 9px #79583732,
+    inset 0 1px 8px #fffaf0;
+  text-align: center;
+}
+
+.rawaj-signature-category-chip:nth-child(4n) {
+  background:
+    radial-gradient(ellipse at 8% 8%, #dfa28785, transparent 65%),
+    linear-gradient(150deg, #f6ddcf, #fff5e7 74%, #dfaa9666);
+}
+
+.rawaj-signature-category-chip > span {
+  display: grid;
+  width: 100%;
+  height: clamp(1.82rem, 8vw, 3.3rem);
+  min-height: 0;
+  place-items: center;
+  color: #7e4628;
+}
+
+.rawaj-signature-category-chip img {
+  width: 95%;
+  height: clamp(1.82rem, 8vw, 3.3rem);
+  object-fit: contain;
+}
+
+.rawaj-signature-category-chip svg {
+  width: 65%;
+  height: 80%;
+  filter: drop-shadow(0 3px 2px #6e3c294a);
+}
+
+.rawaj-signature-category-chip strong {
+  font-size: clamp(0.61rem, 2.75vw, 0.96rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-signature-featured .rawaj-signature-section-header__title::after {
+  position: absolute;
+  z-index: -2;
+  inset-block: 22% 0;
+  inset-inline: 22% -12%;
+  border-radius: 80% 15% 70% 2%;
+  border-block-start: 1px solid #ffdaa3;
+  background: linear-gradient(165deg, #fee1be, #d97d5e 55%, #f4c7a1);
+  transform: translateY(0.55rem);
+  content: "";
+}
+
+.rawaj-signature-featured__viewport {
+  overflow: hidden;
+  margin-inline: calc(-1 * var(--home-gutter));
+  padding-block: 0.12rem 0.55rem;
+  touch-action: pan-y pinch-zoom;
+}
+
+.rawaj-signature-featured__layout {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(0.5rem, 2vw, 0.85rem);
+  padding-inline: 0;
 }
 
 .rawaj-signature-lead-card {
   position: relative;
-  overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: 22px;
-  background:
-    linear-gradient(155deg, #32343a, #292a2f 78%) padding-box,
-    linear-gradient(118deg, rgba(255, 112, 84, 0.54), rgba(220, 62, 182, 0.42), rgba(140, 99, 244, 0.38), rgba(63, 145, 255, 0.42)) border-box;
+  flex: 0 0 66%;
+  min-width: 0;
+  border: 2px solid #ffdfab;
+  border-radius: clamp(1rem, 4vw, 1.6rem);
+  background: #193c39;
   box-shadow:
-    0 21px 48px rgba(0, 0, 0, 0.27),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 5px 13px #784f38a0,
+    0 0 0 1px #fff9ed;
+}
+
+.rawaj-signature-lead-card > a {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  color: white;
 }
 
 .rawaj-signature-lead-card__media {
   position: relative;
-  isolation: isolate;
-  aspect-ratio: 16 / 10;
-  margin: 0.46rem 0.46rem 0;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 17px;
-  background: #202126;
-  box-shadow:
-    0 15px 32px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(236, 238, 255, 0.055);
+  aspect-ratio: 2 / 1;
+  min-height: 8.2rem;
+  max-height: 18rem;
 }
 
-.rawaj-signature-lead-card__media::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 17%, transparent 70%, rgba(6, 7, 12, 0.33)),
-    radial-gradient(circle at 50% -5%, rgba(255, 255, 255, 0.1), transparent 42%);
-  pointer-events: none;
-}
-
-.rawaj-signature-lead-card__media > img,
-.rawaj-signature-lead-card__media > div,
-.rawaj-signature-lead-card__media > svg,
-.rawaj-signature-support-card__media > img,
-.rawaj-signature-support-card__media > div,
-.rawaj-signature-support-card__media > svg,
-.rawaj-signature-latest-card__media > img,
-.rawaj-signature-latest-card__media > div,
-.rawaj-signature-latest-card__media > svg {
+.rawaj-signature-lead-card__media img,
+.rawaj-signature-latest-card__media img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.rawaj-signature-favorite,
-.rawaj-signature-latest-card__favorite {
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  color: #fff;
-  background: rgba(20, 21, 27, 0.58);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.rawaj-signature-favorite {
+.rawaj-signature-lead-card__media::after {
   position: absolute;
-  z-index: 4;
-  inset-block-start: 0.68rem;
-  inset-inline-start: 0.68rem;
-  width: 2.2rem;
-  height: 2.2rem;
-}
-
-.rawaj-signature-favorite svg {
-  width: 1.1rem;
+  inset: 0;
+  background: linear-gradient(0deg, #0a1514fa, #07181170 34%, transparent 69%);
+  content: "";
 }
 
 .rawaj-signature-featured-badge {
   position: absolute;
-  z-index: 4;
-  inset-block-end: 0.65rem;
-  inset-inline-end: 0.65rem;
-  padding: 0.27rem 0.56rem;
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  z-index: 1;
+  inset: 0.43rem 0.43rem auto auto;
+  inset-inline: 0.43rem auto;
+  display: flex;
+  align-items: center;
+  gap: 0.23rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  color: #fff;
-  background: rgba(184, 57, 153, 0.86);
-  box-shadow: 0 7px 17px rgba(164, 42, 136, 0.19);
-  font-size: 0.57rem;
-  font-weight: 600;
+  background: linear-gradient(135deg, #ffedc7, #edba77);
+  color: #3e2919;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.rawaj-signature-featured-badge svg,
+.rawaj-signature-lead-card__body svg,
+.rawaj-signature-latest-card__body svg {
+  width: 0.82rem;
+  height: 0.82rem;
+  flex: none;
+}
+
+.rawaj-signature-lead-card__body {
+  position: absolute;
+  inset: auto 0.55rem 0.55rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.15rem 0.35rem;
+  text-shadow: 0 1px 3px #000;
+}
+
+.rawaj-signature-lead-card__body h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: clamp(0.88rem, 3.6vw, 1.6rem);
+  line-height: 1.2;
+}
+
+.rawaj-signature-lead-card__body small,
+.rawaj-signature-latest-card__body small {
+  display: flex;
+  align-items: center;
+  gap: 0.24rem;
+  font-size: clamp(0.64rem, 2.8vw, 0.88rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.rawaj-signature-lead-card__body strong {
+  border: 1px solid #3a8679;
+  border-radius: 999px;
+  padding: 0.14rem 0.49rem;
+  background: linear-gradient(135deg, #12716b, #073f40);
+  font-size: clamp(0.76rem, 3.4vw, 1.2rem);
+  line-height: 1.2;
+  direction: ltr;
+  overflow-wrap: anywhere;
 }
 
 .rawaj-signature-no-image {
   position: absolute;
-  z-index: 3;
-  inset-block-start: 0.66rem;
-  inset-inline-end: 0.66rem;
-  padding: 0.23rem 0.48rem;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 999px;
-  color: #bbb5b0;
-  background: rgba(25, 26, 31, 0.72);
-  font-size: 0.54rem;
+  z-index: 1;
+  inset: 38% 0 auto;
+  color: #fff9ec;
+  text-shadow: 0 1px 4px #000;
+  text-align: center;
+  font-size: 0.8rem;
 }
 
-.rawaj-signature-lead-card__body {
-  padding: 0.84rem 0.94rem 0.94rem;
-}
-
-.rawaj-signature-lead-card__body > span {
-  display: block;
-  margin-bottom: 0.16rem;
-  color: #d487bd;
-  font-size: 0.57rem;
-  font-weight: 500;
-}
-
-.rawaj-signature-lead-card h3 {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0;
-  color: #f0ece8;
-  font-size: 0.93rem;
-  font-weight: 600;
-  line-height: 1.55;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.rawaj-signature-lead-card__body > strong {
-  display: block;
-  margin-top: 0.4rem;
-  color: #f1d9e6;
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.rawaj-signature-lead-card__body > p {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0.4rem 0 0.58rem;
-  color: #aaa5a0;
-  font-size: 0.66rem;
-  font-weight: 400;
-  line-height: 1.7;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow-wrap: anywhere;
-}
-
-.rawaj-signature-card-meta {
+.rawaj-signature-featured__dots {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.42rem 0.76rem;
-  color: #9f9a96;
-  font-size: 0.6rem;
+  min-height: 1.35rem;
+  justify-content: center;
 }
 
-.rawaj-signature-card-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.24rem;
-}
-
-.rawaj-signature-card-meta svg {
-  width: 0.8rem;
-  color: #72cde1;
-}
-
-.rawaj-signature-featured__supporting {
+.rawaj-signature-featured__dots button {
   display: grid;
-  gap: 0.62rem;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  margin-block: -0.68rem;
 }
 
-.rawaj-signature-support-card {
-  position: relative;
-  display: grid;
-  min-width: 0;
-  grid-template-columns: 6.2rem minmax(0, 1fr) auto;
-  gap: 0.68rem;
-  align-items: center;
-  overflow: hidden;
-  padding: 0.4rem 0.42rem 0.4rem 0.58rem;
-  border: 1px solid var(--rawaj-signature-border);
-  border-radius: 18px;
-  background: linear-gradient(150deg, #313238, #2a2b30);
-  box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.19),
-    inset 0 1px 0 rgba(255, 255, 255, 0.032);
-}
-
-.rawaj-signature-support-card::before {
+.rawaj-signature-featured__dots button::after {
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1px solid #967653;
+  border-radius: 50%;
+  background: #d6bea0;
   content: "";
-  position: absolute;
-  inset-inline-start: 13%;
-  inset-inline-end: 58%;
-  inset-block-start: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(220, 62, 182, 0.5), rgba(63, 145, 255, 0.42), transparent);
-  opacity: 0.72;
 }
 
-.rawaj-signature-support-card__media {
-  position: relative;
-  aspect-ratio: 1.2 / 1;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  background: #222328;
-  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.25);
+.rawaj-signature-featured__dots button[aria-current="true"]::after {
+  background: #07534d;
+  border-color: #07534d;
 }
 
-.rawaj-signature-support-card__body {
-  min-width: 0;
+.rawaj-signature-latest .rawaj-signature-section-header__title {
+  color: #222925;
 }
 
-.rawaj-signature-support-card__body > span {
-  display: block;
-  color: #c982b4;
-  font-size: 0.52rem;
-  font-weight: 500;
+.rawaj-signature-latest .rawaj-signature-section-header__title::before {
+  background: linear-gradient(145deg, #f6e5cc, #fff7ed 78%);
+  box-shadow: none;
 }
 
-.rawaj-signature-support-card__body > strong {
-  display: -webkit-box;
-  overflow: hidden;
-  margin-top: 0.1rem;
-  color: #eeeae6;
-  font-size: 0.73rem;
-  font-weight: 600;
-  line-height: 1.5;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.rawaj-signature-latest .rawaj-signature-section-header__title > svg {
+  box-sizing: content-box;
+  padding: 0.29rem;
+  border-radius: 50%;
+  color: white;
+  background: linear-gradient(155deg, #db825f, #a74731);
 }
 
-.rawaj-signature-support-card__body > b {
-  display: block;
-  margin-top: 0.2rem;
-  color: #efd5e3;
-  font-size: 0.67rem;
-  font-weight: 700;
-}
-
-.rawaj-signature-support-card__body > small {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin-top: 0.22rem;
-  overflow: hidden;
-  color: #96918d;
-  font-size: 0.54rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rawaj-signature-support-card__body > small svg {
-  width: 0.7rem;
-  flex: 0 0 auto;
-  color: #70c9de;
-}
-
-.rawaj-signature-support-card__arrow {
-  width: 0.82rem;
-  color: #77736f;
-}
-
-/* Latest listings remain quiet and fast to scan. */
 .rawaj-signature-latest__list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.58rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.52rem, 2vw, 0.9rem);
 }
 
 .rawaj-signature-latest-card {
   position: relative;
-  display: grid;
   min-width: 0;
-  grid-template-columns: 5.8rem minmax(0, 1fr) auto;
-  gap: 0.66rem;
-  align-items: center;
-  padding: 0.4rem 0.42rem;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 17px;
-  background: rgba(47, 48, 53, 0.86);
-  box-shadow:
-    0 11px 25px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  border: 1px solid #fff8ef;
+  border-radius: 0.85rem;
+  background: linear-gradient(140deg, #fff8ef, #f3e7d7);
+  box-shadow: 0 4px 9px #5b402332;
+}
+
+.rawaj-signature-latest-card > a:first-child {
+  display: block;
+  overflow: hidden;
+  height: 100%;
+  border-radius: inherit;
 }
 
 .rawaj-signature-latest-card__media {
-  aspect-ratio: 1.18 / 1;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.085);
-  border-radius: 13px;
-  background: #222328;
+  position: relative;
+  aspect-ratio: 2.35 / 1;
+  background: #ead9c2;
+}
+
+.rawaj-signature-condition {
+  position: absolute;
+  inset-block-start: 0.45rem;
+  inset-inline-start: 0.45rem;
+  border-radius: 999px;
+  padding: 0.12rem 0.45rem;
+  color: #3b2c1e;
+  background: #ffe4b3;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.rawaj-signature-condition[data-new="true"] {
+  color: #113b27;
+  background: #c2e7c7;
 }
 
 .rawaj-signature-latest-card__body {
-  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+  gap: 0.15rem 0.35rem;
+  align-items: center;
+  min-height: 2.7rem;
+  padding: 0.29rem 0.4rem;
 }
 
-.rawaj-signature-latest-card__body > span {
-  display: block;
-  color: #a9a2a8;
-  font-size: 0.51rem;
-  font-weight: 500;
-}
-
-.rawaj-signature-latest-card__body > strong {
+.rawaj-signature-latest-card__body strong {
   display: -webkit-box;
   overflow: hidden;
-  margin-top: 0.08rem;
-  color: #eeeae6;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.5;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  font-size: clamp(0.7rem, 3vw, 1rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
-.rawaj-signature-latest-card__body > b {
-  display: block;
-  margin-top: 0.18rem;
-  color: #e9cbdc;
-  font-size: 0.66rem;
-  font-weight: 700;
-}
-
-.rawaj-signature-latest-card__body > small {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin-top: 0.18rem;
-  overflow: hidden;
-  color: var(--rawaj-text-muted);
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rawaj-signature-latest-card__body > small svg {
-  width: 0.68rem;
-  flex: 0 0 auto;
-  color: #70c7da;
+.rawaj-signature-latest-card__body b {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  max-width: 6rem;
+  border-inline-start: 1px solid #d7c2a8;
+  padding-inline-start: 0.35rem;
+  color: #07534d;
+  font-size: clamp(0.68rem, 2.95vw, 1rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .rawaj-signature-latest-card__favorite {
-  width: 2rem;
-  height: 2rem;
-  color: #bcb6b2;
-  background: rgba(255, 255, 255, 0.025);
-  box-shadow: none;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  isolation: isolate;
+  color: #20332c;
+}
+
+.rawaj-signature-latest-card__favorite::before {
+  position: absolute;
+  z-index: -1;
+  inset: 7px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: #fff8ee;
+  box-shadow: 0 3px 7px #2b38284f;
+  content: "";
 }
 
 .rawaj-signature-latest-card__favorite svg {
-  width: 0.96rem;
+  width: 1rem;
+  height: 1rem;
 }
 
-/* Real ad placement: hidden while unresolved, refined only when an ad exists. */
-.rawaj-signature-ad-placement aside[data-placement-loading="true"] {
-  display: none !important;
+.rawaj-signature-latest-card__favorite[aria-pressed="true"] svg {
+  color: #a4433a;
+  fill: #a4433a;
 }
 
-.rawaj-signature-ad-placement .container-wide {
-  width: 100%;
-  max-width: none;
-  margin-top: 1.75rem !important;
-  padding-inline: 0 !important;
-}
-
-.rawaj-signature-ad-placement aside[data-placement-loading="false"] > a {
-  border: 1px solid transparent !important;
-  border-radius: 20px !important;
-  background:
-    linear-gradient(#2b2c31, #2b2c31) padding-box,
-    linear-gradient(115deg, rgba(255, 112, 84, 0.36), rgba(220, 62, 182, 0.32), rgba(63, 145, 255, 0.32)) border-box !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.23) !important;
-}
-
-.rawaj-signature-ad-placement aside[data-placement-loading="false"] > a > span:first-child {
-  color: #fff !important;
-  background: rgba(183, 56, 152, 0.87) !important;
-}
-
-/* Categories are a compact discovery rail, not the main page content. */
-.rawaj-signature-categories__rail {
-  display: grid;
-  grid-auto-columns: 6.8rem;
-  grid-auto-flow: column;
-  gap: 0.58rem;
-  overflow-x: auto;
-  padding: 0.05rem 0.03rem 0.35rem;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: none;
-  scroll-snap-type: inline proximity;
-}
-
-.rawaj-signature-categories__rail::-webkit-scrollbar {
-  display: none;
-}
-
-.rawaj-signature-category-chip {
-  display: flex;
-  min-height: 5.8rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.46rem;
-  padding: 0.7rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 17px;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(68, 136, 166, 0.07), transparent 55%),
-    rgba(47, 48, 53, 0.76);
-  box-shadow:
-    0 11px 24px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
-  text-align: center;
-  scroll-snap-align: start;
-}
-
-.rawaj-signature-category-chip > span {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  place-items: center;
-  border: 1px solid rgba(105, 217, 236, 0.34);
-  border-radius: 13px;
-  color: var(--rawaj-signature-cyan);
-  background: rgba(58, 143, 160, 0.075);
-}
-
-.rawaj-signature-category-chip svg {
-  width: 1.15rem;
-}
-
-.rawaj-signature-category-chip strong {
-  max-width: 100%;
-  overflow: hidden;
-  color: #e8e4e0;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Minimal trust and footer treatment. */
+.rawaj-signature-trust-row,
 .rawaj-signature-safety {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.58rem;
+  display: flex;
   align-items: center;
-  margin-top: 1.8rem;
-  padding: 0.75rem 0.12rem;
-  border-block: 1px solid rgba(112, 213, 177, 0.15);
+  gap: 0.5rem;
+  padding-block: 0.6rem;
+  color: #2b5149;
 }
 
+.rawaj-signature-trust-row {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rawaj-signature-trust-row span {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.rawaj-signature-trust-row svg,
 .rawaj-signature-safety > svg {
-  width: 1.2rem;
-  color: var(--rawaj-signature-success);
+  width: 1rem;
+  height: 1rem;
+  flex: none;
 }
 
-.rawaj-signature-safety > span {
-  min-width: 0;
+.rawaj-signature-safety {
+  border-block-start: 1px solid #ddc6a7;
 }
 
-.rawaj-signature-safety strong {
-  display: block;
-  color: #e9e5e1;
-  font-size: 0.67rem;
-  font-weight: 600;
+.rawaj-signature-safety span {
+  flex: 1;
 }
 
 .rawaj-signature-safety small {
   display: block;
-  margin-top: 0.08rem;
-  overflow: hidden;
-  color: #99948f;
-  font-size: 0.54rem;
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.rawaj-signature-safety > a {
-  color: #9ccfc0;
-  font-size: 0.58rem;
-  font-weight: 600;
+.rawaj-signature-safety a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  text-decoration: underline;
 }
 
 .rawaj-signature-home__empty,
 .rawaj-signature-home__load-state {
-  margin-top: 1.35rem;
-  border: 1px solid var(--rawaj-signature-border);
-  border-radius: 18px;
-  color: #b5afaa;
-  background: rgba(47, 48, 53, 0.75);
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid #dec6a7;
+  border-radius: 1rem;
+  background: #fff8ee;
 }
 
-.rawaj-signature-home__empty {
-  padding: 1.2rem;
-  text-align: center;
-  font-size: 0.7rem;
+.rawaj-signature-home :focus-visible {
+  outline: 2px solid #0b675c;
+  outline-offset: 2px;
 }
 
-/* Bottom navigation: only the create action carries the full gradient. */
+.rawaj-signature-lead-card a:focus-visible {
+  outline: 2px solid #fff1cb;
+  outline-offset: -4px;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-mobile-dock {
-  inset-block-end: 0 !important;
+  inset-block-end: 0;
   padding: 0 0.45rem calc(0.3rem + env(safe-area-inset-bottom));
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell {
-  overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 21px !important;
-  background: rgba(39, 40, 45, 0.965) !important;
-  box-shadow:
-    0 17px 38px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  background:
+    radial-gradient(ellipse at 92% -20%, #409687, transparent 55%),
+    radial-gradient(ellipse at 48% 150%, #13746b, transparent 59%), #043432 !important;
+  border: 1px solid #d1b586 !important;
+  color: #fff4de;
+  box-shadow: 0 -3px 16px #042e3055;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item {
-  min-height: 3.42rem !important;
-  color: #a8a29e !important;
-  border: 0 !important;
+  color: #fff4de !important;
+  min-width: 0;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="favorites"] {
+  order: 1;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="chats"] {
+  order: 2;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="account"] {
+  order: 3;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-active="true"] {
+  background: linear-gradient(155deg, #398479, #073c39) !important;
+  box-shadow:
+    inset 0 0 0 1px #e7d8a18f,
+    inset 0 0 10px #a2c4ac64;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item .rawaj-dock-icon {
+  color: #fff4de !important;
   background: transparent !important;
-  box-shadow: none !important;
-  font-family: "Cairo", sans-serif;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
-  color: #f0d5e3 !important;
-  background: rgba(255, 255, 255, 0.047) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
-  color: #f2ccdf !important;
-  background: rgba(208, 70, 160, 0.11) !important;
-  box-shadow: inset 0 0 0 1px rgba(226, 105, 181, 0.1) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-create {
-  color: #fff !important;
-  background: linear-gradient(145deg, var(--rawaj-signature-coral), var(--rawaj-signature-pink), var(--rawaj-signature-violet)) !important;
-  box-shadow:
-    0 11px 24px rgba(208, 58, 168, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-  ring-color: #292a2f !important;
+  color: #152e2b !important;
+  background: linear-gradient(155deg, #fff0c7, #dc9e61) !important;
+  box-shadow: none;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-dock__label {
-  color: inherit !important;
-  font-size: 0.63rem !important;
-  font-weight: 500 !important;
-}
-
-@media (min-width: 40rem) {
-  .rawaj-signature-home__container {
-    padding-inline: 1rem;
+@media (max-width: 410px) {
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
+    flex-wrap: wrap;
+    column-gap: 0.25rem;
   }
 
-  .rawaj-signature-hero__content {
-    padding-inline: 2rem;
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-shell-header__actions {
+    gap: 0.18rem;
   }
 
-  .rawaj-signature-featured__layout {
-    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
-    align-items: stretch;
-  }
-
-  .rawaj-signature-featured__supporting {
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-  }
-
-  /* Two-item datasets should still read as a composed pair, not a lead card
-     beside a half-empty supporting column. */
-  .rawaj-signature-featured__layout:has(.rawaj-signature-featured__supporting > :only-child) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-
-  .rawaj-signature-featured__supporting:has(> :only-child) {
-    grid-template-rows: auto;
-  }
-
-  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "media media"
-      "body arrow";
-    align-items: center;
-    padding: 0.46rem;
-  }
-
-  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__media {
-    grid-area: media;
-    aspect-ratio: 16 / 10;
-  }
-
-  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__body {
-    grid-area: body;
-    padding: 0.42rem 0.48rem 0.3rem;
-  }
-
-  .rawaj-signature-featured__supporting:has(> :only-child) .rawaj-signature-support-card__arrow {
-    grid-area: arrow;
-    margin-inline-end: 0.4rem;
-  }
-
-  .rawaj-signature-support-card {
-    grid-template-columns: 7.5rem minmax(0, 1fr) auto;
-  }
-
-  .rawaj-signature-latest__list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .rawaj-signature-categories__rail {
-    grid-auto-columns: 7.4rem;
+  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
+    display: none;
   }
 }
 
-@media (min-width: 64rem) {
-  .rawaj-signature-home__container {
-    padding-top: 1rem;
-  }
-
+@media (min-width: 768px) {
   .rawaj-signature-hero {
-    min-height: 26rem;
-    margin-bottom: 2.65rem;
+    padding-block: 0.6rem 1.6rem;
   }
 
-  .rawaj-signature-hero__content {
-    min-height: 26rem;
-    padding: 8rem 3rem 5rem;
-  }
-
-  .rawaj-signature-hero h1 {
-    max-width: 38rem;
-  }
-
+  .rawaj-signature-hero__utility,
   .rawaj-signature-search {
-    inset-block-end: -1.62rem;
-  }
-
-  .rawaj-signature-trust-row {
-    max-width: 42rem;
+    max-width: 46rem;
     margin-inline: auto;
   }
 
+  .rawaj-signature-section-header__title {
+    flex: 0 1 62%;
+  }
+
+  .rawaj-signature-featured__viewport {
+    margin-inline: 0;
+  }
+
+  .rawaj-signature-lead-card {
+    flex-basis: 62%;
+  }
+
   .rawaj-signature-latest__list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .rawaj-signature-categories__rail {
-    grid-auto-flow: initial;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    overflow: visible;
-  }
-
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .rawaj-signature-lead-card,
-  .rawaj-signature-support-card,
-  .rawaj-signature-latest-card,
-  .rawaj-signature-category-chip {
-    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-  }
-
-  .rawaj-signature-lead-card:hover,
-  .rawaj-signature-support-card:hover,
-  .rawaj-signature-latest-card:hover,
-  .rawaj-signature-category-chip:hover {
-    transform: translateY(-2px);
+@media (min-width: 1024px) {
+  .rawaj-signature-categories__rail {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 }

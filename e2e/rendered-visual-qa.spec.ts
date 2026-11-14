@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { expectRenderedLayout } from "./layout-audit";
 
 const viewports = [
+  { name: "mobile-320", width: 320, height: 700, project: "mobile", homeOnly: true },
   { name: "mobile-360", width: 360, height: 800, project: "mobile" },
   { name: "mobile-390", width: 390, height: 844, project: "mobile" },
   { name: "mobile-412", width: 412, height: 915, project: "mobile" },
@@ -68,6 +69,7 @@ for (const viewport of viewports) {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
     for (const route of routes) {
+      if ("homeOnly" in viewport && route.name !== "home") continue;
       test(`${route.name} rendered layout audit`, async ({ page }, testInfo) => {
         test.skip(
           !testInfo.project.name.startsWith(viewport.project),

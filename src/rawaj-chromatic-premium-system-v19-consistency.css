@@ -144,7 +144,6 @@
 
 /* Search is one neutral system across home, categories, listings, chats and header. */
 .rawaj-header-search,
-.rawaj-signature-search,
 .rawaj-search-overlay,
 .rawaj-search-toolbar,
 .rawaj-communication-search,
@@ -165,9 +164,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
-.rawaj-signature-search label,
 .rawaj-communication-search input,
-.rawaj-signature-search input,
 .rawaj-search-overlay__field input,
 .rawaj-search-toolbar__search input,
 .rawaj-categories-v2__hero-search input {
@@ -176,7 +173,6 @@
 }
 
 .rawaj-communication-search input::placeholder,
-.rawaj-signature-search input::placeholder,
 .rawaj-search-overlay__field input::placeholder,
 .rawaj-search-toolbar__search input::placeholder,
 .rawaj-categories-v2__hero-search input::placeholder {
@@ -184,7 +180,6 @@
 }
 
 .rawaj-header-search:is(:hover, :focus-visible),
-.rawaj-signature-search:focus-within,
 .rawaj-communication-search:focus-within,
 .rawaj-search-overlay__field:focus-within,
 .rawaj-search-toolbar__search:focus-within,

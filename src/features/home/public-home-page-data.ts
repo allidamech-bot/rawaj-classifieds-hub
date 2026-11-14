@@ -18,9 +18,9 @@ export async function loadPublicHomePageData() {
   const taxonomySchemaMissing =
     !taxonomyResult.ok && taxonomyResult.error.code === "schema_missing";
   const categoryWorlds = taxonomyResult.ok
-    ? buildCanonicalHomeCategoryWorlds(taxonomyResult.data)
+    ? buildCanonicalHomeCategoryWorlds(taxonomyResult.data, 8)
     : taxonomySchemaMissing && categoriesResult.ok
-      ? buildLegacyHomeCategoryWorlds(categoriesResult.data)
+      ? buildLegacyHomeCategoryWorlds(categoriesResult.data, 8)
       : [];
 
   return {
