@@ -256,11 +256,19 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       const dock = document.querySelector(".rawaj-mobile-dock");
       let footerDockOverlap = false;
       if (footer && dock && visible(footer) && visible(dock)) {
-        const footerBottomAtMaxScroll =
-          footer.getBoundingClientRect().bottom +
-          window.scrollY -
-          Math.max(0, root.scrollHeight - window.innerHeight);
-        footerDockOverlap = footerBottomAtMaxScroll > dock.getBoundingClientRect().top + 1;
+        // Storefront footers reserve empty scroll clearance behind the fixed dock.
+        // Check the last visible link/text, not the padded background box.
+        const footerContent = Array.from(
+          footer.querySelectorAll("a[href], button, p, h2, h3, small, li"),
+        ).filter(visible);
+        const lastContentBottom = Math.max(
+          ...footerContent.map((element) => element.getBoundingClientRect().bottom),
+          0,
+        );
+        const bottomAtMaxScroll =
+          lastContentBottom + window.scrollY - Math.max(0, root.scrollHeight - window.innerHeight);
+        footerDockOverlap =
+          footerContent.length > 0 && bottomAtMaxScroll > dock.getBoundingClientRect().top + 1;
       }
 
       function expectedSection(pathname: string) {

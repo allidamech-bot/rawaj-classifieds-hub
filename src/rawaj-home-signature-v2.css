@@ -1,11 +1,11 @@
 /* The route selector also scopes the shared header and dock across client navigation. */
 .rawaj-app-shell[data-resolved-pathname="/"] {
-  --home-ivory: #f9f0e4;
-  --home-champagne: #ffe3b0;
-  --home-ink: #132724;
-  --home-petrol: #073836;
-  --home-teal: #08635e;
-  --home-gold: #eac38f;
+  --home-ivory: var(--rawaj-identity-ivory);
+  --home-champagne: var(--rawaj-identity-champagne);
+  --home-ink: var(--rawaj-identity-ink);
+  --home-petrol: var(--rawaj-identity-petrol);
+  --home-teal: var(--rawaj-identity-teal);
+  --home-gold: var(--rawaj-identity-gold);
   --home-gutter: clamp(0.75rem, 3.4vw, 2rem);
   --home-width: 76rem;
   color: var(--home-ink);
@@ -17,7 +17,7 @@
   background:
     linear-gradient(180deg, transparent 9rem, var(--home-ivory) 13.5rem),
     url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat,
-    linear-gradient(#073836 0 8rem, transparent 14rem) !important;
+    linear-gradient(var(--home-petrol) 0 8rem, transparent 14rem) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-shell__content {
@@ -28,7 +28,7 @@
   position: relative;
   top: auto;
   border: 0 !important;
-  background: #073836 url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat !important;
+  background: var(--home-petrol) url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat !important;
   box-shadow: none !important;
   backdrop-filter: none;
   color: #fff7ea;
@@ -158,7 +158,7 @@
   padding-inline: 0.25rem;
   border-radius: 0.25rem;
   color: #fff5e4;
-  background-color: #073836;
+  background-color: var(--home-petrol);
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -277,7 +277,7 @@
   padding: 0.58rem var(--home-gutter) 0.58rem 0.65rem;
   padding-inline: var(--home-gutter) 0.65rem;
   color: #fff5e6;
-  background-color: #073836;
+  background-color: var(--home-petrol);
   border-start-end-radius: 38% 100%;
   border-end-start-radius: 2.4rem;
 }
@@ -777,7 +777,6 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   background:
     radial-gradient(ellipse at 92% -20%, #409687, transparent 55%),
     radial-gradient(ellipse at 48% 150%, #13746b, transparent 59%), #043432 !important;

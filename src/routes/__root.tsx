@@ -20,6 +20,7 @@ import {
   useListingComparison,
 } from "@/features/comparison/listing-comparison";
 import { AuthProvider } from "@/lib/auth";
+import { resolveBrowserChrome } from "@/lib/browser-chrome";
 import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { resolveRouteStyleScope, routeStyleHrefs } from "@/lib/route-styles";
@@ -129,12 +130,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: ({ matches }) => {
     const seo = createSeo({ title: ROOT_TITLE, description: ROOT_DESCRIPTION });
     const activeMatch = matches[matches.length - 1];
-    const routeStyleScope = resolveRouteStyleScope(activeMatch?.pathname ?? "/");
+    const pathname = activeMatch?.pathname ?? "/";
+    const routeStyleScope = resolveRouteStyleScope(pathname);
+    const { themeColor } = resolveBrowserChrome(pathname);
     return {
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-        { name: "theme-color", content: "#242529" },
+        { name: "theme-color", content: themeColor },
         { name: "author", content: "RAWAJ" },
         { name: "rawaj-build-commit", content: rawajBuildInfo.commitSha },
         { name: "rawaj-build-environment", content: rawajBuildInfo.environment },

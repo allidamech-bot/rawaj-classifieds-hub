@@ -1,5 +1,14 @@
 :root,
 .dark {
+  /* Approved homepage identity. Values are additive until route migration is accepted.
+   * Keep historical dark semantics unchanged during this safe first slice. */
+  --rawaj-identity-ivory: #f9f0e4;
+  --rawaj-identity-champagne: #ffe3b0;
+  --rawaj-identity-ink: #132724;
+  --rawaj-identity-petrol: #073836;
+  --rawaj-identity-teal: #08635e;
+  --rawaj-identity-gold: #eac38f;
+
   --rawaj-page-background: #242529;
   --rawaj-card-background: #2d2f34;
   --rawaj-elevated-background: #34363c;
@@ -27,6 +36,24 @@
   --rawaj-success-surface: #253934;
   --rawaj-warning-surface: #3c3122;
   --rawaj-danger-surface: #412726;
+
+  /* Shared badge variants. Defaults retain the existing legacy appearance until
+   * an approved route opts into the ivory design system. */
+  --rawaj-badge-accent-border: rgba(225, 100, 180, 0.3);
+  --rawaj-badge-accent-surface: rgba(155, 40, 111, 0.2);
+  --rawaj-badge-accent-ink: #f6cfe5;
+  --rawaj-badge-success-border: color-mix(in srgb, var(--rawaj-success) 25%, transparent);
+  --rawaj-badge-success-surface: color-mix(in srgb, var(--rawaj-success) 10%, transparent);
+  --rawaj-badge-success-ink: #bcebd9;
+  --rawaj-badge-warning-border: color-mix(in srgb, var(--rawaj-warning) 25%, transparent);
+  --rawaj-badge-warning-surface: color-mix(in srgb, var(--rawaj-warning) 10%, transparent);
+  --rawaj-badge-warning-ink: #ecd6ac;
+  --rawaj-badge-gold-border: color-mix(in srgb, var(--rawaj-accent-gold) 25%, transparent);
+  --rawaj-badge-gold-surface: color-mix(in srgb, var(--rawaj-accent-gold) 10%, transparent);
+  --rawaj-badge-gold-ink: #ecd6ac;
+  --rawaj-badge-destructive-border: color-mix(in srgb, var(--rawaj-danger) 30%, transparent);
+  --rawaj-badge-destructive-surface: color-mix(in srgb, var(--rawaj-danger) 14%, transparent);
+  --rawaj-badge-destructive-ink: #ffd4d0;
 
   --background: var(--rawaj-page-background);
   --foreground: var(--rawaj-text-primary);
@@ -121,6 +148,17 @@
   --rawaj-shadow-card: var(--shadow-soft);
   --rawaj-shadow-card-hover: var(--shadow-raised);
   --rawaj-shadow-overlay: var(--shadow-overlay);
+  /* Shared button elevation follows semantic actions, not legacy pink/purple constants. */
+  --rawaj-button-shadow-primary: 0 8px 20px color-mix(in srgb, var(--rawaj-action-primary) 20%, transparent);
+  --rawaj-button-shadow-primary-hover: 0 10px 24px color-mix(in srgb, var(--rawaj-action-primary) 24%, transparent);
+  --rawaj-button-shadow-accent: 0 10px 24px color-mix(in srgb, var(--rawaj-action-coral) 20%, transparent);
+  --rawaj-button-shadow-brand: 0 10px 24px color-mix(in srgb, var(--rawaj-action-brand) 22%, transparent);
+  /* Component roles stay semantic across legacy and opt-in palettes. */
+  --rawaj-card-interactive-border: var(--rawaj-border-active);
+  --rawaj-card-interactive-shadow: var(--shadow-raised);
+  --rawaj-control-hover-border: var(--rawaj-border-active);
+  --rawaj-control-focus-border: var(--ring);
+  --rawaj-dialog-overlay-background: color-mix(in srgb, var(--primary) 45%, transparent);
   --shadow-card: var(--shadow-soft);
 
   --motion-fast: 150ms;
@@ -142,6 +180,87 @@
   --rawaj-touch-target: 3rem;
   --app-viewport-height: 100dvh;
   --rawaj-shell-bottom-reserve: max(1.5rem, var(--rawaj-safe-bottom));
+}
+
+
+/* Opt-in route palette only. No routes are enabled by this foundation change.
+ * Apply after screen-level visual acceptance; keep approved home and My Store
+ * unchanged until their own compatibility is verified. */
+.rawaj-app-shell[data-design-palette="ivory"] {
+  color-scheme: light;
+  --rawaj-page-background: var(--rawaj-identity-ivory);
+  --rawaj-card-background: #fffaf3;
+  --rawaj-elevated-background: #fffdf9;
+  --rawaj-subtle-background: #f4ebde;
+  --rawaj-muted-surface: #f4ebde;
+  --rawaj-surface-inset: #fffdf9;
+  --rawaj-surface-active: #e9dcca;
+  --rawaj-surface-selected: #e0ece8;
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #53645e;
+  --rawaj-text-disabled: #6c756d;
+  --rawaj-text-inverse: #ffffff;
+  --rawaj-link: var(--rawaj-identity-teal);
+  --rawaj-border: #dfd3c1;
+  --rawaj-border-strong: #ad9c86;
+  --rawaj-border-active: var(--rawaj-identity-teal);
+  --rawaj-action-primary: var(--rawaj-identity-petrol);
+  --rawaj-action-primary-hover: var(--rawaj-identity-teal);
+  --rawaj-action-primary-foreground: #ffffff;
+  --rawaj-action-brand: var(--rawaj-identity-petrol);
+  --rawaj-action-brand-hover: var(--rawaj-identity-teal);
+  --rawaj-action-coral: #865427;
+  --rawaj-action-coral-hover: #71451f;
+  --rawaj-success: #14583c;
+  --rawaj-warning: #714900;
+  --rawaj-danger: #942a36;
+  --rawaj-accent-gold: var(--rawaj-identity-gold);
+  --rawaj-surface-card: var(--rawaj-card-background);
+  --rawaj-surface-sage: var(--rawaj-muted-surface);
+  --rawaj-surface-elevated: var(--rawaj-elevated-background);
+  --rawaj-shadow-xs: 0 2px 9px rgba(19, 39, 36, 0.06);
+  --shadow-soft: 0 2px 9px rgba(19, 39, 36, 0.06);
+  --shadow-raised: 0 8px 20px rgba(19, 39, 36, 0.1);
+  --shadow-overlay: 0 16px 48px rgba(19, 39, 36, 0.17);
+  --rawaj-shadow-overlay: var(--shadow-overlay);
+  --background: var(--rawaj-page-background);
+  --foreground: var(--rawaj-text-primary);
+  --card: var(--rawaj-card-background);
+  --card-foreground: var(--rawaj-text-primary);
+  --popover: var(--rawaj-elevated-background);
+  --popover-foreground: var(--rawaj-text-primary);
+  --primary: var(--rawaj-action-primary);
+  --primary-foreground: var(--rawaj-action-primary-foreground);
+  --secondary: var(--rawaj-muted-surface);
+  --secondary-foreground: var(--rawaj-text-primary);
+  --accent: var(--rawaj-identity-teal);
+  --accent-foreground: #ffffff;
+  --muted: var(--rawaj-muted-surface);
+  --muted-foreground: var(--rawaj-text-secondary);
+  --border: var(--rawaj-border);
+  --input: var(--rawaj-border-strong);
+  --ring: var(--rawaj-identity-teal);
+  --destructive: var(--rawaj-danger);
+  --destructive-foreground: #ffffff;
+  --warning: var(--rawaj-warning);
+  --gold: var(--rawaj-accent-gold);
+  --gold-foreground: #132724;
+  --rawaj-badge-accent-border: #91b5a6;
+  --rawaj-badge-accent-surface: #dcefe8;
+  --rawaj-badge-accent-ink: #073836;
+  --rawaj-badge-success-border: #99c9b0;
+  --rawaj-badge-success-surface: #e7f5ed;
+  --rawaj-badge-success-ink: #14583c;
+  --rawaj-badge-warning-border: #d3b576;
+  --rawaj-badge-warning-surface: #fff1d1;
+  --rawaj-badge-warning-ink: #714900;
+  --rawaj-badge-gold-border: #ddbf92;
+  --rawaj-badge-gold-surface: #f8ead0;
+  --rawaj-badge-gold-ink: #6e4919;
+  --rawaj-badge-destructive-border: #d9a1a4;
+  --rawaj-badge-destructive-surface: #ffe9e8;
+  --rawaj-badge-destructive-ink: #942a36;
 }
 
 html {

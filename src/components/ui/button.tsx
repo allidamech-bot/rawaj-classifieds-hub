@@ -10,11 +10,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border border-white/10 bg-[var(--rawaj-action-primary)] text-[var(--rawaj-action-primary-foreground)] shadow-[0_8px_20px_rgba(155,40,111,0.2)] hover:bg-[var(--rawaj-action-primary-hover)] hover:shadow-[0_10px_24px_rgba(155,40,111,0.24)]",
+          "border border-white/10 bg-[var(--rawaj-action-primary)] text-[var(--rawaj-action-primary-foreground)] shadow-[var(--rawaj-button-shadow-primary)] hover:bg-[var(--rawaj-action-primary-hover)] hover:shadow-[var(--rawaj-button-shadow-primary-hover)]",
         accent:
-          "border border-white/10 bg-[var(--rawaj-action-coral)] text-white shadow-[0_10px_24px_rgba(194,68,49,0.2)] hover:bg-[var(--rawaj-action-coral-hover)]",
+          "border border-white/10 bg-[var(--rawaj-action-coral)] text-white shadow-[var(--rawaj-button-shadow-accent)] hover:bg-[var(--rawaj-action-coral-hover)]",
         brand:
-          "border border-white/10 bg-[var(--rawaj-action-brand)] text-white shadow-[0_10px_24px_rgba(96,64,168,0.22)] hover:bg-[var(--rawaj-action-brand-hover)]",
+          "border border-white/10 bg-[var(--rawaj-action-brand)] text-white shadow-[var(--rawaj-button-shadow-brand)] hover:bg-[var(--rawaj-action-brand-hover)]",
         soft: "border border-[var(--rawaj-border-strong)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)] hover:border-[var(--rawaj-border-active)] hover:bg-[var(--rawaj-surface-active)]",
         success: "bg-emerald-trust text-emerald-trust-foreground hover:bg-emerald-trust/92",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
