@@ -377,3 +377,10 @@
   .rawaj-taxonomy-option__title {
   color: #17362f !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/add-listing"]
+  main.rawaj-listing-studio-v4
+  .rawaj-studio-action-bar {
+  position: static !important;
+  margin-block-start: 0.75rem !important;
+}
