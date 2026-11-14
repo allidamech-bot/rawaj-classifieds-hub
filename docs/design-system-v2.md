@@ -144,3 +144,67 @@ Additional historical source suites still fail identically on the reference main
 source suite expects retired Input/My Store markup. These assertions were not
 changed in this search migration. The required Quality Gate command set passes
 locally; do not confuse the historical optional suites with successful checks.
+
+
+## B2.2 listing detail — implementation candidate, pending acceptance
+The detail route and contact dock now opt into the existing canonical ivory theme,
+while the page-specific shell uses approved petrol chrome. Historical detail-only
+overrides in V7B/V14/V15/V16 are removed in their original stylesheets; My Store
+and other route ownership remain intact. Retain the existing SEO/SSR, gallery,
+contact, conversation, comparison, favorites, reports and offer workflows.
+This is not accepted until rendered RTL/LTR tests and final-SHA CI are green,
+the PR is verified mergeable and is merged into main.
+
+
+B2.2 dependency audit continuation: retired the remaining inherited dark detail selectors
+at their actual V11, V18, V22 and discovery V4 owners; the V18 shared seller
+selector arm was retained. The V22 media aspect ratio and safe-area dock contract
+are now route-owned, including two-column mobile action reflow. Existing source
+contract tests were aligned to the approved replacement, without removing their
+coverage of seller identity, contact behavior or safe-area reservations.
+
+The last V6 detail-specific dark selectors were also retired at source; shared and storefront V6 selectors remain protected.
+
+
+The generic app-shell main reset retains its original specificity so the
+accepted B2.1 search styles remain untouched. The detail main now explicitly
+owns its opaque ivory canvas through the existing route stylesheet.
+
+B2.2 audit also retired the leftover discovery V4 listing detail typography, price accent and narrow-spec declarations, keeping responsive specification wrapping in the owned detail stylesheet. No global overrides were introduced.
+
+
+The remaining V17 forced-dark detail surfaces and V19 important-price mobile
+rules have been retired from their original owners. V18 historical adaptive-card
+skins now exclude the detail route, and responsive listing-specific rules reside
+in listing-detail-v3.css. Protected routes keep their legacy fallbacks.
+
+Historical V3 adaptive card appearance is now excluded only for cards under the listing detail route, retaining its original dark behavior for every other unmigrated route. The route owner binds card color aliases to canonical ivory semantics so similar/recent cards remain readable.
+
+
+V7B had four broad dark selector arms still targeting `/listings/:id`: two
+forced the main and common cards to a light-on-dark skin, and two forced
+shared action controls to the retired visual palette. B2.2 removes only
+those listing-detail route arms from their original selectors; all other
+unmigrated routes keep their legacy behavior. Seller stats use the semantic
+muted surface instead of a retired dark warm panel.
+
+
+The B2.2 detail source contract now excludes the retired V17 forced-dark listing shell,
+V17 breadcrumb colors, and V6 listing recovery skins. Component-owned copy,
+price and seller heading roles are bound directly to approved identity tokens,
+with an explicit accessible report-action foreground. No unrelated route was re-themed.
+
+B2.2 also excludes the detail pathname from V17 generic dark cards, primary/secondary actions, form controls, badges, overlays and status states directly at their selector ownership level. `/listings` and unrelated unmigrated routes retain their prior behavior; no new late-loaded stylesheet was added.
+
+
+B2.2 loading and unavailable API states share the approved detail canvas through
+`rawaj-detail-recovery` and a route-owned card rather than the retired global
+`rawaj-surface` dark skin. The existing messages and browse-listings action are unchanged.
+
+B2.2 CSS cascade verification also excluded `/listings/:id` from the original V7 broad dark token/heading class selectors. Search, categories, homepage and all still-unmigrated routes retain their existing V7 contract. This addresses the observed rendered white-on-ivory heading failure without changing contrast assertions.
+
+B2.2 rendered contrast audit also includes the `ViewedBeforeBanner`, which appears outside the main detail canvas. Its root now opts into the same canonical ivory tokens, with explicit dark title and secondary timestamp roles rather than inheriting the legacy shell text colors.
+
+The related `PriceChangeBanner` is also outside the main route canvas; it now opts into the canonical palette directly, preserving the existing fetch logic and rise/drop semantics while adopting accessible success/warning badges and legible prices.
+
+Listing photo fallbacks now opt into an explicit `identity` mode on the shared `PlaceholderArt` primitive, limiting the petrol/champagne glyph and glow to the B2.2 gallery and viewer. Default placeholder rendering in all other routes remains unchanged, and missing images remain honestly represented.

@@ -1,19 +1,17 @@
 /* RAWAJ Discovery Marketplace V4
  * One calm, commercial presentation layer for home, categories, results,
- * adaptive listing cards, and public listing detail.
+ * and adaptive listing cards.
  */
 
 .rawaj-home-v3-main,
 .rawaj-categories-v2,
-.rawaj-search-results-v1,
-.rawaj-detail-v2 {
+.rawaj-search-results-v1 {
   color: var(--rawaj-text-primary);
 }
 
 .rawaj-home-v3,
 .rawaj-categories-v2,
-.rawaj-search-results-v1,
-.rawaj-detail-v2__container {
+.rawaj-search-results-v1 {
   width: min(100%, var(--rawaj-page-max));
 }
 
@@ -273,37 +271,7 @@
   backdrop-filter: none;
 }
 
-/* Public listing detail */
-.rawaj-detail-v2__layout {
-  gap: clamp(1rem, 3vw, 2rem);
-}
-
-.rawaj-detail-summary,
-.rawaj-detail-section,
-.rawaj-detail-reference,
-.rawaj-detail-v2__sidebar > section {
-  border: 1px solid var(--rawaj-border);
-  border-radius: var(--rawaj-radius-card);
-  background: var(--rawaj-card-background);
-  box-shadow: var(--rawaj-shadow-xs);
-}
-
-.rawaj-detail-summary h1 {
-  font-size: clamp(1.35rem, 3vw, 2.2rem);
-  line-height: 1.45;
-  text-wrap: balance;
-}
-
-.rawaj-detail-price strong {
-  color: var(--rawaj-accent-orange);
-  font-size: clamp(1.5rem, 4vw, 2.45rem);
-}
-
-.rawaj-detail-description {
-  max-width: 72ch;
-  font-size: 0.95rem;
-  line-height: 2;
-}
+/* B2.2: listing detail presentation belongs to its route styles. */
 
 @media (min-width: 1024px) {
   .rawaj-search-results-v1 {
@@ -516,61 +484,7 @@ body,
   color: #b8b3b1 !important;
 }
 
-/* Listing detail had its own legacy warm-light palette. Rebind only presentation
- * tokens to the approved dark system and keep all media/actions/data untouched. */
-.rawaj-detail-v2 {
-  --detail-canvas: #0b0e14 !important;
-  --detail-surface: #141821 !important;
-  --detail-surface-muted: #171b24 !important;
-  --detail-line: rgba(216, 174, 95, 0.12) !important;
-  --detail-line-strong: rgba(216, 174, 95, 0.2) !important;
-  --detail-ink: #f7f3ed !important;
-  --detail-ink-soft: #b8b3b1 !important;
-  --detail-ink-muted: #9299a2 !important;
-  --detail-green: #e8ca8d !important;
-  --detail-gold: #d8ae5f !important;
-  background: #0b0e14 !important;
-  color: #f7f3ed !important;
-}
-
-.rawaj-detail-v2 :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
-  border: 1px solid rgba(216, 174, 95, 0.11) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-price {
-  border: 1px solid rgba(216, 174, 95, 0.16) !important;
-  background: linear-gradient(145deg, rgba(216, 174, 95, 0.09), rgba(20, 24, 33, 0.95)) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-seller__actions :is(a, button) {
-  border-color: rgba(216, 174, 95, 0.12) !important;
-  color: #ddd7d1 !important;
-  background: #171b24 !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
-  border-color: transparent !important;
-  color: #fff !important;
-  background: linear-gradient(135deg, #c24431, #9b286f) !important;
-}
-
-.rawaj-detail-v2 :is(.rawaj-demo-listing-notice, .rawaj-detail-reserved) {
-  border: 1px solid rgba(216, 174, 95, 0.2) !important;
-  color: #ead7ad !important;
-  background: linear-gradient(145deg, #241d13, #17171a) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-similar__item,
-.rawaj-detail-v2 .rawaj-detail-v2__message {
-  border-color: rgba(216, 174, 95, 0.11) !important;
-  color: #f7f3ed !important;
-  background: #141821 !important;
-}
+/* Listing detail palette is now canonical and route-owned (B2.2). */
 
 /* First-session feedback teaser must never cover content on mobile. It remains
  * fully accessible through its aria-label, but renders as the same compact
@@ -597,14 +511,4 @@ body,
     height: 1.15rem !important;
   }
 
-  /* Prevent narrow spec values from breaking one Arabic character per line. */
-  .rawaj-detail-specs > div {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.2rem !important;
-  }
-
-  .rawaj-detail-specs dd {
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-  }
 }

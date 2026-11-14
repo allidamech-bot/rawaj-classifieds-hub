@@ -1,10 +1,11 @@
+/* B2.2 route migration: exclude only /listings/:id from retired V7 dark tokens and generic heading skins. */
 /* RAWAJ page-by-page recovery V7
  * Emergency cascade repair after the dark-system rollout.
  * High-specificity, route-scoped rules intentionally defeat late legacy CSS.
  * Presentation only; no data, auth, API, D1, R2, permissions, or routing changes.
  */
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"])) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) {
   --background: #242529 !important;
   --foreground: #f2efeb !important;
   --card: #2d2f34 !important;
@@ -50,43 +51,43 @@
     linear-gradient(180deg, #2d2e32 0%, #242529 30rem, #222327 100%) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .text-primary {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .text-primary {
   color: #f2efeb !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .text-foreground {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .text-foreground {
   color: #f2efeb !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .text-muted-foreground {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .text-muted-foreground {
   color: #aaa39f !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .text-primary-foreground {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .text-primary-foreground {
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .bg-primary {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .bg-primary {
   background-color: #9b286f !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .bg-card,
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .bg-card-warm,
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .bg-muted-surface,
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) .bg-secondary {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .bg-card,
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .bg-card-warm,
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .bg-muted-surface,
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .bg-secondary {
   color: #f2efeb !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) :is(h1, h2, h3, h4, h5, h6) {
+.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) :is(h1, h2, h3, h4, h5, h6) {
   color: #f2efeb !important;
   font-family: "Cairo", "Segoe UI", system-ui, sans-serif !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) :is(input, textarea, select) {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) :is(input, textarea, select) {
   color-scheme: dark;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"])) :is(input, textarea, select)::placeholder {
+.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) :is(input, textarea, select)::placeholder {
   color: #888990 !important;
   opacity: 1 !important;
 }

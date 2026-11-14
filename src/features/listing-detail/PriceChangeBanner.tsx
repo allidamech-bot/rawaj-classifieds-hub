@@ -42,16 +42,18 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
 
   return (
     <div className="container-wide pt-3">
-      <section className="flex items-center gap-3 rounded-[1.1rem] border border-border/70 bg-card p-3 shadow-soft">
+      <section
+        className="rawaj-detail-price-change flex items-center gap-3 rounded-[1.1rem] border p-3 shadow-soft"
+        data-design-palette="ivory"
+      >
         <span
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
-            decreased ? "bg-emerald-500/10 text-emerald-700" : "bg-warning/10 text-warning"
-          }`}
+          className="rawaj-detail-price-change__icon grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+          data-tone={decreased ? "down" : "up"}
         >
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-extrabold">
+          <p className="rawaj-detail-price-change__title text-xs font-extrabold">
             {decreased
               ? text("انخفض السعر منذ حفظك للإعلان", "Price dropped since you saved this listing")
               : text(
@@ -59,7 +61,7 @@ export function PriceChangeBanner({ listingId }: { listingId: string }) {
                   "Price increased since you saved this listing",
                 )}
           </p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <p className="rawaj-detail-price-change__previous mt-0.5 text-[10px]">
             {formatPrice(context.previousPrice, context.currency, language)} →{" "}
             {formatPrice(context.currentPrice, context.currency, language)}
           </p>

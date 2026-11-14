@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [repairCss, stabilityCss] = await Promise.all([
+const [repairCss, stabilityCss, detailCss, foundationCss] = await Promise.all([
   readFile(new URL("../src/rawaj-live-repair-sweep-v22.css", import.meta.url), "utf8"),
   readFile(new URL("../src/stability-accessibility-fixes.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8"),
+  readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8"),
 ]);
 
 test("listing studio decorative backdrop cannot widen the document", () => {
@@ -49,17 +51,11 @@ test("listing studio active step and preview count keep readable contrast", () =
   );
 });
 
-test("listing detail mobile media and contact dock keep the summary readable", () => {
-  assert.match(
-    repairCss,
-    /data-resolved-pathname\^="\/listings\/"[\s\S]*?\.rawaj-detail-media__stage[\s\S]*?aspect-ratio: 4 \/ 3 !important/,
-  );
-  assert.match(
-    repairCss,
-    /\.rawaj-detail-v2__container[\s\S]*?padding-bottom: calc\(6rem \+ env\(safe-area-inset-bottom, 0px\)\) !important/,
-  );
-  assert.match(
-    repairCss,
-    /\.rawaj-contact-dock__inner[\s\S]*?min-height: 3\.45rem !important/,
-  );
+test("listing detail retains mobile media and safe-area dock within canonical route ownership", () => {
+  assert.doesNotMatch(repairCss, /data-resolved-pathname\^="\/listings\/"/);
+  assert.match(detailCss, /@media \(max-width: 767px\)/);
+  assert.match(detailCss, /aspect-ratio: 4 \/ 3/);
+  assert.match(detailCss, /env\(safe-area-inset-bottom, 0px\)/);
+  assert.match(detailCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(foundationCss, /rawaj-shell-bottom-reserve/);
 });
