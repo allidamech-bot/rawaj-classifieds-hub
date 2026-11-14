@@ -1,6 +1,37 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 
+async function dumpStorePaint(page: import("@playwright/test").Page, label: string) {
+  const data = await page.evaluate(() => {
+    const selectors = [
+      "main.my-store", ".my-store-hero", ".my-store-identity-row",
+      ".my-store-identity", ".my-store-identity h1", ".my-store-stats",
+      ".ms-owner-inventory", ".ms-approved-tabs", ".ms-owner-listing-card",
+      ".my-store-public-section", ".my-store-public-about",
+      ".my-store-public-details", ".my-store-public-reviews",
+      ".my-store-public-reviews > div", ".my-store-public-safety",
+    ];
+    const item = (element: Element) => {
+      const cs = getComputedStyle(element);
+      const before = getComputedStyle(element, "::before");
+      const after = getComputedStyle(element, "::after");
+      return { tag: element.tagName.toLowerCase(), classes: String(element.className).slice(0,110),
+        background: cs.backgroundColor, bgImage: cs.backgroundImage.slice(0,100),
+        color: cs.color, opacity: cs.opacity, position: cs.position, zIndex: cs.zIndex,
+        before: { content: before.content, bg: before.backgroundColor, bgImage: before.backgroundImage.slice(0,100) },
+        after: { content: after.content, bg: after.backgroundColor },
+      };
+    };
+    return { nodes: selectors.map((selector) => ({selector,
+      node: document.querySelector(selector) ? item(document.querySelector(selector)!) : null })),
+      dark: Array.from(document.querySelectorAll("main.my-store *"))
+        .filter(e => { const bg=getComputedStyle(e).backgroundColor; return /rgb\\(4[0-8],|rgb\\(3[0-9],|rgb\\(2[0-9],/.test(bg); })
+        .slice(0,45).map(item) };
+  });
+  console.log("STORE_PAINT_DIAGNOSTIC_" + label + " " + JSON.stringify(data));
+}
+
+
 // Local browser fixtures only. These are representative data, never production store records.
 test("approved store composition and owner interactions", async ({ page }, testInfo) => {
   test.setTimeout(180000);
@@ -59,6 +90,7 @@ test("approved store composition and owner interactions", async ({ page }, testI
   });
   await page.goto("/profile/listings");
   await expect(page.locator(".my-store")).toBeVisible();
+  await dumpStorePaint(page,"owner");
   await expect(page.locator(".ms-owner-listing-card")).toHaveCount(4);
   await expect(page.locator(".my-store-cover img")).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
@@ -189,6 +221,7 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
   await expect(page.locator(".my-store-public .my-store-add")).toContainText("Browse listings");
   await expect(page.locator("main.my-store-public")).toBeVisible();
+  await dumpStorePaint(page,"buyer");
   await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
   await expect(page.locator(".my-store-identity h1")).toBeVisible();
   await expect(page.locator(".my-store-owner-menu")).toHaveCount(0);
