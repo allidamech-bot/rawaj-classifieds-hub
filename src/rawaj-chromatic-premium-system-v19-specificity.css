@@ -22,7 +22,6 @@
 }
 
 /* Own the exact route-scoped search selectors used by older systems. */
-.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search {
   border-color: rgba(216, 174, 95, 0.14) !important;
@@ -33,21 +32,18 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search input,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input {
   color: #f7f3ed !important;
   background: transparent !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input::placeholder,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search input::placeholder,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input::placeholder {
   color: #9099a5 !important;
   opacity: 1 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label:focus-within,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search:focus-within,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search:focus-within {
   border-color: rgba(216, 174, 95, 0.5) !important;

@@ -147,7 +147,6 @@
 .rawaj-search-overlay,
 .rawaj-search-toolbar,
 .rawaj-communication-search,
-.rawaj-categories-v2__hero-search label,
 .rawaj-search-overlay__field,
 .rawaj-search-location,
 .rawaj-search-filter,
@@ -166,24 +165,21 @@
 
 .rawaj-communication-search input,
 .rawaj-search-overlay__field input,
-.rawaj-search-toolbar__search input,
-.rawaj-categories-v2__hero-search input {
+.rawaj-search-toolbar__search input {
   color: #f7f3ed !important;
   background: transparent !important;
 }
 
 .rawaj-communication-search input::placeholder,
 .rawaj-search-overlay__field input::placeholder,
-.rawaj-search-toolbar__search input::placeholder,
-.rawaj-categories-v2__hero-search input::placeholder {
+.rawaj-search-toolbar__search input::placeholder {
   color: #8e969f !important;
 }
 
 .rawaj-header-search:is(:hover, :focus-visible),
 .rawaj-communication-search:focus-within,
 .rawaj-search-overlay__field:focus-within,
-.rawaj-search-toolbar__search:focus-within,
-.rawaj-categories-v2__hero-search label:focus-within {
+.rawaj-search-toolbar__search:focus-within {
   border-color: rgba(216, 174, 95, 0.46) !important;
   box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }

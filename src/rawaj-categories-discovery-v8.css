@@ -134,6 +134,12 @@
   color: var(--rawaj-text-secondary) !important;
 }
 
+/* Status pills must remain readable on the migrated ivory listing cards. */
+.rawaj-categories-discovery .rawaj-adaptive-card__status {
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-petrol) !important;
+}
+
 .rawaj-categories-discovery__load-more {
   display: inline-flex;
   min-height: 2.9rem;
