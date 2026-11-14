@@ -77,7 +77,7 @@
   color: #f2efeb !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]) :is(h1, h2, h3, h4, h5, h6) {
+.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"]) :is(h1, h2, h3, h4, h5, h6) {
   color: #f2efeb !important;
   font-family: "Cairo", "Segoe UI", system-ui, sans-serif !important;
 }
