@@ -1,7 +1,7 @@
 /* B3.1 account authentication: original style owner, canonical RAWAJ identity.
    Presentation only: preserve Firebase callbacks, form behavior and API boundaries. */
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/login"],
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
@@ -14,7 +14,7 @@
   --auth-v12-muted: #536660;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/login"],
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
@@ -24,14 +24,22 @@
 }
 
 /* Login / registration and email recovery entry */
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-audit-v12 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-audit-v12 {
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #536660;
+  --foreground: var(--rawaj-identity-ink);
+  --muted-foreground: #536660;
+  --card: #fffaf3;
+  --primary: var(--rawaj-identity-teal);
+  --primary-foreground: white;
   min-height: auto !important;
   padding-bottom: clamp(1.5rem, 3vw, 2.5rem) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-audit-v12::before {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-audit-v12::before {
   display: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-layout {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-layout {
   width: min(100%, 62rem) !important;
   min-height: 0 !important;
   grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
@@ -41,36 +49,36 @@
   background: #fffaf3 !important;
   box-shadow: 0 14px 42px color-mix(in srgb, var(--rawaj-identity-petrol) 10%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside {
   min-height: 100% !important;
   border-inline-end: 1px solid color-mix(in srgb, var(--rawaj-identity-champagne) 18%, transparent);
   padding: clamp(1.25rem, 3vw, 1.8rem) !important;
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-petrol) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside::before,
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside::after {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside::before,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside::after {
   display: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__brand > span {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside__brand > span {
   border-radius: 0.8rem !important;
   color: var(--rawaj-identity-petrol) !important;
   background: var(--rawaj-identity-champagne) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__copy {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside__copy {
   margin-top: 2rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__copy h1 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside__copy h1 {
   color: var(--rawaj-identity-ivory) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
   font-size: clamp(1.5rem, 3.8vw, 2.2rem) !important;
   line-height: 1.35 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside__copy > p {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside__copy > p {
   color: var(--rawaj-identity-champagne) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] :is(
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] :is(
   .rawaj-auth-aside__copy > span,
   .rawaj-auth-aside__trust,
   .rawaj-auth-aside li strong
@@ -79,65 +87,65 @@
   font-size: max(0.78rem, 12px) !important;
   line-height: 1.8 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside li {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside li {
   border-color: color-mix(in srgb, var(--rawaj-identity-champagne) 19%, transparent) !important;
   border-radius: 0.85rem !important;
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 7%, transparent) !important;
   padding: 0.68rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside li :is(svg, span) {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside li :is(svg, span) {
   color: var(--rawaj-identity-champagne) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card {
   justify-content: flex-start !important;
   padding: clamp(1rem, 4vw, 1.8rem) !important;
   color: var(--rawaj-identity-ink);
   background: #fffaf3 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header > span {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header > span {
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 0.85rem !important;
   color: var(--rawaj-identity-teal) !important;
   background: color-mix(in srgb, var(--rawaj-identity-teal) 8%, white) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header p {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header p {
   color: var(--rawaj-identity-teal) !important;
   font-size: 0.75rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header h2 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header h2 {
   color: var(--rawaj-identity-petrol) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
   font-size: clamp(1.2rem, 3vw, 1.5rem) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header small {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header small {
   color: var(--auth-v12-copy) !important;
   font-size: max(0.78rem, 12px) !important;
   line-height: 1.7 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-tabs {
   border-color: var(--auth-v12-border) !important;
   border-radius: 0.9rem !important;
   background: var(--rawaj-identity-ivory) !important;
   padding: 0.28rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs button {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-tabs button {
   min-height: 2.8rem !important;
   border-radius: 0.68rem !important;
   color: var(--rawaj-identity-ink) !important;
   font-size: 0.82rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs button[data-active="true"] {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-tabs button[data-active="true"] {
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-teal) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-field-label,
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card :is(label, legend) {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-field-label,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card :is(label, legend) {
   color: var(--rawaj-identity-ink) !important;
   font-size: max(0.82rem, 13px) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card .input,
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .input,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input {
   min-height: 3.15rem !important;
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 0.8rem !important;
@@ -146,11 +154,11 @@
   font-size: max(0.88rem, 14px) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card .input::placeholder,
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input::placeholder {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .input::placeholder,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input::placeholder {
   color: var(--auth-v12-muted) !important;
 }
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/login"],
   [data-resolved-pathname="/reset-password"]
 ) :is(.rawaj-auth-card, .rawaj-auth-recovery-card) .input:focus-visible {
@@ -158,10 +166,10 @@
   outline: 3px solid color-mix(in srgb, var(--rawaj-identity-teal) 25%, transparent) !important;
   outline-offset: 1px;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-password-toggle {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-password-toggle {
   color: var(--rawaj-identity-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] :is(
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] :is(
   .rawaj-auth-forgot-link,
   .rawaj-auth-home-link,
   .rawaj-auth-back-link
@@ -171,14 +179,14 @@
   color: var(--rawaj-identity-teal) !important;
   font-size: 0.8rem !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] :is(
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] :is(
   .rawaj-auth-forgot-link,
   .rawaj-auth-home-link,
   .rawaj-auth-back-link
 ):hover {
   color: var(--rawaj-identity-petrol) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-google {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-google {
   min-height: 3.15rem !important;
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 0.8rem !important;
@@ -186,51 +194,59 @@
   background: white !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-google:hover {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-google:hover {
   border-color: var(--rawaj-identity-teal) !important;
   background: color-mix(in srgb, var(--rawaj-identity-teal) 5%, white) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-security-note {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-security-note {
   border-color: var(--auth-v12-border) !important;
   color: var(--rawaj-identity-ink) !important;
   background: color-mix(in srgb, var(--rawaj-identity-teal) 7%, white) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-divider span {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-divider span {
   color: var(--auth-v12-muted) !important;
   background: #fffaf3 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-state {
   border-radius: 0.85rem !important;
   font-size: max(0.8rem, 13px) !important;
   line-height: 1.75 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="loading"] {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="loading"] {
   border: 1px solid var(--auth-v12-border) !important;
   color: var(--rawaj-identity-ink) !important;
   background: var(--rawaj-identity-ivory) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="success"] {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="success"] {
   border: 1px solid #a8d5bf !important;
   color: #064e39 !important;
   background: #e9f8ef !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="error"] {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="error"] {
   border: 1px solid #e9b4b4 !important;
   color: #922a2c !important;
   background: #fff1f0 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="warning"] {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-state[data-tone="warning"] {
   border: 1px solid #d9c49a !important;
   color: #6b4714 !important;
   background: #fff7e7 !important;
 }
 
 /* New password confirmation / recovery */
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-v4 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-v4 {
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #536660;
+  --foreground: var(--rawaj-identity-ink);
+  --muted-foreground: #536660;
+  --card: #fffaf3;
+  --primary: var(--rawaj-identity-teal);
+  --primary-foreground: white;
   min-height: auto !important;
   padding-bottom: clamp(1rem, 2.5vw, 1.75rem) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card {
   width: min(100%, 31rem);
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 1.25rem !important;
@@ -238,18 +254,18 @@
   background: #fffaf3 !important;
   box-shadow: 0 12px 32px color-mix(in srgb, var(--rawaj-identity-petrol) 10%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-icon {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-icon {
   border: 1px solid var(--rawaj-identity-teal) !important;
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-teal) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card h1 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card h1 {
   color: var(--rawaj-identity-petrol) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
   font-size: clamp(1.15rem, 4vw, 1.45rem) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] :is(
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] :is(
   .rawaj-auth-recovery-card header p,
   .rawaj-auth-recovery-card label > span
 ) {
@@ -257,7 +273,7 @@
   font-size: max(0.8rem, 13px) !important;
   line-height: 1.7 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-state {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-state {
   border-radius: 0.9rem !important;
   color: var(--rawaj-identity-ink) !important;
   background: var(--rawaj-identity-ivory) !important;
@@ -266,14 +282,14 @@
 }
 
 /* Auth callback, no change to navigation or timing */
-.rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4 {
   display: grid;
   min-height: clamp(22rem, 60dvh, 34rem) !important;
   place-items: center;
   padding: clamp(1rem, 4vw, 2rem);
   background: transparent !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card {
   width: min(100%, 30rem);
   border: 1px solid var(--auth-v12-border) !important;
   border-radius: 1.25rem !important;
@@ -282,15 +298,15 @@
   background: #fffaf3 !important;
   box-shadow: 0 12px 32px color-mix(in srgb, var(--rawaj-identity-petrol) 10%, transparent) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card h1 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card h1 {
   color: var(--rawaj-identity-petrol) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card p {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card p {
   color: var(--auth-v12-copy) !important;
   font-size: 0.8rem !important;
   line-height: 1.7 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__spinner {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__spinner {
   color: var(--rawaj-identity-teal) !important;
 }
 
@@ -351,7 +367,7 @@
 /* Responsive, RTL, focus, and motion                                          */
 /* -------------------------------------------------------------------------- */
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/login"],
   [data-resolved-pathname="/reset-password"],
   [data-resolved-pathname="/auth/callback"]
@@ -362,54 +378,54 @@
 }
 
 @media (max-width: 899px) {
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-layout {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-layout {
     display: block !important;
     width: min(100%, 34rem) !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-aside {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-aside {
     display: none !important;
   }
 }
 
 @media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-audit-v12,
-  .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-v4 {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-audit-v12,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-v4 {
     padding-inline: 0.75rem !important;
     padding-top: 0.75rem !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-layout,
-  .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card,
-  .rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-layout,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__card,
   .rawaj-feedback-state {
     border-radius: 1.05rem !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card,
-  .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card {
     padding: 1rem !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header {
     gap: 0.6rem !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card__header > span {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card__header > span {
     width: 2.55rem !important;
     height: 2.55rem !important;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-tabs button,
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-google,
-  .rawaj-app-shell[data-resolved-pathname="/login"] .rawaj-auth-card .input,
-  .rawaj-app-shell[data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-tabs button,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-google,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .input,
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .input {
     min-height: 3rem !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-app-shell[data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__spinner {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4__spinner {
     animation-duration: 1.5s !important;
   }
 }
