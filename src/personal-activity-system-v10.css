@@ -932,6 +932,23 @@
   box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
+/* Compact listing content must use a foreground matching its ivory card surface. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact :is(.rawaj-adaptive-card__price, .rawaj-adaptive-card__title) {
+  color: #173d38 !important;
+}
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact .rawaj-adaptive-card__meta,
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact .rawaj-adaptive-card__meta span {
+  color: #435650 !important;
+}
+
+/* Signed-in empty/error recovery: keep the post-listing link legible. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.text-center a.bg-muted-surface {
+  min-height: 2.75rem;
+  color: #075c52 !important;
+  background: #e9f1e9 !important;
+  border: 1px solid rgba(7, 92, 82, 0.22) !important;
+}
+
 .rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__media {
   aspect-ratio: 16 / 10 !important;
   border-radius: 0 !important;
