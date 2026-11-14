@@ -1,10 +1,10 @@
 /* B3.1 offers: source-owned presentation for recorded price drops only.
    The API contract, calculation and public eligibility logic remain unchanged. */
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 {
   color: var(--rawaj-identity-ink);
   background: var(--rawaj-identity-ivory);
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage {
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-champagne) 26%, transparent);
@@ -13,7 +13,7 @@
   background: var(--rawaj-identity-petrol);
   box-shadow: 0 12px 32px color-mix(in srgb, var(--rawaj-identity-petrol) 13%, transparent);
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage::before {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage::before {
   content: "";
   position: absolute;
   inset-inline: 1.5rem;
@@ -23,23 +23,23 @@
   opacity: 0.65;
   pointer-events: none;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage::after {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage::after {
   content: none;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage :is(h1, .rawaj-signature-kicker) {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage :is(h1, .rawaj-signature-kicker) {
   color: var(--rawaj-identity-champagne) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat {
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-champagne) 24%, transparent) !important;
   border-radius: 0.95rem;
   color: var(--rawaj-identity-ivory);
   background: color-mix(in srgb, var(--rawaj-identity-ivory) 7%, transparent) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat svg {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat svg {
   color: var(--rawaj-identity-champagne) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-product-card {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 .rawaj-product-card {
   min-width: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 15%, transparent) !important;
@@ -50,15 +50,15 @@
   transition: border-color 160ms ease, transform 160ms ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card:hover {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-product-card:hover {
     border-color: var(--rawaj-identity-teal) !important;
     transform: translateY(-2px);
   }
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-product-card :is(h3, strong, .text-primary) {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-product-card :is(h3, strong, .text-primary) {
   color: var(--rawaj-identity-petrol) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 a.bg-primary {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 a.bg-primary {
   min-height: 2.75rem;
   border: 1px solid var(--rawaj-identity-teal) !important;
   border-radius: 0.8rem;
@@ -66,31 +66,31 @@
   background: var(--rawaj-identity-teal) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-empty {
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
   border-radius: 1.2rem;
   color: var(--rawaj-identity-ink) !important;
   background: #fffaf3 !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty > span {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-empty > span {
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-teal) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-empty h3 {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-empty h3 {
   color: var(--rawaj-identity-petrol) !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/offers"] :is(a, button):focus-visible {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] :is(a, button):focus-visible {
   outline: 3px solid var(--rawaj-identity-teal) !important;
   outline-offset: 3px;
 }
 @media (max-width: 639px) {
-  .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-stage {
     border-radius: 1rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 * {
+  .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/offers"] .rawaj-offers-premium-v3 * {
     transition: none !important;
     transform: none !important;
   }
