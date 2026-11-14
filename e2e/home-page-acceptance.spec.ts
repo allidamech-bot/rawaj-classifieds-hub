@@ -187,3 +187,19 @@ test("featured homepage carousel selects another listing using its pagination", 
   await expect(pagination.nth(1)).toHaveAttribute("aria-current", "true");
   await expect(pagination.first()).not.toHaveAttribute("aria-current", "true");
 });
+
+test("mobile dock grid matches its 6 home and 5 destination links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openHydrated(page, "/");
+
+  const dock = page.locator('[data-shell-region="bottom-dock-region"]');
+  await expect(dock).toBeVisible();
+  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "6");
+  await expect(dock.getByRole("listitem")).toHaveCount(6);
+  await expect(dock.locator(".grid-cols-6")).toHaveCount(1);
+
+  await openHydrated(page, "/categories");
+  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "5");
+  await expect(dock.getByRole("listitem")).toHaveCount(5);
+  await expect(dock.locator(".grid-cols-5")).toHaveCount(1);
+});
