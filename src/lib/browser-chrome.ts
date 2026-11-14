@@ -7,7 +7,11 @@ export function resolveBrowserChrome(pathname: string) {
   if (pathname === "/") {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
-  if (pathname === "/categories" || pathname === "/listings" || /^\/listings\/[^/]+$/.test(pathname)) {
+  if (
+    pathname === "/categories" ||
+    pathname === "/listings" ||
+    /^\/listings\/[^/]+$/.test(pathname)
+  ) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
   if (pathname === "/profile/listings" || pathname.startsWith("/seller/")) {
