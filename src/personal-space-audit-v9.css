@@ -351,6 +351,9 @@
 
 /* B3.1 canonical profile/account editor — this section owns /profile only. */
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] {
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent);
   color: var(--rawaj-identity-ink) !important;
   background: var(--rawaj-identity-ivory) !important;
 }
