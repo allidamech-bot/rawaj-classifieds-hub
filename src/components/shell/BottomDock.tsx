@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Grid3X3, Home, MessageCircle, Plus, User } from "lucide-react";
+import { Grid3X3, Heart, Home, MessageCircle, Plus, User } from "lucide-react";
 
 import {
   resolvePrimaryNavigationSection,
@@ -16,8 +16,8 @@ interface BottomDockProps {
 }
 
 type NavItem = {
-  to: "/" | "/categories" | "/add-listing" | "/chats" | "/more" | "/login";
-  section: Exclude<PrimaryNavigationSection, "offers" | "none">;
+  to: "/" | "/categories" | "/add-listing" | "/chats" | "/more" | "/login" | "/favorites";
+  section: Exclude<PrimaryNavigationSection, "offers" | "none"> | "favorites";
   labelAr: string;
   labelEn: string;
   icon: typeof Home;
@@ -58,6 +58,17 @@ export function BottomDock({ pathname }: BottomDockProps) {
   const signedIn = auth.status === "signedIn";
   const items: NavItem[] = [
     ...coreItems,
+    ...(pathname === "/"
+      ? [
+          {
+            to: "/favorites",
+            section: "favorites",
+            labelAr: "المفضلة",
+            labelEn: "Favorites",
+            icon: Heart,
+          } as const,
+        ]
+      : []),
     {
       to: signedIn ? "/more" : "/login",
       section: "account",

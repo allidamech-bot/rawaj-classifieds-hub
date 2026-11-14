@@ -175,3 +175,15 @@ test("active home ad mounts without an empty SSR placeholder or shifting main co
     releaseRequest();
   }
 });
+
+test("featured homepage carousel selects another listing using its pagination", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openHydrated(page, "/");
+  const pagination = page.locator(".rawaj-signature-featured__dots button");
+  await expect(pagination.first()).toHaveAttribute("aria-current", "true");
+  await pagination.nth(1).click();
+  await expect(pagination.nth(1)).toHaveAttribute("aria-current", "true");
+  await expect(pagination.first()).not.toHaveAttribute("aria-current", "true");
+});

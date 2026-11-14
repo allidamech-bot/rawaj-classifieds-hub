@@ -4,8 +4,6 @@ import "../listing-studio-navigation-fix";
 import "../listing-studio-image-validation";
 import "../listing-studio-price-type-guard";
 import "../listing-studio-mobile-recovery.css";
-import "../rawaj-home-feedback-fixes.css";
-import "../rawaj-home-dock-spacing.css";
 import "../rawaj-global-dark-system.css";
 import "../rawaj-shell-system-v2.css";
 import "../rawaj-discovery-system-v3.css";
@@ -37,7 +35,6 @@ import sellerStorefrontV2Css from "../seller-storefront-v2.css?url";
 import trustSupportHubV2Css from "../trust-support-hub-v2.css?url";
 import semanticTokensCss from "../rawaj-semantic-tokens.css?url";
 import auditCorrectionsV8Css from "../rawaj-audit-corrections-v8.css?url";
-import homeAuditV8Css from "../rawaj-home-audit-v8.css?url";
 import categoriesDiscoveryV8Css from "../rawaj-categories-discovery-v8.css?url";
 import ownerListingsWorkspaceV9Css from "../owner-listings-workspace-v9.css?url";
 import listingStudioAuditV9Css from "../listing-studio-audit-v9.css?url";
@@ -96,7 +93,6 @@ export const routeStyleHrefs = {
 export const auditedOverrideStyleHrefs = [
   semanticTokensCss,
   auditCorrectionsV8Css,
-  homeAuditV8Css,
   categoriesDiscoveryV8Css,
   ownerListingsWorkspaceV9Css,
   listingStudioAuditV9Css,
