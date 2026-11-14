@@ -13,14 +13,12 @@ const badgeVariants = cva(
         secondary:
           "border-[var(--rawaj-border)] bg-[var(--rawaj-surface-active)] text-[var(--rawaj-text-primary)]",
         accent:
-          "border-[var(--rawaj-divider)] bg-[var(--rawaj-selected-surface)] text-[var(--rawaj-link-on-light)]",
+          "border-[#e164b4]/30 bg-[rgba(155,40,111,0.2)] text-[#f6cfe5]",
         success:
-          "border-[var(--rawaj-divider)] bg-[var(--rawaj-success-surface)] text-[var(--rawaj-success)]",
-        warning:
-          "border-[var(--rawaj-divider)] bg-[var(--rawaj-warning-surface)] text-[var(--rawaj-warning)]",
-        gold: "border-[var(--rawaj-divider)] bg-[var(--rawaj-warning-surface)] text-[var(--rawaj-gold-ink)]",
-        destructive:
-          "border-[var(--rawaj-divider)] bg-[var(--rawaj-danger-surface)] text-[var(--rawaj-danger)]",
+          "border-emerald-trust/25 bg-emerald-trust/10 text-[#bcebd9]",
+        warning: "border-warning/25 bg-warning/10 text-[#ecd6ac]",
+        gold: "border-gold/25 bg-gold/10 text-[#ecd6ac]",
+        destructive: "border-destructive/30 bg-destructive/14 text-[#ffd4d0]",
         outline:
           "border-[var(--rawaj-border-strong)] bg-transparent text-[var(--rawaj-text-primary)]",
       },

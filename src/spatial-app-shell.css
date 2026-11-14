@@ -110,7 +110,7 @@ body {
   inset-inline-start: 0;
   width: min(42vw, 18rem);
   border-radius: 999px;
-  background: var(--rawaj-orange);
+  background: linear-gradient(90deg, var(--rawaj-orange), var(--rawaj-gold), var(--color-primary));
   box-shadow: 0 0 14px color-mix(in srgb, var(--rawaj-orange) 34%, transparent);
   animation: rawaj-route-pending-slide 900ms ease-in-out infinite;
 }

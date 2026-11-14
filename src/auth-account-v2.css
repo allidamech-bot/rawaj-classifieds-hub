@@ -14,7 +14,17 @@
   top: -11rem;
   z-index: -1;
   height: 36rem;
-  background: transparent;
+  background:
+    radial-gradient(
+      circle at 88% 7%,
+      color-mix(in srgb, var(--rawaj-orange) 10%, transparent),
+      transparent 29%
+    ),
+    radial-gradient(
+      circle at 9% 0%,
+      color-mix(in srgb, var(--rawaj-gold) 12%, transparent),
+      transparent 27%
+    );
   pointer-events: none;
 }
 
@@ -36,9 +46,15 @@
   min-height: 100%;
   overflow: hidden;
   align-content: space-between;
-  background: var(--rawaj-surface-subtle);
+  background:
+    radial-gradient(
+      circle at 90% 7%,
+      color-mix(in srgb, var(--rawaj-gold) 24%, transparent),
+      transparent 27%
+    ),
+    linear-gradient(145deg, #082f2a, var(--color-primary) 52%, #1f5d50);
   padding: clamp(1.5rem, 4vw, 2.4rem);
-  color: var(--rawaj-ink-primary);
+  color: white;
 }
 
 .rawaj-auth-aside::after {
@@ -69,7 +85,7 @@
   height: 2.45rem;
   place-items: center;
   border-radius: 0.8rem;
-  background: #ff7653;
+  background: linear-gradient(145deg, #ff7653, var(--rawaj-orange));
   box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-orange) 28%, transparent);
 }
 
@@ -90,8 +106,8 @@
 }
 
 .rawaj-auth-aside__copy > p {
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.875rem;
+  color: #f2c77f;
+  font-size: 0.6rem;
   font-weight: 900;
   letter-spacing: 0.04em;
 }
@@ -99,7 +115,7 @@
 .rawaj-auth-aside__copy h1 {
   max-width: 28rem;
   margin-top: 0.6rem;
-  color: var(--rawaj-ink-primary);
+  color: white;
   font-family: var(--font-display, inherit);
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 900;
@@ -111,8 +127,8 @@
   display: block;
   max-width: 31rem;
   margin-top: 0.75rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.9375rem;
+  color: color-mix(in srgb, white 70%, transparent);
+  font-size: 0.72rem;
   line-height: 1.9;
 }
 
@@ -143,7 +159,7 @@
   place-items: center;
   border-radius: 0.65rem;
   background: color-mix(in srgb, white 9%, transparent);
-  color: var(--rawaj-brand-primary);
+  color: #f2c77f;
 }
 
 .rawaj-auth-aside li svg {
@@ -311,7 +327,7 @@
   overflow: hidden;
   border: 1px solid color-mix(in srgb, white 10%, transparent);
   border-radius: clamp(1.5rem, 5vw, 2.25rem);
-  background: #082f2a;
+  background: linear-gradient(145deg, #082f2a, var(--color-primary) 54%, #1d5b4e);
   color: white;
   box-shadow: 0 24px 64px color-mix(in srgb, var(--color-primary) 23%, transparent);
 }
@@ -330,7 +346,13 @@
 .rawaj-account-identity__cover > div {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, #082f2a 20%, transparent);
+  background:
+    radial-gradient(
+      circle at 90% 4%,
+      color-mix(in srgb, var(--rawaj-gold) 26%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(180deg, color-mix(in srgb, #082f2a 20%, transparent), #082f2a 94%);
 }
 
 .rawaj-account-identity__content {
@@ -354,7 +376,7 @@
   overflow: visible;
   border: 3px solid color-mix(in srgb, white 84%, transparent);
   border-radius: clamp(1.2rem, 4vw, 1.7rem);
-  background: #f2c77f;
+  background: linear-gradient(145deg, #f2c77f, #f28f57);
   color: var(--color-primary);
   box-shadow: 0 18px 40px color-mix(in srgb, black 28%, transparent);
 }
@@ -678,19 +700,23 @@
   z-index: -1;
   height: 22rem;
   border-radius: 2rem;
-  background: transparent;
+  background:
+    radial-gradient(circle at 15% 5%, color-mix(in srgb, var(--auth-v3-gold) 12%, transparent), transparent 38%),
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--auth-v3-coral) 10%, transparent), transparent 34%);
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-aside {
   border-color: color-mix(in srgb, var(--auth-v3-gold) 27%, transparent);
-  background: #16483e;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(223, 105, 60, 0.2), transparent 38%),
+    linear-gradient(145deg, #16483e, #0d342c 72%);
   box-shadow: 0 26px 68px rgba(13, 54, 45, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-card,
 .rawaj-auth-recovery-v3 > section {
   border: 1px solid color-mix(in srgb, var(--auth-v3-green) 12%, var(--color-border));
-  background: #fffefa;
+  background: linear-gradient(145deg, #fffefa, #f8f7f1);
   box-shadow: 0 22px 54px rgba(16, 63, 53, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.94);
 }
 
@@ -701,7 +727,7 @@
 }
 
 .rawaj-auth-premium-v3 .rawaj-auth-tabs button[aria-selected="true"] {
-  background: #174b41;
+  background: linear-gradient(140deg, #174b41, #0f5b4d);
   color: white;
   box-shadow: 0 9px 22px rgba(16, 70, 58, 0.21);
 }
@@ -722,7 +748,7 @@
 .rawaj-auth-premium-v3 .rawaj-button-primary,
 .rawaj-auth-recovery-v3 .rawaj-button-primary {
   border: 1px solid color-mix(in srgb, var(--auth-v3-coral) 76%, #98381d);
-  background: #ee7a4c;
+  background: linear-gradient(145deg, #ee7a4c, #d75c32);
   color: white;
   box-shadow: 0 13px 27px rgba(201, 78, 35, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }

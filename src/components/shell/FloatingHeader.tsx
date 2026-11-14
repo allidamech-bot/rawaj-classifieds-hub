@@ -1,15 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  Languages,
-  LogIn,
-  MapPin,
-  Menu,
-  Plus,
-  Search,
-  Store,
-  CircleUserRound,
-  UserCog,
-} from "lucide-react";
+import { Languages, LogIn, MapPin, Menu, Plus, Search, Store, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
@@ -187,7 +177,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               title={text("حسابي", "My account")}
               className="rawaj-header-account rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
-              <CircleUserRound className="h-4 w-4" strokeWidth={1.9} />
+              <User className="h-4 w-4" strokeWidth={1.9} />
             </Link>
           ) : (
             <Link
@@ -197,7 +187,7 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               className="rawaj-header-login-cta rawaj-touch-target inline-flex shrink-0 items-center justify-center whitespace-nowrap"
             >
               <LogIn className="h-4 w-4 shrink-0" strokeWidth={2.1} />
-              <span className="rawaj-header-login-cta__label whitespace-nowrap text-[11px] font-bold sm:text-xs">
+              <span className="rawaj-header-login-cta__label whitespace-nowrap font-bold">
                 {text("تسجيل الدخول", "Log in")}
               </span>
             </Link>

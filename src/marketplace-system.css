@@ -76,11 +76,15 @@ body {
 }
 
 body {
-  background: var(--color-background);
+  background:
+    radial-gradient(36rem 20rem at 105% -2%, rgba(237, 101, 61, 0.075), transparent 68%),
+    linear-gradient(180deg, #fafbf8 0, var(--color-background) 18rem), var(--color-background);
 }
 
 .dark body {
-  background: var(--color-background);
+  background:
+    radial-gradient(34rem 20rem at 105% -3%, rgba(255, 120, 80, 0.08), transparent 70%),
+    var(--color-background);
 }
 
 .container-wide,
@@ -175,13 +179,16 @@ select {
 /* Home: bright, memorable, and immediately useful. */
 .rawaj-home-stage {
   border: 1px solid color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
-  background: #f9f4e9;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(237, 101, 61, 0.14), transparent 16rem),
+    radial-gradient(circle at 5% 105%, rgba(24, 114, 93, 0.12), transparent 22rem),
+    linear-gradient(138deg, #f9f4e9 0%, #f2f5ed 56%, #e7efe8 100%);
   box-shadow: 0 18px 48px rgba(31, 54, 46, 0.08);
 }
 
 .rawaj-home-stage::before {
   inset-inline: 2rem;
-  background: rgba(237, 101, 61, 0.48);
+  background: linear-gradient(90deg, transparent, rgba(237, 101, 61, 0.48), transparent);
 }
 
 .rawaj-home-stage::after {
@@ -236,12 +243,12 @@ select {
 
 .rawaj-home-trust-stage {
   border: 1px solid color-mix(in srgb, var(--color-emerald-trust) 18%, var(--color-border));
-  background: #eff7f1;
+  background: linear-gradient(135deg, #eff7f1 0%, #f8faf6 100%);
   box-shadow: none;
 }
 
 .rawaj-home-trust-stage::after {
-  background: rgba(24, 114, 93, 0.05);
+  background: linear-gradient(90deg, transparent, rgba(24, 114, 93, 0.05));
 }
 
 /* Listing cards: media first, then price and decision-supporting facts. */
@@ -279,7 +286,9 @@ select {
 main.container-wide.mobile-page-bottom > section.rawaj-hero-surface:first-child,
 main.container-wide:has(> .rawaj-hero-surface input[type="search"]) > .rawaj-hero-surface {
   border-color: color-mix(in srgb, var(--color-primary) 8%, var(--color-border));
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(237, 101, 61, 0.09), transparent 15rem),
+    linear-gradient(145deg, #ffffff 0%, #f5f7f2 100%);
   box-shadow: 0 12px 36px rgba(25, 47, 39, 0.07);
 }
 
@@ -330,7 +339,9 @@ main.listing-detail-mobile-bottom .fixed .rawaj-surface {
 .rawaj-pulse-page .rawaj-id-card,
 .rawaj-pulse-page .rawaj-merchant-stage {
   border: 1px solid var(--rawaj-border);
-  background: var(--rawaj-card-background);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(225, 100, 180, 0.08), transparent 18rem),
+    var(--rawaj-card-background);
   box-shadow: var(--rawaj-shadow-card);
 }
 
@@ -348,7 +359,7 @@ main.listing-detail-mobile-bottom .fixed .rawaj-surface {
 
 .rawaj-pulse-page .rawaj-id-avatar {
   border-color: rgba(255, 255, 255, 0.14);
-  background: var(--rawaj-action-primary);
+  background: var(--rawaj-gradient-action-short);
   color: #fff;
   box-shadow: var(--rawaj-shadow-card);
 }
@@ -381,7 +392,9 @@ main.container-wide:has([role="tablist"]) [role="tablist"] {
 
 .rawaj-offers-stage {
   border-color: color-mix(in srgb, var(--color-brand-orange) 16%, var(--color-border));
-  background: #fff7ef;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(237, 101, 61, 0.13), transparent 17rem),
+    linear-gradient(138deg, #fff7ef 0%, #f3f6ef 100%);
   box-shadow: 0 12px 36px rgba(25, 47, 39, 0.07);
 }
 

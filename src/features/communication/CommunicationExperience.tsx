@@ -300,7 +300,7 @@ export function CommunicationSignedOut({
 }) {
   const { text } = useUiPreferences();
   return (
-    <section className="rawaj-communication-signed-out rawaj-secondary-state">
+    <section className="rawaj-communication-signed-out">
       <span>
         <LockKeyhole aria-hidden="true" />
       </span>
@@ -311,7 +311,7 @@ export function CommunicationSignedOut({
           "Sign in to view messages and notifications that belong to your account.",
         )}
       </p>
-      <Link to="/login" search={{ returnTo }} className="rawaj-secondary-action">
+      <Link to="/login" search={{ returnTo }}>
         {text("تسجيل الدخول", "Log in")}
       </Link>
       <Link to="/listings">

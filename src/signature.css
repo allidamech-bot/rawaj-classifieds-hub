@@ -1,7 +1,10 @@
 .rawaj-pulse-page {
   position: relative;
   min-height: 100%;
-  background: #fbf8f1;
+  background:
+    radial-gradient(34rem 22rem at 98% 2%, rgba(232, 111, 50, 0.1), transparent 66%),
+    radial-gradient(30rem 22rem at 2% 20%, rgba(89, 101, 199, 0.07), transparent 68%),
+    linear-gradient(180deg, #fbf8f1 0%, var(--background) 42rem);
 }
 
 .rawaj-signature-kicker {
@@ -19,7 +22,7 @@
   width: 1.4rem;
   height: 0.18rem;
   border-radius: 999px;
-  background: var(--brand-orange);
+  background: linear-gradient(90deg, var(--brand-orange), var(--gold));
 }
 
 .rawaj-id-card,
@@ -27,7 +30,10 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #102b46;
+  background:
+    radial-gradient(28rem 17rem at 110% -10%, rgba(197, 154, 74, 0.28), transparent 64%),
+    radial-gradient(22rem 17rem at -10% 112%, rgba(232, 111, 50, 0.22), transparent 64%),
+    linear-gradient(135deg, #102b46 0%, #0d243b 52%, #153957 100%);
   color: #fffaf0;
   box-shadow: 0 24px 64px rgba(8, 24, 42, 0.2);
 }
@@ -63,7 +69,7 @@
   place-items: center;
   overflow: hidden;
   border: 3px solid rgba(255, 250, 240, 0.96);
-  background: #f4e9d5;
+  background: linear-gradient(145deg, #f4e9d5, #fffaf0);
   color: var(--primary);
   box-shadow:
     0 0 0 4px rgba(197, 154, 74, 0.34),
@@ -80,7 +86,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  background: rgba(255, 255, 255, 0.94);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(255, 254, 251, 0.78));
   box-shadow: 0 14px 38px rgba(16, 43, 70, 0.07);
 }
 
@@ -128,7 +134,12 @@
 .rawaj-merchant-scrim {
   position: absolute;
   inset: 0;
-  background: rgba(13, 36, 59, 0.96);
+  background: linear-gradient(
+    90deg,
+    rgba(13, 36, 59, 0.96) 0%,
+    rgba(13, 36, 59, 0.7) 52%,
+    rgba(13, 36, 59, 0.34) 100%
+  );
 }
 
 .rawaj-merchant-rail {
@@ -191,7 +202,9 @@
 .rawaj-product-media {
   position: relative;
   overflow: hidden;
-  background: var(--muted-surface);
+  background:
+    radial-gradient(circle at 80% 10%, rgba(197, 154, 74, 0.16), transparent 34%),
+    var(--muted-surface);
 }
 
 .rawaj-status-ribbon {
@@ -243,7 +256,7 @@
   width: 0.26rem;
   height: 2.2rem;
   border-radius: 999px;
-  background: var(--brand-orange);
+  background: linear-gradient(180deg, var(--brand-orange), var(--gold));
 }
 
 /* Categories identity: scoped to the existing category directory structure. */
@@ -255,7 +268,10 @@ main.container-wide:has(> .rawaj-hero-surface input[type="search"]) > .rawaj-her
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #102b46;
+  background:
+    radial-gradient(23rem 15rem at 108% -12%, rgba(197, 154, 74, 0.28), transparent 62%),
+    radial-gradient(19rem 14rem at -8% 112%, rgba(232, 111, 50, 0.2), transparent 66%),
+    linear-gradient(135deg, #102b46 0%, #0d243b 50%, #173b5b 100%);
   color: #fffaf0;
   box-shadow: 0 24px 62px rgba(8, 24, 42, 0.19);
 }
@@ -334,7 +350,13 @@ main.container-wide:has(> .rawaj-hero-surface input[type="search"])
   position: relative;
   overflow: hidden;
   border-color: color-mix(in srgb, var(--category-accent, var(--brand-orange)) 24%, var(--border));
-  background: rgba(255, 255, 255, 0.97);
+  background:
+    radial-gradient(
+      8rem 7rem at 104% -8%,
+      color-mix(in srgb, var(--category-accent, var(--brand-orange)) 16%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(255, 253, 248, 0.84));
   box-shadow: 0 16px 38px rgba(16, 43, 70, 0.075);
 }
 
@@ -437,7 +459,12 @@ main.container-wide:has(> .rawaj-hero-surface input[type="search"])
     min-height: 18rem;
   }
   .rawaj-merchant-scrim {
-    background: rgba(13, 36, 59, 0.96);
+    background: linear-gradient(
+      0deg,
+      rgba(13, 36, 59, 0.96) 0%,
+      rgba(13, 36, 59, 0.72) 64%,
+      rgba(13, 36, 59, 0.34) 100%
+    );
   }
   .rawaj-merchant-rail > * {
     padding: 0.8rem 0.55rem;

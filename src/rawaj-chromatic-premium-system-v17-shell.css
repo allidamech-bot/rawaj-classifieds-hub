@@ -1,0 +1,135 @@
+/* RAWAJ Chromatic Premium System v17 — exact shell finishing layer. */
+
+.rawaj-app-header .rawaj-header-search,
+.rawaj-app-header .rawaj-header-login-cta,
+.rawaj-app-header .rawaj-header-admin,
+.rawaj-app-header .rawaj-header-store {
+  border: 1px solid rgba(216, 174, 95, 0.14) !important;
+  color: #e8e1da !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.055), transparent 42%),
+    linear-gradient(145deg, rgba(31, 33, 43, 0.92), rgba(18, 21, 29, 0.92)) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.rawaj-app-header .rawaj-header-search {
+  color: #aaaeb6 !important;
+}
+
+.rawaj-app-header .rawaj-header-search:is(:hover, :focus-visible),
+.rawaj-app-header .rawaj-header-login-cta:is(:hover, :focus-visible),
+.rawaj-app-header .rawaj-header-admin:is(:hover, :focus-visible),
+.rawaj-app-header .rawaj-header-store:is(:hover, :focus-visible) {
+  border-color: rgba(216, 174, 95, 0.42) !important;
+  color: #fff6e7 !important;
+  background: linear-gradient(145deg, rgba(51, 43, 39, 0.94), rgba(27, 27, 33, 0.94)) !important;
+}
+
+.rawaj-app-header .rawaj-header-store[data-active="true"] {
+  border-color: rgba(216, 174, 95, 0.48) !important;
+  color: #f6dba5 !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.14), transparent 62%),
+    linear-gradient(145deg, #28231f, #1a1b20) !important;
+}
+
+.rawaj-mobile-dock {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-bottom-nav-shell {
+  overflow: visible;
+  border: 1px solid rgba(216, 174, 95, 0.16) !important;
+  border-radius: 1.35rem !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.055), transparent 48%),
+    linear-gradient(180deg, rgba(28, 30, 38, 0.97), rgba(17, 20, 27, 0.985)) !important;
+  box-shadow:
+    0 -8px 28px rgba(0, 0, 0, 0.22),
+    0 20px 54px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+  backdrop-filter: blur(24px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(120%) !important;
+}
+
+.rawaj-dock-item {
+  color: #a6a4aa !important;
+  border-radius: 1rem !important;
+}
+
+.rawaj-dock-item[data-active="true"]:not([data-primary="true"]) {
+  color: #f7e7c8 !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(216, 174, 95, 0.13), transparent 72%),
+    linear-gradient(145deg, rgba(216, 174, 95, 0.08), rgba(132, 52, 103, 0.1)) !important;
+  box-shadow: inset 0 0 0 1px rgba(216, 174, 95, 0.13) !important;
+}
+
+.rawaj-dock-icon {
+  color: currentColor !important;
+  background: transparent !important;
+}
+
+.rawaj-dock-item[data-active="true"] .rawaj-dock-icon {
+  color: #f0c97c !important;
+  background: rgba(216, 174, 95, 0.055) !important;
+}
+
+.rawaj-dock-create {
+  border: 1px solid rgba(255, 214, 126, 0.24) !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #d53b50 0%, #c72b7a 50%, #735fee 100%) !important;
+  box-shadow:
+    0 12px 28px rgba(197, 43, 120, 0.34),
+    0 0 0 4px rgba(18, 21, 28, 0.94),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+.rawaj-bottom-dock__badge,
+.rawaj-notification-badge {
+  border: 1px solid rgba(255, 223, 169, 0.18) !important;
+  color: #fff !important;
+  background: linear-gradient(145deg, #d93453, #b92478) !important;
+  box-shadow: 0 5px 12px rgba(173, 34, 94, 0.34) !important;
+}
+
+.rawaj-bottom-dock__label {
+  color: currentColor !important;
+}
+
+.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) > :is(p, span):first-child {
+  color: #e4b85f !important;
+}
+
+.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(h1, h2, h3) {
+  color: #f8f4ed !important;
+}
+
+.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(p, span):not(:first-child) {
+  color: #9298a0 !important;
+}
+
+.rawaj-app-shell :is(a, button)[data-active="true"] svg,
+.rawaj-app-shell :is(a, button)[aria-current="page"] svg {
+  filter: drop-shadow(0 2px 7px rgba(216, 174, 95, 0.16));
+}
+
+.rawaj-app-shell hr,
+.rawaj-app-shell [data-slot="separator"] {
+  border-color: rgba(216, 174, 95, 0.1) !important;
+  background: rgba(216, 174, 95, 0.1) !important;
+}
+
+.rawaj-app-shell :is(code, pre, kbd) {
+  border-color: rgba(216, 174, 95, 0.14) !important;
+  color: #e9dfd1 !important;
+  background: #0c1016 !important;
+}
+
+.rawaj-app-shell :is(blockquote) {
+  border-inline-start-color: #d8ae5f !important;
+  color: #c9c2bb !important;
+  background: rgba(216, 174, 95, 0.035) !important;
+}

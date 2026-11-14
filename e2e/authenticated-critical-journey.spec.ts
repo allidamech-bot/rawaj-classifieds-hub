@@ -64,20 +64,11 @@ test.describe("authenticated launch-critical journey", () => {
     await page
       .getByPlaceholder(/مثال: سيارة كيا سيراتو|Example: Kia Cerato/i)
       .fill("سيارة تجريبية لاختبار رحلة النشر");
-    const photoHeading = page.getByRole("heading", {
-      name: /^(Listing photos|صور الإعلان)$/,
-    });
-    const continueButton = page.getByRole("button", { name: /^(Continue|متابعة)$/ });
-    await continueButton.click();
-    // The router can finish hydrating this step after the shared shell marks
-    // itself ready. A second activation is only allowed when validation shows
-    // no actual problem; genuine invalid-category/title errors still fail.
-    if (!(await photoHeading.isVisible().catch(() => false))) {
-      await expect(page.locator('[data-error-summary="true"]')).toHaveCount(0);
-      await expect(continueButton).toBeVisible();
-      await continueButton.click();
-    }
-    await expect(photoHeading).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: /^(Continue|متابعة)$/ }).click();
+
+    await expect(page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ })).toBeVisible(
+      { timeout: 20_000 },
+    );
     await page.locator('input[type="file"][accept*="image"]').setInputFiles({
       name: "rawaj-e2e.png",
       mimeType: "image/png",

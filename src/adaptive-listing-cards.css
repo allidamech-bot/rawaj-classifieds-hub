@@ -5,10 +5,10 @@
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  border: 1px solid var(--rawaj-divider);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
   border-radius: var(--rawaj-radius-card, 1.25rem);
-  background: var(--rawaj-surface);
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.045);
+  background: var(--rawaj-surface-card);
+  box-shadow: var(--shadow-card);
   transition:
     transform var(--motion-medium) ease,
     border-color var(--motion-medium) ease,
@@ -16,9 +16,9 @@
 }
 
 .rawaj-adaptive-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--rawaj-control-border);
-  box-shadow: 0 4px 14px rgba(21, 35, 34, 0.065);
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--rawaj-orange) 34%, var(--color-border));
+  box-shadow: var(--shadow-card-hover);
 }
 
 .rawaj-adaptive-card:active {
@@ -37,7 +37,7 @@
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: var(--rawaj-surface-subtle);
+  background: var(--color-muted);
 }
 
 .rawaj-adaptive-card__media--wide,
@@ -71,19 +71,20 @@
   border: 1px solid color-mix(in srgb, white 26%, transparent);
   border-radius: 999px;
   padding-inline: 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  box-shadow: 0 1px 2px rgba(21, 35, 34, 0.05);
+  font-size: 0.58rem;
+  font-weight: 850;
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(8px);
 }
 
 .rawaj-adaptive-card__status[data-tone="featured"] {
-  background: var(--rawaj-warning-surface);
-  color: var(--rawaj-gold-ink);
+  background: color-mix(in srgb, var(--rawaj-gold) 92%, transparent);
+  color: #203531;
 }
 
 .rawaj-adaptive-card__status[data-tone="reserved"] {
-  background: var(--rawaj-warning-surface);
-  color: var(--rawaj-warning);
+  background: color-mix(in srgb, var(--color-warning) 92%, transparent);
+  color: var(--color-warning-foreground);
 }
 
 .rawaj-adaptive-card__action {
@@ -99,11 +100,12 @@
   width: 2.45rem;
   height: 2.45rem;
   place-items: center;
-  border: 1px solid var(--rawaj-divider);
+  border: 1px solid color-mix(in srgb, white 35%, transparent);
   border-radius: 999px;
-  background: var(--rawaj-surface);
-  color: var(--rawaj-brand-primary);
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.06);
+  background: color-mix(in srgb, var(--rawaj-surface-card) 88%, transparent);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-floating);
+  backdrop-filter: blur(10px) saturate(120%);
   transition:
     transform var(--motion-fast) ease,
     background var(--motion-fast) ease;
@@ -112,7 +114,7 @@
 .rawaj-adaptive-card__action > button:hover,
 .rawaj-adaptive-card__action > a:hover {
   transform: scale(1.05);
-  background: var(--rawaj-surface);
+  background: var(--rawaj-surface-card);
 }
 
 .rawaj-adaptive-card__body {
@@ -133,34 +135,34 @@
 
 .rawaj-adaptive-card__price {
   min-width: 0;
-  color: var(--rawaj-brand-primary);
-  font-size: clamp(1rem, 3.5vw, 1.125rem);
-  font-weight: 800;
+  color: var(--rawaj-orange);
+  font-size: clamp(0.86rem, 3.5vw, 1.02rem);
+  font-weight: 900;
   line-height: 1.35;
 }
 
 .rawaj-adaptive-card__category {
-  max-width: 12rem;
+  max-width: 8.5rem;
   overflow: hidden;
-  border-radius: 8px;
-  background: var(--rawaj-surface-subtle);
-  padding: 0.3rem 0.5rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-background));
+  padding: 0.32rem 0.5rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.55rem;
+  font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .rawaj-adaptive-card__title {
   display: -webkit-box;
-  min-height: 2.8rem;
+  min-height: 2.55rem;
   grid-column: 1 / -1;
   overflow: hidden;
-  color: var(--rawaj-ink-primary);
-  font-size: clamp(0.875rem, 3vw, 1rem);
-  font-weight: 700;
-  line-height: 1.55;
+  color: var(--color-foreground);
+  font-size: clamp(0.74rem, 3vw, 0.84rem);
+  font-weight: 800;
+  line-height: 1.65;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -180,38 +182,37 @@
 .rawaj-adaptive-card__facts > div {
   min-width: 0;
   border-radius: 0.75rem;
-  background: var(--rawaj-surface-subtle);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-background));
   padding: 0.45rem 0.35rem;
   text-align: center;
 }
 
 .rawaj-adaptive-card[data-card-variant="vehicle"] .rawaj-adaptive-card__facts > div {
-  background: var(--rawaj-surface-subtle);
+  background: color-mix(in srgb, var(--rawaj-orange) 7%, var(--color-background));
 }
 
 .rawaj-adaptive-card[data-card-variant="property"] .rawaj-adaptive-card__facts > div {
-  background: var(--rawaj-surface-subtle);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--rawaj-surface-sage));
 }
 
 .rawaj-adaptive-card__facts dt,
 .rawaj-adaptive-card__facts dd {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .rawaj-adaptive-card__facts dt {
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.6875rem;
-  font-weight: 600;
+  color: var(--color-muted-foreground);
+  font-size: 0.5rem;
+  font-weight: 650;
 }
 
 .rawaj-adaptive-card__facts dd {
   margin-top: 0.12rem;
-  color: var(--rawaj-ink-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
+  color: var(--color-foreground);
+  font-size: 0.61rem;
+  font-weight: 800;
 }
 
 .rawaj-adaptive-card__meta {
@@ -223,8 +224,8 @@
   margin-top: auto;
   border-top: 1px solid color-mix(in srgb, var(--color-primary) 7%, var(--color-border));
   padding-top: 0.65rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.58rem;
 }
 
 .rawaj-adaptive-card__meta > span {
@@ -239,34 +240,16 @@
 }
 
 .rawaj-adaptive-card__meta svg {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 0.75rem;
+  height: 0.75rem;
   flex: 0 0 auto;
-  color: var(--rawaj-ink-secondary);
+  color: var(--rawaj-orange);
 }
 
 .rawaj-adaptive-card__meta span span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Real images and honest category placeholders use one media frame. */
-.rawaj-listing-media--image {
-  object-fit: cover;
-}
-
-.rawaj-listing-media--placeholder {
-  border: 0;
-  border-radius: 0;
-  background: var(--rawaj-surface-subtle);
-}
-
-.rawaj-listing-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
 }
 
 /* Compact variant */
@@ -300,7 +283,7 @@
 .rawaj-adaptive-card--compact .rawaj-adaptive-card__title {
   min-height: auto;
   margin-top: 0.25rem;
-  font-size: 0.875rem;
+  font-size: 0.72rem;
 }
 
 .rawaj-adaptive-card--compact .rawaj-adaptive-card__meta {
@@ -312,167 +295,170 @@
   top: 0.5rem;
 }
 
-/* Featured listings retain real photography but use the same white card hierarchy. */
+/* Editorial featured variant */
 .rawaj-featured-card {
   position: relative;
   min-width: 0;
+  min-height: 29rem;
   overflow: hidden;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 16px;
-  background: var(--rawaj-surface);
-  color: var(--rawaj-ink-primary);
-  box-shadow: 0 1px 3px rgba(21, 35, 34, 0.045);
+  border-radius: 1.65rem;
+  background: var(--color-primary);
+  box-shadow: 0 24px 58px color-mix(in srgb, var(--color-primary) 24%, transparent);
+  color: white;
 }
 
 .rawaj-featured-card__link {
+  position: relative;
   display: grid;
-  grid-template-rows: auto 1fr;
-  height: 100%;
-  min-width: 0;
+  min-height: inherit;
   color: inherit;
 }
 
-.rawaj-featured-card__media {
-  position: relative;
+.rawaj-featured-card__media,
+.rawaj-featured-card__media > img,
+.rawaj-featured-card__media > div:first-child {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: var(--rawaj-surface-subtle);
+  height: 100%;
 }
 
 .rawaj-featured-card__media > img,
 .rawaj-featured-card__media > div:first-child {
-  display: block;
-  width: 100%;
-  height: 100%;
   object-fit: cover;
   transition: transform var(--motion-slow) ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .rawaj-featured-card:hover .rawaj-featured-card__media > img {
-    transform: scale(1.015);
-  }
+.rawaj-featured-card:hover .rawaj-featured-card__media > img {
+  transform: scale(1.025);
 }
 
 .rawaj-featured-card__scrim {
-  display: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to top,
+      rgba(5, 27, 24, 0.95) 0%,
+      rgba(5, 27, 24, 0.54) 48%,
+      rgba(5, 27, 24, 0.08) 80%
+    ),
+    linear-gradient(to right, rgba(5, 27, 24, 0.25), transparent 58%);
 }
 
 .rawaj-featured-card__badge {
   position: absolute;
-  inset-inline-start: 0.75rem;
-  top: 0.75rem;
+  inset-inline-start: 1rem;
+  top: 1rem;
   z-index: 2;
   display: inline-flex;
-  min-height: 2rem;
+  min-height: 2.2rem;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 8px;
-  background: var(--rawaj-warning-surface);
-  padding-inline: 0.7rem;
-  color: var(--rawaj-gold-ink);
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: 1px solid color-mix(in srgb, white 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rawaj-gold) 90%, transparent);
+  padding-inline: 0.8rem;
+  color: #203531;
+  font-size: 0.66rem;
+  font-weight: 850;
+  backdrop-filter: blur(8px);
 }
 
 .rawaj-featured-card[data-reserved="true"] .rawaj-featured-card__badge {
-  background: var(--rawaj-warning-surface);
-  color: var(--rawaj-warning);
+  background: color-mix(in srgb, var(--color-warning) 90%, transparent);
 }
 
 .rawaj-featured-card__badge svg {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .rawaj-featured-card__content {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: clamp(1rem, 3vw, 1.5rem);
+  position: relative;
+  z-index: 2;
+  align-self: end;
+  padding: clamp(1.15rem, 4vw, 2rem);
 }
 
 .rawaj-featured-card__category {
   display: inline-flex;
-  border-radius: 8px;
-  background: var(--rawaj-surface-subtle);
-  padding: 0.35rem 0.6rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 999px;
+  background: color-mix(in srgb, white 10%, transparent);
+  padding: 0.4rem 0.65rem;
+  color: color-mix(in srgb, white 74%, transparent);
+  font-size: 0.6rem;
+  font-weight: 750;
 }
 
 .rawaj-featured-card__price {
   display: block;
-  color: var(--rawaj-brand-primary);
-  font-size: clamp(1.25rem, 4vw, 1.65rem);
-  font-weight: 800;
-  line-height: 1.35;
+  margin-top: 0.75rem;
+  color: #f5cb85;
+  font-size: clamp(1.3rem, 5vw, 2.2rem);
+  font-weight: 900;
 }
 
 .rawaj-featured-card__content h3 {
-  max-width: 30ch;
-  overflow-wrap: anywhere;
-  color: var(--rawaj-ink-primary);
-  font-size: clamp(1.125rem, 3vw, 1.35rem);
-  font-weight: 700;
-  line-height: 1.5;
+  max-width: 24ch;
+  margin-top: 0.35rem;
+  color: white;
+  font-size: clamp(1.15rem, 4.5vw, 2rem);
+  font-weight: 850;
+  line-height: 1.35;
 }
 
 .rawaj-featured-card__facts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
 }
 
 .rawaj-featured-card__facts span {
-  border: 1px solid var(--rawaj-divider);
-  border-radius: 8px;
-  background: var(--rawaj-surface-subtle);
-  padding: 0.4rem 0.6rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  border: 1px solid color-mix(in srgb, white 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 8%, transparent);
+  padding: 0.35rem 0.55rem;
+  color: color-mix(in srgb, white 82%, transparent);
+  font-size: 0.58rem;
+  font-weight: 750;
+  backdrop-filter: blur(7px);
 }
 
 .rawaj-featured-card__location {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  color: var(--rawaj-ink-secondary);
-  font-size: 0.75rem;
-  overflow-wrap: anywhere;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  color: color-mix(in srgb, white 72%, transparent);
+  font-size: 0.7rem;
 }
 
 .rawaj-featured-card__location svg,
 .rawaj-featured-card__open svg {
   width: 1rem;
   height: 1rem;
-  flex-shrink: 0;
 }
 
 .rawaj-featured-card__open {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 2.7rem;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: auto;
-  border-radius: 12px;
-  background: var(--rawaj-brand-primary);
-  padding-inline: 1rem;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 700;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  border-radius: 999px;
+  background: white;
+  padding-inline: 0.95rem;
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 850;
 }
 
 .rawaj-featured-card__action {
   position: absolute;
-  inset-inline-end: 0.75rem;
-  top: 0.75rem;
+  inset-inline-end: 1rem;
+  top: 1rem;
   z-index: 4;
 }
 
@@ -489,7 +475,12 @@
 .rawaj-listing-card-skeleton__media,
 .rawaj-listing-card-skeleton__body span,
 .rawaj-listing-card-skeleton__facts span {
-  background: color-mix(in srgb, var(--color-muted) 88%, white);
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--color-muted) 88%, white) 20%,
+    color-mix(in srgb, var(--color-muted) 55%, white) 38%,
+    color-mix(in srgb, var(--color-muted) 88%, white) 56%
+  );
   background-size: 220% 100%;
   animation: rawaj-card-skeleton-shimmer 1.45s linear infinite;
 }
@@ -561,6 +552,10 @@
 }
 
 @media (min-width: 768px) {
+  .rawaj-featured-card {
+    min-height: 34rem;
+  }
+
   .rawaj-adaptive-card--compact {
     min-height: 10rem;
   }

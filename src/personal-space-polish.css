@@ -22,7 +22,11 @@
   z-index: -1;
   height: 10rem;
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 62%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--rawaj-brand-muted-background, #e5eee8) 62%, transparent),
+    transparent
+  );
   pointer-events: none;
 }
 

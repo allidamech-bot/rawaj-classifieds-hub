@@ -343,11 +343,7 @@ function LoginPage() {
                     className="input"
                   />
                   {emailError ? (
-                    <p
-                      id="login-email-error"
-                      role="alert"
-                      className="mt-1.5 text-xs font-medium text-destructive"
-                    >
+                    <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-destructive">
                       {emailError}
                     </p>
                   ) : null}
@@ -406,20 +402,17 @@ function LoginPage() {
                         <label htmlFor="registration-policy-consent" className="font-semibold">
                           {text("أوافق على", "I agree to the")}{" "}
                         </label>
-                        <Link
-                          to="/terms"
-                          className="font-bold text-brand-orange underline underline-offset-2"
-                        >
+                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
                           {text("شروط الاستخدام", "Terms of Use")}
                         </Link>{" "}
                         {text("و", "and")}{" "}
-                        <Link
-                          to="/privacy"
-                          className="font-bold text-brand-orange underline underline-offset-2"
-                        >
+                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
                           {text("سياسة الخصوصية", "Privacy Policy")}
                         </Link>
-                        {text(" الخاصة بمنصة رواج سوريا.", " for the RAWAJ Syria platform.")}
+                        {text(
+                          " الخاصة بمنصة رواج سوريا.",
+                          " for the RAWAJ Syria platform.",
+                        )}
                       </div>
                     </div>
                     {termsError ? (
@@ -520,9 +513,7 @@ function LoginPage() {
                     <div className="w-full border-t border-border/80" />
                   </div>
                   <div className="relative flex justify-center font-semibold text-muted-foreground">
-                    <span className="rounded-full px-3 py-1 text-[var(--rawaj-ink-secondary)]">
-                      {text("أو", "Or")}
-                    </span>
+                    <span className="rounded-full px-3 py-1">{text("أو", "Or")}</span>
                   </div>
                 </div>
 
@@ -538,22 +529,13 @@ function LoginPage() {
                       />
                       <div className="text-xs leading-6 text-foreground/90">
                         <label htmlFor="google-policy-consent" className="font-semibold">
-                          {text(
-                            "للمتابعة باستخدام Google أوافق على",
-                            "To continue with Google, I agree to the",
-                          )}{" "}
+                          {text("للمتابعة باستخدام Google أوافق على", "To continue with Google, I agree to the")}{" "}
                         </label>
-                        <Link
-                          to="/terms"
-                          className="font-bold text-brand-orange underline underline-offset-2"
-                        >
+                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
                           {text("شروط الاستخدام", "Terms of Use")}
                         </Link>{" "}
                         {text("و", "and")}{" "}
-                        <Link
-                          to="/privacy"
-                          className="font-bold text-brand-orange underline underline-offset-2"
-                        >
+                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
                           {text("سياسة الخصوصية", "Privacy Policy")}
                         </Link>
                         .

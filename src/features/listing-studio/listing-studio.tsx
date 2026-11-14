@@ -12,7 +12,7 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export type ListingStudioStep = {
   label: string;
@@ -284,10 +284,7 @@ export function ListingStudioQualityPanel({
           <p>{text("جودة الإعلان", "Listing quality")}</p>
           <h2 id="rawaj-studio-quality-title">{score}%</h2>
         </div>
-        <svg className="rawaj-studio-quality__ring" viewBox="0 0 44 44" aria-hidden="true">
-          <circle cx="22" cy="22" r="18" />
-          <circle cx="22" cy="22" r="18" pathLength="100" strokeDasharray={`${score} 100`} />
-        </svg>
+        <span style={{ "--studio-score": `${score}%` } as CSSProperties} />
       </div>
       <div className="rawaj-studio-quality__track">
         <span style={{ width: `${score}%` }} />

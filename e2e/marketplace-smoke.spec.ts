@@ -71,9 +71,9 @@ test("home shell renders one header and one responsive dock", async ({ page }, t
 
   await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(1);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(1);
 
-  const dock = page.locator("[data-shell-region=bottom-dock-region]");
+  const dock = page.locator(".rawaj-mobile-dock");
   await expect(dock).toHaveCount(1);
   if (testInfo.project.name.startsWith("mobile")) {
     await expect(dock).toBeVisible();
@@ -100,12 +100,7 @@ test("home search submits trimmed queries", async ({ page }) => {
   search = page.locator("#rawaj-signature-search-input");
   await expect(search).toBeVisible();
   await search.fill("  iPhone 15  ");
-  // Activate the real submit button by keyboard: CSS transitions can scroll
-  // the visible submit out of the pointer viewport during a Playwright click.
-  const submit = page.locator("[data-marketplace-home] form[role=search] button[type='submit']");
-  await expect(submit).toBeEnabled();
-  await submit.focus();
-  await submit.press("Enter");
+  await page.locator(".rawaj-signature-search button").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   expect(new URL(page.url()).searchParams.get("q")).toBe("iPhone 15");
 
@@ -127,10 +122,7 @@ test("mobile home search hides the bottom dock while the keyboard field is focus
   const search = page.locator("#rawaj-signature-search-input");
   await search.focus();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "true");
-  await expect(page.locator("[data-shell-region=bottom-dock-region]")).toHaveCSS(
-    "pointer-events",
-    "none",
-  );
+  await expect(page.locator(".rawaj-mobile-dock")).toHaveCSS("pointer-events", "none");
 
   await search.blur();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
@@ -165,7 +157,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
   expect(ratio).toBeGreaterThan(2.2);
   expect(ratio).toBeLessThan(2.38);
 
-  await page.locator("[data-marketplace-home] a[href*='open_filters']").click();
+  await page.locator(".rawaj-signature-location").click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
   const listingsSlot = page.locator('[data-placement-page="search_results"]');
   await expect(listingsSlot).toBeVisible({ timeout: 15_000 });
@@ -177,7 +169,7 @@ test("active public ad uses the unified ratio and follows the resolved route", a
 
 test("home discovery can navigate to the public listings workspace", async ({ page }) => {
   await openHealthyPage(page, "/");
-  const listingsLink = page.locator("[data-marketplace-home] a[href*='open_filters']");
+  const listingsLink = page.locator(".rawaj-signature-location");
   await expect(listingsLink).toBeVisible();
   await listingsLink.click();
   await expect(page).toHaveURL(/\/listings(?:\?|$)/);
@@ -193,7 +185,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   const pageContent = page.locator('[data-shell-region="page-content"]');
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/");
-  await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
+  await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
 
   let releaseRequest = () => {};
   const requestGate = new Promise<void>((resolve) => {
@@ -207,7 +199,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await route.continue();
   });
 
-  const listingsLink = page.locator("[data-marketplace-home] a[href*='open_filters']");
+  const listingsLink = page.locator(".rawaj-signature-location");
 
   try {
     await listingsLink.dispatchEvent("click");
@@ -219,7 +211,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
     await expect(page.locator('[data-shell-region="route-pending-mask"]')).toBeVisible();
     await expect(pageContent).toBeVisible();
     await expect(pageContent).toHaveCSS("pointer-events", "none");
-    await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
+    await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
     await expect(page.locator("main.rawaj-search-results-v1")).toHaveCount(0);
   } finally {
     releaseRequest();
@@ -229,7 +221,7 @@ test("pending navigation keeps the resolved page visible without mixing route sh
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(shell).toHaveAttribute("data-resolved-pathname", "/listings");
   await expect(page.locator('[data-shell-region="route-pending-mask"]')).toHaveCount(0);
-  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
   await expect(page.locator("main.rawaj-search-results-v1")).toBeVisible();
   await page.unroute(delayedListingsRequest);
 });
@@ -254,10 +246,8 @@ test("rapid bottom navigation resolves to one page without stacked route content
 
   const shell = page.locator(".rawaj-app-shell");
   const pageContent = page.locator('[data-shell-region="page-content"]');
-  const categoriesDockLink = page.locator(
-    '[data-shell-region=bottom-dock-region] a[href="/categories"]',
-  );
-  const homeDockLink = page.locator('[data-shell-region=bottom-dock-region] a[href="/"]');
+  const categoriesDockLink = page.locator('.rawaj-mobile-dock a[href="/categories"]');
+  const homeDockLink = page.locator('.rawaj-mobile-dock a[href="/"]');
 
   try {
     await categoriesDockLink.dispatchEvent("click");
@@ -271,7 +261,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
     await expect(pageContent).toBeVisible();
     await expect(pageContent).toHaveCSS("pointer-events", "none");
     await expect(page.locator("main:visible")).toHaveCount(1);
-    await expect(page.locator("main[data-marketplace-home]")).toBeVisible();
+    await expect(page.locator("main.rawaj-signature-home")).toBeVisible();
   } finally {
     releaseRequest();
   }
@@ -279,7 +269,7 @@ test("rapid bottom navigation resolves to one page without stacked route content
   await expect(page).toHaveURL(/\/categories(?:\?|$)/);
   await expect(shell).toHaveAttribute("data-route-state", "idle");
   await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-  await expect(page.locator("main[data-marketplace-home]")).toHaveCount(0);
+  await expect(page.locator("main.rawaj-signature-home")).toHaveCount(0);
   await expect(page.locator("main.rawaj-categories-v2")).toHaveCount(1);
   await page.unroute(delayedReferenceRequest);
 });
@@ -313,13 +303,13 @@ test("home stays within the viewport at audited mobile and desktop widths", asyn
     expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport + 2);
     await expect(page.locator('[data-shell-region="header-region"]')).toHaveCount(1);
     await expect(page.locator('[data-shell-region="page-content"] main:visible')).toHaveCount(1);
-    await expect(page.locator("[data-home-category]").first()).toBeVisible();
+    await expect(page.locator(".rawaj-signature-category-chip").first()).toBeVisible();
 
-    const searchSubmit = page.locator("[data-marketplace-home] form[role=search] button");
+    const searchSubmit = page.locator(".rawaj-signature-search button");
     const submitBounds = await searchSubmit.boundingBox();
     expect(submitBounds?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    const dock = page.locator("[data-shell-region=bottom-dock-region]");
+    const dock = page.locator(".rawaj-mobile-dock");
     if (width < 1024) {
       await expect(dock).toBeVisible();
     } else {

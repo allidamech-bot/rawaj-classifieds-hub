@@ -10,11 +10,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border border-[var(--rawaj-action-primary)] bg-[var(--rawaj-action-primary)] text-[var(--rawaj-action-primary-foreground)] hover:bg-[var(--rawaj-action-primary-hover)]",
+          "border border-white/10 bg-[var(--rawaj-action-primary)] text-[var(--rawaj-action-primary-foreground)] shadow-[0_8px_20px_rgba(155,40,111,0.2)] hover:bg-[var(--rawaj-action-primary-hover)] hover:shadow-[0_10px_24px_rgba(155,40,111,0.24)]",
         accent:
-          "border border-[var(--rawaj-action-coral)] bg-[var(--rawaj-action-coral)] text-white hover:bg-[var(--rawaj-action-coral-hover)]",
+          "border border-white/10 bg-[var(--rawaj-action-coral)] text-white shadow-[0_10px_24px_rgba(194,68,49,0.2)] hover:bg-[var(--rawaj-action-coral-hover)]",
         brand:
-          "border border-[var(--rawaj-action-brand)] bg-[var(--rawaj-action-brand)] text-white hover:bg-[var(--rawaj-action-brand-hover)]",
+          "border border-white/10 bg-[var(--rawaj-action-brand)] text-white shadow-[0_10px_24px_rgba(96,64,168,0.22)] hover:bg-[var(--rawaj-action-brand-hover)]",
         soft: "border border-[var(--rawaj-border-strong)] bg-[var(--rawaj-muted-surface)] text-[var(--rawaj-text-secondary)] hover:border-[var(--rawaj-border-active)] hover:bg-[var(--rawaj-surface-active)]",
         success: "bg-emerald-trust text-emerald-trust-foreground hover:bg-emerald-trust/92",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
@@ -29,7 +29,7 @@ const buttonVariants = cva(
       size: {
         default: "h-[var(--rawaj-control-height)]",
         sm: "h-[var(--rawaj-control-height-sm)] min-h-[var(--rawaj-control-height-sm)] px-3 text-xs",
-        compact: "h-11 min-h-11 rounded-lg px-2.5 text-xs",
+        compact: "h-9 min-h-9 rounded-lg px-2.5 text-xs",
         lg: "h-[var(--rawaj-control-height-lg)] min-h-[var(--rawaj-control-height-lg)] px-6 text-sm",
         icon: "h-[var(--rawaj-control-height)] w-[var(--rawaj-control-height)] px-0",
       },
@@ -52,7 +52,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         data-ui="button"
-        data-size={size ?? "default"}
         data-variant={variant ?? "default"}
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}

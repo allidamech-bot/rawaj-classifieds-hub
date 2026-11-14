@@ -572,6 +572,7 @@ function ShareTemplateArtwork({
       ) : (
         <>
           <div className="absolute inset-x-0 top-0 h-[58%] overflow-hidden">{image}</div>
+          <div className="absolute inset-x-0 top-[45%] h-[18%] bg-gradient-to-t from-[#14263D] to-transparent" />
           <div className="relative flex h-full flex-col">
             {brand}
             <div className="mt-auto pb-5">

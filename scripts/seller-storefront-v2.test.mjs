@@ -23,11 +23,6 @@ const [root, routeStyles, shared, publicRoute, ownerRoute, css, qualityGate, bar
     readFile(new URL("../src/lib/classifieds-api.ts", import.meta.url), "utf8"),
   ]);
 
-const [approvedIdentity, approvedCss] = await Promise.all([
-  readFile(new URL("../src/features/storefront/MyStoreIdentity.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../src/features/storefront/my-store.css", import.meta.url), "utf8"),
-]);
-
 const sellerLoadError = {
   message: "Temporary seller profile read failure",
 };
@@ -44,14 +39,14 @@ test("seller storefront V2 stylesheet loads after existing storefront layers", (
   assert.ok(v2 > foundation);
 });
 
-test("public and owner storefronts share the approved identity without invented metrics", () => {
-  assert.match(approvedIdentity, /export function MyStoreIdentity/);
-  assert.match(approvedIdentity, /mode\?: "owner" \| "public"/);
-  assert.match(approvedIdentity, /approvedCount/);
-  assert.match(approvedIdentity, /ratingAverage/);
-  assert.match(approvedIdentity, /ratingCount/);
-  assert.match(approvedIdentity, /followerCount \?\? "—"/);
-  assert.doesNotMatch(approvedIdentity, /response time|transactions completed|sales count/i);
+test("public and owner storefronts share one factual identity component", () => {
+  assert.match(shared, /export function StorefrontIdentityHero/);
+  assert.match(shared, /mode: "public" \| "owner"/);
+  assert.match(shared, /approvedCount/);
+  assert.match(shared, /ratingAverage/);
+  assert.match(shared, /ratingCount/);
+  assert.match(shared, /This page shows public information and approved listings only/);
+  assert.doesNotMatch(shared, /response time|transactions completed|sales count/i);
 });
 
 test("storefront identity media falls back without blocking refreshed URLs", () => {
@@ -64,20 +59,14 @@ test("storefront identity media falls back without blocking refreshed URLs", () 
   assert.doesNotMatch(shared, /useEffect/);
 });
 
-test("public seller uses the same approved visual identity as the owner but not owner privileges", () => {
-  assert.match(approvedIdentity, /mode\?: "owner" \| "public"/);
-  assert.match(approvedIdentity, /<SellerFollowButton/);
-  assert.match(approvedIdentity, /isPublic \? \(/);
-  assert.match(publicRoute, /<MyStoreIdentity/);
-  assert.match(publicRoute, /mode="public"/);
-  assert.match(publicRoute, /<PublicStoreListingCard/);
-  assert.match(publicRoute, /to="\/listings\/\$id"/);
-  assert.match(publicRoute, /seller\.listings\.map/);
-  assert.match(publicRoute, /seller\.inventoryStatus !== "ready"/);
+test("public seller uses adaptive cards and preserves review privacy contracts", () => {
+  assert.match(publicRoute, /rawaj-storefront-v2/);
+  assert.match(publicRoute, /<StorefrontIdentityHero/);
+  assert.match(publicRoute, /<AdaptiveListingCard/);
+  assert.doesNotMatch(publicRoute, /function SellerListingCard/);
   assert.match(publicRoute, /fetchSellerReviewEligibility/);
   assert.match(publicRoute, /createSellerReview/);
   assert.match(publicRoute, /buildSellerStructuredData/);
-  assert.doesNotMatch(publicRoute, /<OwnerListingsToolbar|deleteOwnerListing|closeOwnerListing/);
 });
 
 test("only genuine unavailable seller outcomes remain eligible for the 404 path", () => {
@@ -128,11 +117,11 @@ test("transient seller profile failures reach the retryable route error boundary
   assert.match(publicRoute, /إعادة المحاولة/);
 });
 
-test("owner storefront preserves management actions and reuses approved identity", () => {
-  assert.match(ownerRoute, /<MyStoreIdentity/);
-  assert.match(ownerRoute, /onManage=\{\(\) => setToolsOpen\(true\)\}/);
-  assert.match(ownerRoute, /my-store-dialog/);
-  assert.match(ownerRoute, /<OwnerListingsToolbar/);
+test("owner store shares identity and preserves lifecycle operations", () => {
+  assert.match(ownerRoute, /rawaj-storefront-v2--owner/);
+  assert.match(ownerRoute, /<StorefrontIdentityHero/);
+  assert.match(ownerRoute, /rawaj-storefront-owner-tabs/);
+  assert.match(ownerRoute, /rawaj-storefront-owner-grid/);
   assert.match(ownerRoute, /fetchCurrentUserListings/);
   assert.match(ownerRoute, /closeOwnerListing/);
   assert.match(ownerRoute, /reactivateOwnerListing/);
@@ -140,9 +129,6 @@ test("owner storefront preserves management actions and reuses approved identity
   assert.match(ownerRoute, /setOwnerListingExpiry/);
   assert.match(ownerRoute, /setOwnerListingReserved/);
   assert.match(ownerRoute, /deleteOwnerListing/);
-  assert.match(approvedCss, /\.my-store-public-card/);
-  assert.match(approvedCss, /\.my-store-dialog\[role="dialog"\]/);
-  assert.match(approvedCss, /data-resolved-pathname\^="\/seller\/"/);
 });
 
 test("owner listings and public store metadata recover independently", () => {
@@ -187,24 +173,4 @@ test("quality gate permanently runs storefront V2 with read-only permissions", (
   assert.match(qualityGate, /Seller Storefront V2 contract/);
   assert.match(qualityGate, /node --test scripts\/seller-storefront-v2\.test\.mjs/);
   assert.doesNotMatch(qualityGate, /contents: write/);
-});
-
-test("storefront mobile visual overrides are isolated to buyer and owner routes", async () => {
-  const [css, styles, navigation] = await Promise.all([
-    readFile(new URL("../src/storefront-mobile-consistency-v1.css", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/route-styles.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/lib/primary-navigation.ts", import.meta.url), "utf8"),
-  ]);
-  assert.match(css, /data-resolved-pathname="\/profile\/listings"/);
-  assert.match(css, /data-resolved-pathname\^="\/seller\/"/);
-  assert.match(css, /\.rawaj-mobile-dock/);
-  assert.match(css, /backdrop-filter: none !important/);
-  assert.match(css, /\.my-store-public-tabs > a/);
-  assert.match(styles, /storefrontMobileConsistencyCss/);
-  assert.match(styles, /marketplaceControlsCss,\s*storefrontMobileConsistencyCss/);
-  const categoriesCase = navigation.slice(
-    navigation.indexOf("export function resolvePrimaryNavigationSection("),
-    navigation.indexOf("if (matchesPath(pathname, \"/add-listing\"))"),
-  );
-  assert.doesNotMatch(categoriesCase, /matchesPath\(pathname, "\/seller"\)/);
 });

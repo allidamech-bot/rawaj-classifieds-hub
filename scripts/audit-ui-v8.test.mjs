@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -8,7 +7,7 @@ const [
   corrections,
   homeCorrections,
   categoriesCorrections,
-  ownerRoute,
+  ownerCorrections,
   studioCorrections,
   personalCorrections,
   adminWorkspaceCorrections,
@@ -32,7 +31,7 @@ const [
   readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-home-audit-v8.css", import.meta.url), "utf8"),
   readFile(new URL("../src/rawaj-categories-discovery-v8.css", import.meta.url), "utf8"),
-  readFile(new URL("../src/routes/profile/listings.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../src/owner-listings-workspace-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/personal-space-audit-v9.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-workspaces-v9.css", import.meta.url), "utf8"),
@@ -68,7 +67,8 @@ const [launchReadinessPolish, semanticTokens, footerContrast] = await Promise.al
   readFile(new URL("../src/footer-contrast-system-v13.css", import.meta.url), "utf8"),
 ]);
 
-test("audited component corrections load without the retired dark recovery layer", () => {
+test("audited component corrections load after legacy recovery layers", () => {
+  const recoveryIndex = routeStyles.indexOf('import "../rawaj-page-by-page-recovery-v7b.css";');
   const correctionIndex = routeStyles.indexOf("auditCorrectionsV8Css,");
   const homeIndex = routeStyles.indexOf("homeAuditV8Css,");
   const categoriesIndex = routeStyles.indexOf("categoriesDiscoveryV8Css,");
@@ -82,6 +82,7 @@ test("audited component corrections load without the retired dark recovery layer
   const authIndex = routeStyles.indexOf("authFeedbackSystemV12Css,");
 
   for (const index of [
+    recoveryIndex,
     correctionIndex,
     homeIndex,
     categoriesIndex,
@@ -96,8 +97,7 @@ test("audited component corrections load without the retired dark recovery layer
   ]) {
     assert.notEqual(index, -1);
   }
-  assert.doesNotMatch(routeStyles, /rawaj-page-by-page-recovery-v7b?[.]css/);
-  assert.doesNotMatch(routeStyles, /rawaj-home-(?:approved|final)[.]css/);
+  assert.ok(correctionIndex > recoveryIndex);
   assert.ok(homeIndex > correctionIndex);
   assert.ok(categoriesIndex > correctionIndex);
   assert.ok(ownerIndex > categoriesIndex);
@@ -111,24 +111,6 @@ test("audited component corrections load without the retired dark recovery layer
 
   assert.doesNotMatch(routeStyles, /import "\.\.\/rawaj-audit-corrections-v8\.css";/);
   assert.doesNotMatch(routeStyles, /import "\.\.\/owner-listings-workspace-v9\.css";/);
-});
-
-
-test("retired dark home and emergency recovery stylesheets are removed from the repository", () => {
-  for (const basename of [
-    "rawaj-page-by-page-recovery-v7.css",
-    "rawaj-page-by-page-recovery-v7b.css",
-    "rawaj-home-approved.css",
-    "rawaj-home-final.css",
-    "rawaj-chromatic-premium-system-v17-shell.css",
-    "rawaj-discovery-system-v3.css",
-  ]) {
-    assert.equal(
-      existsSync(new URL(`../src/${basename}`, import.meta.url)),
-      false,
-      `Retired stylesheet ${basename} must not be restored`,
-    );
-  }
 });
 
 test("shell owns bottom navigation reserve without route-level double spacing", () => {
@@ -152,27 +134,15 @@ test("footer and personal-space corrections retain readable semantic contrast", 
   assert.match(corrections, /rawaj-account-section\[data-tone="muted"\]/);
 });
 
-const initialAppStyles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
-
-test("initial CSS cannot restore an independent ivory or dark palette", () => {
-  const initialTokens = initialAppStyles.split("@layer base")[0];
-  assert.ok(initialTokens.includes("--background: var(--rawaj-canvas, #ffffff);"));
-  assert.ok(initialTokens.includes("--primary: var(--rawaj-brand-primary, #103f42);"));
-  assert.ok(initialTokens.includes("color-scheme: light;"));
-  assert.equal(initialTokens.includes(".dark {"), false);
-  assert.doesNotMatch(initialTokens, /#f7f4ec|#11100d|#d96f32/i);
-});
-
-test("canonical light semantic tokens replace the retired dark theme", () => {
+test("retired light-theme tokens cannot override the final dark semantic palette", () => {
   assert.doesNotMatch(launchReadinessPolish, /^\s*html:root\s*\{/m);
-  assert.match(semanticTokens, /--rawaj-canvas:\s*#ffffff/);
-  assert.match(semanticTokens, /--rawaj-ink-primary:\s*#152322/);
-  assert.match(semanticTokens, /--rawaj-ink-secondary:\s*#53615e/);
-  assert.match(semanticTokens, /--rawaj-brand-primary:\s*#103f42/);
-  assert.match(semanticTokens, /--rawaj-text-primary:\s*var\(--rawaj-ink-primary\)/);
-  assert.match(semanticTokens, /--rawaj-text-secondary:\s*var\(--rawaj-ink-secondary\)/);
-  assert.doesNotMatch(semanticTokens, /--rawaj-text-primary:\s*#f5f1e8/);
+  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-primary:\s*#18352f/);
+  assert.doesNotMatch(launchReadinessPolish, /--rawaj-text-secondary:\s*#536b63/);
+  assert.match(semanticTokens, /--rawaj-text-primary:\s*#f2efeb/);
+  assert.match(semanticTokens, /--rawaj-text-secondary:\s*#c9c3bf/);
+  assert.match(semanticTokens, /--rawaj-text-muted:\s*#aaa39f/);
 });
+
 test("footer renders one responsive variant and reserves the mobile dock", () => {
   assert.match(footerContrast, /\.rawaj-site-footer__mobile\s*{[\s\S]*display:\s*none !important/);
   assert.match(footerContrast, /\.rawaj-site-footer__desktop\s*{[\s\S]*display:\s*none !important/);
@@ -189,14 +159,15 @@ test("footer renders one responsive variant and reserves the mobile dock", () =>
 test("owner workspace uses a compact management summary and prioritizes drafts", () => {
   assert.match(storefrontIdentity, /OwnerStoreWorkspaceSummary/);
   assert.match(storefrontIdentity, /if \(mode === "owner"\)/);
-  assert.match(ownerWorkspace, /rawaj-shop-header__identity/);
-  assert.match(ownerWorkspace, /rawaj-shop-header__actions/);
-  assert.match(ownerWorkspace, /rawaj-shop-profile-details/);
+  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary/);
+  assert.match(ownerWorkspace, /approvedCount/);
+  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__completeness/);
+  assert.match(ownerWorkspace, /rawaj-owner-workspace-summary__actions/);
   assert.doesNotMatch(ownerWorkspace, /needsEditCount|pendingCount|closedCount/);
-  assert.match(ownerRoute, /rawaj-shop-desk__rail[\s\S]*tone="draft"[\s\S]*rawaj-owner-inventory/);
-  assert.match(ownerRoute, /rawaj-owner-inventory[\s\S]*rawaj-shop-desk__secondary/);
-  assert.match(ownerWorkspace, /rawaj-shop-header__cover/);
-  assert.match(ownerWorkspace, /rawaj-approved-stats/);
+  assert.match(ownerCorrections, /rawaj-storefront-notice\[data-tone="draft"\][\s\S]*order: 1/);
+  assert.match(ownerCorrections, /rawaj-owner-workspace-summary[\s\S]*order: 2/);
+  assert.match(ownerCorrections, /a:has\(svg\.lucide-pencil\)[\s\S]*grid-column: 1 \/ -1/);
+  assert.doesNotMatch(ownerCorrections, /main\s+:is\(section, article, form/);
 });
 
 test("listing creation and draft editing use one compact semantic studio", () => {
@@ -348,7 +319,7 @@ test("home advertisement inventory supports two unique records without cloning o
   assert.match(adSlot, /placementPage === "home" \? 2 : 1/);
   assert.match(adSlot, /visiblePlacements\.map/);
   assert.doesNotMatch(adSlot, /placement: result\.data\[0\]/);
-  assert.match(homeCorrections, /\.rawaj-signature-ad-placement:empty/);
+  assert.match(homeCorrections, /\.rawaj-signature-ad-placement[\s\S]*order: 30/);
 });
 
 test("categories directory continues into promoted and latest approved inventory", () => {

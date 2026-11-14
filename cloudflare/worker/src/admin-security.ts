@@ -38,22 +38,6 @@ export async function enforceAdminSecurityPerimeter(
     return denied("auth_required", "Authentication required.", 401, requestId);
   }
 
-  // A frozen account must lose administrative READ access too. Relying only
-  // on requireMutationAuth would leave admin dashboards and private data
-  // visible to suspended staff on GET requests.
-  if (auth.accountStatus !== "active") {
-    await recordAdminSecurityEvent(
-      request,
-      env,
-      requestId,
-      normalizedPath,
-      auth.userId,
-      auth.roles,
-      "admin_account_restricted",
-    );
-    return denied("account_restricted", "Account is not active.", 403, requestId);
-  }
-
   const staffRoles = auth.roles.filter((role) => STAFF_ROLES.has(role));
   if (staffRoles.length === 0) {
     await recordAdminSecurityEvent(

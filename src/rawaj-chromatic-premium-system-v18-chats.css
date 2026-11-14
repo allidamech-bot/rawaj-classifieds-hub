@@ -13,7 +13,10 @@
   width: 100% !important;
   max-width: 100% !important;
   border-color: rgba(216, 174, 95, 0.15) !important;
-  background: var(--rawaj-surface) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.07), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(198, 44, 120, 0.055), transparent 40%),
+    linear-gradient(155deg, #171b24 0%, #11151d 100%) !important;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
@@ -24,7 +27,10 @@
   margin: 0 !important;
   box-sizing: border-box;
   border-color: rgba(216, 174, 95, 0.14) !important;
-  background: var(--rawaj-surface) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.075), transparent 36%),
+    radial-gradient(circle at 0% 100%, rgba(126, 91, 226, 0.055), transparent 42%),
+    linear-gradient(155deg, #1b1e27 0%, #141821 62%, #11151c 100%) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
@@ -34,7 +40,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar__heading h2 {
-  color: var(--rawaj-ink-primary) !important;
+  color: #f7f3ed !important;
   font-size: 0.95rem !important;
 }
 
@@ -47,8 +53,8 @@
   height: 2rem !important;
   border: 1px solid rgba(74, 140, 255, 0.2) !important;
   border-radius: 0.7rem !important;
-  color: var(--rawaj-brand-primary) !important;
-  background: rgba(74, 140, 255, 0.09) !important;
+  color: #cbd7e9 !important;
+  background: linear-gradient(145deg, rgba(74, 140, 255, 0.09), rgba(128, 103, 239, 0.055)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search {
@@ -63,8 +69,10 @@
   border: 1px solid rgba(216, 174, 95, 0.14) !important;
   border-radius: 1rem !important;
   padding-inline: 0.9rem !important;
-  color: var(--rawaj-ink-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #c8c2be !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.035), transparent 45%),
+    linear-gradient(145deg, #10141b, #0c1017) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
@@ -76,14 +84,14 @@
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search svg {
   width: 1.05rem !important;
   height: 1.05rem !important;
-  color: var(--rawaj-ink-secondary) !important;
+  color: #d7d0c9 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input {
   width: 100% !important;
   min-width: 0 !important;
   flex: 1 1 auto !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: #f7f3ed !important;
   background: transparent !important;
   font-size: max(0.8rem, 13px) !important;
 }
@@ -99,19 +107,24 @@
   border: 1px solid rgba(74, 140, 255, 0.12) !important;
   border-radius: 1rem !important;
   padding: 0.9rem 1rem !important;
-  color: var(--rawaj-ink-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #c8c2be !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.055), transparent 42%),
+    linear-gradient(145deg, #151922, #10141b) !important;
   box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary {
   border-color: rgba(255, 255, 255, 0.065) !important;
-  background: var(--rawaj-surface) !important;
+  background: rgba(255, 255, 255, 0.022) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary[data-selected="true"] {
   border-color: rgba(216, 174, 95, 0.26) !important;
-  background: var(--rawaj-selected-surface) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.11), transparent 46%),
+    radial-gradient(circle at 0% 100%, rgba(198, 44, 120, 0.075), transparent 48%),
+    linear-gradient(145deg, #211d27, #171922) !important;
   box-shadow: inset 3px 0 0 #d8ae5f !important;
 }
 
@@ -120,27 +133,34 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-panel {
-  background: var(--rawaj-surface-subtle) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.045), transparent 34%),
+    linear-gradient(180deg, #151922, #10141b) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer {
   border-color: rgba(216, 174, 95, 0.13) !important;
-  background: var(--rawaj-surface) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.045), transparent 38%),
+    linear-gradient(155deg, #1b1f28, #141820) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-stream {
-  background: var(--rawaj-canvas) !important;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(74, 140, 255, 0.04), transparent 30%),
+    radial-gradient(circle at 90% 92%, rgba(198, 44, 120, 0.035), transparent 32%),
+    #0f131a !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble:not([data-mine="true"]) {
   border-color: rgba(255, 255, 255, 0.08) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: linear-gradient(145deg, #1c2029, #151922) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble[data-mine="true"] {
   border-color: rgba(219, 73, 179, 0.22) !important;
-  background: var(--rawaj-brand-primary) !important;
+  background: linear-gradient(145deg, #8f3d68, #5d477f) !important;
   box-shadow: 0 7px 18px rgba(122, 43, 105, 0.22) !important;
 }
 

@@ -110,7 +110,9 @@
   display: grid !important;
   place-items: center !important;
   color: #74d2e3 !important;
-  background: #292c32 !important;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(82, 161, 180, 0.14), transparent 34%),
+    linear-gradient(145deg, #292c32, #202227) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-lead-card__media > div svg,
@@ -128,7 +130,8 @@
   position: sticky;
   isolation: isolate;
   overflow: hidden;
-  background: var(--rawaj-canvas) !important;
+  background:
+    linear-gradient(180deg, rgba(38, 39, 44, 0.985), rgba(34, 35, 40, 0.965)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header::before {
@@ -139,11 +142,17 @@
   left: 0;
   width: 58%;
   pointer-events: none;
-  background: transparent;
+  background:
+    radial-gradient(circle, rgba(255, 132, 101, 0.72) 0 0.8px, transparent 1.45px) 0 0 / 11px 11px,
+    radial-gradient(circle, rgba(225, 77, 191, 0.56) 0 0.9px, transparent 1.55px) 3px 5px / 15px 15px,
+    radial-gradient(circle, rgba(112, 115, 255, 0.42) 0 0.75px, transparent 1.4px) 7px 1px / 18px 18px,
+    radial-gradient(ellipse at 6% 50%, rgba(255, 111, 79, 0.19), transparent 43%),
+    radial-gradient(ellipse at 42% 50%, rgba(220, 62, 182, 0.16), transparent 50%),
+    radial-gradient(ellipse at 82% 53%, rgba(63, 145, 255, 0.12), transparent 48%);
   opacity: 0.76;
   filter: saturate(105%);
-  -webkit-mask-image: none;
-  mask-image: none;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 42%, rgba(0, 0, 0, 0.76) 68%, transparent 100%);
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
@@ -154,11 +163,13 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-action,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-account,
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .order-3 > .relative > button {
-  border-color: var(--rawaj-divider) !important;
-  background: var(--rawaj-surface-subtle) !important;
-  box-shadow: none !important;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  background: rgba(31, 31, 38, 0.58) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 20px rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home {

@@ -1,87 +1,100 @@
 @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap");
 
 /* RAWAJ semantic color foundation.
- * White and neutral surfaces with petrol actions and semantic status colors.
- * This file loads after the legacy foundations and is the source of truth for shared colors.
+ * Decorative colors stay vivid; interactive backgrounds use darker accessible tones.
+ * This file loads after the legacy foundations and is the source of truth for the dark system.
  */
-
-:root {
-  --rawaj-canvas: #ffffff;
-  --rawaj-surface: #ffffff;
-  --rawaj-surface-subtle: #f6f7f6;
-  --rawaj-brand-primary: #103f42;
-  --rawaj-brand-primary-hover: #0b3235;
-  --rawaj-ink-primary: #152322;
-  --rawaj-ink-secondary: #53615e;
-  --rawaj-divider: #e3e7e4;
-  --rawaj-control-border: #798783;
-  --rawaj-brand-gold: #bd984b;
-  --rawaj-link-on-light: #17565a;
-  --rawaj-gold-ink: #76561b;
-  --rawaj-selected-surface: #e8f1ef;
-  --rawaj-warning-surface-light: #fff3dc;
-}
 
 :root,
 .dark {
-  /* Shared fallback colors for route styles and portalled UI. */
-  --rawaj-page-background: var(--rawaj-canvas);
-  --rawaj-page-background-deep: var(--rawaj-canvas);
-  --rawaj-card-background: var(--rawaj-surface);
-  --rawaj-elevated-background: var(--rawaj-surface);
-  --rawaj-subtle-background: var(--rawaj-surface-subtle);
-  --rawaj-muted-surface: var(--rawaj-surface-subtle);
-  --rawaj-surface-active: var(--rawaj-selected-surface);
-  --rawaj-surface-selected: var(--rawaj-selected-surface);
-  --rawaj-surface-inset: var(--rawaj-surface-subtle);
+  /* Canvas and surfaces */
+  --rawaj-page-background: #242529;
+  --rawaj-page-background-deep: #1e1f23;
+  --rawaj-card-background: #2d2f34;
+  --rawaj-elevated-background: #34363c;
+  --rawaj-subtle-background: #292b30;
+  --rawaj-muted-surface: #303136;
+  --rawaj-surface-active: #39343b;
+  --rawaj-surface-selected: #40313f;
+  --rawaj-surface-inset: #27292e;
 
-  --rawaj-text-primary: var(--rawaj-ink-primary);
-  --rawaj-text-secondary: var(--rawaj-ink-secondary);
-  --rawaj-text-muted: var(--rawaj-ink-secondary);
+  /* Text */
+  --rawaj-text-primary: #f2efeb;
+  --rawaj-text-secondary: #c9c3bf;
+  --rawaj-text-muted: #aaa39f;
   --rawaj-text-disabled: #77736f;
-  --rawaj-text-inverse: #ffffff;
-  --rawaj-link: var(--rawaj-link-on-light);
-  --rawaj-text-coral: #913d2c;
-  --rawaj-text-pink: #71425e;
-  --rawaj-text-blue: #235685;
-  --rawaj-text-gold: var(--rawaj-gold-ink);
+  --rawaj-text-inverse: #1d1e22;
+  --rawaj-link: #ef9bca;
+  --rawaj-text-coral: #ff9b87;
+  --rawaj-text-pink: #ef8bd3;
+  --rawaj-text-blue: #8fc2ff;
+  --rawaj-text-gold: #f3c98e;
 
-  --rawaj-border: var(--rawaj-divider);
-  --rawaj-border-strong: var(--rawaj-control-border);
-  --rawaj-border-active: var(--rawaj-brand-primary);
+  /* Borders */
+  --rawaj-border: rgba(255, 255, 255, 0.09);
+  --rawaj-border-strong: rgba(255, 255, 255, 0.16);
+  --rawaj-border-active: rgba(225, 100, 180, 0.38);
 
   /* Decorative identity colors — for icons, light, and hairlines. */
-  --rawaj-accent-coral: #b89762;
-  --rawaj-accent-pink: #9bb2a6;
-  --rawaj-accent-violet: #799f91;
-  --rawaj-accent-blue: #628b80;
-  --rawaj-accent-cyan: #a9c8bb;
+  --rawaj-accent-coral: #ff7054;
+  --rawaj-accent-pink: #dc3eb6;
+  --rawaj-accent-violet: #8c63f4;
+  --rawaj-accent-blue: #3f91ff;
+  --rawaj-accent-cyan: #69d9ec;
 
   /* Accessible action colors — white text remains readable. */
-  --rawaj-action-primary: var(--rawaj-brand-primary);
-  --rawaj-action-primary-hover: var(--rawaj-brand-primary-hover);
-  --rawaj-action-brand: #315c50;
-  --rawaj-action-brand-hover: #264c42;
-  --rawaj-action-coral: #6b5133;
-  --rawaj-action-coral-hover: #5c452b;
-  --rawaj-action-blue: #254f46;
+  --rawaj-action-primary: #9b286f;
+  --rawaj-action-primary-hover: #87235f;
+  --rawaj-action-brand: #6040a8;
+  --rawaj-action-brand-hover: #50358f;
+  --rawaj-action-coral: #c24431;
+  --rawaj-action-coral-hover: #aa392a;
+  --rawaj-action-blue: #3b6fc4;
   --rawaj-action-primary-foreground: #ffffff;
 
   /* Functional states */
-  --rawaj-success: #176145;
-  --rawaj-success-surface: #eaf5ef;
-  --rawaj-warning: #754500;
-  --rawaj-warning-surface: var(--rawaj-warning-surface-light);
-  --rawaj-danger: #a12b31;
-  --rawaj-danger-surface: #fcedee;
+  --rawaj-success: #70d5b1;
+  --rawaj-success-surface: #253934;
+  --rawaj-warning: #e3a04b;
+  --rawaj-warning-surface: #3c3122;
+  --rawaj-danger: #ea7168;
+  --rawaj-danger-surface: #412726;
   --rawaj-accent-gold: #cda260;
+
+  /* Gradients */
+  --rawaj-gradient-decoration: linear-gradient(
+    115deg,
+    var(--rawaj-accent-coral),
+    var(--rawaj-accent-pink) 48%,
+    var(--rawaj-accent-violet) 74%,
+    var(--rawaj-accent-blue)
+  );
+  --rawaj-gradient-action: linear-gradient(
+    115deg,
+    var(--rawaj-action-coral),
+    var(--rawaj-action-primary) 48%,
+    var(--rawaj-action-brand) 76%,
+    var(--rawaj-action-blue)
+  );
+  --rawaj-gradient-action-short: linear-gradient(
+    115deg,
+    var(--rawaj-action-coral),
+    var(--rawaj-action-primary)
+  );
+  --rawaj-gradient-border: linear-gradient(
+    115deg,
+    rgba(255, 112, 84, 0.62),
+    rgba(220, 62, 182, 0.52),
+    rgba(140, 99, 244, 0.48),
+    rgba(63, 145, 255, 0.48)
+  );
 
   /* Semantic aliases used by Tailwind and shared components. */
   --background: var(--rawaj-page-background);
   --foreground: var(--rawaj-text-primary);
   --card: var(--rawaj-card-background);
   --card-foreground: var(--rawaj-text-primary);
-  --card-warm: var(--rawaj-surface-subtle);
+  --card-warm: #313238;
   --muted-surface: var(--rawaj-muted-surface);
   --popover: var(--rawaj-elevated-background);
   --popover-foreground: var(--rawaj-text-primary);
@@ -91,7 +104,7 @@
   --secondary-foreground: var(--rawaj-text-primary);
   --muted: var(--rawaj-muted-surface);
   --muted-foreground: var(--rawaj-text-secondary);
-  --accent: var(--rawaj-action-primary, var(--rawaj-brand-primary));
+  --accent: var(--rawaj-action-primary);
   --accent-foreground: #ffffff;
   --gold: var(--rawaj-accent-gold);
   --gold-foreground: #201e1a;
@@ -99,17 +112,17 @@
   --brand-orange-foreground: #ffffff;
   --brand-navy: var(--rawaj-action-brand);
   --emerald-trust: var(--rawaj-success);
-  --emerald-trust-foreground: #ffffff;
+  --emerald-trust-foreground: #10231d;
   --destructive: var(--rawaj-danger);
   --destructive-foreground: #ffffff;
   --warning: var(--rawaj-warning);
   --border: var(--rawaj-border);
-  --input: var(--rawaj-control-border);
-  --ring: var(--rawaj-link, #a9c8bb);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #e164b4;
 
   /* Legacy aliases retained only for old route CSS until each route is rebuilt. */
   --rawaj-primary: var(--rawaj-text-primary);
-  --rawaj-primary-deep: var(--rawaj-brand-primary-hover);
+  --rawaj-primary-deep: #faf6f2;
   --rawaj-accent-orange: var(--rawaj-accent-coral);
   --rawaj-border-brand: var(--rawaj-border-active);
   --rawaj-orange: var(--rawaj-accent-coral);
@@ -119,9 +132,9 @@
   --rawaj-ink-soft: var(--rawaj-text-secondary);
   --rawaj-surface-card: var(--rawaj-card-background);
   --rawaj-surface-sage: var(--rawaj-muted-surface);
-  --rawaj-surface-sage-strong: var(--rawaj-selected-surface);
-  --rawaj-surface-warm: var(--rawaj-surface-subtle);
-  --rawaj-surface-gold: var(--rawaj-warning-surface-light);
+  --rawaj-surface-sage-strong: #37383e;
+  --rawaj-surface-warm: #342c30;
+  --rawaj-surface-gold: #363127;
   --rawaj-surface-elevated: var(--rawaj-elevated-background);
   --rawaj-forest-deep: var(--rawaj-page-background);
   --rawaj-forest: var(--rawaj-muted-surface);

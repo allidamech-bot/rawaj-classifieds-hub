@@ -1,4 +1,3 @@
-import directory from "@/features/categories/category-directory.module.css";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Briefcase,
@@ -46,6 +45,7 @@ import {
   resolveTaxonomyListingSearch,
   searchTaxonomyNodes,
   taxonomyListingUrlSearch,
+  taxonomyNodeDescription,
   taxonomyNodeName,
   taxonomyPathLabel,
 } from "@/lib/taxonomy";
@@ -170,38 +170,49 @@ function CategoriesPage() {
     <>
       <PageHeader title={text("الأقسام", "Categories")} titleIsPageHeading={false} />
       <main className="rawaj-categories-v2 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
-        <section className={directory.heading} data-category-directory-heading>
-          <div>
-            <h1 className={directory.title} dir="auto">
-              {currentNode
-                ? taxonomyNodeName(currentNode, language)
-                : text("تصفّح الأقسام", "Browse categories")}
-            </h1>
-            {currentNode && <Breadcrumbs path={currentPath} language={language} text={text} />}
+        <section className="rawaj-categories-v2__hero rounded-[1.55rem] sm:rounded-[1.9rem]">
+          <div className="p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-[1rem] bg-primary text-primary-foreground shadow-[0_9px_22px_rgba(16,43,70,0.16)]">
+                <Grid3X3 className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="rawaj-eyebrow">{text("دليل رواج", "RAWAJ directory")}</p>
+                <h1 className="mt-1.5 text-xl font-bold leading-[1.4] text-primary sm:text-2xl">
+                  {currentNode
+                    ? taxonomyNodeName(currentNode, language)
+                    : text("اختر القسم المناسب", "Choose the right category")}
+                </h1>
+                <p className="mt-2.5 max-w-2xl text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
+                  {currentNode
+                    ? (taxonomyNodeDescription(currentNode, language) ??
+                      text(
+                        "تصفح الفروع داخل هذا المستوى أو انتقل إلى نتائج الإعلانات المرتبطة به.",
+                        "Browse child levels or open the linked listing results.",
+                      ))
+                    : text(
+                        "انتقل إلى القسم الأقرب لما تبحث عنه، ثم أكمل التصفية داخل نتائج الإعلانات.",
+                        "Choose the closest category, then continue refining inside listing results.",
+                      )}
+                </p>
+              </div>
+            </div>
+
+            {showTaxonomy && <Breadcrumbs path={currentPath} language={language} text={text} />}
           </div>
 
-          <div>
-            <div
-              className={directory.search}
-              role="search"
-              aria-label={text("بحث الأقسام", "Category search")}
-            >
-              <Search aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <div className="rawaj-categories-v2__hero-search p-3 sm:p-4">
+            <label className="flex items-center gap-2.5 rounded-[1.05rem] border border-border/80 bg-card/82 px-3.5 py-3 shadow-[0_7px_22px_rgba(16,43,70,0.045)] transition focus-within:border-brand-orange/60 focus-within:ring-[3px] focus-within:ring-brand-orange/12">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input
                 value={query}
                 onChange={(event) => updateQuery(event.target.value)}
                 aria-label={text("ابحث داخل الأقسام", "Search categories")}
                 placeholder={text("ابحث داخل الأقسام", "Search categories")}
-                className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
                 type="search"
-                dir="auto"
               />
-              {query ? (
-                <button type="button" onClick={() => updateQuery("")}>
-                  {text("مسح", "Clear")}
-                </button>
-              ) : null}
-            </div>
+            </label>
           </div>
         </section>
 
@@ -304,6 +315,7 @@ function TaxonomyDirectory({
     currentNode && currentPath.length > 0
       ? resolveTaxonomyListingSearch(currentNode, currentPath)
       : null;
+  const canOpenCurrentLevel = currentListingSearch !== null;
   const visibleNodes = currentNode
     ? getTaxonomyChildren(index, currentNode.id)
     : getTaxonomyRootNodes(index);
@@ -334,17 +346,38 @@ function TaxonomyDirectory({
 
   return (
     <>
-      {currentListingSearch && (
-        <Link
-          to="/listings"
-          search={taxonomyListingUrlSearch(currentListingSearch)}
-          className="rawaj-button-primary mt-3 inline-flex min-h-11 items-center px-4 py-2.5"
-        >
-          {text("عرض إعلانات هذا القسم", "View listings in this category")}
-        </Link>
+      {currentNode && canOpenCurrentLevel && currentListingSearch && (
+        <div className="rawaj-surface mt-4 rounded-[1.25rem] p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+          <div>
+            <p className="text-sm font-extrabold text-foreground">
+              {text("تريد رؤية الإعلانات مباشرة؟", "Want to see listings now?")}
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {text(
+                "افتح كل النتائج المرتبطة بهذا المستوى.",
+                "Open all results linked to this level.",
+              )}
+            </p>
+          </div>
+          <Link
+            to="/listings"
+            search={taxonomyListingUrlSearch(currentListingSearch)}
+            className="rawaj-button-primary mt-3 w-full px-4 py-2.5 sm:mt-0 sm:w-auto"
+          >
+            {text("عرض الإعلانات", "View listings")}
+          </Link>
+        </div>
       )}
 
-      {visibleNodes.length > 0 ? (
+      {visibleNodes.length === 0 && currentNode ? (
+        <Panel
+          title={text("هذا آخر مستوى في التصنيف", "This is the last category level")}
+          body={text(
+            "انتقل إلى نتائج الإعلانات المرتبطة بهذا التصنيف.",
+            "Open the listing results linked to this category.",
+          )}
+        />
+      ) : (
         <DirectoryGrid>
           {visibleNodes.map((node) => {
             const path = getTaxonomyPath(index, node);
@@ -360,17 +393,13 @@ function TaxonomyDirectory({
             );
           })}
         </DirectoryGrid>
-      ) : null}
+      )}
     </>
   );
 }
 
 function DirectoryGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <section className={directory.grid} data-category-directory-grid>
-      {children}
-    </section>
-  );
+  return <section className="rawaj-category-directory-grid mt-5">{children}</section>;
 }
 
 function TaxonomyRow({
@@ -392,7 +421,7 @@ function TaxonomyRow({
   const isLeaf = !hasChildren;
 
   return (
-    <article className={directory.card} data-category-directory-card>
+    <article className="rawaj-category-directory-card tap-card">
       <Link
         to={isLeaf ? "/listings" : "/categories"}
         search={
@@ -400,21 +429,28 @@ function TaxonomyRow({
             ? taxonomyListingUrlSearch(resolveTaxonomyListingSearch(node, path))
             : { node: node.id }
         }
-        className={directory.link}
-        data-category-directory-link
+        className="group flex h-full items-center gap-3 p-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
       >
-        <span className={directory.icon} data-category-directory-icon>
+        <span className="category-tile h-11 w-11 shrink-0 sm:h-12 sm:w-12">
           <Icon className="h-5 w-5" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
-            <span className={directory.name} dir="auto">
+            <span className="truncate text-sm font-semibold text-foreground sm:text-[15px]">
               {taxonomyNodeName(node, language)}
             </span>
-            <ChevronLeft aria-hidden="true" className={directory.chevron} />
+            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
           </span>
-          {pathLabel && <span className={directory.secondary}>{pathLabel}</span>}
-          <span className={directory.secondary}>
+          {pathLabel && (
+            <span className="mt-1 block truncate text-[11px] font-bold text-gold">{pathLabel}</span>
+          )}
+          <span className="mt-1 hidden line-clamp-2 text-xs leading-5 text-muted-foreground sm:block sm:text-[13px]">
+            {taxonomyNodeDescription(node, language) ??
+              (isLeaf
+                ? text("انتقل إلى نتائج هذا التصنيف.", "Open results for this category.")
+                : text("افتح الفروع داخل هذا المستوى.", "Open child levels in this category."))}
+          </span>
+          <span className="mt-1.5 inline-flex text-[11px] font-semibold text-brand-orange sm:mt-2 sm:text-xs">
             {isLeaf
               ? text("عرض النتائج", "View results")
               : text("استعراض الفروع", "Browse children")}

@@ -1,4 +1,3 @@
-import { sanitizePublicListingDetails } from "./public-listing-privacy";
 import {
   authenticate,
   corsHeaders,
@@ -34,9 +33,7 @@ interface R2Bucket {
   put(
     key: string,
     value: ArrayBuffer,
-    options?: {
-      httpMetadata?: { contentType?: string; cacheControl?: string };
-    },
+    options?: { httpMetadata?: { contentType?: string; cacheControl?: string } },
   ): Promise<{ httpEtag: string }>;
   get(key: string): Promise<R2Object | null>;
   delete(key: string): Promise<void>;
@@ -117,13 +114,7 @@ export async function handleMarketplacePrivate(
     return privateMedia(request, env, cors, decodeURIComponent(privateMediaMatch[1]));
   }
   return relevant(path) && url.pathname.startsWith("/api/")
-    ? json(
-        {
-          error: { code: "method_not_allowed", message: "Method not allowed." },
-        },
-        405,
-        cors,
-      )
+    ? json({ error: { code: "method_not_allowed", message: "Method not allowed." } }, 405, cors)
     : null;
 }
 
@@ -183,12 +174,7 @@ async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: H
   if (auth instanceof Response) return auth;
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
     return json(
-      {
-        error: {
-          code: "unsupported_media_type",
-          message: "Multipart form required.",
-        },
-      },
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
       415,
       cors,
     );
@@ -226,10 +212,7 @@ async function uploadProfileMedia(request: Request, env: MarketplaceEnv, cors: H
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
-      httpMetadata: {
-        contentType: file.type,
-        cacheControl: "public, max-age=31536000, immutable",
-      },
+      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=31536000, immutable" },
     });
   } catch {
     return databaseError(cors);
@@ -340,11 +323,7 @@ async function removeProfileMedia(
 async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
   const page = integer(url.searchParams.get("page"), 1, 1, 100_000);
   const pageSize = integer(url.searchParams.get("pageSize"), 30, 1, 50);
-  const where = [
-    "l.status = 'approved'",
-    "l.archived_at IS NULL",
-    "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
-  ];
+  const where = ["l.status = 'approved'", "l.archived_at IS NULL"];
   const values: Value[] = [];
   addFilter(where, values, "l.category_id", clean(url.searchParams.get("categoryId"), 120));
   addFilter(where, values, "l.subcategory_id", clean(url.searchParams.get("subcategoryId"), 120));
@@ -384,22 +363,7 @@ async function publicListings(url: URL, env: MarketplaceEnv, cors: Headers) {
     .bind(...values)
     .all();
   return result.success
-    ? json(
-        {
-          data: {
-            items: (result.results ?? []).map((row) => ({
-              ...row,
-              // Maintain the legacy DTO shape, never the legacy privacy leak.
-              currency: "SYP",
-              details: JSON.stringify(sanitizePublicListingDetails(jsonObject(row.details))),
-            })),
-            page,
-            pageSize,
-          },
-        },
-        200,
-        cors,
-      )
+    ? json({ data: { items: result.results ?? [], page, pageSize } }, 200, cors)
     : databaseError(cors);
 }
 
@@ -414,14 +378,7 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   )
     .bind(id)
     .first<Row>();
-  const ownerView = Boolean(row && auth?.userId === row.owner_id);
-  const publiclyAvailable = Boolean(
-    row &&
-    row.status === "approved" &&
-    !row.archived_at &&
-    (!row.expires_at || String(row.expires_at) > now()),
-  );
-  if (!row || (!ownerView && !publiclyAvailable)) {
+  if (!row || (row.status !== "approved" && row.owner_id !== auth?.userId)) {
     return json({ error: { code: "not_found", message: "Listing not found." } }, 404, cors);
   }
   const images = await env.DB.prepare(
@@ -434,13 +391,7 @@ async function listingDetail(request: Request, env: MarketplaceEnv, cors: Header
   return json(
     {
       data: {
-        listing: ownerView
-          ? mapListingRow(row)
-          : {
-              ...mapListingRow(row),
-              currency: "SYP",
-              details: sanitizePublicListingDetails(jsonObject(row.details)),
-            },
+        listing: mapListingRow(row),
         images: (images.results ?? []).map((image) => ({
           id: stringValue(image.id),
           listingId: stringValue(image.listing_id),
@@ -531,13 +482,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       .first<{ id: string; status: string; updated_at: string }>();
     if (existing) {
       return json(
-        {
-          data: {
-            id: existing.id,
-            status: existing.status,
-            updatedAt: existing.updated_at,
-          },
-        },
+        { data: { id: existing.id, status: existing.status, updatedAt: existing.updated_at } },
         200,
         cors,
       );
@@ -551,7 +496,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       location_node_id, title, description, price, currency, price_type,
       listing_condition, status, district_ar, contact_name, contact_options, details,
       is_featured, search_text_normalized, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SYP', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAR', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
   ).bind(
     id,
     auth.userId,
@@ -597,13 +542,7 @@ async function createListing(request: Request, env: MarketplaceEnv, cors: Header
       .first<{ id: string; status: string; updated_at: string }>();
     if (existing) {
       return json(
-        {
-          data: {
-            id: existing.id,
-            status: existing.status,
-            updatedAt: existing.updated_at,
-          },
-        },
+        { data: { id: existing.id, status: existing.status, updatedAt: existing.updated_at } },
         200,
         cors,
       );
@@ -623,12 +562,7 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
   if (!existing || existing.owner_id !== auth.userId) return forbidden(cors);
   if (!["draft", "rejected", "approved"].includes(existing.status)) {
     return json(
-      {
-        error: {
-          code: "invalid_transition",
-          message: "Listing cannot be edited.",
-        },
-      },
+      { error: { code: "invalid_transition", message: "Listing cannot be edited." } },
       409,
       cors,
     );
@@ -637,12 +571,7 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
   if (input instanceof Response) return input;
   if (input.expectedUpdatedAt && input.expectedUpdatedAt !== existing.updated_at) {
     return json(
-      {
-        error: {
-          code: "stale_write",
-          message: "Listing changed since it was loaded.",
-        },
-      },
+      { error: { code: "stale_write", message: "Listing changed since it was loaded." } },
       409,
       cors,
     );
@@ -651,11 +580,8 @@ async function updateListing(request: Request, env: MarketplaceEnv, cors: Header
     const submissionError = await validateListingSubmission(env, cors, id, input);
     if (submissionError) return submissionError;
   }
-  const status = input.submit
-    ? "pending_review"
-    : existing.status === "approved"
-      ? "draft"
-      : existing.status;
+  const status =
+    input.submit ? "pending_review" : existing.status === "approved" ? "draft" : existing.status;
   const timestamp = now();
   const result = await env.DB.prepare(
     `UPDATE listings SET category_id = ?, subcategory_id = ?, governorate_id = ?,
@@ -722,12 +648,7 @@ async function deleteListing(request: Request, env: MarketplaceEnv, cors: Header
   if (!listing || listing.owner_id !== auth.userId) return forbidden(cors);
   if (!["draft", "pending_review", "approved", "rejected"].includes(listing.status)) {
     return json(
-      {
-        error: {
-          code: "invalid_transition",
-          message: "Listing cannot be deleted.",
-        },
-      },
+      { error: { code: "invalid_transition", message: "Listing cannot be deleted." } },
       409,
       cors,
     );
@@ -779,12 +700,7 @@ async function uploadImage(
   if (!["draft", "rejected", "approved"].includes(listing.status)) return forbidden(cors);
   if (!request.headers.get("Content-Type")?.toLowerCase().startsWith("multipart/form-data")) {
     return json(
-      {
-        error: {
-          code: "unsupported_media_type",
-          message: "Multipart form required.",
-        },
-      },
+      { error: { code: "unsupported_media_type", message: "Multipart form required." } },
       415,
       cors,
     );
@@ -840,16 +756,11 @@ async function uploadImage(
   const assetId = crypto.randomUUID();
   const imageId = crypto.randomUUID();
   const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
-  // A retry may share a checksum with another in-flight upload. Use a unique
-  // R2 key so compensating deletion can never remove a successful sibling.
-  const objectKey = `listings/${auth.userId}/${listingId}/${assetId}.${extension}`;
+  const objectKey = `listings/${auth.userId}/${listingId}/${checksum}.${extension}`;
   let object;
   try {
     object = await env.MEDIA.put(objectKey, bytes.buffer, {
-      httpMetadata: {
-        contentType: file.type,
-        cacheControl: "public, max-age=0, must-revalidate",
-      },
+      httpMetadata: { contentType: file.type, cacheControl: "public, max-age=0, must-revalidate" },
     });
   } catch {
     return databaseError(cors);
@@ -986,11 +897,9 @@ async function reorderImages(
   );
   if (temporary.some((result) => !result.success)) return databaseError(cors);
   const finalStatements = imageIds.map((id, index) =>
-    env.DB.prepare("UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?").bind(
-      index,
-      id,
-      listingId,
-    ),
+    env.DB.prepare(
+      "UPDATE listing_images SET sort_order = ? WHERE id = ? AND listing_id = ?",
+    ).bind(index, id, listingId),
   );
   if (listing.status === "approved") {
     finalStatements.push(
@@ -1300,7 +1209,7 @@ function mapListingRow(row: Row) {
     title: stringValue(row.title),
     description: stringValue(row.description),
     price: nullableNumber(row.price),
-    currency: "SYP",
+    currency: "SAR",
     priceType: stringValue(row.price_type, "fixed"),
     condition: stringValue(row.listing_condition, "not_applicable"),
     status,
@@ -1453,12 +1362,7 @@ function forbidden(cors: Headers) {
 }
 function databaseError(cors: Headers) {
   return json(
-    {
-      error: {
-        code: "database_unavailable",
-        message: "Data service unavailable.",
-      },
-    },
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
     503,
     cors,
   );

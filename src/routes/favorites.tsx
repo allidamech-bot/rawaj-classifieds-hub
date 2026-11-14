@@ -356,7 +356,7 @@ function Panel({
 }) {
   const { language } = useUiPreferences();
   return (
-    <div className="rawaj-secondary-state rounded-2xl text-center hairline">
+    <div className="rounded-2xl bg-card p-10 text-center hairline">
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted-surface">
         <Heart className="h-6 w-6 text-muted-foreground" />
       </span>
@@ -369,7 +369,7 @@ function Panel({
               type="button"
               onClick={onAction}
               disabled={actionDisabled}
-              className="rawaj-secondary-action rounded-xl px-5 py-2 text-sm font-bold disabled:opacity-60"
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
             >
               {actionLabel}
             </button>
@@ -377,7 +377,7 @@ function Panel({
             <Link
               to={actionTo}
               search={actionSearch}
-              className="rawaj-secondary-action rounded-xl px-5 py-2 text-sm font-bold"
+              className="inline-block rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
             >
               {actionLabel}
             </Link>

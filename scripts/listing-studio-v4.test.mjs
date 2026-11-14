@@ -46,7 +46,7 @@ test("phase 4 listing studio layer is route-scoped and loaded last", () => {
 test("phase 4 keeps publishing behavior untouched while improving form semantics", () => {
   assert.match(route, /submitOwnerListingForReview\(/);
   assert.match(route, /progressLabel=\{text\(/);
-  assert.match(route, /role=\{submissionConfirmed \? "status" : "alert"\}/);
+  assert.match(route, /role="status" aria-live="polite"/);
   assert.match(studio, /aria-label=\{progressLabel\}/);
   assert.doesNotMatch(
     css,
@@ -92,7 +92,7 @@ test("phase 4 establishes readable controls, compact sections, and responsive la
 });
 
 test("mobile recovery keeps the add-listing surface readable and non-overlapping", () => {
-  assert.match(recoveryCss, /background:\s*var\(--rawaj-card-background\)\s*;/);
+  assert.match(recoveryCss, /background:\s*linear-gradient\(135deg, #fffaf1/);
   assert.match(recoveryCss, /grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(
     recoveryCss,

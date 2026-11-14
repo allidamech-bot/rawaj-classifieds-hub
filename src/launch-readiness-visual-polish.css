@@ -114,14 +114,14 @@
 
 .rawaj-button-primary {
   border-radius: var(--radius-button);
-  background: var(--rawaj-action-primary);
-  color: var(--rawaj-action-primary-foreground);
-  box-shadow: none;
+  background: var(--rawaj-action-coral);
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.18);
 }
 
 .rawaj-button-primary:hover {
-  background: var(--rawaj-action-primary-hover);
-  filter: none;
+  background: var(--rawaj-action-coral-hover);
+  filter: saturate(1.02);
 }
 
 .rawaj-icon-button {
@@ -212,7 +212,7 @@
 
 .rawaj-storefront-identity {
   border-radius: var(--radius-hero);
-  background: #092d29;
+  background: linear-gradient(150deg, #092d29, #123f38 76%, #1a5147);
   box-shadow: 0 10px 30px rgba(9, 45, 41, 0.13);
 }
 

@@ -133,7 +133,6 @@ function AddListingPage() {
   const [loading, setLoading] = useState(true);
   const [setupError, setSetupError] = useState<ClassifiedsError | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
-  const [submissionConfirmed, setSubmissionConfirmed] = useState(false);
   const [stepErrors, setStepErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -763,7 +762,6 @@ function AddListingPage() {
     }
 
     setReorderingImages(true);
-    setSubmissionConfirmed(false);
     setSubmitMessage(null);
     try {
       const result = await reorderListingImages(auth.profile?.id ?? null, draft.id, persistedOrder);
@@ -1305,7 +1303,6 @@ function AddListingPage() {
     setSubmitting(true);
     setAutosaveState("idle");
     await autosaveQueueRef.current;
-    setSubmissionConfirmed(false);
     setSubmitMessage(null);
 
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -1585,7 +1582,6 @@ function AddListingPage() {
       lastAutosaveSignatureRef.current = "";
       setAutosaveState("idle");
 
-      setSubmissionConfirmed(true);
       setSubmitMessage(
         imageErrors.length > 0
           ? text(
@@ -1849,7 +1845,6 @@ function AddListingPage() {
               {stepErrors.length > 0 && (
                 <div
                   data-error-summary="true"
-                  role="alert"
                   tabIndex={-1}
                   className="rounded-[1.15rem] border border-destructive/15 bg-destructive/8 p-4 text-sm text-destructive shadow-soft"
                 >
@@ -1872,8 +1867,8 @@ function AddListingPage() {
                   <Card
                     title={text("اختر القسم", "Choose category")}
                     description={text(
-                      "اختر قسم الإعلان لعرض الحقول المناسبة.",
-                      "Choose a category to see the relevant fields.",
+                      "ابدأ بالقسم الأقرب لما تبيعه حتى تظهر الحقول المناسبة.",
+                      "Start with the closest category so the right fields appear.",
                     )}
                   >
                     {taxonomyNodes.length > 0 ? (
@@ -1913,7 +1908,6 @@ function AddListingPage() {
                           "مثال: سيارة كيا سيراتو 2018",
                           "Example: Kia Cerato 2018",
                         )}
-                        aria-invalid={Boolean(fieldErrors.title) || undefined}
                         data-first-invalid={Boolean(fieldErrors.title)}
                       />
                     </Field>
@@ -2049,7 +2043,6 @@ function AddListingPage() {
                         onChange={(event) => setDescription(event.target.value)}
                         rows={5}
                         className="input resize-none"
-                        aria-invalid={Boolean(fieldErrors.description) || undefined}
                         data-first-invalid={Boolean(fieldErrors.description)}
                       />
                     </Field>
@@ -2120,7 +2113,6 @@ function AddListingPage() {
                           onChange={(event) => setPrice(normalizeNumericInput(event.target.value))}
                           inputMode="numeric"
                           className="input"
-                          aria-invalid={Boolean(fieldErrors.price) || undefined}
                           data-first-invalid={Boolean(fieldErrors.price)}
                         />
                       </Field>
@@ -2217,7 +2209,6 @@ function AddListingPage() {
                           autoComplete="tel"
                           className="input"
                           placeholder="+963 ..."
-                          aria-invalid={Boolean(fieldErrors.phone) || undefined}
                           data-first-invalid={Boolean(fieldErrors.phone)}
                         />
                       </Field>
@@ -2236,7 +2227,6 @@ function AddListingPage() {
                           autoComplete="tel"
                           className="input"
                           placeholder="+963 ..."
-                          aria-invalid={Boolean(fieldErrors.whatsapp) || undefined}
                           data-first-invalid={Boolean(fieldErrors.whatsapp)}
                         />
                       </Field>
@@ -2347,12 +2337,7 @@ function AddListingPage() {
               </div>
 
               {submitMessage && (
-                <div
-                  className={
-                    submissionConfirmed ? "rawaj-studio-success" : "rawaj-studio-submit-feedback"
-                  }
-                  role={submissionConfirmed ? "status" : "alert"}
-                >
+                <div className="rawaj-studio-success" role="status" aria-live="polite">
                   <p>{submitMessage}</p>
                   {createdListingId && (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -2369,9 +2354,8 @@ function AddListingPage() {
                         {text("إدارة الإعلان", "Manage listing")}
                       </button>
                       <Link
-                        to="/profile/listings"
-                        search={{ tab: submissionConfirmed ? "pending" : "needs_edit" }}
-                        className="inline-flex min-h-11 items-center rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
+                        to="/profile"
+                        className="rounded-xl bg-card px-3 py-2 text-xs font-bold hairline"
                       >
                         {text("إعلاناتي", "My listings")}
                       </Link>
@@ -2759,7 +2743,6 @@ function CategorySpecificFields({
               value={values.property_type ?? ""}
               onChange={(event) => patch({ property_type: event.target.value || undefined })}
               className="input"
-              aria-invalid={Boolean(errors.property_type) || undefined}
               data-first-invalid={Boolean(errors.property_type)}
             >
               <option value="">{text("اختر النوع", "Choose type")}</option>
@@ -2778,7 +2761,6 @@ function CategorySpecificFields({
               value={values.listing_purpose ?? ""}
               onChange={(event) => patch({ listing_purpose: event.target.value || undefined })}
               className="input"
-              aria-invalid={Boolean(errors.listing_purpose) || undefined}
               data-first-invalid={Boolean(errors.listing_purpose)}
             >
               <option value="">{text("اختر الغرض", "Choose purpose")}</option>
@@ -2842,7 +2824,6 @@ function CategorySpecificFields({
               value={values.car_make ?? values.make ?? ""}
               onChange={(event) => patch({ car_make: event.target.value || undefined })}
               className="input"
-              aria-invalid={Boolean(errors.car_make) || undefined}
               data-first-invalid={Boolean(errors.car_make)}
             >
               <option value="">{text("اختر الشركة", "Choose make")}</option>
@@ -2859,7 +2840,6 @@ function CategorySpecificFields({
               onChange={(event) => patch({ car_model: event.target.value })}
               maxLength={60}
               className="input"
-              aria-invalid={Boolean(errors.car_model) || undefined}
               data-first-invalid={Boolean(errors.car_model)}
             />
           </Field>
@@ -2965,7 +2945,6 @@ function CategorySpecificFields({
               value={values.job_type ?? ""}
               onChange={(event) => patch({ job_type: event.target.value })}
               className="input"
-              aria-invalid={Boolean(errors.job_type) || undefined}
               data-first-invalid={Boolean(errors.job_type)}
             />
           </Field>
@@ -2974,7 +2953,6 @@ function CategorySpecificFields({
               value={values.employment_type ?? ""}
               onChange={(event) => patch({ employment_type: event.target.value || undefined })}
               className="input"
-              aria-invalid={Boolean(errors.employment_type) || undefined}
               data-first-invalid={Boolean(errors.employment_type)}
             >
               <option value="">{text("اختر", "Choose")}</option>
@@ -3085,7 +3063,6 @@ function CategorySpecificFields({
               value={values.service_type ?? ""}
               onChange={(event) => patch({ service_type: event.target.value })}
               className="input"
-              aria-invalid={Boolean(errors.service_type) || undefined}
               data-first-invalid={Boolean(errors.service_type)}
             />
           </Field>
@@ -3134,7 +3111,6 @@ function CategorySpecificFields({
               value={values.electronics_brand ?? ""}
               onChange={(event) => patch({ electronics_brand: event.target.value })}
               className="input"
-              aria-invalid={Boolean(errors.electronics_brand) || undefined}
               data-first-invalid={Boolean(errors.electronics_brand)}
             />
           </Field>
@@ -3143,7 +3119,6 @@ function CategorySpecificFields({
               value={values.electronics_model ?? ""}
               onChange={(event) => patch({ electronics_model: event.target.value })}
               className="input"
-              aria-invalid={Boolean(errors.electronics_model) || undefined}
               data-first-invalid={Boolean(errors.electronics_model)}
             />
           </Field>
@@ -3236,7 +3211,6 @@ function NumberField({
         min={min}
         max={max}
         className="input"
-        aria-invalid={Boolean(error) || undefined}
         data-first-invalid={Boolean(error)}
       />
     </Field>
@@ -3338,7 +3312,7 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="max-w-[65%] break-words text-end font-semibold text-primary">{value}</span>
+      <span className="max-w-[65%] truncate text-end font-semibold text-primary">{value}</span>
     </div>
   );
 }

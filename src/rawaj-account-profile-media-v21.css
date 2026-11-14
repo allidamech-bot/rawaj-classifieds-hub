@@ -5,20 +5,26 @@
  */
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor {
-  border-color: var(--rawaj-divider) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: none !important;
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(112, 54, 97, 0.08), transparent 35%),
+    linear-gradient(150deg, #171c25 0%, #121720 62%, #10151d 100%) !important;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor > header {
-  border-bottom-color: var(--rawaj-divider) !important;
+  border-bottom-color: rgba(216, 174, 95, 0.11) !important;
   padding: 0.78rem 0.88rem !important;
-  background: rgba(255, 255, 255, 0.018) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(214, 72, 170, 0.055), transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.006)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"] .rawaj-account-profile-editor .rawaj-account-section__body {
   padding: 0.78rem !important;
-  background: var(--rawaj-surface) !important;
+  background: transparent !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -35,11 +41,13 @@
   .rawaj-account-section__body
   > form
   > div:first-child {
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid rgba(216, 174, 95, 0.11) !important;
   border-radius: 1rem !important;
   padding: 0.78rem !important;
-  background: var(--rawaj-surface-subtle) !important;
-  box-shadow: none !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.045), transparent 35%),
+    linear-gradient(145deg, #121821, #0e141c) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -49,7 +57,7 @@
   > div:first-child
   > h3 {
   margin: 0 0 0.62rem !important;
-  color: var(--rawaj-ink-primary) !important;
+  color: #f4efe8 !important;
   font-size: 0.76rem !important;
   line-height: 1.4 !important;
 }
@@ -72,11 +80,11 @@
   > .grid
   > div {
   min-width: 0;
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid rgba(216, 174, 95, 0.09) !important;
   border-radius: 0.92rem !important;
   padding: 0.7rem !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
+  color: #eee9e2 !important;
+  background: linear-gradient(145deg, #111720, #0c1219) !important;
   box-shadow: none !important;
 }
 
@@ -180,7 +188,9 @@
   > div:nth-of-type(2) {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.055) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(216, 174, 95, 0.045), transparent 55%),
+    #090e15 !important;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2) !important;
 }
 
@@ -198,7 +208,7 @@
   height: 100% !important;
   object-fit: contain !important;
   object-position: center !important;
-  background: var(--rawaj-surface-subtle) !important;
+  background: #090e15 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -209,7 +219,7 @@
   > .grid
   > div
   > p {
-  color: var(--rawaj-ink-secondary) !important;
+  color: #8f98a5 !important;
   font-size: 0.66rem !important;
   line-height: 1.5 !important;
 }
@@ -241,14 +251,14 @@
   align-items: center !important;
   justify-content: center !important;
   gap: 0.35rem !important;
-  border: 1px solid var(--rawaj-divider) !important;
+  border: 1px solid rgba(216, 174, 95, 0.14) !important;
   border-radius: 0.75rem !important;
   padding: 0.42rem 0.66rem !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #ddd8d0 !important;
+  background: linear-gradient(145deg, #171e28, #111821) !important;
   font-size: 0.68rem !important;
   font-weight: 800 !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -260,9 +270,11 @@
   > div
   > div:last-child
   > label {
-  border-color: var(--rawaj-brand-primary) !important;
-  color: var(--rawaj-brand-primary) !important;
-  background: var(--rawaj-selected-surface) !important;
+  border-color: rgba(216, 174, 95, 0.22) !important;
+  color: #f0d493 !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.08), transparent 55%),
+    linear-gradient(145deg, #1a2027, #121820) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -275,7 +287,7 @@
   > div:last-child
   > button {
   border-color: rgba(234, 113, 104, 0.16) !important;
-  color: var(--rawaj-danger) !important;
+  color: #efaaa5 !important;
   background: rgba(234, 113, 104, 0.035) !important;
 }
 
@@ -293,11 +305,11 @@
   .rawaj-account-section__body
   .input {
   min-height: 2.7rem;
-  border-color: var(--rawaj-control-border) !important;
+  border-color: rgba(216, 174, 95, 0.1) !important;
   border-radius: 0.78rem !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: none !important;
+  color: #f3efe9 !important;
+  background: #0d131b !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/profile"]
@@ -311,7 +323,7 @@
   .rawaj-account-profile-editor
   .rawaj-account-section__body
   .input:focus {
-  border-color: var(--rawaj-brand-primary) !important;
+  border-color: rgba(216, 174, 95, 0.38) !important;
   box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.065) !important;
 }
 

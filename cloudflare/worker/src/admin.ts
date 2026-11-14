@@ -1,4 +1,3 @@
-import { handleAdminUserManagement } from "./admin-user-management";
 import {
   authenticate,
   corsHeaders,
@@ -49,13 +48,6 @@ export async function handleAdmin(request: Request, env: AdminEnv): Promise<Resp
   }
   if (path === "/v1/admin/users" && request.method === "GET") {
     return adminUsers(request, env, cors);
-  }
-  if (
-    path === "/v1/admin/users/status" ||
-    path === "/v1/admin/users/restrictions" ||
-    path === "/v1/admin/users/roles"
-  ) {
-    return handleAdminUserManagement(request, env);
   }
   if (path === "/v1/admin/audit" && request.method === "GET") {
     return adminAuditLogs(request, env, cors);
@@ -158,16 +150,13 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
 async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
-  if (!requireAdminRole(auth, "admin")) return forbidden(cors);
+  if (!requireAdminRole(auth, "owner")) return forbidden(cors);
 
   const limit = integerParam(request, 100, 1, 200);
   const result = await env.DB.prepare(
     `SELECT u.id, u.email, p.account_status, p.verification_status,
-            p.display_name, p.business_name, u.created_at,
+            p.display_name, p.business_name,
             group_concat(DISTINCT ur.role) AS roles,
-            (SELECT group_concat(DISTINCT restriction_type) FROM user_restrictions r
-              WHERE r.user_id = u.id AND r.starts_at <= ?
-              AND (r.ends_at IS NULL OR r.ends_at > ?)) AS active_restrictions,
             (SELECT count(*) FROM listings WHERE owner_id = u.id) AS listing_count,
             (SELECT count(*) FROM listing_reports WHERE reporter_id = u.id) AS reports_submitted,
             0 AS reports_received
@@ -178,7 +167,7 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
       ORDER BY u.created_at DESC
       LIMIT ?`,
   )
-    .bind(now(), now(), limit)
+    .bind(limit)
     .all<Row>();
 
   if (!result.success) return databaseError(cors);
@@ -194,8 +183,7 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
     listingCount: numberValue(row.listing_count),
     reportsSubmitted: numberValue(row.reports_submitted),
     reportsReceived: numberValue(row.reports_received),
-    activeRestrictions:
-      (row.active_restrictions as string | null)?.split(",").filter(Boolean) ?? [],
+    activeRestrictions: [],
   }));
 
   return json({ data: users }, 200, cors);
@@ -367,24 +355,14 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     .first<{ status: string; updated_at: string }>();
   if (!listing) {
     return json(
-      {
-        error: {
-          code: "listing_not_found",
-          message: "The listing to moderate was not found.",
-        },
-      },
+      { error: { code: "listing_not_found", message: "The listing to moderate was not found." } },
       404,
       cors,
     );
   }
   if (listing.updated_at !== expectedUpdatedAt) {
     return json(
-      {
-        error: {
-          code: "stale_review",
-          message: "Listing changed since loaded.",
-        },
-      },
+      { error: { code: "stale_review", message: "Listing changed since loaded." } },
       409,
       cors,
     );
@@ -394,12 +372,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
     listing.status !== "pending_review"
   ) {
     return json(
-      {
-        error: {
-          code: "invalid_transition",
-          message: "Listing is not pending review.",
-        },
-      },
+      { error: { code: "invalid_transition", message: "Listing is not pending review." } },
       409,
       cors,
     );
@@ -562,12 +535,7 @@ async function adminModerateListing(request: Request, env: AdminEnv, cors: Heade
 
   if (!persisted || persisted.status !== nextStatus || persisted.updated_at !== timestamp) {
     return json(
-      {
-        error: {
-          code: "stale_review",
-          message: "Listing changed since loaded.",
-        },
-      },
+      { error: { code: "stale_review", message: "Listing changed since loaded." } },
       409,
       cors,
     );
@@ -864,12 +832,7 @@ function notFound(cors: Headers) {
 
 function databaseError(cors: Headers) {
   return json(
-    {
-      error: {
-        code: "database_unavailable",
-        message: "Data service unavailable.",
-      },
-    },
+    { error: { code: "database_unavailable", message: "Data service unavailable." } },
     503,
     cors,
   );

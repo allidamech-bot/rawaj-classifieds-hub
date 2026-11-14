@@ -14,24 +14,24 @@
 .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] {
   border: 1px solid color-mix(in srgb, white 12%, transparent);
   border-radius: var(--radius-hero, 1.25rem);
-  background: var(--rawaj-surface);
+  background: linear-gradient(135deg, #092d29, #123f38 72%, #1b554a);
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] h2 {
-  color: var(--rawaj-ink-primary);
+  color: white;
   font-size: clamp(1.1rem, 3vw, 1.35rem);
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero__metrics > div {
-  border: 1px solid var(--rawaj-divider);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 0.75rem;
-  background: var(--rawaj-surface-subtle);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero__metrics span,
 .rawaj-messaging-v4 .rawaj-communication-hero__metrics strong {
-  color: var(--rawaj-ink-primary);
+  color: white;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero__actions a {

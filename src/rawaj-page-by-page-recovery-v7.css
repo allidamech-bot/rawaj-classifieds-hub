@@ -1,0 +1,411 @@
+/* RAWAJ page-by-page recovery V7
+ * Emergency cascade repair after the dark-system rollout.
+ * High-specificity, route-scoped rules intentionally defeat late legacy CSS.
+ * Presentation only; no data, auth, API, D1, R2, permissions, or routing changes.
+ */
+
+.rawaj-app-shell {
+  --background: #242529 !important;
+  --foreground: #f2efeb !important;
+  --card: #2d2f34 !important;
+  --card-foreground: #f2efeb !important;
+  --card-warm: #313238 !important;
+  --muted-surface: #303136 !important;
+  --popover: #34363c !important;
+  --popover-foreground: #f2efeb !important;
+  --primary: #9b286f !important;
+  --primary-foreground: #ffffff !important;
+  --secondary: #303136 !important;
+  --secondary-foreground: #f2efeb !important;
+  --muted: #303136 !important;
+  --muted-foreground: #aaa39f !important;
+  --accent: #9b286f !important;
+  --accent-foreground: #ffffff !important;
+  --border: rgba(255, 255, 255, 0.09) !important;
+  --input: rgba(255, 255, 255, 0.15) !important;
+  --ring: #e164b4 !important;
+  --color-background: #242529 !important;
+  --color-foreground: #f2efeb !important;
+  --color-card: #2d2f34 !important;
+  --color-card-foreground: #f2efeb !important;
+  --color-card-warm: #313238 !important;
+  --color-muted-surface: #303136 !important;
+  --color-popover: #34363c !important;
+  --color-popover-foreground: #f2efeb !important;
+  --color-primary: #9b286f !important;
+  --color-primary-foreground: #ffffff !important;
+  --color-secondary: #303136 !important;
+  --color-secondary-foreground: #f2efeb !important;
+  --color-muted: #303136 !important;
+  --color-muted-foreground: #aaa39f !important;
+  --color-accent: #9b286f !important;
+  --color-accent-foreground: #ffffff !important;
+  --color-border: rgba(255, 255, 255, 0.09) !important;
+  --color-input: rgba(255, 255, 255, 0.15) !important;
+  --color-ring: #e164b4 !important;
+  color: #f2efeb !important;
+  background:
+    radial-gradient(circle at 92% -4%, rgba(63, 145, 255, 0.065), transparent 27rem),
+    radial-gradient(circle at -8% 22%, rgba(220, 62, 182, 0.05), transparent 25rem),
+    linear-gradient(180deg, #2d2e32 0%, #242529 30rem, #222327 100%) !important;
+}
+
+.rawaj-app-shell .text-primary {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell .text-foreground {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell .text-muted-foreground {
+  color: #aaa39f !important;
+}
+
+.rawaj-app-shell .text-primary-foreground {
+  color: #ffffff !important;
+}
+
+.rawaj-app-shell .bg-primary {
+  background-color: #9b286f !important;
+}
+
+.rawaj-app-shell .bg-card,
+.rawaj-app-shell .bg-card-warm,
+.rawaj-app-shell .bg-muted-surface,
+.rawaj-app-shell .bg-secondary {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell :is(h1, h2, h3, h4, h5, h6) {
+  color: #f2efeb !important;
+  font-family: "Cairo", "Segoe UI", system-ui, sans-serif !important;
+}
+
+.rawaj-app-shell :is(input, textarea, select) {
+  color-scheme: dark;
+}
+
+.rawaj-app-shell :is(input, textarea, select)::placeholder {
+  color: #888990 !important;
+  opacity: 1 !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. Homepage
+   -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname="/"] {
+  color: #f2efeb !important;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(63, 145, 255, 0.07), transparent 25rem),
+    radial-gradient(circle at 6% 42%, rgba(220, 62, 182, 0.04), transparent 26rem),
+    linear-gradient(180deg, #2f3034 0%, #26272b 38%, #232428 100%) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-home__container {
+  color: #f2efeb !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero {
+  border-color: transparent !important;
+  background:
+    linear-gradient(155deg, rgba(9, 12, 39, 0.985), rgba(11, 12, 29, 0.985) 57%, rgba(18, 18, 26, 0.995)) padding-box,
+    linear-gradient(120deg, rgba(255, 112, 84, 0.42), rgba(220, 62, 182, 0.32), rgba(140, 99, 244, 0.32), rgba(63, 145, 255, 0.36)) border-box !important;
+  color: #f5f1ed !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero :is(h1, h2, strong) {
+  color: #f5f1ed !important;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.72) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__kicker {
+  color: #ded9d5 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__content > p {
+  color: rgba(239, 235, 231, 0.82) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-location {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(35, 36, 44, 0.82) !important;
+  color: #ddd7d2 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-hero__primary-action,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search button,
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-button-primary {
+  border-color: rgba(255, 255, 255, 0.13) !important;
+  background: linear-gradient(115deg, #ff7054, #dc3eb6) !important;
+  color: #ffffff !important;
+  box-shadow: 0 11px 25px rgba(210, 56, 170, 0.2) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search {
+  border-color: transparent !important;
+  background:
+    linear-gradient(145deg, rgba(39, 40, 47, 0.995), rgba(29, 30, 36, 0.995)) padding-box,
+    linear-gradient(112deg, rgba(255, 112, 84, 0.5), rgba(220, 62, 182, 0.42), rgba(140, 99, 244, 0.4), rgba(63, 145, 255, 0.44)) border-box !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input {
+  color: #f4f1ee !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-search input::placeholder {
+  color: #9b979b !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] :is(
+    .rawaj-signature-section,
+    .rawaj-signature-lead-card,
+    .rawaj-signature-support-card,
+    .rawaj-signature-latest-card,
+    .rawaj-signature-categories,
+    .rawaj-signature-safety,
+    main > .rawaj-surface,
+    main > section.rounded-2xl
+  ) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] main :is(.rawaj-surface, .rawaj-feedback-state, [role="alert"]):not(.rawaj-signature-hero) {
+  border-color: rgba(255, 255, 255, 0.085) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.04), transparent 32%),
+    linear-gradient(155deg, rgba(48, 49, 55, 0.99), rgba(39, 40, 46, 0.99)) !important;
+  color: #c9c3bf !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022), 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] main :is(.rawaj-surface, .rawaj-feedback-state, [role="alert"]) :is(h1, h2, h3, strong) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] main :is(.rawaj-surface, .rawaj-feedback-state, [role="alert"]) :is(p, small, span.text-muted-foreground) {
+  color: #aaa39f !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. Categories
+   -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 {
+  color: #f2efeb !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background:
+    radial-gradient(circle at 8% 112%, rgba(255, 117, 89, 0.25), transparent 34%),
+    radial-gradient(circle at 42% -15%, rgba(223, 73, 181, 0.2), transparent 40%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.18), transparent 38%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #f2efeb !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero .bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
+  color: #ffffff !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero :is(h1, .text-primary) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero :is(p, .text-muted-foreground) {
+  color: #c0bbb7 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search {
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(24, 25, 30, 0.34) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(24, 25, 30, 0.7) !important;
+  color: #f2efeb !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input {
+  color: #f2efeb !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] :is(
+    .rawaj-category-directory-card,
+    .rawaj-category-directory-grid > article,
+    .rawaj-categories-v2 > .rawaj-surface,
+    .rawaj-categories-v2 > section > article,
+    .rawaj-categories-v2 .rawaj-surface
+  ) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 32%),
+    linear-gradient(155deg, rgba(48, 49, 55, 0.99), rgba(39, 40, 46, 0.99)) !important;
+  color: #c9c3bf !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 10px 26px rgba(0, 0, 0, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .category-tile {
+  border: 1px solid rgba(104, 173, 255, 0.15) !important;
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] :is(.rawaj-category-directory-card, .rawaj-surface) :is(h2, strong, .text-foreground) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] :is(.rawaj-category-directory-card, .rawaj-surface) :is(p, small, .text-muted-foreground) {
+  color: #aaa39f !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 .bg-muted-surface {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #d1cbc7 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 button.bg-primary,
+.rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 .rawaj-button-primary {
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
+  color: #ffffff !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. More / account command center
+   -------------------------------------------------------------------------- */
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+  color: #f2efeb !important;
+  background: transparent !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background:
+    radial-gradient(circle at 4% 112%, rgba(255, 117, 89, 0.38), transparent 32%),
+    radial-gradient(circle at 42% -12%, rgba(223, 73, 181, 0.3), transparent 38%),
+    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.28), transparent 36%),
+    linear-gradient(145deg, #292a30, #24252a 58%, #222329) !important;
+  color: #ffffff !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero :is(h1, h2, strong) {
+  color: #ffffff !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero :is(p, small) {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__symbol {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(24, 25, 30, 0.34) !important;
+  color: #ff9a85 !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges > *,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__actions > * {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(24, 25, 30, 0.3) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] :is(
+    .rawaj-more-v2__command > .rawaj-color-card,
+    .rawaj-more-v2__secondary > .rawaj-color-card,
+    .rawaj-account-section
+  ) {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.035), transparent 32%),
+    linear-gradient(155deg, rgba(48, 49, 55, 0.99), rgba(39, 40, 46, 0.99)) !important;
+  color: #c9c3bf !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 10px 26px rgba(0, 0, 0, 0.13) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-color-card:first-child {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 117, 89, 0.13), transparent 34%),
+    linear-gradient(150deg, #34323a, #292a30) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-color-card:nth-child(2) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.12), transparent 34%),
+    linear-gradient(150deg, #31343c, #292a30) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card :is(.text-primary, .text-foreground, strong) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card .text-muted-foreground,
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section .text-muted-foreground {
+  color: #aaa39f !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card .bg-primary {
+  border: 1px solid rgba(255, 255, 255, 0.13) !important;
+  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
+  color: #ffffff !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section > div {
+  border-color: rgba(255, 255, 255, 0.065) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button) {
+  color: #f2efeb !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(a, button):hover {
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(.bg-card-warm, .bg-primary\/7) {
+  background: rgba(104, 173, 255, 0.075) !important;
+  color: #8fc2ff !important;
+}
+
+/* Shared mobile contrast closure for the three repaired pages. */
+@media (max-width: 767px) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/"],
+      [data-resolved-pathname="/categories"],
+      [data-resolved-pathname="/more"]
+    ) .rawaj-app-shell__content {
+    background: transparent !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2,
+  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+    padding-inline: 0.75rem !important;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .rawaj-app-shell:is(
+      [data-resolved-pathname="/"],
+      [data-resolved-pathname="/categories"],
+      [data-resolved-pathname="/more"]
+    ) :is(button, a) {
+    transform: none !important;
+  }
+}

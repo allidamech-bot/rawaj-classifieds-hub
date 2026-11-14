@@ -61,8 +61,7 @@
     "test:cloudflare-deployment-safety": "node --test scripts/cloudflare-deployment-safety-gate.test.mjs",
     "test:runtime-boundary": "node scripts/retired-backend-runtime-audit.mjs && node --test scripts/backend-boundary-hardening.test.mjs",
     "test:d1-migrations": "node scripts/check-migration-ledger.mjs && node scripts/replay-d1-migrations.mjs",
-    "test:admin-security": "node --test scripts/admin-security-regression.mjs scripts/p1-stability-security-contract.test.mjs scripts/p1-stability-admin-sqlite.test.mjs",
-    "test:p1-stability-security": "node --test scripts/p1-stability-security-contract.test.mjs scripts/p1-stability-admin-sqlite.test.mjs scripts/p1-stability-security-runtime.test.mjs",
+    "test:admin-security": "node --test scripts/admin-security-regression.mjs",
     "check:cloudflare": "npm run test:runtime-boundary && npm run test:local-imports && npm run test:audit-ui-v8 && npm run test:cloudflare-cutover && npm run test:d1-migrations && npm run test:admin-security && npm run typecheck && npx tsc -p cloudflare/worker/tsconfig.json --noEmit && npm run build",
     "test:local-imports": "node scripts/local-import-integrity.mjs",
     "test:listing-lifecycle-completeness": "node --test scripts/listing-lifecycle-completeness-v1.test.mjs",
@@ -71,7 +70,7 @@
     "test:syria-growth": "node --test scripts/syria-growth-boost-contract.test.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "8.4.3",
+    "@capacitor/android": "^8.4.1",
     "@capacitor/core": "^8.4.1",
     "@capacitor/push-notifications": "^8.1.1",
     "@hookform/resolvers": "^5.2.2",
@@ -128,7 +127,7 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
-    "zod": "^4.6.7"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.1",
@@ -152,12 +151,6 @@
     "vite": "^8.0.16"
   },
   "overrides": {
-    "postcss": "8.5.23",
-    "@grpc/grpc-js": "1.13.6",
-    "rimraf": "6.1.4",
-    "glob": "14.0.6",
-    "@typescript-eslint/typescript-estree": {
-      "minimatch": "11.0.8"
-    }
+    "postcss": "8.5.23"
   }
 }

@@ -27,8 +27,10 @@
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search {
   border-color: rgba(216, 174, 95, 0.14) !important;
-  color: var(--rawaj-ink-secondary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #d8d2cc !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
+    linear-gradient(145deg, #0c121a, #080d13) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
 }
 
@@ -36,7 +38,7 @@
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input,
 .rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search input,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input {
-  color: var(--rawaj-ink-primary) !important;
+  color: #f7f3ed !important;
   background: transparent !important;
 }
 
@@ -61,29 +63,42 @@
  * the approved /more and /profile visual language. */
 .rawaj-app-shell[data-resolved-pathname="/account"] .rawaj-account-identity {
   border-color: rgba(216, 174, 95, 0.16) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface-subtle) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(74, 140, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 8% 96%, rgba(219, 73, 179, 0.1), transparent 38%),
+    linear-gradient(150deg, #1c2029, #141820 64%, #10141b) !important;
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/account"] .rawaj-account-identity__cover > div {
-  background: rgba(11, 14, 20, 0.16) !important;
+  background:
+    radial-gradient(circle at 16% 15%, rgba(240, 95, 79, 0.2), transparent 30%),
+    radial-gradient(circle at 55% 0%, rgba(219, 73, 179, 0.16), transparent 34%),
+    radial-gradient(circle at 92% 28%, rgba(74, 140, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(11, 14, 20, 0.16), rgba(11, 14, 20, 0.88)) !important;
 }
 
-/* Support and safety share the same white-first surface and readable hierarchy. */
+/* Support and safety heroes are brand surfaces, not neutral grey cards. */
 .rawaj-app-shell:is(
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"]
   ) .rawaj-trust-hero {
-  border-color: var(--rawaj-divider) !important;
-  background: var(--rawaj-surface) !important;
-  box-shadow: none !important;
+  border-color: rgba(216, 174, 95, 0.16) !important;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(74, 140, 255, 0.13), transparent 34%),
+    radial-gradient(circle at 7% 96%, rgba(219, 73, 179, 0.11), transparent 39%),
+    radial-gradient(circle at 58% 0%, rgba(216, 174, 95, 0.07), transparent 36%),
+    linear-gradient(150deg, #1d202a, #151922 66%, #11151d) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-requests {
   border-color: rgba(216, 174, 95, 0.11) !important;
-  color: var(--rawaj-ink-primary) !important;
-  background: var(--rawaj-surface) !important;
+  color: #f7f3ed !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
+    linear-gradient(150deg, #171b24, #11151d) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
 }
 
@@ -101,7 +116,7 @@
     .rawaj-safety-guide li,
     .rawaj-trust-empty p
   ) {
-  font-size: 0.875rem !important;
+  font-size: max(0.68rem, 11px) !important;
   line-height: 1.75 !important;
 }
 
@@ -109,7 +124,7 @@
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"]
   ) :is(.rawaj-support-topic h3, .rawaj-support-faq summary, .rawaj-safety-guide h2) {
-  font-size: 1rem !important;
+  font-size: max(0.76rem, 12px) !important;
   line-height: 1.55 !important;
 }
 
@@ -118,7 +133,7 @@
     [data-resolved-pathname="/privacy"],
     [data-resolved-pathname="/prohibited"]
   ) :is(.rawaj-legal-v3 p, .rawaj-legal-v3 li, .rawaj-prohibited-v3 p, .rawaj-prohibited-v3 li) {
-  font-size: 0.9375rem !important;
+  font-size: max(0.7rem, 11px) !important;
   line-height: 1.8 !important;
 }
 
