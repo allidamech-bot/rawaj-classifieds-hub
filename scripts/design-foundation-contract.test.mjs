@@ -453,3 +453,11 @@ test("B2.2 loading and unavailable route states use the same approved palette", 
   assert.ok(styles.includes(".rawaj-detail-recovery__description"));
   assert.ok(styles.includes("main.rawaj-detail-recovery[data-design-palette=\"ivory\"]"));
 });
+
+
+test("B2.2 excludes listing detail from V7 forced-dark inherited headings", async () => {
+  const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
+  assert.doesNotMatch(v7, /:where\(:not\(\[data-resolved-pathname="\/listings"\]\)\)/);
+  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(v7.includes('.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"])'));
+});

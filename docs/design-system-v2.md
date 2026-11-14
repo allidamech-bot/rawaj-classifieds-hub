@@ -200,3 +200,5 @@ B2.2 also excludes the detail pathname from V17 generic dark cards, primary/seco
 B2.2 loading and unavailable API states share the approved detail canvas through
 `rawaj-detail-recovery` and a route-owned card rather than the retired global
 `rawaj-surface` dark skin. The existing messages and browse-listings action are unchanged.
+
+B2.2 CSS cascade verification also excluded `/listings/:id` from the original V7 broad dark token/heading class selectors. Search, categories, homepage and all still-unmigrated routes retain their existing V7 contract. This addresses the observed rendered white-on-ivory heading failure without changing contrast assertions.
