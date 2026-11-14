@@ -398,3 +398,14 @@ test("B2.2 retires dark V17 detail panels and V19 specificity patches", async ()
   const cards = await readFile(new URL("../src/rawaj-chromatic-premium-system-v18-categories-listings.css", import.meta.url), "utf8");
   assert.ok(cards.includes(':not([data-resolved-pathname^="/listings/"])'));
 });
+
+
+test("B2.2 similar cards reject old V3 dark discovery skin only inside detail", async () => {
+  const discovery = await readFile(new URL("../src/rawaj-discovery-system-v3.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.doesNotMatch(discovery, /:where\(:not\(\.rawaj-search-results-v1 \*\)\)/);
+  assert.match(discovery, /:where\(:not\(\.rawaj-search-results-v1 \*\):not\(\.rawaj-detail-v2 \*\)\)/);
+  for (const token of ["--color-background", "--color-foreground", "--color-muted-foreground", "--rawaj-orange"]) {
+    assert.ok(detail.includes(token + ":"), `Missing detail card color alias: ${token}`);
+  }
+});

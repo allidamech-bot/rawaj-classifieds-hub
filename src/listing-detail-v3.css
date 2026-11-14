@@ -414,6 +414,17 @@
  * The main owns its background above the legacy generic main reset.
  */
 main.rawaj-detail-v2[data-design-palette="ivory"] {
+  /* Rebind legacy card aliases locally; similar/recent cards share the same
+   * approved semantic palette as the listing without altering other routes. */
+  --color-background: var(--rawaj-page-background);
+  --color-foreground: var(--rawaj-text-primary);
+  --color-card: var(--rawaj-card-background);
+  --color-muted: var(--rawaj-muted-surface);
+  --color-muted-surface: var(--rawaj-muted-surface);
+  --color-muted-foreground: var(--rawaj-text-secondary);
+  --color-primary: var(--rawaj-action-primary);
+  --color-border: var(--rawaj-border);
+  --rawaj-orange: var(--rawaj-identity-teal);
   --detail-canvas: var(--rawaj-identity-ivory);
   --detail-surface: var(--rawaj-card-background);
   --detail-surface-muted: var(--rawaj-muted-surface);
