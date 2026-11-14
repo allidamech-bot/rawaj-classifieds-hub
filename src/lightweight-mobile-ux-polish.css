@@ -280,9 +280,9 @@
   bottom: var(--rawaj-floating-bottom) !important;
 }
 
-.rawaj-feedback-teaser {
-  /* Render the petrol base as an opaque color, including under visual audits. */
-  background-color: var(--rawaj-identity-petrol) !important;
+.rawaj-app-shell .rawaj-feedback-trigger .rawaj-feedback-teaser {
+  /* Solid branded control surface stays readable on both dark and ivory routes. */
+  background: var(--rawaj-identity-petrol) !important;
   color: var(--rawaj-identity-ivory) !important;
   position: static !important;
   transform: none !important;

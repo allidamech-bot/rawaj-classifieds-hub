@@ -170,6 +170,12 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   color: var(--rawaj-identity-ivory) !important;
 }
 
+/* Secondary footer copy meets AA contrast on the petrol navigation/footer. */
+.rawaj-app-shell[data-resolved-pathname="/categories"]
+  .rawaj-site-footer :is(.rawaj-site-footer__mobile-copy, .rawaj-site-footer__mobile-brand p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
   border: 1px solid rgba(255, 227, 176, 0.56) !important;
   background:
