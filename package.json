@@ -15,7 +15,7 @@
     "test:discovery-marketplace-v4": "node --test scripts/discovery-marketplace-v4.test.mjs",
     "test:listing-studio-v4": "node --test scripts/listing-studio-v4.test.mjs",
     "test:messaging-v4": "node --test scripts/messaging-v4.test.mjs",
-    "test:account-store-activity-v3": "node --test scripts/account-store-activity-v3.test.mjs",
+    "test:account-store-activity-v3": "node --test scripts/account-store-activity-v3.test.mjs scripts/b3-account-hub.test.mjs",
     "test:auth-support-secondary-v3": "node --test scripts/auth-support-secondary-v3.test.mjs",
     "test:admin-console-v3": "node --test scripts/admin-console-v3.test.mjs",
     "test:responsive-accessibility-v1": "node --test scripts/responsive-accessibility-v1.test.mjs",

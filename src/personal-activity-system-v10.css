@@ -43,51 +43,50 @@
   margin: 0 !important;
 }
 
-/* Account-unavailable states share a utility panel that was still inheriting a
-   warm light-surface fallback. Keep it focused and native to the dark shell. */
-.rawaj-app-shell:is(
+/* B3.1 unavailable account states: readable ivory panels in both languages. */
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > div.text-center {
   width: min(100%, 52rem);
   margin-inline: auto !important;
   padding: clamp(1.4rem, 4vw, 2.2rem) !important;
-  border: 1px solid var(--rawaj-border-strong) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 25%, transparent) !important;
   border-radius: 1.25rem !important;
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-identity-ink) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.08), transparent 34%),
     radial-gradient(circle at 0% 100%, rgba(104, 173, 255, 0.065), transparent 38%),
-    linear-gradient(155deg, #303137, #292a30) !important;
+    linear-gradient(155deg, #fffaf3, #fffaf3) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 16px 36px rgba(0, 0, 0, 0.18) !important;
+    inset 0 1px 0 color-mix(in srgb, var(--rawaj-identity-teal) 5%, white),
+    0 16px 36px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > div.text-center > span {
   border: 1px solid rgba(104, 173, 255, 0.14);
-  color: #9bc8ff !important;
+  color: var(--rawaj-identity-teal) !important;
   background: rgba(104, 173, 255, 0.075) !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > div.text-center > p:first-of-type {
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-identity-ink) !important;
   font-size: 0.92rem !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > div.text-center > p + p {
   max-width: 42rem;
   margin-inline: auto;
-  color: var(--rawaj-text-secondary) !important;
+  color: var(--rawaj-identity-ink) !important;
   font-size: max(0.82rem, 13px) !important;
   line-height: 1.75 !important;
 }
@@ -864,210 +863,283 @@
   box-shadow: 0 8px 18px rgba(113, 64, 109, 0.22) !important;
 }
 
-/* Favorites: collection first, unavailable history clearly separated. */
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child,
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
+/* B3.1 favorites: canonical ivory cards, unavailable history clearly separated. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"],
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] {
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent);
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+  .rawaj-account-collection-v3::before {
+  display: none !important;
+  content: none !important;
+}
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child,
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--rawaj-border-strong) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 25%, transparent) !important;
   border-radius: 1.2rem !important;
   padding: 0.9rem 1rem !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(220, 62, 182, 0.1), transparent 42%),
-    linear-gradient(150deg, #323238, #2b2c31) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-identity-teal) 5%, transparent), transparent 42%),
+    #fffaf3 !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child {
-  border-color: rgba(220, 62, 182, 0.18) !important;
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child {
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
-  border-color: rgba(63, 145, 255, 0.18) !important;
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.11), transparent 42%),
-    linear-gradient(150deg, #30333a, #2b2c31) !important;
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-identity-teal) 5%, transparent), transparent 42%),
+    #fffaf3 !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
   .rawaj-account-collection-v3 > section:first-child h2 {
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-identity-ink) !important;
   font-size: 0.9rem !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
   .rawaj-account-collection-v3 > section:first-child p {
   max-width: 76ch;
   margin-top: 0.25rem !important;
-  color: var(--rawaj-text-muted) !important;
+  color: #536660 !important;
   font-size: 0.68rem !important;
   line-height: 1.6 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.grid {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 0.65rem !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact,
-.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact,
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] article.opacity-85 {
   min-height: 100%;
   overflow: hidden;
-  border: 1px solid var(--rawaj-border) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
-  background: linear-gradient(155deg, #303137, #292a30) !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.13) !important;
+  background: #fffaf3 !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__media {
+/* Saved-searches recovery CTA matches the ivory empty-state panel. */
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > div.text-center a.bg-muted-surface {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  color: #075c52 !important;
+  background: #e9f1e9 !important;
+  border: 1px solid rgba(7, 92, 82, 0.22) !important;
+}
+
+/* Compact listing content must use a foreground matching its ivory card surface. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact :is(.rawaj-adaptive-card__price, .rawaj-adaptive-card__title) {
+  color: #173d38 !important;
+}
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact .rawaj-adaptive-card__meta,
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 .rawaj-adaptive-card--compact .rawaj-adaptive-card__meta span {
+  color: #435650 !important;
+}
+
+/* Signed-in empty/error recovery: keep the post-listing link legible. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > div.text-center a.bg-muted-surface {
+  min-height: 2.75rem;
+  color: #075c52 !important;
+  background: #e9f1e9 !important;
+  border: 1px solid rgba(7, 92, 82, 0.22) !important;
+}
+
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__media {
   aspect-ratio: 16 / 10 !important;
   border-radius: 0 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__body {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__body {
   padding: 0.75rem !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
   inset: 0.55rem 0.55rem auto auto !important;
 }
 
-[dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
+[dir="rtl"] .rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action {
   inset: 0.55rem auto auto 0.55rem !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action button {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-adaptive-card--compact .rawaj-adaptive-card__action button {
   display: grid;
   width: 2.25rem;
   height: 2.25rem;
   place-items: center;
-  border: 1px solid rgba(239, 111, 108, 0.2) !important;
+  border: 1px solid rgba(146, 47, 51, 0.25) !important;
   border-radius: 0.72rem !important;
-  color: #f2aaa4 !important;
-  background: rgba(30, 30, 34, 0.84) !important;
+  color: #922f33 !important;
+  background: rgba(255, 250, 243, 0.96) !important;
   backdrop-filter: blur(8px);
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] article.opacity-85 {
   opacity: 1 !important;
   border-style: dashed !important;
   border-color: rgba(227, 160, 75, 0.18) !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.055), transparent 45%),
-    #2b2c31 !important;
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--rawaj-identity-gold) 10%, white), transparent 45%),
+    #fffaf3 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:first-child {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] article.opacity-85 > div:first-child {
   grid-template-columns: 5.5rem minmax(0, 1fr) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child a {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child a {
   min-height: 2.45rem !important;
   border-radius: 0.72rem !important;
-  background: rgba(63, 145, 255, 0.08) !important;
-  color: #c9defd !important;
+  background: color-mix(in srgb, var(--rawaj-identity-teal) 8%, white) !important;
+  color: var(--rawaj-identity-teal) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child button {
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] article.opacity-85 > div:last-child button {
   width: 2.45rem !important;
   height: 2.45rem !important;
-  border: 1px solid rgba(239, 111, 108, 0.18) !important;
+  border: 1px solid rgba(146, 47, 51, 0.22) !important;
   border-radius: 0.72rem !important;
-  color: #f2aaa4 !important;
-  background: rgba(239, 111, 108, 0.055) !important;
+  color: #922f33 !important;
+  background: rgba(146, 47, 51, 0.09) !important;
 }
 
-/* Saved searches: creator is an intentional command bar; saved rows are scannable. */
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form {
+/* B3.1 saved searches: accessible creation form and scannable saved rows. */
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(9rem, 0.55fr) auto !important;
   gap: 0.55rem !important;
-  border: 1px solid var(--rawaj-border) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
   padding: 0.75rem !important;
-  background: linear-gradient(155deg, #303137, #292a30) !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12) !important;
+  background: #fffaf3 !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form :is(input, select) {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form :is(input, select) {
   min-height: 2.85rem !important;
-  border: 1px solid var(--rawaj-border) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 0.75rem !important;
   padding: 0.55rem 0.7rem !important;
-  color: var(--rawaj-text-primary) !important;
-  background: #24252a !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: white !important;
   font-size: 0.7rem !important;
   box-shadow: none !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form button[type="submit"] {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > form button[type="submit"] {
   min-height: 2.85rem !important;
   border: 0 !important;
   border-radius: 0.75rem !important;
   padding-inline: 1rem !important;
-  color: #fff !important;
-  background: var(--rawaj-gradient-action-short) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
   font-size: 0.7rem !important;
   box-shadow: 0 8px 18px rgba(113, 64, 109, 0.2) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li {
   display: grid;
   align-content: space-between;
   min-height: 8.5rem;
-  border: 1px solid var(--rawaj-border) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 1rem !important;
   padding: 0.8rem !important;
-  background: linear-gradient(155deg, #303137, #292a30) !important;
-  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.12) !important;
+  background: #fffaf3 !important;
+  box-shadow: 0 9px 22px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:first-child {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:first-child {
   align-items: flex-start !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li .lucide-search {
-  color: #b9d5ff !important;
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li .lucide-search {
+  color: var(--rawaj-identity-teal) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li select {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li select {
   min-height: 1.9rem !important;
-  border: 1px solid var(--rawaj-border) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 16%, transparent) !important;
   border-radius: 0.58rem !important;
-  color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: color-mix(in srgb, var(--rawaj-identity-teal) 5%, white) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li button[aria-label] {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li button[aria-label] {
   width: 2.25rem !important;
   height: 2.25rem !important;
-  border: 1px solid rgba(239, 111, 108, 0.18) !important;
+  border: 1px solid rgba(146, 47, 51, 0.22) !important;
   border-radius: 0.7rem !important;
-  color: #f2aaa4 !important;
-  background: rgba(239, 111, 108, 0.055) !important;
+  color: #922f33 !important;
+  background: rgba(146, 47, 51, 0.09) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:last-child a {
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > ul > li > div:last-child a {
   display: inline-flex;
   min-height: 2.35rem !important;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(63, 145, 255, 0.18) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
   border-radius: 0.7rem !important;
   padding: 0.45rem 0.75rem !important;
-  color: #c9defd !important;
-  background: rgba(63, 145, 255, 0.065) !important;
+  color: var(--rawaj-identity-teal) !important;
+  background: color-mix(in srgb, var(--rawaj-identity-teal) 6%, white) !important;
   font-size: 0.64rem !important;
   box-shadow: none !important;
 }
 
+
+/* Shared B3.1 collection shell, scoped to the two actual account routes only. */
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"]) .rawaj-account-collection-v3 {
+  color: var(--rawaj-identity-ink) !important;
+  background: transparent;
+  min-width: 0;
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #536660;
+  --foreground: var(--rawaj-identity-ink);
+  --muted-foreground: #536660;
+  --card: #fffaf3;
+  --primary: var(--rawaj-identity-teal);
+  --primary-foreground: white;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"]) .rawaj-account-collection-v3 > :is(section, form, ul > li, div.grid > article, div.text-center) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"]) .rawaj-account-collection-v3 :is(a, button, input, select):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal) !important;
+  outline-offset: 3px;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"]) .rawaj-account-collection-v3 :is(a, button).bg-primary {
+  min-height: 2.75rem;
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
+  border-color: var(--rawaj-identity-teal) !important;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"]) .rawaj-account-collection-v3 :is(input, select) {
+  min-width: 0;
+  max-width: 100%;
+  font-size: max(0.875rem, 14px) !important;
+}
 @media (hover: hover) and (pointer: fine) {
   .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed > :is(a, article):hover,
   .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline:hover,

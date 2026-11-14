@@ -343,7 +343,11 @@ function LoginPage() {
                     className="input"
                   />
                   {emailError ? (
-                    <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-destructive">
+                    <p
+                      id="login-email-error"
+                      role="alert"
+                      className="mt-1.5 text-xs font-medium text-destructive"
+                    >
                       {emailError}
                     </p>
                   ) : null}
@@ -395,24 +399,27 @@ function LoginPage() {
                           setAcceptedPolicies(event.target.checked);
                           if (termsError) setTermsError("");
                         }}
-                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-identity-teal)]"
                         required
                       />
                       <div className="text-xs leading-6 text-foreground/90">
                         <label htmlFor="registration-policy-consent" className="font-semibold">
                           {text("أوافق على", "I agree to the")}{" "}
                         </label>
-                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
+                        <Link
+                          to="/terms"
+                          className="font-bold text-brand-orange underline underline-offset-2"
+                        >
                           {text("شروط الاستخدام", "Terms of Use")}
                         </Link>{" "}
                         {text("و", "and")}{" "}
-                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
+                        <Link
+                          to="/privacy"
+                          className="font-bold text-brand-orange underline underline-offset-2"
+                        >
                           {text("سياسة الخصوصية", "Privacy Policy")}
                         </Link>
-                        {text(
-                          " الخاصة بمنصة رواج سوريا.",
-                          " for the RAWAJ Syria platform.",
-                        )}
+                        {text(" الخاصة بمنصة رواج سوريا.", " for the RAWAJ Syria platform.")}
                       </div>
                     </div>
                     {termsError ? (
@@ -525,17 +532,26 @@ function LoginPage() {
                         type="checkbox"
                         checked={acceptedPolicies}
                         onChange={(event) => setAcceptedPolicies(event.target.checked)}
-                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-identity-teal)]"
                       />
                       <div className="text-xs leading-6 text-foreground/90">
                         <label htmlFor="google-policy-consent" className="font-semibold">
-                          {text("للمتابعة باستخدام Google أوافق على", "To continue with Google, I agree to the")}{" "}
+                          {text(
+                            "للمتابعة باستخدام Google أوافق على",
+                            "To continue with Google, I agree to the",
+                          )}{" "}
                         </label>
-                        <Link to="/terms" className="font-bold text-brand-orange underline underline-offset-2">
+                        <Link
+                          to="/terms"
+                          className="font-bold text-brand-orange underline underline-offset-2"
+                        >
                           {text("شروط الاستخدام", "Terms of Use")}
                         </Link>{" "}
                         {text("و", "and")}{" "}
-                        <Link to="/privacy" className="font-bold text-brand-orange underline underline-offset-2">
+                        <Link
+                          to="/privacy"
+                          className="font-bold text-brand-orange underline underline-offset-2"
+                        >
                           {text("سياسة الخصوصية", "Privacy Policy")}
                         </Link>
                         .
