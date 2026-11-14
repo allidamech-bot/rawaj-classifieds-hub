@@ -1234,8 +1234,10 @@ function ManageListingPage() {
   return (
     <>
       <PageHeader title={text("تعديل الإعلان", "Edit listing")} back to="/profile" />
-      <main className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
-        data-studio-workflow="edit">
+      <main
+        className="rawaj-listing-studio-v2 rawaj-listing-studio-v3 rawaj-listing-studio-v4 rawaj-listing-studio-v2--manage container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5"
+        data-studio-workflow="edit"
+      >
         <ListingStudioHero
           eyebrow={text("إدارة الإعلان", "Listing management")}
           title={title || text("تعديل الإعلان", "Edit listing")}
