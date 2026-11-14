@@ -36,3 +36,10 @@ test("bottom dock keeps the primary action restrained", () => {
   assert.match(dock, /ring-\[3px\]/);
   assert.doesNotMatch(dock, /rawaj-dock-active-indicator/);
 });
+
+test("bottom dock grid is derived from actual navigation destinations", () => {
+  assert.match(dock, /data-item-count=\\{items\\.length\\}/);
+  assert.match(dock, /items\\.length === 6 \\? "grid-cols-6" : "grid-cols-5"/);
+  assert.match(dock, /pathname === "\/"/);
+  assert.match(dock, /section: "favorites"/);
+});
