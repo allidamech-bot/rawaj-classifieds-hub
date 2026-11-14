@@ -777,7 +777,6 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-bottom-nav-shell {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   background:
     radial-gradient(ellipse at 92% -20%, #409687, transparent 55%),
     radial-gradient(ellipse at 48% 150%, #13746b, transparent 59%), #043432 !important;
