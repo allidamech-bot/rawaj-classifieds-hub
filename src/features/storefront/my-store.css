@@ -169,6 +169,10 @@
 }
 .my-store-cover-title {
   position: absolute;
+  /* Match the painted petrol SVG curve under the light title. */
+  background-color: #103c3e;
+  border-radius: 3px;
+  padding-inline: 0.15rem;
   inset-inline-start: 28px;
   top: 22px;
   color: #fff;
@@ -1148,7 +1152,8 @@
 }
 
 .my-store-public-details .rawaj-signature-kicker {
-  color: #8c743f !important;
+  /* Champagne ink darkened to AA on the approved ivory surface. */
+  color: #78612e !important;
 }
 
 .my-store-public-details :is(input, textarea, select) {
@@ -1826,4 +1831,47 @@
 .rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary h3,
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store .ms-owner-listing-card__summary h3 {
   color: #101716 !important;
+}
+
+/* Signed-out and initializing My Store share the approved storefront identity.
+   No owner-management or public seller styles are modified. */
+.my-store-guest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(2.25rem, 7vw, 5rem) 1rem 7rem;
+}
+
+.my-store-guest .rawaj-feedback-state {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card) !important;
+  color: var(--foreground) !important;
+  box-shadow: none;
+}
+
+.my-store-guest .rawaj-feedback-state h1 {
+  color: var(--foreground) !important;
+}
+
+.my-store-guest .rawaj-feedback-state p {
+  color: var(--muted-foreground) !important;
+}
+
+.my-store-guest__action {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.my-store-guest__action:hover {
+  background: #17555a;
 }

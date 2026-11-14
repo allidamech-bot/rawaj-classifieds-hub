@@ -188,24 +188,42 @@ test("featured homepage carousel selects another listing using its pagination", 
   await expect(pagination.first()).not.toHaveAttribute("aria-current", "true");
 });
 
-test("featured pagination and the next section maintain separate touch areas on narrow screens", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 700 });
+test("mobile dock grid matches its 6 home and 5 destination links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await openHydrated(page, "/");
 
-  const carousel = page.locator(".rawaj-signature-featured__viewport");
-  const pagination = page.locator(".rawaj-signature-featured__dots button").first();
-  const latest = page.locator(".rawaj-signature-latest");
-  const carouselBounds = await carousel.boundingBox();
-  const paginationBounds = await pagination.boundingBox();
-  const latestBounds = await latest.boundingBox();
+  const dock = page.locator('[data-shell-region="bottom-dock-region"]');
+  await expect(dock).toBeVisible();
+  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "6");
+  await expect(dock.getByRole("listitem")).toHaveCount(6);
+  await expect(dock.locator(".grid-cols-6")).toHaveCount(1);
 
-  expect(carouselBounds).not.toBeNull();
-  expect(paginationBounds).not.toBeNull();
-  expect(latestBounds).not.toBeNull();
-  if (!carouselBounds || !paginationBounds || !latestBounds) return;
-  expect(paginationBounds.height).toBeGreaterThanOrEqual(44);
-  expect(paginationBounds.y).toBeGreaterThanOrEqual(carouselBounds.y + carouselBounds.height - 1);
-  expect(latestBounds.y).toBeGreaterThanOrEqual(paginationBounds.y + paginationBounds.height - 1);
+  await openHydrated(page, "/categories");
+  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "5");
+  await expect(dock.getByRole("listitem")).toHaveCount(5);
+  await expect(dock.locator(".grid-cols-5")).toHaveCount(1);
+});
+
+test("browser chrome follows the home and categories route colors", async ({ page }) => {
+  await openHydrated(page, "/");
+  const themeMeta = page.locator('meta[name="theme-color"]');
+  await expect(themeMeta).toHaveAttribute("content", "#073836");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+
+  await openHydrated(page, "/categories");
+  await expect(themeMeta).toHaveAttribute("content", "#073836");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+  await expect(page.locator("main.rawaj-categories-v2")).toHaveAttribute(
+    "data-design-palette",
+    "ivory",
+  );
+});
+
+test("signed-out My Store keeps approved light shell and sign-in affordance", async ({ page }) => {
+  await openHydrated(page, "/profile/listings");
+  await expect(page.locator("main.my-store.my-store-guest")).toBeVisible();
+  await expect(page.locator(".my-store-topbar")).toBeVisible();
+  await expect(page.locator(".my-store-guest .rawaj-feedback-state")).toBeVisible();
+  await expect(page.locator(".my-store-guest__action")).toBeVisible();
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#fcfaf7");
 });

@@ -34,7 +34,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { FeedbackState } from "@/components/feedback/FeedbackState";
-import { PageHeader } from "@/components/PageHeader";
 import {
   Dialog,
   DialogContent,
@@ -511,13 +510,8 @@ function MyListingsPage() {
     const returnTo = search.tab ? `/profile/listings?tab=${search.tab}` : "/profile/listings";
     return (
       <>
-        <PageHeader
-          title={text("متجري", "My store")}
-          titleIsPageHeading={false}
-          to="/profile"
-          backMode="history"
-        />
-        <main className="rawaj-store-workspace container-wide mobile-page-bottom pt-4">
+        <MyStoreHeader />
+        <main className="my-store my-store-guest" dir={language === "ar" ? "rtl" : "ltr"}>
           <div aria-busy={loading}>
             <FeedbackState
               title={text("متجري", "My store")}
@@ -538,14 +532,14 @@ function MyListingsPage() {
               }
               action={
                 signedOut || unavailable ? (
-                  <Link to="/login" search={{ returnTo }} className="rawaj-store-empty__action">
+                  <Link to="/login" search={{ returnTo }} className="my-store-guest__action">
                     {text("تسجيل الدخول", "Sign in")}
                   </Link>
                 ) : loading ? undefined : (
                   <button
                     type="button"
                     onClick={() => void auth.refreshProfile()}
-                    className="rawaj-store-empty__action"
+                    className="my-store-guest__action"
                   >
                     {text("إعادة المحاولة", "Try again")}
                   </button>

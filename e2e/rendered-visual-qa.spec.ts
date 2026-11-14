@@ -20,7 +20,7 @@ const routes = [
   { name: "listings", path: "/listings" },
   {
     name: "listing-detail",
-    path: "/listings/da100001-0000-4000-8000-000000000001",
+    path: "/listings/e2e-listing-featured",
   },
   { name: "offers", path: "/offers" },
   {

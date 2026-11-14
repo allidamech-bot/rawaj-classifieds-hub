@@ -39,6 +39,9 @@ jobs:
       - name: Install Worker dependencies
         run: npm ci --prefix cloudflare/worker --ignore-scripts
 
+      - name: Verify approved identity and design foundation
+        run: npm run test:design-foundation
+
       - name: Lint changed source files
         shell: bash
         env:

@@ -87,7 +87,10 @@ export function BottomDock({ pathname }: BottomDockProps) {
       aria-label={text("التنقل الرئيسي", "Primary navigation")}
     >
       <div
-        className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid grid-cols-5 items-end"
+        className={`rawaj-bottom-nav-shell pointer-events-auto mx-auto grid items-end ${
+          items.length === 6 ? "grid-cols-6" : "grid-cols-5"
+        }`}
+        data-item-count={items.length}
         role="list"
       >
         {items.map((item) => {

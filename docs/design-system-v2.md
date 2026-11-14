@@ -1,55 +1,105 @@
-# RAWAJ Design System V2
+# RAWAJ design system — approved identity and migration contract
 
-This foundation is the visual contract for all subsequent page redesigns. `src/design-foundation.css` is the single canonical token source. `src/design-system-v2.css` is a temporary compatibility component layer and must not declare root palette, spacing, radius, shadow, or motion values.
+> Status: **Phase 1 in progress** (14 November 2026). This is the source-of-truth
+> contract for the approved peacock-petrol homepage identity, not a claim that
+> every route is already migrated or visually accepted.
 
-## Brand roles
+## Approved identity: actual homepage values
 
-- Forest (`#123f38`): trust, primary actions, active navigation, high-priority headings.
-- Orange (`#f45f38`): posting, momentum, conversion actions, compact accents.
-- Gold (`#c99543`): verification, featured and premium states only.
-- Ivory (`#f6f2e9`): page canvas.
-- Card ivory (`#fffdf9`): elevated content.
-- Sage (`#e9f0ea`): neutral section separation and selected soft states.
-- Warm (`#fff0e8`): promotions, offers, and contextual highlights.
+The shared source of truth is `src/design-foundation.css`. Existing homepage
+styles consume its `--rawaj-identity-*` tokens through `--home-*` aliases.
+Do not redefine the same palette in a per-route stylesheet. The rollout is
+additive: historical dark semantics are intentionally unchanged until each
+dependent route has been migrated and reviewed.
 
-## Surface hierarchy
+| Token | Value | Intended role |
+| --- | --- | --- |
+| `--rawaj-identity-petrol` | `#073836` | Primary dark branded panels and hero surfaces |
+| `--rawaj-identity-teal` | `#08635e` | Interactive/action accent on light ivory |
+| `--rawaj-identity-ivory` | `#f9f0e4` | Homepage canvas and light-on-dark inverse text |
+| `--rawaj-identity-champagne` | `#ffe3b0` | Premium detailing and text **on petrol** |
+| `--rawaj-identity-ink` | `#132724` | Primary copy on ivory |
+| `--rawaj-identity-gold` | `#eac38f` | Premium accent on petrol, not low-contrast copy on ivory |
 
-Use the lightest suitable layer instead of making every block white:
+These are the **existing approved homepage values**, not speculative new colors.
+The palette does not confer approval on other routes. Contrast pairs validated
+in source tests: ink/ivory 13.85:1, teal/ivory 6.29:1, ivory/petrol 11.43:1,
+champagne/petrol 10.36:1, gold/petrol 7.80:1. Gradients, overlays,
+transparency, and image-backed text require **rendered** checks in addition to
+these solid-color calculations.
 
-1. Page: `rawaj-page-surface`
-2. Sage section: `rawaj-section-sage`
-3. Warm section: `rawaj-section-warm`
-4. Gold section: `rawaj-section-gold`
-5. Elevated content: shared `Card` / `data-ui="card"`
+## Ownership and preservation
 
-## Shared controls
+- **Homepage**: its approved composition, media, geometry, and current action
+  behavior remain protected. Only alias existing colors to canonical tokens
+  during the safe foundation slice; do not redesign it in Phase 1.
+- **My Store**: owner `/profile/listings`, its editor, and public seller
+  `/seller/:id` retain the approved design and behavior. Screen-level CSS must
+  not leak into these routes.
+- **Other routes**: migrate route families deliberately, with shared
+  components (Button, Card, Input, select, dialog, shell, dock) consuming
+  semantic tokens from the foundation.
+- **Legacy styles**: `rawaj-global-dark-system.css`, recovery V7/V7B, and
+  related historical layers are still loaded in main. Their presence is a
+  known migration dependency, not authorization to delete them without
+  selector/dependency audits and rendered regression checks.
+- **PR #867**: remained a draft with failed browser and rendered-visual
+  gates at the 14 November audit. Do not mistake its blanket ivory stylesheet
+  for completed route migration; integrate or retire changes only after
+  exact-file review and proven acceptance.
 
-- `Button`: `default`/`accent` for the dominant coral action, `brand` for deep-green secondary emphasis, plus `soft`, `success`, `secondary`, `outline`, `ghost`, `destructive`, and `link`.
-- `Badge`: `default`, `secondary`, `accent`, `success`, `warning`, `gold`, `destructive`, `outline`.
-- `Input`: 48px default height with visible hover, focus, disabled, and validation-compatible states.
-- `Card`: `default`, `flat`, `subtle`, and `elevated`, with `interactive` reserved for actionable cards.
+## Component and page rules
 
-## Foundation scales
+1. Canonical palette/spacing/radius/focus/motion tokens belong in
+   `src/design-foundation.css`. Component CSS may arrange or specialize a
+   component but must not establish a second global palette.
+2. Use semantic meaning (canvas, text, inverse, muted, status, accent), not
+   hard-coded colors in every route. Gold/champagne are **not** defaults for
+   small text on ivory.
+3. Keep interactive touch targets at least 44px, preserve keyboard focus
+   visibility, and support reduced motion.
+4. Verify actual content and error, empty, disabled, loading, modal, and
+   keyboard-open states, not only source selectors.
+5. Support Arabic RTL and English LTR at 320, 360, 390, 430, 768, and
+   desktop widths; test iPhone Safari/PWA safe areas separately.
+6. Retain existing API/data/permissions/business rules; any nonvisual
+   concern belongs in its own engineering track.
 
-- Spacing: `4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64`.
-- Controls: `40 / 44 / 48px`; compact controls are reserved for dense secondary actions.
-- Icons: `16 / 20 / 24px`.
-- Elevation: soft, raised, overlay; borders carry the default separation.
-- Layering: base, sticky, dock, overlay, toast.
-- Motion: 150 / 200 / 300ms with reduced-motion support.
+## Nine execution batches and acceptance gates
 
-## Page redesign rule
+1. **Foundation** — canonical palette, component ownership, inherited
+   stylesheet audit, design regression safeguards. **In progress**.
+2. **Homepage** — final polish and iPhone visual acceptance. Pending.
+3. **Categories and search** — category hierarchy, search, filters, results.
+   Pending.
+4. **Listing detail and posting** — details, photos, contact, publish form.
+   Pending.
+5. **Account and settings** — profile, more, auth, favorites, saved searches.
+   Pending.
+6. **Messaging and notifications** — chats, alerts, activity. Pending.
+7. **Trust and support** — support, safety, verification, legal, promotion.
+   Pending.
+8. **Administration** — moderation, users, audit, campaigns. Pending.
+9. **Final integration** — cascade cleanup, route inventory, browsers, iPhone
+   acceptance and release-readiness. Pending.
 
-New page work must consume these tokens and components. Do not add a route-local replacement palette or a generic white card system. Page-specific CSS may arrange and specialize components, but the shared color, radius, shadow, motion, and focus contracts remain authoritative.
+**A batch is not accepted by a passing source check alone.** Required evidence:
+exact commit SHA, affected paths, before/after screenshots, RTL/LTR and role
+coverage, contrast/touch/overflow review, relevant functional regression, and
+CI result on the same SHA. No automatic production deployment; the owner
+publishes manually.
 
-## Marketplace core rules
+## Phase 1 update — shared semantic status primitives
 
-- Home discovery uses a single high-contrast hero and one dominant search action.
-- Categories, featured inventory, and latest inventory use distinct sage, gold, and warm section surfaces.
-- Common search links are presented as shortcuts, never as unsupported trending claims.
-- Listing cards render one per row below 390px, two from 390px, three from 640px, and four from 1024px.
-- Featured and reserved states must be explicit in markup and cannot rely on color alone.
+`Badge` accent/success/warning/gold/destructive variants now consume
+central `--rawaj-badge-*-{border,surface,ink}` roles rather than embedding the
+retired pink/purple colors in the component. The legacy/default palette retains
+its existing appearance. A scoped `data-design-palette="ivory"` token contract
+is available for **future, explicitly reviewed** route migration; it is not yet
+enabled on the application shell or My Store. The light badge colors pass
+WCAG AA 4.5:1 for opaque foreground/background pairs, but still require
+actual rendered contrast checks when a route opts in.
 
-## Rollout checks
-
-Every page redesign must be reviewed at 320px, 360px, 390px, 430px, and desktop widths. It must preserve RTL and LTR layout, visible keyboard focus, reduced-motion behavior, readable dark-surface contrast, and a minimum 44px touch target for primary controls.
+Do not activate the new route palette on `/profile/listings`, `/seller/:id`,
+or `/` as an unreviewed shortcut. Route visual acceptance and an explicit
+sign-off are prerequisites.

@@ -145,10 +145,7 @@ export function FeedbackWidget({
     const message = draft.message.trim();
     if (subject.length < 4) {
       setNotice(
-        text(
-          "اكتب عنواناً واضحاً من 4 أحرف على الأقل.",
-          "Enter a subject of at least 4 characters.",
-        ),
+        text("اكتب عنواناً واضحاً من 4 أحرف على الأقل.", "Enter a subject of at least 4 characters."),
       );
       return;
     }
@@ -252,7 +249,7 @@ export function FeedbackWidget({
                 setNotice("");
                 setNeedsSignIn(false);
               }}
-              className="rawaj-feedback-teaser flex items-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 px-3 py-2.5 text-white shadow-xl ring-2 ring-white/30 transition hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50"
+              className="rawaj-feedback-teaser flex items-center gap-2 rounded-2xl border border-[var(--rawaj-identity-gold)] bg-[var(--rawaj-identity-petrol)] px-3 py-2.5 text-[var(--rawaj-identity-ivory)] shadow-lg transition-[background-color,transform] hover:bg-[var(--rawaj-identity-teal)] hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--rawaj-identity-gold)] motion-reduce:transition-none motion-reduce:hover:transform-none"
               aria-label={`${teaserLine1} ${teaserLine2}`}
             >
               <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -270,7 +267,7 @@ export function FeedbackWidget({
                 setNotice("");
                 setNeedsSignIn(false);
               }}
-              className="rawaj-feedback-button grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 text-white shadow-xl ring-2 ring-white/25 transition hover:scale-105 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-fuchsia-400/60"
+              className="rawaj-feedback-button grid h-12 w-12 place-items-center rounded-full border border-[var(--rawaj-identity-gold)] bg-[var(--rawaj-identity-petrol)] text-[var(--rawaj-identity-ivory)] shadow-lg transition-[background-color,transform] hover:bg-[var(--rawaj-identity-teal)] hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--rawaj-identity-gold)] motion-reduce:transition-none motion-reduce:hover:transform-none"
               aria-label={triggerLabel}
               title={triggerLabel}
             >

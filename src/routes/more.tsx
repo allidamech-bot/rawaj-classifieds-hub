@@ -376,12 +376,12 @@ function AccountItem({
         </span>
         <span className="min-w-0">
           <span
-            className={`rawaj-settings-row-title block break-words text-sm font-semibold ${row.destructive ? "text-destructive" : "text-foreground"}`}
+            className={`block break-words text-sm font-semibold ${row.destructive ? "text-destructive" : "text-foreground"}`}
           >
             {text(row.titleAr, row.titleEn)}
           </span>
           {(row.hintAr || row.hintEn) && (
-            <span className="rawaj-settings-row-hint mt-0.5 block break-words text-[10px]">
+            <span className="mt-0.5 block break-words text-[10px] text-muted-foreground">
               {text(row.hintAr ?? row.titleAr, row.hintEn ?? row.titleEn)}
             </span>
           )}
