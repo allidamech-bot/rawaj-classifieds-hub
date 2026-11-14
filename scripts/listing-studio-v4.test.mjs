@@ -280,3 +280,12 @@ test("B2.3 ivory legacy exclusion preserves accepted My Store selector specifici
   assert.ok(!legacy.includes('.rawaj-app-shell:not([data-design-palette="ivory"])'));
   assert.ok(legacy.includes('[data-resolved-pathname="/profile/listings"]'));
 });
+
+test("B2.3 opaque canvas roles preserve AA audit under gradients", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  const action = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  assert.ok(audit.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(audit.includes("background-color: var(--rawaj-card-background) !important"));
+  assert.ok(action.includes("background-color: var(--rawaj-identity-petrol) !important"));
+  assert.ok(css.includes('.rawaj-shell-header__title :is(h1, p)'));
+});

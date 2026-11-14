@@ -297,6 +297,7 @@
 .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__index {
   border-color: rgba(255, 255, 255, 0.15) !important;
   background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
+  background-color: var(--rawaj-identity-petrol) !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(218, 67, 160, 0.2) !important;
 }
@@ -817,6 +818,7 @@
 .rawaj-listing-studio-v4 .rawaj-studio-action-bar button.bg-emerald-trust {
   border: 1px solid rgba(85, 216, 164, 0.2) !important;
   background: linear-gradient(135deg, var(--rawaj-success), var(--rawaj-identity-teal)) !important;
+  background-color: var(--rawaj-success) !important;
   color: #fff !important;
   box-shadow: 0 12px 25px rgba(55, 190, 140, 0.16) !important;
 }

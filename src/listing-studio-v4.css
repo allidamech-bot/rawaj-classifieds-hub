@@ -15,6 +15,16 @@
   --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
 }
 
+/* B2.3: page heading lives above the petrol shell, not on the ivory content.
+ * Do not change the global header, My Store or the shared type hierarchy.
+ */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+    [data-resolved-pathname="/add-listing"],
+    [data-resolved-pathname^="/profile/listings/"]
+  ) .rawaj-shell-header__title :is(h1, p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 /* RAWAJ Listing Studio V4 — premium correction pass.
  * Presentation only: publishing, drafts, uploads, taxonomy, validation,
  * permissions, and category-specific fields remain unchanged.
@@ -443,4 +453,9 @@
   .rawaj-studio-gate > .rawaj-studio-gate__card {
     border-radius: 1rem;
   }
+}
+
+/* Hidden taxonomy labels remain accessible and have a deterministic color role. */
+.rawaj-listing-studio-v4 label.sr-only {
+  color: var(--rawaj-identity-ink);
 }
