@@ -187,3 +187,25 @@ test("featured homepage carousel selects another listing using its pagination", 
   await expect(pagination.nth(1)).toHaveAttribute("aria-current", "true");
   await expect(pagination.first()).not.toHaveAttribute("aria-current", "true");
 });
+
+test("featured pagination and the next section maintain separate touch areas on narrow screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await openHydrated(page, "/");
+
+  const carousel = page.locator(".rawaj-signature-featured__viewport");
+  const pagination = page.locator(".rawaj-signature-featured__dots button").first();
+  const latest = page.locator(".rawaj-signature-latest");
+  const carouselBounds = await carousel.boundingBox();
+  const paginationBounds = await pagination.boundingBox();
+  const latestBounds = await latest.boundingBox();
+
+  expect(carouselBounds).not.toBeNull();
+  expect(paginationBounds).not.toBeNull();
+  expect(latestBounds).not.toBeNull();
+  if (!carouselBounds || !paginationBounds || !latestBounds) return;
+  expect(paginationBounds.height).toBeGreaterThanOrEqual(44);
+  expect(paginationBounds.y).toBeGreaterThanOrEqual(carouselBounds.y + carouselBounds.height - 1);
+  expect(latestBounds.y).toBeGreaterThanOrEqual(paginationBounds.y + paginationBounds.height - 1);
+});

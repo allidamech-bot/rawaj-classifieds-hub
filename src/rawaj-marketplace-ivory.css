@@ -384,3 +384,19 @@
   position: static !important;
   margin-block-start: 0.75rem !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/categories"]
+  main
+  .rawaj-categories-v2__hero {
+  background:
+    radial-gradient(ellipse at 12% 100%, #23766a, transparent 64%),
+    linear-gradient(145deg, #0e514a, #073836 72%), #073836 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/categories"]
+  main
+  .rawaj-category-directory-card {
+  background:
+    radial-gradient(ellipse at 100% 100%, #e9dfc5, transparent 60%),
+    linear-gradient(145deg, #fffaf1, #f7ead8), #fffaf1 !important;
+}
