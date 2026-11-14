@@ -112,13 +112,13 @@ test.describe("authenticated launch-critical owner listing lifecycle journey", (
     approvedCard = ownerCard(page, APPROVED_TITLE);
     await openListingManagement(approvedCard);
     await expect(
-listingManagement(page, APPROVED_TITLE).getByRole("button", {
+      listingManagement(page, APPROVED_TITLE).getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     ).toBeVisible({ timeout: 30_000 });
 
     await clickTwiceInSameTick(
-listingManagement(page, APPROVED_TITLE).getByRole("button", {
+      listingManagement(page, APPROVED_TITLE).getByRole("button", {
         name: /إلغاء الحجز|Clear reservation/i,
       }),
     );
@@ -164,13 +164,13 @@ listingManagement(page, APPROVED_TITLE).getByRole("button", {
       ),
     ).toHaveValue("90");
     await expect(
-listingManagement(page, APPROVED_TITLE).getByRole("button", {
+      listingManagement(page, APPROVED_TITLE).getByRole("button", {
         name: /وضع محجوز|Mark reserved/i,
       }),
     ).toBeVisible();
 
     await clickTwiceInSameTick(
-listingManagement(page, APPROVED_TITLE).getByRole("button", {
+      listingManagement(page, APPROVED_TITLE).getByRole("button", {
         name: /تم البيع|Sold|Mark sold/i,
       }),
     );
@@ -225,7 +225,7 @@ listingManagement(page, APPROVED_TITLE).getByRole("button", {
     await expect(draftCard).toBeVisible({ timeout: 30_000 });
     await openListingManagement(draftCard);
     await clickTwiceInSameTick(
-listingManagement(page, DRAFT_TITLE).getByRole("button", {
+      listingManagement(page, DRAFT_TITLE).getByRole("button", {
         name: /حذف المسودة|Delete draft/i,
       }),
     );
