@@ -203,3 +203,14 @@ test("mobile dock grid matches its 6 home and 5 destination links", async ({ pag
   await expect(dock.getByRole("listitem")).toHaveCount(5);
   await expect(dock.locator(".grid-cols-5")).toHaveCount(1);
 });
+
+test("browser chrome follows the home and categories route colors", async ({ page }) => {
+  await openHydrated(page, "/");
+  const themeMeta = page.locator('meta[name="theme-color"]');
+  await expect(themeMeta).toHaveAttribute("content", "#073836");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+
+  await openHydrated(page, "/categories");
+  await expect(themeMeta).toHaveAttribute("content", "#242529");
+  await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
+});

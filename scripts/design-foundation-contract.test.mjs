@@ -14,7 +14,14 @@ const compatibilityLayer = await readFile(
 );
 const button = await readFile(new URL("../src/components/ui/button.tsx", import.meta.url), "utf8");
 const card = await readFile(new URL("../src/components/ui/card.tsx", import.meta.url), "utf8");
-const feedbackWidget = await readFile(new URL("../src/components/FeedbackWidget.tsx", import.meta.url), "utf8");
+const feedbackWidget = await readFile(
+  new URL("../src/components/FeedbackWidget.tsx", import.meta.url),
+  "utf8",
+);
+const browserChrome = await readFile(
+  new URL("../src/lib/browser-chrome.ts", import.meta.url),
+  "utf8",
+);
 const input = await readFile(new URL("../src/components/ui/input.tsx", import.meta.url), "utf8");
 const select = await readFile(new URL("../src/components/ui/select.tsx", import.meta.url), "utf8");
 const dialog = await readFile(new URL("../src/components/ui/dialog.tsx", import.meta.url), "utf8");
@@ -284,4 +291,18 @@ test("feedback trigger uses approved identity and no retired pink-purple gradien
   assert.ok(!feedbackWidget.includes("via-fuchsia-500"));
   assert.ok(!feedbackWidget.includes("to-purple-600"));
   assert.ok(feedbackWidget.includes("motion-reduce:hover:transform-none"));
+});
+
+test("route-aware iPhone browser chrome uses actual approved route colors", () => {
+  assert.ok(rootRoute.includes('const { themeColor } = resolveBrowserChrome(pathname);'));
+  assert.ok(rootRoute.includes('{ name: "theme-color", content: themeColor }'));
+  assert.ok(appShell.includes("useRouteBrowserChrome(pathname)"));
+  assert.ok(appShell.includes("root.style.colorScheme = colorScheme"));
+  assert.ok(!appShell.includes("useDarkBrowserChrome"));
+  assert.ok(browserChrome.includes('pathname === "/"'));
+  assert.ok(browserChrome.includes('"#073836"'));
+  assert.ok(browserChrome.includes('pathname === "/profile/listings"'));
+  assert.ok(browserChrome.includes('pathname.startsWith("/seller/")'));
+  assert.ok(browserChrome.includes('"#fcfaf7"'));
+  assert.ok(browserChrome.includes('"#242529"'));
 });

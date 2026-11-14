@@ -5,6 +5,7 @@ import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
+import { resolveBrowserChrome } from "@/lib/browser-chrome";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
 import { auditedOverrideStyleHrefs } from "@/lib/route-styles";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -79,10 +80,11 @@ function useViewportState() {
   return keyboardOpen;
 }
 
-function useDarkBrowserChrome() {
+function useRouteBrowserChrome(pathname: string) {
+  const { colorScheme, themeColor } = resolveBrowserChrome(pathname);
   useEffect(() => {
     const root = document.documentElement;
-    root.style.colorScheme = "dark";
+    root.style.colorScheme = colorScheme;
 
     let themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (!themeMeta) {
@@ -90,8 +92,8 @@ function useDarkBrowserChrome() {
       themeMeta.name = "theme-color";
       document.head.appendChild(themeMeta);
     }
-    themeMeta.content = "#242529";
-  }, []);
+    themeMeta.content = themeColor;
+  }, [colorScheme, themeColor]);
 }
 
 const ACCESSIBLE_FIELD_SELECTOR =
@@ -195,7 +197,7 @@ export function AppShell({
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
     config.mode,
   );
-  useDarkBrowserChrome();
+  useRouteBrowserChrome(pathname);
   useAccessibleFieldNameFallbacks(pathname);
 
   return (
