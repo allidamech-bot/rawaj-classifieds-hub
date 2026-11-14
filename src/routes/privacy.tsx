@@ -202,10 +202,16 @@ function PrivacyPage() {
             {text("روابط مرتبطة", "Related policies")}
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <Link to="/terms" className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline">
+            <Link
+              to="/terms"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
+            >
               {text("شروط الاستخدام", "Terms of Use")}
             </Link>
-            <Link to="/safety" className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline">
+            <Link
+              to="/safety"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
+            >
               {text("إرشادات الأمان", "Safety guidance")}
             </Link>
             <Link

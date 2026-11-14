@@ -78,6 +78,28 @@ test.describe("authenticated trust requests", () => {
     expect(submissions).toBe(1);
   });
 
+  test("listing report preserves its existing action and confirmation", async ({ page }) => {
+    let reports = 0;
+    await page.route("**/v1/listings/e2e-listing-featured/reports", async (route) => {
+      expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+      expect(route.request().method()).toBe("POST");
+      expect(route.request().postDataJSON()).toMatchObject({ reportType: "suspicious_listing" });
+      reports += 1;
+      await route.fulfill({
+        status: 201,
+        json: { data: { id: "fixture-report", duplicate: false } },
+      });
+    });
+    await page.goto("/listings/e2e-listing-featured");
+    await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+    const reportButton = page.getByRole("button", { name: "Report listing" });
+    await reportButton.focus();
+    await expect(reportButton).toBeFocused();
+    await reportButton.press("Enter");
+    await expect(page.getByText("Report sent for review.")).toBeVisible();
+    expect(reports).toBe(1);
+  });
+
   test("verification sends fixture evidence only to the private request endpoint", async ({
     page,
   }) => {

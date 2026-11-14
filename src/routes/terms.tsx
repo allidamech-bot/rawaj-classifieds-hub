@@ -224,7 +224,10 @@ function TermsPage() {
             >
               {text("سياسة الخصوصية", "Privacy Policy")}
             </Link>
-            <Link to="/safety" className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline">
+            <Link
+              to="/safety"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
+            >
               {text("إرشادات الأمان", "Safety guidance")}
             </Link>
             <Link
