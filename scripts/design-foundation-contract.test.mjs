@@ -139,7 +139,7 @@ const approvedHomepagePalette = {
 };
 
 function srgbLuminance(hex) {
-  const components = hex.match(/[\\da-f]{2}/gi).map((value) => Number.parseInt(value, 16) / 255);
+  const components = hex.match(/[0-9a-f]{2}/gi).map((value) => Number.parseInt(value, 16) / 255);
   const linear = components.map((value) =>
     value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
   );
@@ -155,17 +155,18 @@ function contrastRatio(first, second) {
 test("approved homepage identity consumes canonical tokens without color drift", () => {
   for (const [role, hex] of Object.entries(approvedHomepagePalette)) {
     const canonical = `--rawaj-identity-${role}`;
-    const tokenDeclaration = new RegExp(`\\b${canonical}: ${hex};`, "i");
-    assert.match(foundation, tokenDeclaration, `${role} must be defined in the canonical source`);
-    assert.match(
-      homepageIdentity,
-      new RegExp(`--home-${role}: var\\(${canonical}\\);`),
+    assert.ok(
+      foundation.includes(`${canonical}: ${hex};`),
+      `${role} must be defined in the canonical token source`,
+    );
+    assert.ok(
+      homepageIdentity.includes(`--home-${role}: var(${canonical});`),
       `${role} must be consumed by homepage rather than redeclared`,
     );
   }
 
   assert.doesNotMatch(homepageIdentity, /#073836/i, "homepage petrol must use its named token");
-  assert.match(homepageIdentity, /data-resolved-pathname="\\/"/);
+  assert.ok(homepageIdentity.includes('data-resolved-pathname="/"'), "homepage selectors stay route-scoped");
 });
 
 test("approved identity text pairs meet WCAG AA normal-text contrast", () => {
@@ -180,6 +181,9 @@ test("approved identity text pairs meet WCAG AA normal-text contrast", () => {
       approvedHomepagePalette[foreground],
       approvedHomepagePalette[background],
     );
-    assert.ok(ratio >= 4.5, `${foreground} on ${background} must achieve 4.5:1 (got ${ratio.toFixed(2)})`);
+    assert.ok(
+      ratio >= 4.5,
+      `${foreground} on ${background} must achieve 4.5:1 (got ${ratio.toFixed(2)})`,
+    );
   }
 });
