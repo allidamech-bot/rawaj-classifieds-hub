@@ -864,6 +864,16 @@
 }
 
 /* B3.1 favorites: canonical ivory cards, unavailable history clearly separated. */
+.rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"],
+.rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] {
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
+.rawaj-app-shell[data-shell-mode]:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
+  .rawaj-account-collection-v3::before {
+  display: none !important;
+  content: none !important;
+}
 .rawaj-app-shell.rawaj-route-favorites[data-resolved-pathname="/favorites"] .rawaj-account-collection-v3 > section:first-child,
 .rawaj-app-shell.rawaj-route-saved-searches[data-resolved-pathname="/saved-searches"] .rawaj-account-collection-v3 > section:first-child {
   position: relative;
