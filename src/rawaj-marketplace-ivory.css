@@ -645,3 +645,87 @@
   background: var(--market-teal) !important;
   color: #fffaf0 !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/prohibited"]
+  main.rawaj-prohibited-v3
+  :is(article, section.bg-card) {
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/prohibited"]
+  main.rawaj-prohibited-v3
+  > section:nth-child(2) {
+  background: #f8ead3 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/prohibited"]
+  main.rawaj-prohibited-v3
+  :is(p, h2) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/prohibited"]
+  main.rawaj-prohibited-v3
+  h1.text-destructive {
+  color: #923223 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/prohibited"]
+  main.rawaj-prohibited-v3
+  a.bg-primary {
+  background: var(--market-teal) !important;
+  color: #fffaf0 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/login"]
+  main.rawaj-auth-audit-v12
+  .rawaj-auth-card
+  :is(small, .rawaj-auth-field-label, .rawaj-auth-forgot-link, .rawaj-auth-home-link, label) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/login"]
+  main.rawaj-auth-audit-v12
+  .rawaj-auth-tabs
+  button {
+  color: var(--market-ink) !important;
+  background: var(--market-card) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/login"]
+  main.rawaj-auth-audit-v12
+  .rawaj-auth-tabs
+  button[data-active="true"] {
+  color: #fffaf0 !important;
+  background: var(--market-teal) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/reset-password"]
+  main.rawaj-auth-recovery-v4
+  .rawaj-auth-recovery-card {
+  background: var(--market-card) !important;
+  border-color: var(--market-line) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/reset-password"]
+  main.rawaj-auth-recovery-v4
+  .rawaj-auth-recovery-card
+  :is(h1, header p, label) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/reset-password"]
+  main.rawaj-auth-recovery-v4
+  .rawaj-auth-recovery-state[data-tone="error"] {
+  background: #f8e5dc !important;
+  border-color: #d8aa98 !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/reset-password"]
+  main.rawaj-auth-recovery-v4
+  .rawaj-auth-recovery-state[data-tone="error"]
+  p {
+  color: #823c2e !important;
+}
