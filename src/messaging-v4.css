@@ -4,17 +4,17 @@
  */
 
 .rawaj-messaging-v4 {
-  --message-border: color-mix(in srgb, var(--rawaj-primary, #123f38) 15%, var(--rawaj-border, #d5ded8));
-  --message-muted: var(--rawaj-muted-surface, #e9efea);
-  --message-surface: var(--rawaj-card-background, #fffdf8);
-  --message-ink: var(--rawaj-text-primary, #18352f);
-  --message-subtle: var(--rawaj-text-secondary, #536b63);
+  --message-border: #d2ddd5;
+  --message-muted: #f2f0e8;
+  --message-surface: #fffaf3;
+  --message-ink: #173d38;
+  --message-subtle: #435650;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] {
   border: 1px solid color-mix(in srgb, white 12%, transparent);
   border-radius: var(--radius-hero, 1.25rem);
-  background: linear-gradient(135deg, #092d29, #123f38 72%, #1b554a);
+  background: #083d38;
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 
@@ -122,14 +122,14 @@
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
-  border-color: color-mix(in srgb, var(--rawaj-primary, #123f38) 28%, var(--message-border));
+  border-color: color-mix(in srgb, #075d52 28%, var(--message-border));
   background: var(--message-surface);
   color: var(--message-ink);
-  box-shadow: inset 3px 0 0 var(--rawaj-accent-orange, #e9663c);
+  box-shadow: inset 3px 0 0 #075d52;
 }
 
 [dir="rtl"] .rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
-  box-shadow: inset -3px 0 0 var(--rawaj-accent-orange, #e9663c);
+  box-shadow: inset -3px 0 0 #075d52;
 }
 
 .rawaj-messaging-v4 .rawaj-participant-avatar {
@@ -183,7 +183,7 @@
   height: 1.45rem;
   place-items: center;
   border-radius: 999px;
-  background: var(--rawaj-accent-orange, #e9663c);
+  background: #075d52;
   color: white;
   font-size: max(0.7rem, 11px);
 }
@@ -255,8 +255,8 @@
 }
 
 .rawaj-messaging-v4 .rawaj-message-bubble[data-mine="true"] {
-  border-color: var(--rawaj-primary, #123f38);
-  background: var(--rawaj-primary, #123f38);
+  border-color: #075d52;
+  background: #075d52;
   color: white;
   box-shadow: 0 4px 12px rgba(9, 45, 41, 0.13);
 }
@@ -314,8 +314,8 @@
 
 .rawaj-messaging-v4 .rawaj-message-composer textarea:focus-visible,
 .rawaj-messaging-v4 .rawaj-message-composer__block-reason:focus-visible {
-  border-color: var(--rawaj-accent-orange, #e9663c);
-  outline: 3px solid color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 15%, transparent);
+  border-color: #075d52;
+  outline: 3px solid color-mix(in srgb, #075d52 15%, transparent);
   outline-offset: 1px;
   box-shadow: none;
 }
@@ -348,11 +348,11 @@
 .rawaj-messaging-v4 .rawaj-message-composer__send {
   min-height: 3.25rem;
   border-radius: 0.72rem;
-  border: 1px solid color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 72%, #a84427);
-  background: var(--rawaj-accent-orange, #e9663c);
+  border: 1px solid #075d52;
+  background: #075d52;
   color: white;
   font-size: max(0.84rem, 13.5px);
-  box-shadow: 0 5px 14px rgba(233, 102, 60, 0.2);
+  box-shadow: 0 5px 14px rgba(7, 93, 82, 0.16);
   transition: filter 150ms ease, box-shadow 150ms ease;
 }
 
@@ -361,13 +361,13 @@
   .rawaj-messaging-v4 .rawaj-message-header a:hover,
   .rawaj-messaging-v4 .rawaj-quick-replies button:hover,
   .rawaj-messaging-v4 .rawaj-message-composer button:not(.rawaj-message-composer__send):hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 28%, var(--message-border));
+    border-color: color-mix(in srgb, #075d52 28%, var(--message-border));
     background: var(--message-surface);
   }
 
   .rawaj-messaging-v4 .rawaj-message-composer__send:hover:not(:disabled) {
     filter: brightness(0.97) saturate(1.02);
-    box-shadow: 0 7px 18px rgba(233, 102, 60, 0.24);
+    box-shadow: 0 7px 18px rgba(7, 93, 82, 0.18);
   }
 }
 
@@ -380,7 +380,7 @@
 .rawaj-messaging-v4 .rawaj-message-composer__send:focus-visible,
 .rawaj-messaging-v4 .rawaj-conversation-summary:focus-visible,
 .rawaj-messaging-v4 .rawaj-quick-replies button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 20%, transparent);
+  outline: 3px solid color-mix(in srgb, #075d52 20%, transparent);
   outline-offset: 2px;
 }
 
@@ -475,4 +475,16 @@
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* B3.2 — message attachment, composer and keyboard focus parity on ivory. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-conversation-summary:focus-visible,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-quick-replies button:focus-visible,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer textarea:focus-visible,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer__send:focus-visible {
+  outline: 3px solid #075d52 !important;
+  outline-offset: 2px;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer__send:disabled {
+  opacity: 0.55;
 }
