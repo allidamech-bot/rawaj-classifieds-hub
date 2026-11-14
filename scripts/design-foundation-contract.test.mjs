@@ -4,6 +4,10 @@ import test from "node:test";
 
 const rootRoute = await readFile(new URL("../src/routes/__root.tsx", import.meta.url), "utf8");
 const foundation = await readFile(new URL("../src/design-foundation.css", import.meta.url), "utf8");
+const homepageIdentity = await readFile(
+  new URL("../src/rawaj-home-signature-v2.css", import.meta.url),
+  "utf8",
+);
 const compatibilityLayer = await readFile(
   new URL("../src/design-system-v2.css", import.meta.url),
   "utf8",
@@ -123,4 +127,59 @@ test("the shared brand name cannot fall back to retired primary green text", () 
     globalDarkSystem,
     /\.rawaj-app-header \.rawaj-brand-lockup__name\s*{[\s\S]*color:\s*var\(--rawaj-text-primary\) !important/,
   );
+});
+
+const approvedHomepagePalette = {
+  ivory: "#f9f0e4",
+  champagne: "#ffe3b0",
+  ink: "#132724",
+  petrol: "#073836",
+  teal: "#08635e",
+  gold: "#eac38f",
+};
+
+function srgbLuminance(hex) {
+  const components = hex.match(/[\\da-f]{2}/gi).map((value) => Number.parseInt(value, 16) / 255);
+  const linear = components.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+  );
+  return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+}
+
+function contrastRatio(first, second) {
+  const a = srgbLuminance(first);
+  const b = srgbLuminance(second);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+test("approved homepage identity consumes canonical tokens without color drift", () => {
+  for (const [role, hex] of Object.entries(approvedHomepagePalette)) {
+    const canonical = `--rawaj-identity-${role}`;
+    const tokenDeclaration = new RegExp(`\\b${canonical}: ${hex};`, "i");
+    assert.match(foundation, tokenDeclaration, `${role} must be defined in the canonical source`);
+    assert.match(
+      homepageIdentity,
+      new RegExp(`--home-${role}: var\\(${canonical}\\);`),
+      `${role} must be consumed by homepage rather than redeclared`,
+    );
+  }
+
+  assert.doesNotMatch(homepageIdentity, /#073836/i, "homepage petrol must use its named token");
+  assert.match(homepageIdentity, /data-resolved-pathname="\\/"/);
+});
+
+test("approved identity text pairs meet WCAG AA normal-text contrast", () => {
+  for (const [foreground, background] of [
+    ["ink", "ivory"],
+    ["teal", "ivory"],
+    ["ivory", "petrol"],
+    ["champagne", "petrol"],
+    ["gold", "petrol"],
+  ]) {
+    const ratio = contrastRatio(
+      approvedHomepagePalette[foreground],
+      approvedHomepagePalette[background],
+    );
+    assert.ok(ratio >= 4.5, `${foreground} on ${background} must achieve 4.5:1 (got ${ratio.toFixed(2)})`);
+  }
 });
