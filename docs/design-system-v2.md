@@ -208,3 +208,5 @@ B2.2 rendered contrast audit also includes the `ViewedBeforeBanner`, which appea
 The related `PriceChangeBanner` is also outside the main route canvas; it now opts into the canonical palette directly, preserving the existing fetch logic and rise/drop semantics while adopting accessible success/warning badges and legible prices.
 
 Listing photo fallbacks now opt into an explicit `identity` mode on the shared `PlaceholderArt` primitive, limiting the petrol/champagne glyph and glow to the B2.2 gallery and viewer. Default placeholder rendering in all other routes remains unchanged, and missing images remain honestly represented.
+
+B2.3 removes the remaining forced-dark studio skins at original V7B and V18 owners, and keeps the approved listing studio Safari/PWA chrome petrol while leaving all unauthorised routes on the previous scheme.

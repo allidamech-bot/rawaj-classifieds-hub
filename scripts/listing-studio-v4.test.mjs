@@ -251,3 +251,17 @@ test("B2.3 excludes create/edit from V7 and V17 forced dark shells at source", a
   assert.ok(!v17.includes('.rawaj-app-shell[data-resolved-pathname="/add-listing"],\\n.rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] {'));
   assert.ok(v7.includes('[data-resolved-pathname="/more"]'));
 });
+
+test("B2.3 has no dark V7B/V18 studio owner and has matching mobile chrome", async () => {
+  const read = (p) => readFile(new URL("../src/"+p,import.meta.url),"utf8");
+  const [v7b,v18,chrome]=await Promise.all([
+    read("rawaj-page-by-page-recovery-v7b.css"),
+    read("rawaj-chromatic-premium-system-v18-legacy-surfaces.css"),
+    read("lib/browser-chrome.ts"),
+  ]);
+  assert.ok(!v7b.includes("/* 6. Add/edit listing studio */"));
+  assert.ok(!v18.includes("Listing studio: add/edit/manage"));
+  assert.ok(v7b.includes(':not([data-design-palette="ivory"])'));
+  assert.ok(chrome.includes('pathname === "/add-listing"'));
+  assert.ok(chrome.includes('themeColor: "#073836"'));
+});

@@ -4,7 +4,7 @@
  */
 
 /* Shared route-scoped legacy white-surface removal. */
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -30,7 +30,7 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -61,61 +61,21 @@
 
 /* 5. Listing detail moved to route-owned styles. */
 
-/* 6. Add/edit listing studio */
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-listing-studio-v4 {
-  color: #f4f1ed !important;
-  background: transparent !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-hero {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  background:
-    radial-gradient(circle at 8% 116%, rgba(255, 117, 89, 0.4), transparent 30%),
-    radial-gradient(circle at 38% -12%, rgba(220, 65, 176, 0.34), transparent 38%),
-    radial-gradient(circle at 82% 18%, rgba(76, 136, 255, 0.3), transparent 36%),
-    linear-gradient(132deg, #292a30 0%, #25262c 52%, #24252a 100%) !important;
-  color: #f4f1ed !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) :is(
-    .rawaj-studio-section,
-    .rawaj-studio-steps,
-    .rawaj-studio-completion,
-    .rawaj-studio-preview,
-    .rawaj-studio-quality
-  ) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(155deg, #303137, #282a2f) !important;
-  color: #c9c3bf !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-listing-studio-v4 :is(h1, h2, h3, h4, strong, label) {
-  color: #f4f1ed !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-listing-studio-v4 :is(p, small, .text-muted-foreground) {
-  color: #9697a0 !important;
-}
-
-.rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-listing-studio-v4 :is(input, textarea, select, .input) {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #f4f1ed !important;
-}
+/* B2.3: studio route CSS is no longer owned by legacy V7B. */
 
 /* 7. Login and password recovery */
-.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 {
   color: #f4f1ed !important;
   background: transparent !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) :is(.rawaj-auth-layout, .rawaj-auth-card) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) :is(.rawaj-auth-layout, .rawaj-auth-card) {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: linear-gradient(155deg, #303137, #282a2f) !important;
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-aside {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-aside {
   background:
     radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.46), transparent 34%),
     radial-gradient(circle at 42% -15%, rgba(223, 73, 181, 0.37), transparent 38%),
@@ -124,18 +84,18 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(h1, h2, h3, strong, label) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(h1, h2, h3, strong, label) {
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(input, textarea, select, .input) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(input, textarea, select, .input) {
   border-color: rgba(255, 255, 255, 0.09) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: #f4f1ed !important;
 }
 
 /* 8. Profile, favorites, saved searches, activity, notifications */
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -147,7 +107,7 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -160,7 +120,7 @@
   color: #c9c3bf !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -171,7 +131,7 @@
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -209,7 +169,7 @@
 }
 
 /* 10. Support, safety, legal, verification and promotion */
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"],
     [data-resolved-pathname="/terms"],
@@ -222,7 +182,7 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"],
     [data-resolved-pathname="/terms"],
@@ -240,7 +200,7 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/support"],
     [data-resolved-pathname="/safety"],
     [data-resolved-pathname="/terms"],
@@ -255,7 +215,7 @@
 }
 
 /* 11. Seller storefront and offers */
-.rawaj-app-shell:is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) :is(.rawaj-storefront-v2, main) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) :is(.rawaj-storefront-v2, main) {
   color: #f4f1ed !important;
   background: transparent !important;
 }
@@ -270,7 +230,7 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel) {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: linear-gradient(155deg, #303137, #282a2f) !important;
   color: #c9c3bf !important;
@@ -309,7 +269,7 @@
 }
 
 /* Shared functional controls */
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -331,7 +291,7 @@
     [data-resolved-pathname="/offers"],
     [data-resolved-pathname^="/admin"]
   ) :is(button, a).bg-primary,
-.rawaj-app-shell:is(
+.rawaj-app-shell:not([data-design-palette="ivory"]):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],

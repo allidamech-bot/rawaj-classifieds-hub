@@ -448,7 +448,7 @@ test("B2.2 removes competing V17 shell and breadcrumb colors at their source", a
 test("B2.2 retires generic V17 dark control styles for the detail route", async () => {
   const css = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
   assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]))'));
-  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
   assert.ok(css.includes('[data-resolved-pathname="/add-listing"]'));
 });
 
@@ -466,7 +466,7 @@ test("B2.2 loading and unavailable route states use the same approved palette", 
 test("B2.2 excludes listing detail from V7 forced-dark inherited headings", async () => {
   const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
   assert.doesNotMatch(v7, /:where\(:not\(\[data-resolved-pathname="\/listings"\]\)\)/);
-  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
   assert.ok(v7.includes('.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"])'));
 });
 
