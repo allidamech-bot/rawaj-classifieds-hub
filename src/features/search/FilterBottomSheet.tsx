@@ -42,6 +42,7 @@ export function FilterBottomSheet({
     >
       <BottomSheetContent
         className="rawaj-filter-sheet"
+        data-design-palette="ivory"
         data-filter-state="draft"
         data-scroll-mode="content"
         style={{

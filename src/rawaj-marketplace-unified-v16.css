@@ -849,8 +849,8 @@
 
 .rawaj-bottom-nav-shell {
   border: 1px solid var(--r16-line) !important;
-  background: rgba(25, 28, 29, 0.94) !important;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28) !important;
+  background: var(--rawaj-shell-chrome-surface, rgba(25, 28, 29, 0.94)) !important;
+  box-shadow: var(--rawaj-shell-chrome-shadow, 0 12px 34px rgba(0, 0, 0, 0.28)) !important;
   backdrop-filter: blur(18px) saturate(1.08) !important;
 }
 

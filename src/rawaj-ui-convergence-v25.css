@@ -79,7 +79,7 @@
 }
 
 /* Native form controls still used by legacy routes follow the same field contract. */
-.rawaj-app-shell__content
+.rawaj-app-shell__content:where(:not([data-resolved-pathname="/listings"] *))
   form
   :is(
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
@@ -98,7 +98,7 @@
     background-color var(--motion-fast) var(--motion-ease);
 }
 
-.rawaj-app-shell__content
+.rawaj-app-shell__content:where(:not([data-resolved-pathname="/listings"] *))
   form
   :is(
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
@@ -107,7 +107,7 @@
   ):focus-visible {
   border-color: var(--rawaj-border-active);
   outline: 0;
-  box-shadow: 0 0 0 3px rgba(225, 100, 180, 0.12);
+  box-shadow: var(--rawaj-focus-shadow, 0 0 0 3px rgba(225, 100, 180, 0.12));
 }
 
 .rawaj-app-shell__content form :is(label, legend) {
@@ -128,7 +128,7 @@
 body
   :is([role="dialog"], [role="menu"], [role="listbox"])
   :is(a[href], button, input, select, textarea):focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--rawaj-text-pink) 82%, white);
+  outline: 2px solid var(--rawaj-focus-ring, color-mix(in srgb, var(--rawaj-text-pink) 82%, white));
   outline-offset: 3px;
 }
 

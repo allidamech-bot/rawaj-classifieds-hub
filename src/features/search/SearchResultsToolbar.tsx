@@ -175,7 +175,7 @@ export function SearchResultsToolbar({
             onBlur={() => rememberSearch(query)}
             placeholder={text("ابحث ضمن النتائج...", "Search within results...")}
             aria-label={text("بحث في الإعلانات", "Search listings")}
-            aria-describedby="rawaj-search-shortcut"
+            aria-describedby={query ? undefined : "rawaj-search-shortcut"}
             list="rawaj-recent-searches"
             type="search"
             inputMode="search"

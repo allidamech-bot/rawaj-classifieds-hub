@@ -32,6 +32,7 @@
     transparent
   );
   pointer-events: none;
+  opacity: var(--rawaj-shell-ambient-opacity, 1);
 }
 
 .rawaj-site-footer .rawaj-brand-lockup,

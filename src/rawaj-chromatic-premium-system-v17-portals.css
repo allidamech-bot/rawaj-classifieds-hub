@@ -4,11 +4,11 @@
  * for legacy UI primitives that predate data-slot attributes.
  */
 
-body :is([role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"]) {
+body :is([role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"]):where(:not(.rawaj-filter-sheet)) {
   color: var(--rawaj-v17-text, #f7f3ed) !important;
 }
 
-body :is([role="dialog"], [role="menu"], [role="listbox"]) {
+body :is([role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-filter-sheet)) {
   border-color: rgba(216, 174, 95, 0.2) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(216,174,95,.07), transparent 36%),
@@ -121,6 +121,6 @@ body :is([aria-invalid="true"], [data-invalid="true"]) {
 }
 
 body :is(button, a, input, textarea, select, [role="checkbox"], [role="radio"], [role="switch"], [role="slider"]):focus-visible {
-  outline: 2px solid rgba(232,202,141,.88) !important;
+  outline: 2px solid var(--rawaj-focus-ring, rgba(232,202,141,.88)) !important;
   outline-offset: 2px !important;
 }

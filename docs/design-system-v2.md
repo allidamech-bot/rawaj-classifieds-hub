@@ -1,6 +1,6 @@
 # RAWAJ design system — approved identity and migration contract
 
-> Status: **Phase 1 in progress** (14 November 2026). This is the source-of-truth
+> Status: **B1 substantially completed; B2 in progress** (14 November 2026). This is the source-of-truth
 > contract for the approved peacock-petrol homepage identity, not a claim that
 > every route is already migrated or visually accepted.
 
@@ -43,10 +43,12 @@ these solid-color calculations.
   related historical layers are still loaded in main. Their presence is a
   known migration dependency, not authorization to delete them without
   selector/dependency audits and rendered regression checks.
-- **PR #867**: remained a draft with failed browser and rendered-visual
-  gates at the 14 November audit. Do not mistake its blanket ivory stylesheet
-  for completed route migration; integrate or retire changes only after
-  exact-file review and proven acceptance.
+- **PR #867**: merged as `5a55344931652a7373f8f763bd9a624d30ef28db`.
+  Categories use the reconciled petrol/ivory directory design. The rejected
+  blanket ivory stylesheet must not be restored.
+- **Verified merged foundation**: #866 (`8e18e03f210c6ea4b18810c39582759aa1c32bfd`)
+  and #868 (`bceb5f8a3fa3f8d45d63053ae576e6a815681abd`).
+
 
 ## Component and page rules
 
@@ -65,23 +67,17 @@ these solid-color calculations.
 6. Retain existing API/data/permissions/business rules; any nonvisual
    concern belongs in its own engineering track.
 
-## Nine execution batches and acceptance gates
+## Expanded execution batches and acceptance gates
 
-1. **Foundation** — canonical palette, component ownership, inherited
-   stylesheet audit, design regression safeguards. **In progress**.
-2. **Homepage** — final polish and iPhone visual acceptance. Pending.
-3. **Categories and search** — category hierarchy, search, filters, results.
-   Pending.
-4. **Listing detail and posting** — details, photos, contact, publish form.
-   Pending.
-5. **Account and settings** — profile, more, auth, favorites, saved searches.
-   Pending.
-6. **Messaging and notifications** — chats, alerts, activity. Pending.
-7. **Trust and support** — support, safety, verification, legal, promotion.
-   Pending.
-8. **Administration** — moderation, users, audit, campaigns. Pending.
-9. **Final integration** — cascade cleanup, route inventory, browsers, iPhone
-   acceptance and release-readiness. Pending.
+1. **B1 — Foundation and entry experiences**: substantially completed through
+   #866, #868 and #867. Preserve homepage, categories and My Store; physical
+   iPhone acceptance remains pending.
+2. **B2 — Discovery and listings**: B2.1 search/results implementation in PR #869, followed
+   sequentially by B2.2 listing detail and B2.3 listing studio. Not accepted yet.
+3. **B3 — Personal and operational experiences**: account, communication,
+   trust/support and administration, each independently tested and merged. Pending.
+4. **B4 — Integration**: audited legacy retirement, actual route inventory,
+   responsive RTL/LTR browser acceptance and owner handoff. Pending.
 
 **A batch is not accepted by a passing source check alone.** Required evidence:
 exact commit SHA, affected paths, before/after screenshots, RTL/LTR and role
@@ -95,11 +91,56 @@ publishes manually.
 central `--rawaj-badge-*-{border,surface,ink}` roles rather than embedding the
 retired pink/purple colors in the component. The legacy/default palette retains
 its existing appearance. A scoped `data-design-palette="ivory"` token contract
-is available for **future, explicitly reviewed** route migration; it is not yet
-enabled on the application shell or My Store. The light badge colors pass
+is used by the approved category directory and the B2.1 results/filter portal.
+It is not enabled globally on the application shell or My Store. The light badge colors pass
 WCAG AA 4.5:1 for opaque foreground/background pairs, but still require
 actual rendered contrast checks when a route opts in.
 
 Do not activate the new route palette on `/profile/listings`, `/seller/:id`,
 or `/` as an unreviewed shortcut. Route visual acceptance and an explicit
 sign-off are prerequisites.
+
+## B2.1 source ownership — PR #869
+
+Search results and its filter portal opt into the existing ivory semantic
+contract. `listings-results.css` owns results presentation; V3 discovery retains
+responsive geometry and the legacy default card appearance on other routes.
+`search-filters-v1.css` continues to own the protected category directory.
+
+The source cascade migration removes exact search selector arms from V7B,
+V18 home/discovery, V19 consistency and V19 specificity. Shared historical
+card, text, label and input rules exclude results using `:where()` so their
+specificity and appearance remain unchanged on other routes. The filter portal
+carries its own palette because body portals cannot inherit page tokens.
+
+Existing shared shell declarations expose optional `--rawaj-shell-*` surface,
+ink, line, shadow and ambient slots. Their fallback values preserve the previous
+appearance. Only `/listings` assigns these slots, using canonical identity
+aliases for its canvas, header, footer and mobile navigation. There is no new
+late-loaded override bundle and no new important priority in the route stylesheet.
+
+Acceptance evidence must distinguish Chromium automation from WebKit and real
+hardware: WebKit was downloaded but could not launch in this workspace because
+its system libraries are missing and installing them requires unavailable root
+access. Physical iPhone Safari and standalone PWA remain owner/device acceptance.
+
+Rendered fixture captures: [390px before](visual-evidence/b2-1/search-390-before.png),
+[390px after](visual-evidence/b2-1/search-390-after.png),
+[1440px before](visual-evidence/b2-1/search-1440-before.png),
+[1440px after](visual-evidence/b2-1/search-1440-after.png).
+These use deterministic local fixtures; they do not represent production inventory.
+
+Local verification includes 23 targeted Chromium scenarios, the rendered results
+contrast/layout audit, price draft/apply/reset, sorting, grid/list URL state,
+empty/error recovery, 200% text and RTL/LTR across all seven target widths.
+Home, My Store and seller captures at 390/1440 match the reference pixels;
+categories retain their dimensions and pass the directory tests, with sparse
+rasterization differences in capture comparison. Independent static review found
+no blocking issues. Required CI and merge state are recorded on PR #869.
+
+Additional historical source suites still fail identically on the reference main:
+`test:discovery-marketplace-v4` expects the retired homepage `DiscoveryHero`;
+`precheck` stops at a stale owner performance fixture assertion; the optional V25
+source suite expects retired Input/My Store markup. These assertions were not
+changed in this search migration. The required Quality Gate command set passes
+locally; do not confuse the historical optional suites with successful checks.
