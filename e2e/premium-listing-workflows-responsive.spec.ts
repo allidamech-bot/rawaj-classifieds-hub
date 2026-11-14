@@ -53,17 +53,35 @@ test.describe("premium listing workflow responsiveness", () => {
 
     await page.goto("/profile/listings", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
-    const ownerWorkspace = page.locator(".rawaj-owner-control-center");
+    // My Store was rebuilt around the approved owner storefront. Its old
+    // control-center and workspace-summary selectors are intentionally gone.
+    const ownerWorkspace = page.locator("main.my-store");
     await expect(ownerWorkspace).toBeVisible({ timeout: 30_000 });
+    await expect(ownerWorkspace.locator('.my-store-hero[data-store-view="owner"]')).toBeVisible();
+    await expect(ownerWorkspace.locator(".ms-owner-inventory")).toBeVisible();
+    await expect(
+      ownerWorkspace.getByRole("link", { name: /إضافة إعلان|Add Listing/i }),
+    ).toBeVisible();
 
+    const searchToggle = ownerWorkspace.getByRole("button", {
+      name: /فتح البحث|Open search/i,
+    });
+    const storeSearch = ownerWorkspace.locator(".my-store-search input");
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       await page.waitForTimeout(75);
       await expectNoPageOverflow(page, `profile-listings:${viewport.width}`);
-      await expect(
-        ownerWorkspace.locator('.rawaj-owner-workspace-summary__actions [data-priority="primary"]'),
-      ).toBeVisible();
-      await expect(ownerWorkspace.locator('input[type="search"]')).toBeVisible();
+      await expect(ownerWorkspace.locator(".ms-approved-tabs")).toBeVisible();
+
+      if (viewport.width < 768) {
+        await expect(searchToggle).toBeVisible();
+        if ((await searchToggle.getAttribute("aria-expanded")) !== "true") {
+          await searchToggle.click();
+        }
+      }
+      // Desktop shows the search field directly. On mobile it is deliberately
+      // hidden until the 44px search-toggle control is activated.
+      await expect(storeSearch).toBeVisible();
     }
 
     await page.setViewportSize({ width: 390, height: 844 });
