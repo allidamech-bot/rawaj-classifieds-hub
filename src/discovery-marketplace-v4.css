@@ -273,37 +273,7 @@
   backdrop-filter: none;
 }
 
-/* Public listing detail */
-.rawaj-detail-v2__layout {
-  gap: clamp(1rem, 3vw, 2rem);
-}
-
-.rawaj-detail-summary,
-.rawaj-detail-section,
-.rawaj-detail-reference,
-.rawaj-detail-v2__sidebar > section {
-  border: 1px solid var(--rawaj-border);
-  border-radius: var(--rawaj-radius-card);
-  background: var(--rawaj-card-background);
-  box-shadow: var(--rawaj-shadow-xs);
-}
-
-.rawaj-detail-summary h1 {
-  font-size: clamp(1.35rem, 3vw, 2.2rem);
-  line-height: 1.45;
-  text-wrap: balance;
-}
-
-.rawaj-detail-price strong {
-  color: var(--rawaj-accent-orange);
-  font-size: clamp(1.5rem, 4vw, 2.45rem);
-}
-
-.rawaj-detail-description {
-  max-width: 72ch;
-  font-size: 0.95rem;
-  line-height: 2;
-}
+/* B2.2: listing detail presentation belongs to its route styles. */
 
 @media (min-width: 1024px) {
   .rawaj-search-results-v1 {
@@ -543,14 +513,4 @@ body,
     height: 1.15rem !important;
   }
 
-  /* Prevent narrow spec values from breaking one Arabic character per line. */
-  .rawaj-detail-specs > div {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 0.2rem !important;
-  }
-
-  .rawaj-detail-specs dd {
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
-  }
 }

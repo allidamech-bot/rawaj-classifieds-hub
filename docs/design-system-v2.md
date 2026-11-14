@@ -169,3 +169,5 @@ The last V6 detail-specific dark selectors were also retired at source; shared a
 The old app-shell transparent-main reset is now explicitly scoped to non-detail
 mains in `rawaj-global-dark-system.css`. This lets the approved detail canvas
 paint an opaque ivory background rather than revealing the inherited dark shell.
+
+B2.2 audit also retired the leftover discovery V4 listing detail typography, price accent and narrow-spec declarations, keeping responsive specification wrapping in the owned detail stylesheet. No global overrides were introduced.

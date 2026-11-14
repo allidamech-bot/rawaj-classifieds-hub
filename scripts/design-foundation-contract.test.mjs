@@ -374,3 +374,12 @@ test("B2.2 detail canvas is not erased by the legacy app-shell main reset", () =
   assert.doesNotMatch(globalDarkSystem, /\.rawaj-app-shell main\s*\{/);
   assert.match(foundation, /\.rawaj-detail-v2\[data-design-palette="ivory"\]/);
 });
+
+
+test("B2.2 discovery V4 retains no competing detail or orange-price rules", async () => {
+  const discovery = await readFile(new URL("../src/discovery-marketplace-v4.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.ok(!discovery.includes(".rawaj-detail-"));
+  assert.match(detail, /@media \(max-width: 639px\)/);
+  assert.match(detail, /grid-template-columns: minmax\(0, 1fr\)/);
+});

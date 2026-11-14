@@ -810,6 +810,18 @@
   }
 }
 
+@media (max-width: 639px) {
+  .rawaj-detail-specs > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+
+  .rawaj-detail-specs dd {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+}
+
 /* Existing contact flow, now using the approved route palette. */
 .rawaj-contact-dock {
   border: 0;
