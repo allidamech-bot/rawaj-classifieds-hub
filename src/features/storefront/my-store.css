@@ -169,6 +169,10 @@
 }
 .my-store-cover-title {
   position: absolute;
+  /* Match the painted petrol SVG curve under the light title. */
+  background-color: #103c3e;
+  border-radius: 3px;
+  padding-inline: 0.15rem;
   inset-inline-start: 28px;
   top: 22px;
   color: #fff;
@@ -1148,7 +1152,8 @@
 }
 
 .my-store-public-details .rawaj-signature-kicker {
-  color: #8c743f !important;
+  /* Champagne ink darkened to AA on the approved ivory surface. */
+  color: #78612e !important;
 }
 
 .my-store-public-details :is(input, textarea, select) {
