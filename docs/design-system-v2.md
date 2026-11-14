@@ -179,3 +179,11 @@ skins now exclude the detail route, and responsive listing-specific rules reside
 in listing-detail-v3.css. Protected routes keep their legacy fallbacks.
 
 Historical V3 adaptive card appearance is now excluded only for cards under the listing detail route, retaining its original dark behavior for every other unmigrated route. The route owner binds card color aliases to canonical ivory semantics so similar/recent cards remain readable.
+
+
+V7B had four broad dark selector arms still targeting `/listings/:id`: two
+forced the main and common cards to a light-on-dark skin, and two forced
+shared action controls to the retired visual palette. B2.2 removes only
+those listing-detail route arms from their original selectors; all other
+unmigrated routes keep their legacy behavior. Seller stats use the semantic
+muted surface instead of a retired dark warm panel.

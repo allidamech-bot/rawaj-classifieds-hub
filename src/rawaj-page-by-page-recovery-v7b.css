@@ -1,11 +1,10 @@
 /* RAWAJ page-by-page recovery V7B
- * Remaining routes: listings, detail, studio, auth, personal space,
+ * Remaining routes: listings, studio, auth, personal space,
  * trust/legal, storefront, offers, and admin.
  */
 
 /* Shared route-scoped legacy white-surface removal. */
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -32,7 +31,6 @@
 }
 
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -312,7 +310,6 @@
 
 /* Shared functional controls */
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -335,7 +332,6 @@
     [data-resolved-pathname^="/admin"]
   ) :is(button, a).bg-primary,
 .rawaj-app-shell:is(
-    [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],

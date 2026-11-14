@@ -409,3 +409,13 @@ test("B2.2 similar cards reject old V3 dark discovery skin only inside detail", 
     assert.ok(detail.includes(token + ":"), `Missing detail card color alias: ${token}`);
   }
 });
+
+
+test("B2.2 detail is excluded from V7B old page and action force-overrides", async () => {
+  const recovery = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7b.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8");
+  assert.ok(!recovery.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.ok(recovery.includes('[data-resolved-pathname="/add-listing"]'));
+  assert.ok(detail.includes(".rawaj-detail-seller__stats > div"));
+  assert.ok(detail.includes("background: var(--rawaj-muted-surface)"));
+});
