@@ -183,3 +183,16 @@ test("B2.3 create and edit share one studio V4 UI without global inline inputs",
     assert.ok(editor.includes(preserved), `Editor contract removed: ${preserved}`);
   }
 });
+
+
+test("B2.3 uses one accessible route-owned gate for publishing and editor recovery", async () => {
+  const editor = await readFile(new URL("../src/routes/profile/listings_.$id.tsx", import.meta.url), "utf8");
+  assert.equal((route.match(/className="rawaj-studio-gate container-wide/g) || []).length, 2);
+  assert.equal((editor.match(/className="rawaj-studio-gate container-wide/g) || []).length, 2);
+  assert.match(route, /className="rawaj-studio-success rawaj-studio-gate__card/);
+  assert.match(editor, /rawaj-studio-gate__description/);
+  assert.match(css, /\.rawaj-studio-gate > \.rawaj-studio-gate__card/);
+  assert.match(css, /\.rawaj-studio-gate :is\(a, button\):focus-visible/);
+  assert.match(editor, /onClick=\{\(\) => void loadSetup\(\)\}/);
+  assert.match(route, /actionSearch=\{\{ returnTo: "\/add-listing" \}\}/);
+});

@@ -375,3 +375,55 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+
+/* B2.3 account gates, submission and recovery states are owned by the studio.
+ * They render without a draft, so their canvas must not inherit retired dark cards.
+ */
+.rawaj-studio-gate {
+  display: grid;
+  min-height: min(68dvh, 42rem);
+  align-content: start;
+  background: var(--rawaj-identity-ivory);
+  color: var(--rawaj-identity-ink);
+  padding-block: clamp(1.5rem, 5vw, 3.5rem);
+}
+
+.rawaj-studio-gate > .rawaj-studio-gate__card {
+  width: min(100%, 36rem);
+  margin-inline: auto;
+  border: 1px solid #dfd3c1;
+  border-radius: 1.2rem;
+  background: #fffaf3;
+  box-shadow: 0 8px 28px rgba(19, 39, 36, 0.08);
+}
+
+.rawaj-app-shell .rawaj-studio-gate .rawaj-studio-gate__title {
+  color: var(--rawaj-identity-ink) !important;
+  line-height: 1.55;
+}
+
+.rawaj-app-shell .rawaj-studio-gate .rawaj-studio-gate__description {
+  color: #435650 !important;
+}
+
+.rawaj-studio-gate :is(a, button).rawaj-button-primary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-color: var(--rawaj-identity-petrol);
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+}
+
+.rawaj-studio-gate :is(a, button):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 3px;
+}
+
+@media (max-width: 430px) {
+  .rawaj-studio-gate > .rawaj-studio-gate__card {
+    border-radius: 1rem;
+  }
+}

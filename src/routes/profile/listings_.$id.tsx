@@ -1191,8 +1191,8 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide mobile-page-bottom pt-10">
-          <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground hairline">
+        <main className="rawaj-studio-gate container-wide mobile-page-bottom pt-10">
+          <div className="rawaj-studio-gate__card rawaj-studio-gate__description p-8 text-center text-sm">
             {text("جارٍ تحميل بيانات الإعلان.", "Loading listing data.")}
           </div>
         </main>
@@ -1204,12 +1204,12 @@ function ManageListingPage() {
     return (
       <>
         <PageHeader title={text("تعديل الإعلان", "Edit listing")} />
-        <main className="container-wide mobile-page-bottom pt-10">
-          <div className="rawaj-surface rounded-[1.5rem] p-10 text-center">
-            <p className="text-sm font-semibold text-foreground">
+        <main className="rawaj-studio-gate container-wide mobile-page-bottom pt-10">
+          <div className="rawaj-studio-gate__card p-6 text-center sm:p-10">
+            <p className="rawaj-studio-gate__title text-base font-semibold">
               {text("الإعلان غير متاح", "Listing unavailable")}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="rawaj-studio-gate__description mt-2 text-sm leading-7">
               {setupError?.message ??
                 text("تعذر تحميل هذا الإعلان.", "Could not load this listing.")}
             </p>
