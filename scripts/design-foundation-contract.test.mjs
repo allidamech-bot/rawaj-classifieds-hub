@@ -367,3 +367,10 @@ test("B2.2 route no longer inherits old V6 dark listing layers", async () => {
   assert.ok(!v6.includes(".rawaj-detail-"));
   assert.ok(v6.includes(".rawaj-storefront-identity"));
 });
+
+
+test("B2.2 detail canvas is not erased by the legacy app-shell main reset", () => {
+  assert.match(globalDarkSystem, /\.rawaj-app-shell main:not\(\.rawaj-detail-v2\)/);
+  assert.doesNotMatch(globalDarkSystem, /\.rawaj-app-shell main\s*\{/);
+  assert.match(foundation, /\.rawaj-detail-v2\[data-design-palette="ivory"\]/);
+});

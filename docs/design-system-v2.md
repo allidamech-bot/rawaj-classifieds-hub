@@ -164,3 +164,8 @@ contract tests were aligned to the approved replacement, without removing their
 coverage of seller identity, contact behavior or safe-area reservations.
 
 The last V6 detail-specific dark selectors were also retired at source; shared and storefront V6 selectors remain protected.
+
+
+The old app-shell transparent-main reset is now explicitly scoped to non-detail
+mains in `rawaj-global-dark-system.css`. This lets the approved detail canvas
+paint an opaque ivory background rather than revealing the inherited dark shell.
