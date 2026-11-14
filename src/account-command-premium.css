@@ -1,6 +1,10 @@
 /* B3.1 /more presentation ownership.
    Replaces the retired charcoal/pink/purple command-center skin in place.
    Other routes, including My Store and the B2 listing studio, are intentionally untouched. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3::before {
+  display: none !important;
+  content: none !important;
+}
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] {
   --account-canvas: var(--rawaj-identity-ivory);
   --account-ink: var(--rawaj-identity-ink);
