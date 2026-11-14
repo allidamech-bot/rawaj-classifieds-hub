@@ -233,6 +233,45 @@
   background: #fff7e7 !important;
 }
 
+/* B3.1 contrast closure: these controls had inherited a legacy dark theme
+   above the now-light auth card. All rules are strictly route-scoped. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-shell-header--context {
+  background: var(--rawaj-identity-petrol) !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-shell-header__title :is(p, h1) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card button.rawaj-button-primary {
+  min-height: 3rem !important;
+  border: 1px solid var(--rawaj-identity-teal) !important;
+  border-radius: 0.8rem !important;
+  color: #fff !important;
+  background: var(--rawaj-identity-teal) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card button.rawaj-button-primary:where(:hover, :focus-visible) {
+  background: var(--rawaj-identity-petrol) !important;
+  border-color: var(--rawaj-identity-petrol) !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card a.text-brand-orange {
+  color: var(--rawaj-identity-teal) !important;
+  text-decoration-thickness: 1px;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .bg-card\/60 {
+  border-color: var(--auth-v12-border) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: #fffaf3 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .rawaj-auth-google + p.text-muted-foreground,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card .text-muted-foreground {
+  color: #435650 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-card :is(a, button, input):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal) !important;
+  outline-offset: 2px !important;
+}
+
 /* New password confirmation / recovery */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-v4 {
   --rawaj-text-primary: var(--rawaj-identity-ink);
