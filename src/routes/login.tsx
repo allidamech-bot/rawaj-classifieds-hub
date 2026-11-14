@@ -395,7 +395,7 @@ function LoginPage() {
                           setAcceptedPolicies(event.target.checked);
                           if (termsError) setTermsError("");
                         }}
-                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-identity-teal)]"
                         required
                       />
                       <div className="text-xs leading-6 text-foreground/90">
@@ -525,7 +525,7 @@ function LoginPage() {
                         type="checkbox"
                         checked={acceptedPolicies}
                         onChange={(event) => setAcceptedPolicies(event.target.checked)}
-                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-accent-pink)]"
+                        className="mt-1 h-4 w-4 shrink-0 accent-[var(--rawaj-identity-teal)]"
                       />
                       <div className="text-xs leading-6 text-foreground/90">
                         <label htmlFor="google-policy-consent" className="font-semibold">
