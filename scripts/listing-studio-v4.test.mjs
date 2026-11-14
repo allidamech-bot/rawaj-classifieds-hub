@@ -310,3 +310,14 @@ test("B2.3 V20 no longer overrides the studio continue button with retired gradi
   assert.ok(css.includes("--rawaj-card-background: #fffaf3"));
   assert.ok(css.includes("background-color: var(--rawaj-card-background)"));
 });
+
+test("B2.3 form labels, selected taxonomy and clipped search label meet approved foreground contract", async () => {
+  const v5 = await readFile(new URL("../src/rawaj-listing-studio-system-v5.css", import.meta.url), "utf8");
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  assert.ok(v5.includes("label > span.text-muted-foreground"));
+  assert.ok(v5.includes("color: #435650 !important"));
+  assert.ok(audit.includes(".rawaj-taxonomy-selection :is(p, small)"));
+  assert.ok(audit.includes("background-color: #e0ece8 !important"));
+  assert.ok(css.includes('label.sr-only[for="listing-taxonomy-search"]'));
+  assert.ok(css.includes("background-color: #fffaf3 !important"));
+});

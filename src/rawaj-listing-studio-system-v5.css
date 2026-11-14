@@ -415,7 +415,7 @@
 /* Fields */
 .rawaj-listing-studio-v4 label > span:first-child,
 .rawaj-listing-studio-v4 .rawaj-studio-section__body > label > span:first-child {
-  color: var(--studio-v5-text-soft) !important;
+  color: #435650 !important;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
 }
@@ -1028,4 +1028,11 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* B2.3 contrast acceptance: original field-label ownership beats inherited
+ * V17/V19 text utility colors in both create and edit screens. */
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  :is(label > span.text-muted-foreground, .rawaj-studio-section__body label > span:first-child) {
+  color: #435650 !important;
 }

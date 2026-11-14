@@ -812,6 +812,10 @@
 }
 
 .rawaj-taxonomy-selection {
+  /* Light selected-category surface is independent from dark legacy aliases. */
+  --rawaj-text-primary: #132724;
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #53645e;
   display: flex;
   min-height: 3rem;
   align-items: center;
@@ -940,4 +944,16 @@
   .rawaj-taxonomy-breadcrumb__segment button {
     max-width: 8.5rem;
   }
+}
+
+/* B2.3 selected-category copy and search label have stable foregrounds in
+ * the actual route owner, regardless of the old global utility cascade. */
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-selection {
+  background-color: #e0ece8 !important;
+  color: #132724 !important;
+}
+.rawaj-app-shell[data-design-palette="ivory"] main.rawaj-listing-studio-v4
+  .rawaj-taxonomy-selection :is(p, small) {
+  color: #132724 !important;
 }
