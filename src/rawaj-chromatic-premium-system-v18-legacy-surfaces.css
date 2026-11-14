@@ -221,12 +221,6 @@
 /* Support, safety, legal, verification, promotion                            */
 /* -------------------------------------------------------------------------- */
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) :is(.rawaj-trust-hero, .rawaj-trust-card, .rawaj-trust-link-card, .rawaj-trust-section, .rawaj-support-card) {
   border-color: rgba(216,174,95,.14) !important;
@@ -239,9 +233,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero {
   background:

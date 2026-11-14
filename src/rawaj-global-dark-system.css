@@ -122,7 +122,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 .rawaj-app-header .rawaj-brand-lockup__name {
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-shell-brand-ink, var(--rawaj-text-primary)) !important;
   font-size: 1.02rem !important;
   font-weight: 700 !important;
 }

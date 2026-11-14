@@ -44,7 +44,7 @@ main.container-wide > section.rawaj-hero-surface.mx-auto.max-w-md button[type="s
   box-shadow: none;
 }
 
-main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
+:where(.rawaj-app-shell:not([data-trust-workspace])) main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
   overflow: hidden;
   border-color: color-mix(in srgb, var(--color-border) 78%, transparent);
   border-radius: var(--rawaj-radius-surface);
@@ -53,17 +53,17 @@ main.container-wide.mobile-page-bottom.space-y-5 > section:first-child {
   box-shadow: var(--rawaj-shadow-soft);
 }
 
-main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .text-muted-foreground {
+:where(.rawaj-app-shell:not([data-trust-workspace])) main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .text-muted-foreground {
   color: rgba(255, 255, 255, 0.72);
 }
 
-main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .bg-muted-surface {
+:where(.rawaj-app-shell:not([data-trust-workspace])) main.container-wide.mobile-page-bottom.space-y-5 > section:first-child .bg-muted-surface {
   background: rgba(255, 255, 255, 0.1);
   color: white;
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-main.container-wide.mobile-page-bottom.space-y-5 > section:first-child a[class*="bg-primary"] {
+:where(.rawaj-app-shell:not([data-trust-workspace])) main.container-wide.mobile-page-bottom.space-y-5 > section:first-child a[class*="bg-primary"] {
   background: var(--color-brand-orange);
   color: white;
 }
@@ -108,7 +108,7 @@ main.container-wide.mobile-page-bottom.space-y-5 #account-info a {
     border-radius: var(--rawaj-radius-surface);
   }
 
-  main.container-wide.mobile-page-bottom.space-y-5 > section:first-child > div {
+  :where(.rawaj-app-shell:not([data-trust-workspace])) main.container-wide.mobile-page-bottom.space-y-5 > section:first-child > div {
     align-items: stretch;
   }
 }

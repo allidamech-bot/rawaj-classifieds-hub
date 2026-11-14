@@ -239,13 +239,13 @@ function VerificationPage() {
     return (
       <>
         <PageHeader title={text("التوثيق", "Verification")} to="/more" backMode="history" />
-        <main className="container-wide mobile-page-bottom pt-4">
-          <section className="rounded-2xl bg-card p-7 text-center hairline">
-            <BadgeCheck className="mx-auto h-9 w-9 text-gold" />
+        <main className="rawaj-verification container-wide mobile-page-bottom pt-4">
+          <section className="rawaj-verification-gate rounded-2xl p-7 text-center hairline">
+            <BadgeCheck className="mx-auto h-9 w-9 text-primary" />
             <h1 className="mt-3 text-base font-extrabold">
               {text("التوثيق يتطلب حساباً", "Verification requires an account")}
             </h1>
-            <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-xl text-xs leading-6">
               {text(
                 "سجّل الدخول أولاً. الطلبات تخضع لشروط أهلية وفحص آلي أولي ثم مراجعة بشرية من الإدارة.",
                 "Log in first. Requests are subject to eligibility checks followed by manual admin review.",
@@ -254,7 +254,7 @@ function VerificationPage() {
             <Link
               to="/login"
               search={{ returnTo: "/verification" }}
-              className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              className="mt-4 inline-flex min-h-11 items-center rounded-xl rawaj-trust-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
               {text("تسجيل الدخول", "Log in")}
             </Link>
@@ -267,10 +267,10 @@ function VerificationPage() {
   return (
     <>
       <PageHeader title={text("التوثيق", "Verification")} to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
-        <section className="rounded-2xl bg-card p-5 hairline">
+      <main className="rawaj-verification container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
+        <section className="rawaj-trust-intro">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl rawaj-trust-intro__icon">
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
@@ -297,7 +297,7 @@ function VerificationPage() {
                 key={en}
                 className="flex items-start gap-2 rounded-xl bg-muted-surface p-3 text-xs leading-5"
               >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--rawaj-success)]" />
                 <span>{text(ar, en)}</span>
               </div>
             ))}
@@ -312,7 +312,7 @@ function VerificationPage() {
 
         {alreadyVerified ? (
           <section className="rounded-2xl bg-emerald-500/10 p-5 hairline">
-            <div className="flex items-center gap-3 text-emerald-400">
+            <div className="flex items-center gap-3 text-[var(--rawaj-success)]">
               <BadgeCheck className="h-6 w-6" />
               <strong>{text("حسابك موثّق حالياً", "Your account is currently verified")}</strong>
             </div>
@@ -432,11 +432,14 @@ function VerificationPage() {
                   "أقر بصحة البيانات والوثيقة، وأفهم أن التوثيق قابل للرفض أو السحب عند ظهور معلومات غير صحيحة أو إساءة استخدام، وأن الشارة ليست ضماناً لأي معاملة. كما أوافق على ",
                   "I confirm the information and evidence are accurate, understand verification may be refused or revoked for false information or abuse, and understand the badge is not a transaction guarantee. I also agree to the ",
                 )}
-                <Link to="/terms" className="font-bold text-primary hover:underline">
+                <Link to="/terms" className="rawaj-policy-inline font-bold text-primary underline">
                   {text("شروط الاستخدام", "Terms of Use")}
                 </Link>
                 {text(" و", " and ")}
-                <Link to="/privacy" className="font-bold text-primary hover:underline">
+                <Link
+                  to="/privacy"
+                  className="rawaj-policy-inline font-bold text-primary underline"
+                >
                   {text("سياسة الخصوصية", "Privacy Policy")}
                 </Link>
                 .
@@ -446,7 +449,7 @@ function VerificationPage() {
             {notice ? (
               <p
                 role="status"
-                className={`mt-3 rounded-xl p-3 text-xs font-semibold ${noticeKind === "success" ? "bg-emerald-500/10 text-emerald-400" : "bg-destructive/10 text-destructive"}`}
+                className={`mt-3 rounded-xl p-3 text-xs font-semibold ${noticeKind === "success" ? "bg-emerald-500/10 text-[var(--rawaj-success)]" : "bg-destructive/10 text-destructive"}`}
               >
                 {notice}
               </p>
@@ -455,7 +458,7 @@ function VerificationPage() {
             <button
               type="submit"
               disabled={saving || hasPendingRequest || !acceptedRules}
-              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-extrabold text-primary-foreground disabled:opacity-50"
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl rawaj-trust-primary px-4 py-2 text-xs font-extrabold text-primary-foreground disabled:opacity-50"
             >
               <BadgeCheck className="h-4 w-4" />
               {saving
@@ -472,11 +475,20 @@ function VerificationPage() {
             {text("سجل طلبات التوثيق", "Verification history")}
           </h2>
           {requestsLoading ? (
-            <p className="mt-3 text-xs text-muted-foreground">
-              {text("جارٍ التحميل…", "Loading…")}
-            </p>
+            <p className="mt-3 text-xs text-muted-foreground">{text("جارٍ التحميل…", "Loading…")}</p>
           ) : requestsError ? (
-            <p className="mt-3 text-xs text-destructive">{requestsError.message}</p>
+            <div className="mt-3">
+              <p role="alert" className="text-sm text-destructive">
+                {requestsError.message}
+              </p>
+              <button
+                type="button"
+                onClick={() => void loadRequests()}
+                className="mt-2 rounded-xl rawaj-trust-secondary px-4 font-bold text-primary"
+              >
+                {text("إعادة المحاولة", "Try again")}
+              </button>
+            </div>
           ) : requests.length === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">
               {text("لا توجد طلبات سابقة.", "No previous requests.")}
@@ -527,7 +539,7 @@ function RequestRow({
         </small>
       </div>
       <span
-        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${approved ? "bg-emerald-500/10 text-emerald-400" : rejected ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold ${approved ? "bg-emerald-500/10 text-[var(--rawaj-success)]" : rejected ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}
       >
         {approved ? (
           <CheckCircle2 className="h-3 w-3" />
