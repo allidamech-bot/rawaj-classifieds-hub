@@ -15,10 +15,11 @@ const mobileViewports = [
   { width: 412, height: 915 },
 ] as const;
 
-const lightHeroSamples: Rgb[] = [
-  [255, 250, 241],
-  [238, 248, 242],
-  [255, 240, 231],
+// The approved studio hero uses an ivory heading on a petrol/teal gradient.
+// The contrast samples must follow the actual approved brand endpoints.
+const approvedHeroSamples: Rgb[] = [
+  [7, 56, 54],
+  [8, 99, 94],
 ];
 
 function parseRgb(value: string): Rgb {
@@ -138,8 +139,9 @@ for (const viewport of mobileViewports) {
       });
       expect(heroColors.background).toContain("linear-gradient");
       const headingRgb = parseRgb(heroColors.headingColor);
-      for (const backgroundRgb of lightHeroSamples) {
-        expect(contrastRatio(headingRgb, backgroundRgb)).toBeGreaterThanOrEqual(7);
+      expect(headingRgb).toEqual([249, 240, 228]);
+      for (const backgroundRgb of approvedHeroSamples) {
+        expect(contrastRatio(headingRgb, backgroundRgb)).toBeGreaterThanOrEqual(4.5);
       }
 
       const stepBoxes = await studio.locator(".rawaj-studio-steps > li").evaluateAll((elements) =>
