@@ -193,3 +193,5 @@ The B2.2 detail source contract now excludes the retired V17 forced-dark listing
 V17 breadcrumb colors, and V6 listing recovery skins. Component-owned copy,
 price and seller heading roles are bound directly to approved identity tokens,
 with an explicit accessible report-action foreground. No unrelated route was re-themed.
+
+B2.2 also excludes the detail pathname from V17 generic dark cards, primary/secondary actions, form controls, badges, overlays and status states directly at their selector ownership level. `/listings` and unrelated unmigrated routes retain their prior behavior; no new late-loaded stylesheet was added.
