@@ -364,7 +364,7 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 24%, transparent) !important;
   border-radius: 1.3rem !important;
   color: var(--rawaj-identity-ink) !important;
-  background: linear-gradient(150deg, #fffaf3, #fffaf3) !important;
+  background: #fffaf3 !important;
   box-shadow: 0 12px 26px color-mix(in srgb, var(--rawaj-identity-petrol) 9%, transparent) !important;
 }
 
@@ -515,7 +515,7 @@
   border-radius: 1.15rem !important;
   padding: 0 !important;
   color: var(--rawaj-identity-ink) !important;
-  background: linear-gradient(150deg, #fffaf3, #fffaf3) !important;
+  background: #fffaf3 !important;
   box-shadow: 0 4px 16px color-mix(in srgb, var(--rawaj-identity-petrol) 7%, transparent) !important;
 }
 
