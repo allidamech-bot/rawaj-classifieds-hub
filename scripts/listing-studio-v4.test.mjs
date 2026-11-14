@@ -265,3 +265,10 @@ test("B2.3 has no dark V7B/V18 studio owner and has matching mobile chrome", asy
   assert.ok(chrome.includes('pathname === "/add-listing"'));
   assert.ok(chrome.includes('themeColor: "#073836"'));
 });
+
+test("B2.3 V8 no longer forces charcoal cards over the studio's ivory panels", async () => {
+  const css = await readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8");
+  assert.ok(!css.includes("Listing studio: compact hierarchy"));
+  assert.ok(!css.includes(".rawaj-studio-quality"));
+  assert.ok(css.includes("Admin: readable semantic surfaces"));
+});
