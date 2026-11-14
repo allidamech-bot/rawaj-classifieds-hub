@@ -145,10 +145,7 @@ export function FeedbackWidget({
     const message = draft.message.trim();
     if (subject.length < 4) {
       setNotice(
-        text(
-          "اكتب عنواناً واضحاً من 4 أحرف على الأقل.",
-          "Enter a subject of at least 4 characters.",
-        ),
+        text("اكتب عنواناً واضحاً من 4 أحرف على الأقل.", "Enter a subject of at least 4 characters."),
       );
       return;
     }
