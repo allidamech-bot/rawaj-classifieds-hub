@@ -483,3 +483,17 @@ test("B2.2 price change outside main uses accessible semantic identity roles", a
   assert.ok(foundation.includes('.rawaj-detail-price-change[data-design-palette="ivory"]'));
   assert.ok(styles.includes(".rawaj-detail-price-change__previous"));
 });
+
+
+test("B2.2 placeholder uses approved gold/petrol only for listing detail", async () => {
+  const load = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
+  const [placeholder, gallery, viewer] = await Promise.all([
+    load("components/PlaceholderArt.tsx"),
+    load("features/listing-detail/ListingMediaExperience.tsx"),
+    load("features/listing-detail/ListingMediaViewer.tsx"),
+  ]);
+  assert.ok(placeholder.includes("identity = false"), "Other routes keep the existing placeholder design");
+  assert.ok(placeholder.includes('identity ? "#ffe3b0"'));
+  assert.equal((gallery.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
+  assert.equal((viewer.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
+});

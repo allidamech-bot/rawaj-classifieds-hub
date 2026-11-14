@@ -125,7 +125,7 @@ export default function ListingMediaViewer({
                 onError={() => onImageError(currentUrl)}
               />
             ) : (
-              <PlaceholderArt type={placeholder} aspect="wide" />
+              <PlaceholderArt type={placeholder} aspect="wide" identity />
             )}
           </div>
 
@@ -158,7 +158,7 @@ export default function ListingMediaViewer({
                       aria-pressed={selectedIndex === index}
                     >
                       {failedUrls.has(imageUrl) ? (
-                        <PlaceholderArt type={placeholder} aspect="standard" />
+                        <PlaceholderArt type={placeholder} aspect="standard" identity />
                       ) : (
                         <img
                           src={imageUrl}

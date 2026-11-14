@@ -206,3 +206,5 @@ B2.2 CSS cascade verification also excluded `/listings/:id` from the original V7
 B2.2 rendered contrast audit also includes the `ViewedBeforeBanner`, which appears outside the main detail canvas. Its root now opts into the same canonical ivory tokens, with explicit dark title and secondary timestamp roles rather than inheriting the legacy shell text colors.
 
 The related `PriceChangeBanner` is also outside the main route canvas; it now opts into the canonical palette directly, preserving the existing fetch logic and rise/drop semantics while adopting accessible success/warning badges and legible prices.
+
+Listing photo fallbacks now opt into an explicit `identity` mode on the shared `PlaceholderArt` primitive, limiting the petrol/champagne glyph and glow to the B2.2 gallery and viewer. Default placeholder rendering in all other routes remains unchanged, and missing images remain honestly represented.
