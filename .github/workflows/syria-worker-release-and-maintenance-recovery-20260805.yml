@@ -1,0 +1,313 @@
+name: Syria Worker Release and Maintenance Recovery 2026-08-05
+
+on:
+  push:
+    branches:
+      - audit/syria-cloudflare-public-live-20260805
+    paths:
+      - ".github/workflows/syria-worker-release-and-maintenance-recovery-20260805.yml"
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: syria-worker-release-and-maintenance-recovery-20260805
+  cancel-in-progress: false
+
+env:
+  TARGET_MAIN_SHA: d6fefcecc50e4f9b86a6961896e7f0cd51163374
+  TARGET_WORKER: rawaj-classifieds-hub
+  TARGET_API: https://rawaj-classifieds-hub.allidamech.workers.dev
+  TARGET_D1_NAME: rawaj-staging
+  TARGET_D1_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
+  TARGET_R2_NAME: rawaj-listing-images-production
+
+jobs:
+  dispatch-worker-release:
+    name: Dispatch exact Syria Worker release
+    if: contains(github.event.head_commit.message, '[run-syria-worker-recovery-20260805]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      deployment_run_id: ${{ steps.dispatch.outputs.run_id }}
+
+    steps:
+      - name: Validate immutable dispatch context
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "allidamech-bot/rawaj-classifieds-hub"
+          test "$GITHUB_REF" = "refs/heads/audit/syria-cloudflare-public-live-20260805"
+          test "$TARGET_MAIN_SHA" = "d6fefcecc50e4f9b86a6961896e7f0cd51163374"
+          test "$TARGET_WORKER" = "rawaj-classifieds-hub"
+          test "$TARGET_D1_NAME" = "rawaj-staging"
+          test "$TARGET_D1_ID" = "d0e6496c-9f63-48d3-beeb-d2e219500f6a"
+          test "$TARGET_R2_NAME" = "rawaj-listing-images-production"
+          remote_main="$(git ls-remote https://github.com/$GITHUB_REPOSITORY.git refs/heads/main | awk '{print $1}')"
+          test "$remote_main" = "$TARGET_MAIN_SHA"
+
+      - name: Dispatch protected production workflow
+        id: dispatch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          workflow="cloudflare-production-worker-deploy.yml"
+          before="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId // 0')"
+
+          gh workflow run "$workflow" \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f approval_phrase=DEPLOY_RAWAJ_SYRIA_WORKER_PRODUCTION \
+            -f expected_commit_sha="$TARGET_MAIN_SHA" \
+            -f reviewed_release_sha="$TARGET_MAIN_SHA"
+
+          run_id=""
+          for attempt in $(seq 1 60); do
+            current="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --event workflow_dispatch --limit 1 --json databaseId,headSha --jq '.[0] | select(.headSha == env.TARGET_MAIN_SHA) | .databaseId // 0' 2>/dev/null || echo 0)"
+            if [ "$current" != "0" ] && [ "$current" != "$before" ]; then
+              run_id="$current"
+              break
+            fi
+            sleep 2
+          done
+          test -n "$run_id"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Dispatched Syria Worker release run $run_id"
+
+      - name: Wait for protected deployment result
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.dispatch.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          gh run watch "$RUN_ID" --repo "$GITHUB_REPOSITORY" --exit-status
+
+  recover-maintenance:
+    name: Disable only Syria maintenance mode
+    needs: dispatch-worker-release
+    runs-on: ubuntu-latest
+    environment: syria-production
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.SYRIA_CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.SYRIA_CLOUDFLARE_ACCOUNT_ID }}
+      SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE: ${{ vars.SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE }}
+      CLOUDFLARE_D1_DATABASE_ID: d0e6496c-9f63-48d3-beeb-d2e219500f6a
+      CLOUDFLARE_D1_DATABASE_NAME: rawaj-staging
+      CLOUDFLARE_R2_BUCKET_NAME: rawaj-listing-images-production
+      RAWAJ_WORKER_RELEASE_SHA: d6fefcecc50e4f9b86a6961896e7f0cd51163374
+      RAWAJ_WORKER_ENVIRONMENT: production
+
+    steps:
+      - name: Validate dedicated Syria environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$TARGET_MAIN_SHA" = "$RAWAJ_WORKER_RELEASE_SHA"
+          test "$SYRIA_CLOUDFLARE_CREDENTIAL_SCOPE" = "rawaj-classifieds-hub"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test "$CLOUDFLARE_D1_DATABASE_NAME" = "$TARGET_D1_NAME"
+          test "$CLOUDFLARE_D1_DATABASE_ID" = "$TARGET_D1_ID"
+          test "$CLOUDFLARE_R2_BUCKET_NAME" = "$TARGET_R2_NAME"
+
+          response=/tmp/syria-worker-access.json
+          code="$(curl --silent --show-error --max-time 20 \
+            --output "$response" --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            --header 'Accept: application/json' \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/services/$TARGET_WORKER" || true)"
+          success="$(node -e "try{const d=require('$response');process.stdout.write(d?.success===true?'true':'false')}catch{process.stdout.write('false')}")"
+          test "$code" = "200"
+          test "$success" = "true"
+
+      - name: Checkout exact current main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_MAIN_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify target remains current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$TARGET_MAIN_SHA"
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          test "$(git rev-parse refs/remotes/origin/main)" = "$TARGET_MAIN_SHA"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: cloudflare/worker/package-lock.json
+
+      - name: Install locked Worker tooling and render exact config
+        run: |
+          npm ci --prefix cloudflare/worker --ignore-scripts
+          npm --prefix cloudflare/worker run render:production
+          node <<'NODE'
+          const fs = require('node:fs');
+          const c = JSON.parse(fs.readFileSync('cloudflare/worker/wrangler.generated.jsonc','utf8'));
+          if (c.name !== 'rawaj-classifieds-hub') throw new Error('wrong_worker');
+          if (c.routes) throw new Error('routes_forbidden');
+          if (c.d1_databases?.length !== 1) throw new Error('wrong_d1_count');
+          if (c.d1_databases[0]?.binding !== 'DB') throw new Error('wrong_d1_binding');
+          if (c.d1_databases[0]?.database_name !== 'rawaj-staging') throw new Error('wrong_d1_name');
+          if (c.d1_databases[0]?.database_id !== 'd0e6496c-9f63-48d3-beeb-d2e219500f6a') throw new Error('wrong_d1_id');
+          if (c.r2_buckets?.length !== 1) throw new Error('wrong_r2_count');
+          if (c.r2_buckets[0]?.binding !== 'MEDIA') throw new Error('wrong_r2_binding');
+          if (c.r2_buckets[0]?.bucket_name !== 'rawaj-listing-images-production') throw new Error('wrong_r2_name');
+          if (c.vars?.FIREBASE_PROJECT_ID !== 'project-af18fcaf-c46e-4ec5-93a') throw new Error('wrong_firebase');
+          if (c.vars?.API_ALLOWED_ORIGINS !== 'https://rawa-j.com,https://www.rawa-j.com') throw new Error('wrong_cors');
+          if (c.vars?.RAWAJ_WORKER_RELEASE_SHA !== process.env.TARGET_MAIN_SHA) throw new Error('wrong_release');
+          NODE
+
+      - name: Snapshot all controls before recovery
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          node_modules/.bin/wrangler d1 execute "$TARGET_D1_NAME" \
+            --remote --config wrangler.generated.jsonc --json \
+            --command "SELECT key, enabled, reason, version, updated_by, updated_at FROM system_controls ORDER BY key;" \
+            > /tmp/syria-controls-before.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('/tmp/syria-controls-before.json','utf8'));
+          const result = Array.isArray(payload) ? payload[0] : payload;
+          if (!result?.success || !Array.isArray(result.results)) throw new Error('invalid_control_snapshot');
+          const row = result.results.find((candidate) => candidate.key === 'maintenance_mode');
+          if (!row) throw new Error('missing_maintenance_control');
+          fs.writeFileSync('/tmp/syria-maintenance-before.json', JSON.stringify(row));
+          console.log(`maintenance_before=${Number(row.enabled) === 1 ? 'enabled' : 'disabled'}`);
+          NODE
+
+      - name: Disable maintenance only and append audit record
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          enabled="$(node -e "const r=require('/tmp/syria-maintenance-before.json');process.stdout.write(Number(r.enabled)===1?'1':'0')")"
+          version="$(node -e "const r=require('/tmp/syria-maintenance-before.json');process.stdout.write(String(Number(r.version)))")"
+          if [ "$enabled" = "0" ]; then
+            echo "maintenance_mode is already disabled; no mutation required."
+            exit 0
+          fi
+
+          audit_id="$(node -e "process.stdout.write(crypto.randomUUID())")"
+          timestamp="$(node -e "process.stdout.write(new Date().toISOString())")"
+          reason="Automated Syria maintenance recovery after public Cloudflare audit 2026-08-05"
+          next_version="$((version + 1))"
+          metadata="$(node -e "process.stdout.write(JSON.stringify({enabled:false,reason:process.argv[1],expectedVersion:Number(process.argv[2]),nextVersion:Number(process.argv[3]),source:'github-actions-syria-recovery-20260805',release:process.argv[4]}))" "$reason" "$version" "$next_version" "$TARGET_MAIN_SHA")"
+          metadata_sql="${metadata//\'/\'\'}"
+
+          node_modules/.bin/wrangler d1 execute "$TARGET_D1_NAME" \
+            --remote --config wrangler.generated.jsonc \
+            --command "UPDATE system_controls SET enabled = 0, reason = '$reason', version = $next_version, updated_by = NULL, updated_at = '$timestamp' WHERE key = 'maintenance_mode' AND enabled = 1 AND version = $version; INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id, metadata, created_at) SELECT '$audit_id', NULL, 'system_control.recovered', 'system_controls', 'maintenance_mode', '$metadata_sql', '$timestamp' WHERE changes() = 1;"
+
+      - name: Prove no other system control changed
+        working-directory: cloudflare/worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          node_modules/.bin/wrangler d1 execute "$TARGET_D1_NAME" \
+            --remote --config wrangler.generated.jsonc --json \
+            --command "SELECT key, enabled, reason, version, updated_by, updated_at FROM system_controls ORDER BY key;" \
+            > /tmp/syria-controls-after.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const rows = (file) => {
+            const payload = JSON.parse(fs.readFileSync(file,'utf8'));
+            const result = Array.isArray(payload) ? payload[0] : payload;
+            if (!result?.success || !Array.isArray(result.results)) throw new Error(`invalid_snapshot:${file}`);
+            return result.results;
+          };
+          const before = rows('/tmp/syria-controls-before.json');
+          const after = rows('/tmp/syria-controls-after.json');
+          if (before.length !== after.length) throw new Error('control_count_changed');
+          const afterMap = new Map(after.map((row) => [row.key, row]));
+          for (const row of before) {
+            const next = afterMap.get(row.key);
+            if (!next) throw new Error(`missing_control:${row.key}`);
+            if (row.key === 'maintenance_mode') {
+              if (Number(next.enabled) !== 0) throw new Error('maintenance_still_enabled');
+              const expectedVersion = Number(row.enabled) === 1 ? Number(row.version) + 1 : Number(row.version);
+              if (Number(next.version) !== expectedVersion) throw new Error('maintenance_version_unexpected');
+              continue;
+            }
+            if (JSON.stringify(next) !== JSON.stringify(row)) throw new Error(`unrelated_control_changed:${row.key}`);
+          }
+          console.log('Only maintenance_mode changed, or no mutation was needed.');
+          NODE
+
+      - name: Verify live release, controls and market CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const target = process.env.TARGET_API;
+          const expectedRelease = process.env.TARGET_MAIN_SHA;
+          const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          let last;
+          for (let attempt = 0; attempt < 15; attempt += 1) {
+            const nonce = `${Date.now()}-${crypto.randomUUID()}`;
+            const [health, status, allowed, denied] = await Promise.all([
+              fetch(`${target}/v1/health?recovery_probe=${nonce}`, { headers: { Origin: 'https://rawa-j.com' } }),
+              fetch(`${target}/v1/system-status?recovery_probe=${nonce}`),
+              fetch(`${target}/v1/health?allowed_probe=${nonce}`, { headers: { Origin: 'https://www.rawa-j.com' } }),
+              fetch(`${target}/v1/health?denied_probe=${nonce}`, { headers: { Origin: 'https://sa.rawa-j.com' } }),
+            ]);
+            const healthBody = await health.json();
+            const statusBody = await status.json();
+            last = { healthBody, statusBody };
+            const pass =
+              health.status === 200 &&
+              healthBody?.data?.service === 'rawaj-classifieds-hub' &&
+              healthBody?.data?.releaseSha === expectedRelease &&
+              healthBody?.data?.environment === 'production' &&
+              healthBody?.data?.database === 'ready' &&
+              status.status === 200 &&
+              statusBody?.data?.maintenanceMode === false &&
+              statusBody?.data?.emergencyReadOnly === false &&
+              allowed.headers.get('access-control-allow-origin') === 'https://www.rawa-j.com' &&
+              denied.headers.get('access-control-allow-origin') === null;
+            if (pass) {
+              console.log('Syria Worker release and maintenance recovery verified.');
+              process.exit(0);
+            }
+            await pause(3000);
+          }
+          console.error(JSON.stringify(last));
+          process.exit(1);
+          NODE
+
+      - name: Record recovery result
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_RUN_ID: ${{ needs.dispatch-worker-release.outputs.deployment_run_id }}
+        run: |
+          cat > /tmp/syria-recovery-result.md <<EOF
+          ## Syria Worker release and maintenance recovery — PASS
+
+          - Worker release: \`$TARGET_MAIN_SHA\`
+          - Worker: \`$TARGET_WORKER\`
+          - D1: \`$TARGET_D1_NAME\` / \`$TARGET_D1_ID\`
+          - R2 binding retained: \`$TARGET_R2_NAME\`
+          - Protected deployment run: \`$DEPLOYMENT_RUN_ID\`
+          - \`maintenance_mode\`: disabled
+          - \`emergency_read_only\`: verified disabled
+          - Syria origins: verified allowed
+          - Saudi origin: verified rejected
+          - Other system controls: verified unchanged
+
+          No migration, DNS, route, custom domain, R2 object, Firebase, Saudi, or Gateway operation occurred.
+          EOF
+          gh pr comment 683 --repo "$GITHUB_REPOSITORY" --body-file /tmp/syria-recovery-result.md

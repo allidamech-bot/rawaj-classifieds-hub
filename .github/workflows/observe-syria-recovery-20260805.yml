@@ -1,0 +1,29 @@
+name: Observe Syria Recovery 2026-08-05
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/observe-syria-recovery-20260805.yml"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: List recovery runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "syria-worker-release-and-maintenance-recovery-20260805.yml" \
+            --limit 10 \
+            --json databaseId,status,conclusion,event,headBranch,headSha,displayTitle,url \
+            --jq '.'
