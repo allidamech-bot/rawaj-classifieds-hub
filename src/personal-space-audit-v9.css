@@ -350,6 +350,14 @@
 }
 
 /* B3.1 canonical profile/account editor — this section owns /profile only. */
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] {
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-hub-v3::before {
+  display: none !important;
+  content: none !important;
+}
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-hub-v3 {
   display: grid;
   gap: 0.85rem !important;
