@@ -135,3 +135,10 @@
   color: #fff !important;
   background: #075d52 !important;
 }
+
+/* WCAG AA final contrast for the recorded-offers explanatory paragraph.
+   Full-contrast ivory keeps this text readable against petrol on small screens. */
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage p.mt-3.max-w-xl,
+.rawaj-offers-premium-v3 .rawaj-offers-stage p.mt-3.max-w-xl {
+  color: #fffaf3 !important;
+}
