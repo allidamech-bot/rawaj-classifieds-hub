@@ -188,18 +188,17 @@ function MorePage() {
         />
 
         {auth.status === "signedOut" ? (
-          <Link
-            to="/login"
-            search={{ returnTo: "/more" }}
-            className="rawaj-more-v2__signin"
-          >
+          <Link to="/login" search={{ returnTo: "/more" }} className="rawaj-more-v2__signin">
             <User aria-hidden="true" className="h-5 w-5" />
             <span>{text("سجّل الدخول لإدارة حسابك", "Sign in to manage your account")}</span>
             <ChevronLeft aria-hidden="true" className="h-4 w-4 rtl:rotate-180" />
           </Link>
         ) : null}
 
-        <section className="rawaj-more-v2__command" aria-label={text("اختصارات الحساب", "Account shortcuts")}>
+        <section
+          className="rawaj-more-v2__command"
+          aria-label={text("اختصارات الحساب", "Account shortcuts")}
+        >
           <TrustSectionHeader
             eyebrow={text("الاختصارات", "Shortcuts")}
             title={text("مركز العمليات", "Command center")}
@@ -220,7 +219,10 @@ function MorePage() {
           </div>
         </section>
 
-        <nav className="rawaj-more-v2__secondary" aria-label={text("خدمات حسابك", "Your account services")}>
+        <nav
+          className="rawaj-more-v2__secondary"
+          aria-label={text("خدمات حسابك", "Your account services")}
+        >
           {secondaryShortcuts.map((row) => (
             <SecondaryShortcut key={row.titleEn} row={row} text={text} />
           ))}
