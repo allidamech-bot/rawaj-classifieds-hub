@@ -17,7 +17,10 @@ for (const { path, selector } of routes) {
         const response = await page.goto(path, { waitUntil: "domcontentloaded" });
         expect(response?.status() ?? 200).toBeLessThan(500);
         await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
-        await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
+        await expect(page.locator("html")).toHaveAttribute(
+          "dir",
+          language === "ar" ? "rtl" : "ltr",
+        );
         await expect(page.locator(selector)).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
 
