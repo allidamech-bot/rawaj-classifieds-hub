@@ -211,7 +211,7 @@ const ivoryBadgePairs = [
   ["destructive", "#942a36", "#ffe9e8"],
 ];
 
-test("shared badge variants use central status tokens, never embedded colors", () => {
+test("shared badge variants use central status tokens, never embedded colors", async () => {
   const badge = await readFile(new URL("../src/components/ui/badge.tsx", import.meta.url), "utf8");
   for (const [role] of ivoryBadgePairs) {
     for (const property of ["border", "surface", "ink"]) {
