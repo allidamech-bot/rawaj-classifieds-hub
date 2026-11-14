@@ -1,0 +1,54 @@
+name: B3 Account WebKit Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/account-command-premium.css"
+      - "src/account-shortcuts-compact-row.css"
+      - "src/auth-feedback-system-v12.css"
+      - "src/offers-signature.css"
+      - "src/personal-activity-system-v10.css"
+      - "src/personal-space-audit-v9.css"
+      - "src/routes/login.tsx"
+      - "src/routes/more.tsx"
+      - "e2e/b3-account-*.spec.ts"
+      - ".github/workflows/b3-account-webkit.yml"
+
+concurrency:
+  group: b3-account-webkit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-webkit:
+    name: iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Verify B3.1 account visual and functional routes in WebKit
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b3-account-hub.spec.ts e2e/b3-account-family.spec.ts --project=mobile-webkit
+      - name: Upload WebKit screenshots and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b3-account-webkit-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
