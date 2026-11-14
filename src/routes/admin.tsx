@@ -376,6 +376,7 @@ function AdminLayout() {
                   <Link
                     key={tab.to}
                     to={tab.to as "/admin"}
+                    activeOptions={{ exact: tab.exact }}
                     aria-current={active ? "page" : undefined}
                     onClick={() => {
                       if (openedTypes === "all") markNotificationsOpened();

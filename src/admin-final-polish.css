@@ -1,6 +1,6 @@
 /* Final admin overrides; the complete admin system remains in styles.css. */
 .rawaj-admin-v3 {
-  --admin-v3-coral: var(--rawaj-accent-orange, #e9663c);
+  --admin-v3-coral: var(--rawaj-identity-teal);
   gap: 1rem;
   max-width: 96rem;
   margin-inline: auto;
@@ -22,13 +22,13 @@
   min-height: 2.75rem;
 }
 .rawaj-admin-v3 nav a[aria-current="page"] {
-  background: linear-gradient(135deg, #eef8f2, #fff1e8) !important;
-  color: #18352f !important;
-  border-color: #dbe8e1 !important;
+  background: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  border-color: var(--rawaj-identity-petrol) !important;
 }
 .rawaj-admin-v3 :is(input, textarea, select):focus-visible,
 .rawaj-admin-v3 :is(button, a):focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--admin-v3-coral) 18%, transparent);
+  outline: 3px solid var(--admin-v3-coral);
   outline-offset: 2px;
 }
 .rawaj-admin-v3 :is(table, [role="table"]) {
