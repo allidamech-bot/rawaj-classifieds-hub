@@ -320,6 +320,46 @@
   line-height: 1.75 !important;
 }
 
+/* Password reset: accessible header and invalid-link recovery states.
+   No change to Firebase verification, redirects or password handling. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] :is(.rawaj-app-header, .rawaj-shell-header--context) {
+  color: #fffaf3 !important;
+  background: #083d38 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] :is(
+  .rawaj-brand-lockup__name,
+  .rawaj-brand-lockup__latin,
+  .rawaj-shell-header__title h1,
+  .rawaj-shell-header__title p
+) {
+  color: #fffaf3 !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="error"] {
+  color: #902b2e !important;
+  background: #fff0ed !important;
+  border-color: rgba(144, 43, 46, 0.26) !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="error"] :is(p, span) {
+  color: #902b2e !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="success"] {
+  color: #064e39 !important;
+  background: #e9f8ef !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card button.rawaj-button-primary {
+  min-height: 2.75rem !important;
+  border: 1px solid #075d52 !important;
+  border-radius: 0.75rem !important;
+  color: #fff !important;
+  background: #075d52 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/reset-password"] .rawaj-auth-recovery-card button.rawaj-button-primary:focus-visible {
+  outline: 3px solid #075d52 !important;
+  outline-offset: 2px;
+}
+
 /* Auth callback, no change to navigation or timing */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/auth/callback"] .rawaj-auth-callback-v4 {
   display: grid;
