@@ -35,7 +35,7 @@
   grid-template-columns: minmax(0, 1fr) 5.5rem;
   margin-bottom: 0.75rem;
   border-radius: var(--radius-hero, 1.25rem);
-  background: linear-gradient(135deg, #092d29, #123f38 72%, #1b554a);
+  background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal));
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 
@@ -218,8 +218,8 @@
 }
 
 .rawaj-listing-studio-v4 .input:focus-visible {
-  border-color: var(--rawaj-accent-orange, #e9663c);
-  outline: 3px solid color-mix(in srgb, var(--rawaj-accent-orange, #e9663c) 16%, transparent);
+  border-color: var(--rawaj-identity-teal);
+  outline: 3px solid color-mix(in srgb, var(--rawaj-identity-teal) 22%, transparent);
   outline-offset: 1px;
 }
 

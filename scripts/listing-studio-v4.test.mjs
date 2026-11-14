@@ -206,3 +206,14 @@ test("B2.3 studio palette opt-in is route-scoped at the shared shell", async () 
   assert.match(css, /data-resolved-pathname\^="\/profile\/listings\/"/);
   assert.match(css, /--rawaj-shell-canvas: var\(--rawaj-identity-ivory\)/);
 });
+
+
+test("B2.3 retires direct dark gradients in studio visual owners", async () => {
+  const audit = await readFile(new URL("../src/listing-studio-audit-v9.css", import.meta.url), "utf8");
+  for (const retired of ["#303138", "#303137", "#2a2b31", "#292a30", "#343039", "#2c2b31", "#2d333d"]) {
+    assert.ok(!audit.includes(retired), `Retired dark surface survives: ${retired}`);
+  }
+  assert.ok(audit.includes("background: var(--rawaj-card-background) !important"));
+  assert.ok(audit.includes("background: var(--rawaj-surface-selected) !important"));
+  assert.ok(css.includes("background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal))"));
+});
