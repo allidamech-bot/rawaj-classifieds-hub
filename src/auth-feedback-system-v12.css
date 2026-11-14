@@ -508,3 +508,31 @@
     animation-duration: 1.5s !important;
   }
 }
+
+/* B3.1 invalid recovery URL: robust selectors use the route's own component
+   classes, independent of legacy shell mode and stylesheet load order. */
+.rawaj-app-header.rawaj-shell-header[data-resolved-pathname="/reset-password"],
+.rawaj-shell-header.rawaj-shell-header--context[data-resolved-pathname="/reset-password"] {
+  color: #fffaf3 !important;
+  background: #083d38 !important;
+  background-image: none !important;
+}
+.rawaj-app-header[data-resolved-pathname="/reset-password"] .rawaj-shell-header__title :is(h1, p) {
+  color: #fffaf3 !important;
+}
+.rawaj-auth-recovery-v4 .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="error"] {
+  border: 1px solid #d8a9a4 !important;
+  color: #902b2e !important;
+  background: #fff0ed !important;
+  background-image: none !important;
+}
+.rawaj-auth-recovery-v4 .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="error"] :is(p, span) {
+  color: #902b2e !important;
+}
+.rawaj-auth-recovery-v4 .rawaj-auth-recovery-card .rawaj-auth-recovery-state[data-tone="error"] button.rawaj-button-primary {
+  border: 1px solid #075d52 !important;
+  color: #fff !important;
+  background: #075d52 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
