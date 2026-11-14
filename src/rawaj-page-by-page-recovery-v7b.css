@@ -5,7 +5,6 @@
 
 /* Shared route-scoped legacy white-surface removal. */
 .rawaj-app-shell:is(
-    [data-resolved-pathname="/listings"],
     [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
@@ -33,7 +32,6 @@
 }
 
 .rawaj-app-shell:is(
-    [data-resolved-pathname="/listings"],
     [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
@@ -62,84 +60,6 @@
 }
 
 /* 4. Listings and filters */
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-results-v1 {
-  color: #f2efeb !important;
-  background: transparent !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.05), transparent 35%),
-    linear-gradient(150deg, #303136, #292a30) !important;
-  color: #f2efeb !important;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.17) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar :is(h1, strong, .text-primary, .text-foreground) {
-  color: #f2efeb !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar :is(p, span, .text-muted-foreground) {
-  color: #aaa39f !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__sort,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__saved,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__views,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-quick-filter-rail button {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: rgba(24, 25, 30, 0.62) !important;
-  color: #c9c3bf !important;
-  box-shadow: none !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__search input,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__sort select {
-  color: #f2efeb !important;
-  background: transparent !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__filter,
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-quick-filter-rail button[data-active="true"],
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-search-toolbar__views button[aria-pressed="true"] {
-  border-color: rgba(255, 255, 255, 0.13) !important;
-  background: linear-gradient(135deg, #c24431, #9b286f 58%, #6040a8) !important;
-  color: #ffffff !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] :is(.rawaj-adaptive-card, .rawaj-listing-card, .rawaj-results-grid > article, .rawaj-results-grid > a) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(155deg, #303137, #282a2f) !important;
-  color: #f2efeb !important;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] :is(.rawaj-adaptive-card, .rawaj-listing-card) :is(h2, h3, strong, .text-foreground) {
-  color: #f2efeb !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] :is(.rawaj-adaptive-card, .rawaj-listing-card) :is(p, small, time, .text-muted-foreground) {
-  color: #aaa39f !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: #2b2c31 !important;
-  color: #f2efeb !important;
-  box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.38) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet :is(h2, h3, strong, label) {
-  color: #f2efeb !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/listings"] .rawaj-filter-sheet :is(input, textarea, select) {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #f2efeb !important;
-}
 
 /* 5. Listing detail */
 .rawaj-app-shell[data-resolved-pathname^="/listings/"] .rawaj-detail-v2 {
@@ -439,7 +359,6 @@
 
 /* Shared functional controls */
 .rawaj-app-shell:is(
-    [data-resolved-pathname="/listings"],
     [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
@@ -463,7 +382,6 @@
     [data-resolved-pathname^="/admin"]
   ) :is(button, a).bg-primary,
 .rawaj-app-shell:is(
-    [data-resolved-pathname="/listings"],
     [data-resolved-pathname^="/listings/"],
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],

@@ -952,7 +952,10 @@ function ListingsPage() {
   return (
     <>
       <PageHeader title={title} titleIsPageHeading={false} />
-      <main className="rawaj-search-results-v1 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5">
+      <main
+        data-design-palette="ivory"
+        className="rawaj-search-results-v1 container-wide rawaj-content-stack mobile-page-bottom pb-8 pt-3 sm:pt-5"
+      >
         <SearchResultsToolbar
           title={title}
           pathLabel={

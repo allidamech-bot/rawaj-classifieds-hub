@@ -781,11 +781,11 @@ main :is(table, [role="table"]) { max-width: 100%; }
 
 @media (pointer: coarse) {
   main :is(button, a, summary, input, select):not(.rawaj-chip):not([class*="text-link"]) {
-    min-height: 2.75rem;
+    min-height: 44px;
   }
 
   main :is(button, a)[aria-label]:not(:has(span:not(.sr-only))) {
-    min-width: 2.75rem;
+    min-width: 44px;
   }
 }
 

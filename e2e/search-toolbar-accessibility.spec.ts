@@ -27,5 +27,8 @@ test("search toolbar keeps a usable clear target and native input direction at 3
   await expect(input).toHaveValue("");
   await expect(input).toBeFocused();
   await expect(toolbar.locator("#rawaj-search-shortcut")).toBeVisible();
+  await expect(input).toHaveAttribute("aria-describedby", "rawaj-search-shortcut");
+  await input.fill("سيارة");
+  await expect(input).toHaveCSS("direction", "rtl");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

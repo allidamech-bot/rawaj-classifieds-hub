@@ -43,10 +43,10 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   margin-top: clamp(1rem, 3vw, 2.25rem) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   background:
-    radial-gradient(circle at 12% 100%, rgba(220, 62, 182, 0.08), transparent 24rem),
+    var(--rawaj-shell-chrome-surface, radial-gradient(circle at 12% 100%, rgba(220, 62, 182, 0.08), transparent 24rem),
     radial-gradient(circle at 88% 100%, rgba(63, 145, 255, 0.07), transparent 24rem),
-    #202126 !important;
-  color: var(--rawaj-text-primary) !important;
+    #202126) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-text-primary)) !important;
 }
 
 .rawaj-site-footer__mobile {
@@ -56,7 +56,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-site-footer__mobile-brand p,
 .rawaj-site-footer__mobile-copy {
-  color: var(--rawaj-text-secondary) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-text-secondary)) !important;
   font-size: 0.78rem !important;
   line-height: 1.65 !important;
 }
@@ -69,7 +69,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   min-height: 2.65rem !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: rgba(255, 255, 255, 0.035) !important;
-  color: var(--rawaj-text-secondary) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-text-secondary)) !important;
   padding-inline: 0.9rem !important;
   font-size: 0.78rem !important;
 }
@@ -78,7 +78,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 .rawaj-site-footer__mobile nav a:focus-visible {
   border-color: var(--rawaj-border-active) !important;
   background: var(--rawaj-surface-active) !important;
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-text-primary)) !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -102,6 +102,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: #1d1e23 !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18) !important;
+  max-height: var(--rawaj-ad-placement-max-height, none);
 }
 
 .rawaj-ad-placement__backdrop {
@@ -162,7 +163,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 .rawaj-app-shell[data-resolved-pathname="/categories"]
   :is(.rawaj-app-header, .rawaj-shell-header, .rawaj-site-footer, .rawaj-bottom-nav-shell) {
   background-color: var(--rawaj-identity-petrol) !important;
-  color: var(--rawaj-identity-ivory) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-identity-ivory)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2 nav a.rawaj-chip {
@@ -173,7 +174,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 /* Secondary footer copy meets AA contrast on the petrol navigation/footer. */
 .rawaj-app-shell[data-resolved-pathname="/categories"]
   .rawaj-site-footer :is(.rawaj-site-footer__mobile-copy, .rawaj-site-footer__mobile-brand p) {
-  color: var(--rawaj-identity-ivory) !important;
+  color: var(--rawaj-shell-chrome-ink, var(--rawaj-identity-ivory)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
@@ -586,6 +587,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
   .rawaj-ad-placement__frame {
     aspect-ratio: 16 / 7;
+    max-height: var(--rawaj-ad-placement-max-height, none);
   }
 
   .rawaj-app-shell[data-resolved-pathname="/profile/listings"] .rawaj-storefront-identity[data-mode="owner"] .rawaj-storefront-identity__metrics {

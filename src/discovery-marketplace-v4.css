@@ -403,12 +403,12 @@
 html,
 body,
 .rawaj-app-shell {
-  background-color: #0b0e14 !important;
+  background-color: var(--rawaj-shell-canvas, #0b0e14) !important;
 }
 
 /* Neutral cards and signed-out / system states should share one dark canvas. */
 .rawaj-app-shell :is(
-    .rawaj-surface,
+    .rawaj-surface:where(:not(.rawaj-search-results-v1 *)),
     .rawaj-foundation-card,
     .rawaj-communication-signed-out,
     .rawaj-auth-layout,
