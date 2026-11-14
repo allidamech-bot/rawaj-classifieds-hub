@@ -31,9 +31,7 @@ body {
 .rawaj-app-shell__page,
 .rawaj-app-shell__content,
 .rawaj-page-surface,
-/* B2.2 detail supplies its own ivory canvas and color; keep the legacy
- * transparent main reset on every other route. */
-.rawaj-app-shell main:not(.rawaj-detail-v2) {
+.rawaj-app-shell main {
   color: inherit;
   background-color: transparent;
 }

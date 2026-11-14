@@ -410,9 +410,11 @@
   }
 }
 
-/* V4 composition: dark media theatre, warm reading canvas, fewer repeated panels. */
-.rawaj-detail-v2 {
-  --detail-canvas: var(--rawaj-page-background);
+/* V4 composition: dark media theatre, warm reading canvas, fewer repeated panels.
+ * The main owns its background above the legacy generic main reset.
+ */
+main.rawaj-detail-v2[data-design-palette="ivory"] {
+  --detail-canvas: var(--rawaj-identity-ivory);
   --detail-surface: var(--rawaj-card-background);
   --detail-surface-muted: var(--rawaj-muted-surface);
   --detail-line: var(--rawaj-border);
@@ -811,6 +813,14 @@
 }
 
 @media (max-width: 639px) {
+  .rawaj-detail-price > strong {
+    max-width: 100%;
+    font-size: clamp(1.05rem, 5.8vw, 1.4rem);
+    line-height: 1.35;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
   .rawaj-detail-specs > div {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.2rem;

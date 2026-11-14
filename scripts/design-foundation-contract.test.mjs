@@ -369,9 +369,11 @@ test("B2.2 route no longer inherits old V6 dark listing layers", async () => {
 });
 
 
-test("B2.2 detail canvas is not erased by the legacy app-shell main reset", () => {
-  assert.match(globalDarkSystem, /\.rawaj-app-shell main:not\(\.rawaj-detail-v2\)/);
-  assert.doesNotMatch(globalDarkSystem, /\.rawaj-app-shell main\s*\{/);
+test("B2.2 detail owns an opaque canvas without changing the generic main reset", async () => {
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.match(globalDarkSystem, /\.rawaj-app-shell main\s*\{/);
+  assert.doesNotMatch(globalDarkSystem, /main:not\(\.rawaj-detail-v2\)/);
+  assert.ok(detail.includes('main.rawaj-detail-v2[data-design-palette="ivory"]'));
   assert.match(foundation, /\.rawaj-detail-v2\[data-design-palette="ivory"\]/);
 });
 
@@ -382,4 +384,17 @@ test("B2.2 discovery V4 retains no competing detail or orange-price rules", asyn
   assert.ok(!discovery.includes(".rawaj-detail-"));
   assert.match(detail, /@media \(max-width: 639px\)/);
   assert.match(detail, /grid-template-columns: minmax\(0, 1fr\)/);
+});
+
+test("B2.2 retires dark V17 detail panels and V19 specificity patches", async () => {
+  const files = [
+    "rawaj-chromatic-premium-system-v17.css",
+    "rawaj-chromatic-premium-system-v19-specificity.css",
+  ];
+  for (const file of files) {
+    const source = await readFile(new URL(`../src/${file}`, import.meta.url), "utf8");
+    assert.ok(!source.includes(".rawaj-detail-"), `${file} still contains old detail selectors`);
+  }
+  const cards = await readFile(new URL("../src/rawaj-chromatic-premium-system-v18-categories-listings.css", import.meta.url), "utf8");
+  assert.ok(cards.includes(':not([data-resolved-pathname^="/listings/"])'));
 });

@@ -166,8 +166,14 @@ coverage of seller identity, contact behavior or safe-area reservations.
 The last V6 detail-specific dark selectors were also retired at source; shared and storefront V6 selectors remain protected.
 
 
-The old app-shell transparent-main reset is now explicitly scoped to non-detail
-mains in `rawaj-global-dark-system.css`. This lets the approved detail canvas
-paint an opaque ivory background rather than revealing the inherited dark shell.
+The generic app-shell main reset retains its original specificity so the
+accepted B2.1 search styles remain untouched. The detail main now explicitly
+owns its opaque ivory canvas through the existing route stylesheet.
 
 B2.2 audit also retired the leftover discovery V4 listing detail typography, price accent and narrow-spec declarations, keeping responsive specification wrapping in the owned detail stylesheet. No global overrides were introduced.
+
+
+The remaining V17 forced-dark detail surfaces and V19 important-price mobile
+rules have been retired from their original owners. V18 historical adaptive-card
+skins now exclude the detail route, and responsive listing-specific rules reside
+in listing-detail-v3.css. Protected routes keep their legacy fallbacks.

@@ -191,7 +191,6 @@ body {
 .rawaj-account-section,
 .rawaj-listing-card,
 .rawaj-result-card,
-.rawaj-detail-section,
 .rawaj-admin-card,
 .rawaj-admin-panel,
 .rawaj-support-card,
@@ -431,14 +430,7 @@ body {
   background: #0d1117 !important;
 }
 
-/* Listing detail. */
-.rawaj-app-shell[data-resolved-pathname^="/listings/"] :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
-  border-color: rgba(216,174,95,.17) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216,174,95,.055), transparent 38%),
-    linear-gradient(150deg, #191d26, #12161d) !important;
-  box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
-}
+/* Listing detail migrated to route-owned light styling in B2.2. */
 
 /* Add/edit listing studio. */
 .rawaj-app-shell[data-resolved-pathname="/add-listing"] :is(.rawaj-studio-panel, .rawaj-listing-studio-card, [data-ui="card"]),
