@@ -272,3 +272,11 @@ test("B2.3 V8 no longer forces charcoal cards over the studio's ivory panels", a
   assert.ok(!css.includes(".rawaj-studio-quality"));
   assert.ok(css.includes("Admin: readable semantic surfaces"));
 });
+
+
+test("B2.3 ivory legacy exclusion preserves accepted My Store selector specificity", async () => {
+  const legacy = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7b.css", import.meta.url), "utf8");
+  assert.ok(legacy.includes('.rawaj-app-shell:where(:not([data-design-palette="ivory"]))'));
+  assert.ok(!legacy.includes('.rawaj-app-shell:not([data-design-palette="ivory"])'));
+  assert.ok(legacy.includes('[data-resolved-pathname="/profile/listings"]'));
+});
