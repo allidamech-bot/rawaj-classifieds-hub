@@ -28,7 +28,7 @@
   position: relative;
   top: auto;
   border: 0 !important;
-  background: transparent !important;
+  background: #073836 url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat !important;
   box-shadow: none !important;
   backdrop-filter: none;
   color: #fff7ea;
@@ -154,7 +154,11 @@
 .rawaj-signature-hero__tagline {
   position: relative;
   margin: -0.65rem 0 0.5rem;
+  width: fit-content;
+  padding-inline: 0.25rem;
+  border-radius: 0.25rem;
   color: #fff5e4;
+  background-color: #073836;
   font-size: 0.7rem;
   font-weight: 700;
 }
@@ -273,6 +277,9 @@
   padding: 0.58rem var(--home-gutter) 0.58rem 0.65rem;
   padding-inline: var(--home-gutter) 0.65rem;
   color: #fff5e6;
+  background-color: #073836;
+  border-start-end-radius: 38% 100%;
+  border-end-start-radius: 2.4rem;
 }
 
 .rawaj-signature-section-header__title::before {
@@ -462,7 +469,7 @@
   gap: 0.23rem;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ffedc7, #edba77);
+  background: linear-gradient(135deg, #ffedc7, #edba77), #ffe0a7;
   color: #3e2919;
   font-size: 0.69rem;
   font-weight: 800;
@@ -558,6 +565,7 @@
 
 .rawaj-signature-latest .rawaj-signature-section-header__title {
   color: #222925;
+  background-color: transparent;
 }
 
 .rawaj-signature-latest .rawaj-signature-section-header__title::before {
@@ -584,7 +592,7 @@
   min-width: 0;
   border: 1px solid #fff8ef;
   border-radius: 0.85rem;
-  background: linear-gradient(140deg, #fff8ef, #f3e7d7);
+  background: linear-gradient(140deg, #fff8ef, #f3e7d7), #f6ecdf;
   box-shadow: 0 4px 9px #5b402332;
 }
 
@@ -747,6 +755,20 @@
 .rawaj-signature-lead-card a:focus-visible {
   outline: 2px solid #fff1cb;
   outline-offset: -4px;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-site-footer {
+  background-color: #172823 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"]
+  .rawaj-site-footer
+  :is(
+    .rawaj-site-footer__mobile-copy,
+    .rawaj-site-footer__mobile p,
+    .rawaj-site-footer__mobile nav a
+  ) {
+  color: #fff2dc !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-mobile-dock {

@@ -175,12 +175,9 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
   return (
     <section className="rawaj-signature-hero" aria-labelledby="rawaj-signature-home-title">
       <div className="rawaj-signature-hero__content">
-        <h1 id="rawaj-signature-home-title" className="sr-only">
-          {text("كل ما تبحث عنه… في رواج", "Everything you are looking for… on RAWAJ")}
-        </h1>
-        <p className="rawaj-signature-hero__tagline">
+        <h1 id="rawaj-signature-home-title" className="rawaj-signature-hero__tagline">
           {text("سوق الإعلانات المبوبة في سوريا", "Syria’s classifieds marketplace")}
-        </p>
+        </h1>
 
         <div className="rawaj-signature-hero__utility">
           <Link
