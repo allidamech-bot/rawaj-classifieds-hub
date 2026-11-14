@@ -521,3 +521,18 @@
   :is(h3, p, label:has(input[type="file"])) {
   color: var(--market-ink) !important;
 }
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/support"]
+  main.rawaj-support-v2
+  .rawaj-support-v2__layout
+  :is(.rawaj-support-panel, .rawaj-support-requests, .rawaj-support-topics, .rawaj-support-faq)
+  :is(h2, h4, p, summary, .rawaj-trust-section-header span, a.inline-flex) {
+  color: var(--market-ink) !important;
+}
+
+.rawaj-app-shell.rawaj-marketplace-ivory[data-resolved-pathname="/support"]
+  main.rawaj-support-v2
+  a.bg-primary.text-primary-foreground {
+  background: var(--market-teal) !important;
+  color: #fffaf0 !important;
+}
