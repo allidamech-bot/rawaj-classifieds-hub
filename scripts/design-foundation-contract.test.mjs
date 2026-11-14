@@ -348,3 +348,16 @@ test("B2.2 detail uses canonical palette and no legacy forced theme", async () =
   }
   assert.ok(browserChrome.includes("listings"));
 });
+
+test("B2.2 removes inherited V11/V18/V22 dark listing skins at their original sources", async () => {
+  const load = (p) => readFile(new URL(`../src/${p}`, import.meta.url), "utf8");
+  for (const file of ["public-journey-audit-v11.css", "rawaj-chromatic-premium-system-v18-legacy-surfaces.css", "rawaj-live-repair-sweep-v22.css"]) {
+    const css = await load(file);
+    assert.ok(!css.includes('data-resolved-pathname^="/listings/"'), `${file} still overrides listing detail`);
+  }
+  const dark = await load("discovery-marketplace-v4.css");
+  assert.ok(!dark.includes("--detail-canvas: #0b0e14 !important"));
+  const detail = await load("listing-detail-v3.css");
+  assert.ok(detail.includes("aspect-ratio: 4 / 3"));
+  assert.ok(detail.includes("safe-area-inset-bottom"));
+});

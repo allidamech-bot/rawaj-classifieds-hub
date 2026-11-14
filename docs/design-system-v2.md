@@ -154,3 +154,11 @@ and other route ownership remain intact. Retain the existing SEO/SSR, gallery,
 contact, conversation, comparison, favorites, reports and offer workflows.
 This is not accepted until rendered RTL/LTR tests and final-SHA CI are green,
 the PR is verified mergeable and is merged into main.
+
+
+B2.2 dependency audit continuation: retired the remaining inherited dark detail selectors
+at their actual V11, V18, V22 and discovery V4 owners; the V18 shared seller
+selector arm was retained. The V22 media aspect ratio and safe-area dock contract
+are now route-owned, including two-column mobile action reflow. Existing source
+contract tests were aligned to the approved replacement, without removing their
+coverage of seller identity, contact behavior or safe-area reservations.

@@ -516,61 +516,7 @@ body,
   color: #b8b3b1 !important;
 }
 
-/* Listing detail had its own legacy warm-light palette. Rebind only presentation
- * tokens to the approved dark system and keep all media/actions/data untouched. */
-.rawaj-detail-v2 {
-  --detail-canvas: #0b0e14 !important;
-  --detail-surface: #141821 !important;
-  --detail-surface-muted: #171b24 !important;
-  --detail-line: rgba(216, 174, 95, 0.12) !important;
-  --detail-line-strong: rgba(216, 174, 95, 0.2) !important;
-  --detail-ink: #f7f3ed !important;
-  --detail-ink-soft: #b8b3b1 !important;
-  --detail-ink-muted: #9299a2 !important;
-  --detail-green: #e8ca8d !important;
-  --detail-gold: #d8ae5f !important;
-  background: #0b0e14 !important;
-  color: #f7f3ed !important;
-}
-
-.rawaj-detail-v2 :is(.rawaj-detail-summary, .rawaj-detail-section, .rawaj-detail-seller, .rawaj-detail-safety) {
-  border: 1px solid rgba(216, 174, 95, 0.11) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-price {
-  border: 1px solid rgba(216, 174, 95, 0.16) !important;
-  background: linear-gradient(145deg, rgba(216, 174, 95, 0.09), rgba(20, 24, 33, 0.95)) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-seller__actions :is(a, button) {
-  border-color: rgba(216, 174, 95, 0.12) !important;
-  color: #ddd7d1 !important;
-  background: #171b24 !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
-  border-color: transparent !important;
-  color: #fff !important;
-  background: linear-gradient(135deg, #c24431, #9b286f) !important;
-}
-
-.rawaj-detail-v2 :is(.rawaj-demo-listing-notice, .rawaj-detail-reserved) {
-  border: 1px solid rgba(216, 174, 95, 0.2) !important;
-  color: #ead7ad !important;
-  background: linear-gradient(145deg, #241d13, #17171a) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-similar__item,
-.rawaj-detail-v2 .rawaj-detail-v2__message {
-  border-color: rgba(216, 174, 95, 0.11) !important;
-  color: #f7f3ed !important;
-  background: #141821 !important;
-}
+/* Listing detail palette is now canonical and route-owned (B2.2). */
 
 /* First-session feedback teaser must never cover content on mobile. It remains
  * fully accessible through its aria-label, but renders as the same compact

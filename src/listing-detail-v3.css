@@ -871,3 +871,27 @@
 @media (prefers-reduced-motion: reduce) {
   .rawaj-contact-dock__inner :is(a, button) { transition: none; }
 }
+
+/* Scoped mobile media geometry and contact dock: preserve full text and safe area. */
+@media (max-width: 767px) {
+  .rawaj-detail-media__stage {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+  .rawaj-detail-v2__container {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 430px) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] {
+    --sticky-action-height: 8.25rem;
+  }
+  .rawaj-contact-dock__inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 3.45rem;
+  }
+  .rawaj-contact-dock__inner > :only-child { grid-column: 1 / -1; }
+  .rawaj-contact-dock__secondary { width: auto; }
+  .rawaj-contact-dock__inner :is(a, button) { min-height: 2.75rem; }
+}

@@ -35,17 +35,6 @@
   color: var(--rawaj-link) !important;
 }
 
-.rawaj-detail-v2 .rawaj-detail-summary__date,
-.rawaj-detail-v2 .rawaj-detail-safety :is(p, li),
-.rawaj-detail-v2 .rawaj-detail-seller :is(p, small, span) {
-  color: var(--rawaj-text-secondary) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-seller__actions > a:first-child {
-  color: var(--rawaj-action-primary-foreground) !important;
-  background: var(--rawaj-action-primary) !important;
-}
-
 .rawaj-storefront-v2 .rawaj-storefront-identity__actions > a:first-child {
   color: var(--rawaj-action-primary-foreground) !important;
   background: var(--rawaj-action-primary) !important;
