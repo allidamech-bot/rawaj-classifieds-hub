@@ -222,12 +222,7 @@ test("activity messages notifications favorites and saved searches share one cle
 });
 
 test("public listing seller offers and trust journeys use compact readable route ownership", () => {
-  assert.match(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
-  assert.match(
-    publicCorrections,
-    /\.rawaj-detail-media__stage[\s\S]*min-height: clamp\(18rem, 52vw, 32rem\)/,
-  );
-  assert.match(publicCorrections, /\.rawaj-contact-dock__primary/);
+  assert.doesNotMatch(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
   assert.match(publicCorrections, /data-resolved-pathname\^="\/seller\/"/);
   assert.match(
     publicCorrections,

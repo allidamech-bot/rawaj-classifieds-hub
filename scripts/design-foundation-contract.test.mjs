@@ -332,3 +332,176 @@ test("signed-out My Store uses approved identity instead of retired guest worksp
   assert.ok(myStoreStyles.includes("background: var(--card) !important;"));
   assert.ok(myStoreStyles.includes("color: var(--foreground) !important;"));
 });
+
+test("B2.2 detail uses canonical palette and no legacy forced theme", async () => {
+  const load = (p) => readFile(new URL(`../src/${p}`, import.meta.url), "utf8");
+  const [detail, route, dock, v7b, v14, v15, v16, actions] = await Promise.all([
+    load("listing-detail-v3.css"),
+    load("routes/listings.$id.tsx"),
+    load("features/listing-detail/ListingContactDock.tsx"),
+    load("rawaj-page-by-page-recovery-v7b.css"),
+    load("rawaj-marketplace-premium-v14.css"),
+    load("rawaj-marketplace-final-polish-v15.css"),
+    load("rawaj-marketplace-unified-v16.css"),
+    load("rawaj-marketplace-unified-v16-actions.css"),
+  ]);
+  assert.ok(foundation.includes('.rawaj-detail-v2[data-design-palette="ivory"]'));
+  assert.match(route, /data-design-palette="ivory"/);
+  assert.match(dock, /data-design-palette="ivory"/);
+  for (const token of ["ivory", "teal", "petrol", "champagne"]) {
+    assert.ok(detail.includes(`var(--rawaj-identity-${token})`));
+  }
+  for (const old of [v7b, v14, v15, v16, actions]) {
+    assert.ok(!old.includes(".rawaj-detail-") && !old.includes(".rawaj-contact-dock"));
+  }
+  assert.ok(browserChrome.includes("listings"));
+});
+
+test("B2.2 removes inherited V11/V18/V22 dark listing skins at their original sources", async () => {
+  const load = (p) => readFile(new URL(`../src/${p}`, import.meta.url), "utf8");
+  for (const file of ["public-journey-audit-v11.css", "rawaj-chromatic-premium-system-v18-legacy-surfaces.css", "rawaj-live-repair-sweep-v22.css"]) {
+    const css = await load(file);
+    assert.ok(!css.includes('data-resolved-pathname^="/listings/"'), `${file} still overrides listing detail`);
+  }
+  const dark = await load("discovery-marketplace-v4.css");
+  assert.ok(!dark.includes("--detail-canvas: #0b0e14 !important"));
+  const detail = await load("listing-detail-v3.css");
+  assert.ok(detail.includes("aspect-ratio: 4 / 3"));
+  assert.ok(detail.includes("safe-area-inset-bottom"));
+});
+
+test("B2.2 route no longer inherits old V6 dark listing layers", async () => {
+  const v6 = await readFile(new URL("../src/rawaj-final-site-system-v6.css", import.meta.url), "utf8");
+  assert.ok(!v6.includes(".rawaj-detail-"));
+  assert.ok(v6.includes(".rawaj-storefront-identity"));
+});
+
+
+test("B2.2 detail owns an opaque canvas without changing the generic main reset", async () => {
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.match(globalDarkSystem, /\.rawaj-app-shell main\s*\{/);
+  assert.doesNotMatch(globalDarkSystem, /main:not\(\.rawaj-detail-v2\)/);
+  assert.ok(detail.includes('main.rawaj-detail-v2[data-design-palette="ivory"]'));
+  assert.match(foundation, /\.rawaj-detail-v2\[data-design-palette="ivory"\]/);
+});
+
+
+test("B2.2 discovery V4 retains no competing detail or orange-price rules", async () => {
+  const discovery = await readFile(new URL("../src/discovery-marketplace-v4.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.ok(!discovery.includes(".rawaj-detail-"));
+  assert.match(detail, /@media \(max-width: 639px\)/);
+  assert.match(detail, /grid-template-columns: minmax\(0, 1fr\)/);
+});
+
+test("B2.2 retires dark V17 detail panels and V19 specificity patches", async () => {
+  const files = [
+    "rawaj-chromatic-premium-system-v17.css",
+    "rawaj-chromatic-premium-system-v19-specificity.css",
+  ];
+  for (const file of files) {
+    const source = await readFile(new URL(`../src/${file}`, import.meta.url), "utf8");
+    assert.ok(!source.includes(".rawaj-detail-"), `${file} still contains old detail selectors`);
+  }
+  const cards = await readFile(new URL("../src/rawaj-chromatic-premium-system-v18-categories-listings.css", import.meta.url), "utf8");
+  assert.ok(cards.includes(':not([data-resolved-pathname^="/listings/"])'));
+});
+
+
+test("B2.2 similar cards reject old V3 dark discovery skin only inside detail", async () => {
+  const discovery = await readFile(new URL("../src/rawaj-discovery-system-v3.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.doesNotMatch(discovery, /:where\(:not\(\.rawaj-search-results-v1 \*\)\)/);
+  assert.match(discovery, /:where\(:not\(\.rawaj-search-results-v1 \*\):not\(\.rawaj-detail-v2 \*\)\)/);
+  for (const token of ["--color-background", "--color-foreground", "--color-muted-foreground", "--rawaj-orange"]) {
+    assert.ok(detail.includes(token + ":"), `Missing detail card color alias: ${token}`);
+  }
+});
+
+
+test("B2.2 detail is excluded from V7B old page and action force-overrides", async () => {
+  const recovery = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7b.css", import.meta.url), "utf8");
+  const detail = await readFile(new URL("../src/listing-detail-v2.css", import.meta.url), "utf8");
+  assert.ok(!recovery.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.ok(recovery.includes('[data-resolved-pathname="/add-listing"]'));
+  assert.ok(detail.includes(".rawaj-detail-seller__stats > div"));
+  assert.ok(detail.includes("background: var(--rawaj-muted-surface)"));
+});
+
+
+test("B2.2 removes competing V17 shell and breadcrumb colors at their source", async () => {
+  const load = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
+  const [detail, shell, crumbs, fallback] = await Promise.all([
+    load("listing-detail-v3.css"),
+    load("rawaj-chromatic-premium-system-v17.css"),
+    load("rawaj-chromatic-premium-system-v17-corrections.css"),
+    load("rawaj-final-site-system-v6.css"),
+  ]);
+  assert.doesNotMatch(shell, /\.rawaj-app-shell\[data-resolved-pathname\^="\/listings\/"\]/);
+  assert.ok(!fallback.includes('[data-resolved-pathname^="/listings/"]'));
+  assert.ok(crumbs.includes(':not([data-resolved-pathname^="/listings/"]) nav[aria-label="breadcrumb"]'));
+  assert.ok(detail.includes("--detail-ink: var(--rawaj-identity-ink)"));
+  assert.ok(detail.includes(".rawaj-detail-similar__item .rawaj-adaptive-card__price"));
+});
+
+
+test("B2.2 retires generic V17 dark control styles for the detail route", async () => {
+  const css = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
+  assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]))'));
+  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(css.includes('[data-resolved-pathname="/add-listing"]'));
+});
+
+
+test("B2.2 loading and unavailable route states use the same approved palette", async () => {
+  const route = await readFile(new URL("../src/routes/listings.$id.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.equal((route.match(/className="rawaj-detail-v2 rawaj-detail-recovery/g) || []).length, 2);
+  assert.ok(route.includes('className="rawaj-detail-recovery__card"'));
+  assert.ok(styles.includes(".rawaj-detail-recovery__description"));
+  assert.ok(styles.includes("main.rawaj-detail-recovery[data-design-palette=\"ivory\"]"));
+});
+
+
+test("B2.2 excludes listing detail from V7 forced-dark inherited headings", async () => {
+  const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
+  assert.doesNotMatch(v7, /:where\(:not\(\[data-resolved-pathname="\/listings"\]\)\)/);
+  assert.ok(v7.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  assert.ok(v7.includes('.rawaj-app-shell:not([data-resolved-pathname="/"]):not([data-resolved-pathname="/categories"])'));
+});
+
+
+test("B2.2 viewed-before banner outside main owns readable ivory semantics", async () => {
+  const banner = await readFile(new URL("../src/features/listing-detail/ViewedBeforeBanner.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.match(banner, /className="rawaj-detail-viewed-before /);
+  assert.match(banner, /data-design-palette="ivory"/);
+  assert.ok(foundation.includes('.rawaj-detail-viewed-before[data-design-palette="ivory"]'));
+  assert.ok(styles.includes(".rawaj-detail-viewed-before__timestamp"));
+  assert.ok(styles.includes("color: var(--rawaj-text-secondary)"));
+});
+
+
+test("B2.2 price change outside main uses accessible semantic identity roles", async () => {
+  const banner = await readFile(new URL("../src/features/listing-detail/PriceChangeBanner.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/listing-detail-v3.css", import.meta.url), "utf8");
+  assert.ok(banner.includes('className="rawaj-detail-price-change '));
+  assert.ok(banner.includes('data-design-palette="ivory"'));
+  assert.ok(banner.includes('data-tone={decreased ? "down" : "up"}'));
+  assert.ok(foundation.includes('.rawaj-detail-price-change[data-design-palette="ivory"]'));
+  assert.ok(styles.includes(".rawaj-detail-price-change__previous"));
+});
+
+
+test("B2.2 placeholder uses approved gold/petrol only for listing detail", async () => {
+  const load = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
+  const [placeholder, gallery, viewer] = await Promise.all([
+    load("components/PlaceholderArt.tsx"),
+    load("features/listing-detail/ListingMediaExperience.tsx"),
+    load("features/listing-detail/ListingMediaViewer.tsx"),
+  ]);
+  assert.ok(placeholder.includes("identity = false"), "Other routes keep the existing placeholder design");
+  assert.ok(placeholder.includes('identity ? "#ffe3b0"'));
+  assert.equal((gallery.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
+  assert.equal((viewer.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
+});

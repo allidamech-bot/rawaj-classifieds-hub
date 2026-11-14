@@ -1,3 +1,17 @@
+/* B2.2 route-owned shell colors: sibling routes keep their original chrome. */
+.rawaj-app-shell[data-resolved-pathname^="/listings/"] {
+  --rawaj-shell-ambient-opacity: 0;
+  --rawaj-shell-canvas: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  --rawaj-shell-chrome-shadow: 0 4px 16px rgba(7, 56, 54, 0.12);
+  --rawaj-shell-primary-surface: var(--rawaj-identity-teal);
+  --rawaj-shell-primary-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-active-surface: var(--rawaj-identity-champagne);
+  --rawaj-shell-active-ink: var(--rawaj-identity-petrol);
+}
+
 /* RAWAJ Listing Detail V3 — premium correction pass.
  * Presentation only. Media behavior, SSR data, seller actions, favorites,
  * reporting, contact flows, and related listings remain unchanged.
@@ -396,18 +410,32 @@
   }
 }
 
-/* V4 composition: dark media theatre, warm reading canvas, fewer repeated panels. */
-.rawaj-detail-v2 {
-  --detail-canvas: #f2efe7;
-  --detail-surface: #fffdf8;
-  --detail-surface-muted: #edf2ed;
-  --detail-line: #d5ded7;
-  --detail-line-strong: #bdccc3;
-  --detail-ink: #183630;
-  --detail-ink-soft: #50675f;
-  --detail-ink-muted: #6c7d76;
-  --detail-green: #0f433b;
-  --detail-gold: #b48742;
+/* V4 composition: dark media theatre, warm reading canvas, fewer repeated panels.
+ * The main owns its background above the legacy generic main reset.
+ */
+main.rawaj-detail-v2[data-design-palette="ivory"] {
+  /* Rebind legacy card aliases locally; similar/recent cards share the same
+   * approved semantic palette as the listing without altering other routes. */
+  --color-background: var(--rawaj-page-background);
+  --color-foreground: var(--rawaj-identity-ink);
+  --color-card: var(--rawaj-card-background);
+  --color-muted: var(--rawaj-muted-surface);
+  --color-muted-surface: var(--rawaj-muted-surface);
+  --color-muted-foreground: #435650;
+  --color-primary: var(--rawaj-identity-petrol);
+  --color-border: var(--rawaj-border);
+  --rawaj-orange: var(--rawaj-identity-teal);
+  --rawaj-primary-deep: var(--rawaj-identity-teal);
+  --detail-canvas: var(--rawaj-identity-ivory);
+  --detail-surface: var(--rawaj-card-background);
+  --detail-surface-muted: var(--rawaj-muted-surface);
+  --detail-line: var(--rawaj-border);
+  --detail-line-strong: var(--rawaj-border-strong);
+  --detail-ink: var(--rawaj-identity-ink);
+  --detail-ink-soft: #435650;
+  --detail-ink-muted: #53645e;
+  --detail-green: var(--rawaj-identity-teal);
+  --detail-gold: var(--rawaj-identity-gold);
   background: var(--detail-canvas);
   color: var(--detail-ink);
 }
@@ -419,12 +447,12 @@
 .rawaj-detail-media__stage {
   min-height: clamp(19rem, 52vw, 32rem);
   border: 0;
-  background: #061b18;
+  background: var(--rawaj-identity-petrol);
   box-shadow: 0 14px 38px rgba(0, 22, 19, 0.24);
 }
 
 .rawaj-detail-media__image {
-  background: #061b18;
+  background: var(--rawaj-identity-petrol);
 }
 
 .rawaj-detail-v2__container {
@@ -483,7 +511,7 @@
   background: #fff3dc;
 }
 
-.rawaj-detail-summary h1 {
+main.rawaj-detail-v2 .rawaj-detail-summary h1 {
   max-width: 28ch;
   margin-top: 0.8rem;
   color: var(--detail-ink);
@@ -563,7 +591,7 @@
   margin-top: 1.1rem;
   border: 0;
   border-radius: 0.85rem;
-  background: #edf4ef;
+  background: var(--rawaj-surface-selected);
   padding: 0.9rem 1rem;
 }
 
@@ -586,7 +614,7 @@
   margin-bottom: 0.85rem;
 }
 
-.rawaj-detail-section__heading h2 {
+main.rawaj-detail-v2 .rawaj-detail-section__heading h2 {
   color: var(--detail-ink);
   font-size: clamp(1.05rem, 2.4vw, 1.25rem);
 }
@@ -675,12 +703,12 @@
 .rawaj-detail-seller__actions :is(a, button) {
   border-color: var(--detail-line);
   color: var(--detail-ink-soft);
-  background: #f7f9f7;
+  background: var(--rawaj-elevated-background);
 }
 
 .rawaj-detail-seller__actions > a:first-child {
   border-color: transparent;
-  color: #fff;
+  color: var(--rawaj-action-primary-foreground);
   background: var(--detail-green);
 }
 
@@ -703,7 +731,7 @@
 
 .rawaj-detail-safety {
   color: var(--detail-ink);
-  background: #f7f3e9;
+  background: var(--rawaj-subtle-background);
 }
 
 .rawaj-detail-safety :is(h2, strong) {
@@ -714,10 +742,15 @@
   color: var(--detail-ink-soft) !important;
 }
 
-.rawaj-detail-safety__actions button {
+main.rawaj-detail-v2 .rawaj-detail-safety__actions button {
   border-color: #d9c79e;
   color: #684b1f;
   background: #fffaf0;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-safety__actions button[data-tone="report"] {
+  color: var(--rawaj-danger);
+  background: var(--rawaj-card-background);
 }
 
 .rawaj-demo-listing-notice,
@@ -739,15 +772,27 @@
   color: var(--detail-ink);
 }
 
-.rawaj-detail-similar__heading :is(h2, p, a) {
-  color: inherit;
+main.rawaj-detail-v2 .rawaj-detail-similar__heading :is(h2, p, a) {
+  color: var(--rawaj-identity-ink);
 }
 
-.rawaj-detail-similar__item {
+main.rawaj-detail-v2 .rawaj-detail-similar__heading p {
+  color: #435650;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item {
   border-color: var(--detail-line);
   color: var(--detail-ink);
   background: var(--detail-surface);
   box-shadow: none;
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item .rawaj-adaptive-card__title {
+  color: var(--rawaj-identity-ink);
+}
+
+main.rawaj-detail-v2 .rawaj-detail-similar__item .rawaj-adaptive-card__price {
+  color: var(--rawaj-identity-teal);
 }
 
 .rawaj-detail-v2__message {
@@ -794,4 +839,198 @@
   .rawaj-detail-specs > div:last-child {
     border-bottom: 0;
   }
+}
+
+@media (max-width: 639px) {
+  .rawaj-detail-price > strong {
+    max-width: 100%;
+    font-size: clamp(1.05rem, 5.8vw, 1.4rem);
+    line-height: 1.35;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .rawaj-detail-specs > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+
+  .rawaj-detail-specs dd {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+}
+
+/* Existing contact flow, now using the approved route palette. */
+.rawaj-contact-dock {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.rawaj-contact-dock__inner {
+  width: min(100%, 46rem);
+  min-width: 0;
+  gap: 0.4rem;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 1.1rem;
+  background: var(--rawaj-card-background);
+  box-shadow: var(--rawaj-shadow-overlay);
+}
+.rawaj-contact-dock__inner :is(a, button) {
+  min-width: 0;
+  min-height: 2.75rem;
+  border-radius: 0.8rem;
+  box-shadow: none;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.rawaj-contact-dock__primary {
+  flex: 1.2 1 0;
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+}
+.rawaj-contact-dock__offer {
+  flex: 1 1 0;
+  background: var(--rawaj-identity-champagne);
+  color: var(--rawaj-identity-petrol);
+}
+.rawaj-contact-dock__secondary {
+  flex: 0 0 auto;
+  background: var(--rawaj-muted-surface);
+  color: var(--rawaj-identity-petrol);
+}
+.rawaj-contact-dock__secondary[data-tone="whatsapp"] {
+  background: #14583c;
+  color: #ffffff;
+}
+.rawaj-contact-dock__inner :is(a, button):focus-visible,
+.rawaj-detail-v2 :is(a, button):focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 2px;
+}
+.rawaj-detail-v2 {
+  padding-bottom: max(5.5rem, var(--rawaj-shell-bottom-reserve));
+}
+@media (max-width: 430px) {
+  .rawaj-contact-dock { padding-inline: 0.5rem; }
+  .rawaj-contact-dock__inner { gap: 0.3rem; padding: 0.4rem; }
+  .rawaj-contact-dock__inner :is(a, button) { min-height: 2.75rem; padding-inline: 0.4rem; font-size: 0.73rem; }
+  .rawaj-contact-dock__secondary { width: 2.75rem; padding-inline: 0; }
+  .rawaj-detail-price > strong { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rawaj-contact-dock__inner :is(a, button) { transition: none; }
+}
+
+/* Scoped mobile media geometry and contact dock: preserve full text and safe area. */
+@media (max-width: 767px) {
+  .rawaj-detail-media__stage {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+  .rawaj-detail-v2__container {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 430px) {
+  .rawaj-app-shell[data-resolved-pathname^="/listings/"] {
+    --sticky-action-height: 8.25rem;
+  }
+  .rawaj-contact-dock__inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 3.45rem;
+  }
+  .rawaj-contact-dock__inner > :only-child { grid-column: 1 / -1; }
+  .rawaj-contact-dock__secondary { width: auto; }
+  .rawaj-contact-dock__inner :is(a, button) { min-height: 2.75rem; }
+}
+
+/* Listing detail loading/unavailable recovery — same surface, no legacy dark card. */
+main.rawaj-detail-recovery[data-design-palette="ivory"] {
+  display: grid;
+  min-height: min(72dvh, 44rem);
+  align-content: start;
+  padding-block: clamp(1.5rem, 5vw, 3.5rem);
+}
+
+.rawaj-detail-recovery__card {
+  width: min(100%, 38rem);
+  margin-inline: auto;
+  border: 1px solid var(--rawaj-border);
+  border-radius: 1.2rem;
+  background: var(--rawaj-card-background);
+  box-shadow: var(--rawaj-shadow-soft);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  text-align: center;
+}
+
+.rawaj-detail-recovery__title {
+  color: var(--rawaj-identity-ink);
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.rawaj-detail-recovery__description {
+  margin-top: 0.55rem;
+  color: #435650;
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+main.rawaj-detail-recovery .rawaj-detail-recovery__action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.1rem;
+  border-radius: 0.85rem;
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+  padding: 0.65rem 1.15rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+main.rawaj-detail-recovery .rawaj-detail-recovery__action:focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 3px;
+}
+
+/* Listing history is outside the main detail canvas and must own its palette. */
+.rawaj-detail-viewed-before[data-design-palette="ivory"] {
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-identity-ink);
+  box-shadow: var(--shadow-soft);
+}
+.rawaj-detail-viewed-before__icon {
+  background: var(--rawaj-muted-surface);
+  color: var(--rawaj-identity-teal);
+}
+.rawaj-detail-viewed-before__title {
+  color: var(--rawaj-identity-ink);
+}
+.rawaj-detail-viewed-before__timestamp {
+  color: var(--rawaj-text-secondary);
+}
+
+/* Price change also sits before the gallery, outside the detail main. */
+.rawaj-detail-price-change[data-design-palette="ivory"] {
+  border-color: var(--rawaj-border);
+  background: var(--rawaj-card-background);
+  color: var(--rawaj-identity-ink);
+  box-shadow: var(--shadow-soft);
+}
+.rawaj-detail-price-change__title { color: var(--rawaj-identity-ink); }
+.rawaj-detail-price-change__previous { color: var(--rawaj-text-secondary); }
+.rawaj-detail-price-change__icon[data-tone="down"] {
+  background: var(--rawaj-badge-success-surface);
+  color: var(--rawaj-badge-success-ink);
+}
+.rawaj-detail-price-change__icon[data-tone="up"] {
+  background: var(--rawaj-badge-warning-surface);
+  color: var(--rawaj-badge-warning-ink);
 }

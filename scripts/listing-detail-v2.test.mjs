@@ -60,8 +60,8 @@ test("listing detail V2 styles load after marketplace presentation styles", () =
 });
 
 test("listing detail starts with immersive media instead of a page header", () => {
-  assert.match(route, /<main className="rawaj-detail-v2">[\s\S]*?<ListingMediaExperience/);
-  const loadedReturn = route.indexOf('<main className="rawaj-detail-v2">');
+  assert.match(route, /<main className="rawaj-detail-v2" data-design-palette="ivory">[\s\S]*?<ListingMediaExperience/);
+  const loadedReturn = route.indexOf('<main className="rawaj-detail-v2" data-design-palette="ivory">');
   const mediaIndex = route.indexOf("<ListingMediaExperience", loadedReturn);
   const pageHeaderIndex = route.indexOf("<PageHeader", loadedReturn);
   assert.ok(loadedReturn >= 0 && mediaIndex > loadedReturn);

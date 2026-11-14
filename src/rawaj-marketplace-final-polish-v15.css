@@ -3,8 +3,7 @@
  * Scoped to existing markup; no business-logic changes.
  */
 
-.rawaj-app-shell[data-resolved-pathname="/profile/listings"],
-.rawaj-detail-v2 {
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] {
   --r15-page: #181b1c;
   --r15-page-2: #1d2021;
   --r15-card: #222627;
@@ -629,79 +628,7 @@
   border-color: var(--r15-line) !important;
 }
 
-/* =========================
-   Listing detail — same DNA
-   ========================= */
-
-.rawaj-detail-v2 {
-  color: var(--r15-text) !important;
-  background:
-    radial-gradient(circle at 88% 4%, rgba(214, 173, 96, 0.055), transparent 28rem),
-    var(--r15-page) !important;
-}
-
-.rawaj-detail-v2 .rawaj-detail-media__stage {
-  border: 1px solid var(--r15-line) !important;
-  border-radius: 1.4rem !important;
-  background: #0e1112 !important;
-  box-shadow: var(--r15-shadow) !important;
-}
-
-.rawaj-detail-v2__content {
-  overflow: hidden !important;
-  border: 1px solid rgba(21, 31, 29, 0.08) !important;
-  border-radius: 1.45rem !important;
-  color: var(--r15-ink) !important;
-  background: var(--r15-ivory) !important;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.13) !important;
-}
-
-.rawaj-detail-summary {
-  gap: 0.72rem !important;
-  padding: 1.25rem !important;
-}
-
-.rawaj-detail-summary h1 {
-  color: #18221f !important;
-  font-weight: 900 !important;
-  line-height: 1.45 !important;
-}
-
-.rawaj-detail-price strong {
-  color: #9b742e !important;
-}
-
-.rawaj-detail-summary__badges > span {
-  border-color: rgba(18, 83, 69, 0.12) !important;
-  color: #145e50 !important;
-  background: rgba(18, 83, 69, 0.055) !important;
-}
-
-.rawaj-detail-section {
-  border-top-color: rgba(21, 31, 29, 0.085) !important;
-}
-
-.rawaj-detail-specs {
-  border-color: rgba(21, 31, 29, 0.09) !important;
-  border-radius: 0.95rem !important;
-  background: rgba(255, 255, 255, 0.32) !important;
-}
-
-.rawaj-detail-seller {
-  border: 1px solid rgba(214, 173, 96, 0.18) !important;
-  border-radius: 1.25rem !important;
-  color: var(--r15-text) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(214, 173, 96, 0.1), transparent 34%),
-    linear-gradient(145deg, #15463c, #102e29 72%) !important;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.17) !important;
-}
-
-.rawaj-contact-dock {
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
-  background: rgba(20, 23, 24, 0.92) !important;
-  backdrop-filter: blur(20px) saturate(1.1) !important;
-}
+/* B2.2 detail styling retired from this shared layer. */
 
 /* =========================
    Mobile composition
@@ -810,54 +737,6 @@
     min-height: 2.55rem !important;
     font-size: 0.61rem !important;
   }
-
-  .rawaj-detail-v2 .rawaj-detail-media,
-  .rawaj-detail-v2__container {
-    width: calc(100% - 1rem) !important;
-  }
-
-  .rawaj-detail-v2 .rawaj-detail-media__stage {
-    aspect-ratio: 4 / 3 !important;
-    border-radius: 1.08rem !important;
-  }
-
-  .rawaj-detail-v2__content {
-    border-radius: 1.12rem !important;
-  }
-
-  .rawaj-detail-summary {
-    grid-template-columns: 1fr !important;
-    padding: 0.95rem !important;
-  }
-
-  .rawaj-detail-summary > nav,
-  .rawaj-detail-summary__badges,
-  .rawaj-detail-summary h1,
-  .rawaj-detail-summary__essentials,
-  .rawaj-detail-price {
-    grid-column: 1 !important;
-  }
-
-  .rawaj-detail-price {
-    grid-row: auto !important;
-    min-width: 0 !important;
-    border-inline-start: 0 !important;
-    border-top: 1px solid rgba(21, 31, 29, 0.09) !important;
-    padding: 0.65rem 0 0 !important;
-    text-align: start !important;
-  }
-
-  .rawaj-detail-specs {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .rawaj-detail-v2__sidebar {
-    grid-template-columns: 1fr !important;
-  }
-
-  .rawaj-detail-seller {
-    border-radius: 1.08rem !important;
-  }
 }
 
 @media (max-width: 390px) {
@@ -871,8 +750,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] *,
-  .rawaj-detail-v2 * {
+  .rawaj-app-shell[data-resolved-pathname="/profile/listings"] *{
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
