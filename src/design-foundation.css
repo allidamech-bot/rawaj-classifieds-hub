@@ -130,6 +130,11 @@
   --rawaj-shadow-card: var(--shadow-soft);
   --rawaj-shadow-card-hover: var(--shadow-raised);
   --rawaj-shadow-overlay: var(--shadow-overlay);
+  /* Shared button elevation follows semantic actions, not legacy pink/purple constants. */
+  --rawaj-button-shadow-primary: 0 8px 20px color-mix(in srgb, var(--rawaj-action-primary) 20%, transparent);
+  --rawaj-button-shadow-primary-hover: 0 10px 24px color-mix(in srgb, var(--rawaj-action-primary) 24%, transparent);
+  --rawaj-button-shadow-accent: 0 10px 24px color-mix(in srgb, var(--rawaj-action-coral) 20%, transparent);
+  --rawaj-button-shadow-brand: 0 10px 24px color-mix(in srgb, var(--rawaj-action-brand) 22%, transparent);
   --shadow-card: var(--shadow-soft);
 
   --motion-fast: 150ms;
