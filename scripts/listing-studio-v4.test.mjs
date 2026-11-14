@@ -237,3 +237,17 @@ test("B2.3 source V5 uses canonical light panels and semantic text colors", asyn
     assert.ok(!system.includes(old), `V5 has retired color ${old}`);
   }
 });
+
+
+test("B2.3 excludes create/edit from V7 and V17 forced dark shells at source", async () => {
+  const v7 = await readFile(new URL("../src/rawaj-page-by-page-recovery-v7.css", import.meta.url), "utf8");
+  const v17 = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
+  for (const css of [v7, v17]) {
+    assert.ok(css.includes(':not([data-resolved-pathname="/add-listing"])'));
+    assert.ok(css.includes(':not([data-resolved-pathname^="/profile/listings/"])'));
+    assert.ok(css.includes(':not([data-resolved-pathname^="/listings/"])'));
+    assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]))'));
+  }
+  assert.ok(!v17.includes('.rawaj-app-shell[data-resolved-pathname="/add-listing"],\\n.rawaj-app-shell[data-resolved-pathname^="/profile/listings/"] {'));
+  assert.ok(v7.includes('[data-resolved-pathname="/more"]'));
+});
