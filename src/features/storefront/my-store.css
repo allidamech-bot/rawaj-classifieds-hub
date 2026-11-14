@@ -1788,3 +1788,42 @@
   }
 }
 
+/*
+ * The frozen August site has route-wide !important dark surfaces and typography.
+ * Reset those rules ONLY within the modern owner/public storefront. No other
+ * routes or shared theme files are modified.
+ */
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store :is(section, article, form),
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public :is(section, article, form) {
+  background-image: none !important;
+  background-color: #fcfaf7 !important;
+  border-color: #dedbd5 !important;
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store :is(.ms-owner-listing-card, .ms-owner-listing-card__content),
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public :is(.my-store-public-card, .my-store-public-about, .my-store-public-reviews, .my-store-public-safety) {
+  background-image: none !important;
+  background-color: #fffdfa !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"]
+  main.my-store :is(h1, h2, h3, strong, p, small, time),
+.rawaj-app-shell[data-resolved-pathname^="/seller/"]
+  main.my-store.my-store-public :is(h1, h2, h3, strong, p, small, time) {
+  color: #152322 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .my-store-identity h1,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store .my-store-identity h1 {
+  color: #101716 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-store-card-price,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store .ms-store-card-price {
+  color: #103f42 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/profile/listings"] main.my-store .ms-owner-listing-card__summary h3,
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store .ms-owner-listing-card__summary h3 {
+  color: #101716 !important;
+}

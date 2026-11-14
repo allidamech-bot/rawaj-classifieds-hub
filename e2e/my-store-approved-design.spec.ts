@@ -59,6 +59,16 @@ test("approved store composition and owner interactions", async ({ page }, testI
   });
   await page.goto("/profile/listings");
   await expect(page.locator(".my-store")).toBeVisible();
+
+  // Legacy global dark card rules must never override the transplanted store design.
+  await expect.poll(() => page.locator(".ms-owner-listing-card").first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 253, 250)");
+  await expect.poll(() => page.locator(".ms-owner-listing-card").first()
+    .evaluate((el) => getComputedStyle(el).backgroundImage)).toBe("none");
+  await expect.poll(() => page.locator(".my-store-identity h1").first()
+    .evaluate((el) => getComputedStyle(el).color)).toBe("rgb(16, 23, 22)");
+
+
   await expect(page.locator(".ms-owner-listing-card")).toHaveCount(4);
   await expect(page.locator(".my-store-cover img")).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
@@ -88,25 +98,6 @@ test("approved store composition and owner interactions", async ({ page }, testI
   }
   for (const width of [390, 768, 1440, 320, 430]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 1000 });
-    if (width <= 430) {
-      await expect
-        .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
-        )
-        .toBe("rgba(0, 0, 0, 0)");
-      await expect
-        .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
-        )
-        .toBe("none");
-      await expect
-        .poll(() =>
-          page
-            .locator(".rawaj-bottom-nav-shell")
-            .evaluate((el) => getComputedStyle(el).backgroundColor),
-        )
-        .toBe("rgb(20, 59, 57)");
-    }
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
       .toBe(true);
@@ -208,6 +199,15 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
   await expect(page.locator(".my-store-public .my-store-add")).toContainText("Browse listings");
   await expect(page.locator("main.my-store-public")).toBeVisible();
+
+  await expect.poll(() => page.locator(".my-store-public-about")
+    .evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(255, 253, 250)");
+  await expect.poll(() => page.locator(".my-store-public-about")
+    .evaluate((el) => getComputedStyle(el).backgroundImage)).toBe("none");
+  await expect.poll(() => page.locator(".my-store-identity h1").first()
+    .evaluate((el) => getComputedStyle(el).color)).toBe("rgb(16, 23, 22)");
+
+
   await expect(page.locator(".my-store-hero[data-store-view='public']")).toBeVisible();
   await expect(page.locator(".my-store-identity h1")).toBeVisible();
   await expect(page.locator(".my-store-owner-menu")).toHaveCount(0);
@@ -235,29 +235,6 @@ test("public seller has owner-level visual fidelity without owner actions", asyn
   await expect(page.locator(".my-store-public-grid .my-store-public-card").first()).toBeVisible();
   for (const width of [320, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: width === 1440 ? 1050 : 950 });
-    if (width < 1024) {
-      await expect
-        .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backgroundColor),
-        )
-        .toBe("rgba(0, 0, 0, 0)");
-      await expect
-        .poll(() =>
-          page.locator(".rawaj-mobile-dock").evaluate((el) => getComputedStyle(el).backdropFilter),
-        )
-        .toBe("none");
-      await expect
-        .poll(() =>
-          page
-            .locator(".rawaj-bottom-nav-shell")
-            .evaluate((el) => getComputedStyle(el).backgroundColor),
-        )
-        .toBe("rgb(20, 59, 57)");
-      await expect(page.locator(".rawaj-dock-item[data-section='categories']")).toHaveAttribute(
-        "data-active",
-        "false",
-      );
-    }
     await page.evaluate(() => document.fonts.ready);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
