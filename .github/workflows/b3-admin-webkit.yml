@@ -45,7 +45,7 @@ jobs:
         run: >-
           npx playwright test e2e/b3-administration.spec.ts
           --project=mobile-webkit
-          --grep 'B3\\.4.*(keeps the signed-out gate|owners can open every documented workspace|RTL administration navigation)'
+          --grep 'B3\.4.*(keeps the signed-out gate|owners can open every documented workspace|RTL administration navigation)'
       - name: Preserve WebKit screenshots and failure traces
         if: always()
         uses: actions/upload-artifact@v4
