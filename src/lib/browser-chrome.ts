@@ -10,7 +10,21 @@ export function resolveBrowserChrome(pathname: string) {
   if (
     pathname === "/categories" ||
     pathname === "/listings" ||
+    pathname === "/offers" ||
     /^\/listings\/[^/]+$/.test(pathname)
+  ) {
+    return { colorScheme: "light", themeColor: "#073836" } as const;
+  }
+  if (
+    [
+      "/support",
+      "/safety",
+      "/terms",
+      "/privacy",
+      "/prohibited",
+      "/verification",
+      "/promotion",
+    ].includes(pathname)
   ) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }

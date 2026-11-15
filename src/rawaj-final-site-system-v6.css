@@ -186,7 +186,6 @@
    -------------------------------------------------------------------------- */
 
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-v2,
-.rawaj-app-shell[data-resolved-pathname="/promotion"] main,
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] main {
   color: var(--v6-text);
 }
@@ -256,7 +255,6 @@
 
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card,
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-empty,
-.rawaj-app-shell[data-resolved-pathname="/promotion"] main :is(section, article, form),
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(section, article, form) {
   border: 1px solid var(--v6-line) !important;
   background:
@@ -274,7 +272,7 @@
 
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-section-header h2,
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card strong,
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(h1, h2, h3, strong) {
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(h1, h2, h3, strong) {
   color: var(--v6-text) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
 }
@@ -282,7 +280,7 @@
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-section-header span,
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card p,
 :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-empty p,
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(p, li, small, .text-muted-foreground) {
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(p, li, small, .text-muted-foreground) {
   color: var(--v6-muted) !important;
 }
 
@@ -292,7 +290,7 @@
   color: #8fc2ff !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select) {
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(input, textarea, select) {
   min-height: 3rem;
   border: 1px solid var(--v6-line) !important;
   border-radius: 0.82rem;
@@ -306,13 +304,13 @@
   min-height: 8rem;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select):focus-visible {
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(input, textarea, select):focus-visible {
   border-color: rgba(104, 173, 255, 0.46) !important;
   outline-color: rgba(104, 173, 255, 0.18) !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main button[type="submit"],
-.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(a, button).bg-primary {
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main button[type="submit"],
+.rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(a, button).bg-primary {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
   color: #fff !important;
@@ -351,13 +349,11 @@
 
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/promotion"],
     [data-resolved-pathname="/reset-password"],
     [data-resolved-pathname^="/admin"]
   ) main > .rawaj-surface,
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/promotion"],
     [data-resolved-pathname="/reset-password"],
     [data-resolved-pathname^="/admin"]
   ) main > section.rounded-2xl {

@@ -71,10 +71,7 @@ function PromotionPage() {
 
   const promotions = useMemo(() => orders.map((order) => order.promotion), [orders]);
   const eligibleListings = useMemo(
-    () =>
-      listings.filter((listing) =>
-        isListingEligibleForSearchBoost(listing, promotions, nowMs),
-      ),
+    () => listings.filter((listing) => isListingEligibleForSearchBoost(listing, promotions, nowMs)),
     [listings, nowMs, promotions],
   );
   const selectedPackage =
@@ -121,7 +118,9 @@ function PromotionPage() {
     } catch (error) {
       if (requestId !== listingsRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
-      setListingsError(unknownError(error, text("تعذر تحميل إعلاناتك.", "Could not load your listings.")));
+      setListingsError(
+        unknownError(error, text("تعذر تحميل إعلاناتك.", "Could not load your listings.")),
+      );
     } finally {
       if (requestId === listingsRequestIdRef.current) setListingsLoading(false);
     }
@@ -144,7 +143,9 @@ function PromotionPage() {
     } catch (error) {
       if (requestId !== ordersRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
-      setOrdersError(unknownError(error, text("تعذر تحميل طلبات Boost.", "Could not load Boost requests.")));
+      setOrdersError(
+        unknownError(error, text("تعذر تحميل طلبات Boost.", "Could not load Boost requests.")),
+      );
     } finally {
       if (requestId === ordersRequestIdRef.current) setOrdersLoading(false);
     }
@@ -236,7 +237,11 @@ function PromotionPage() {
       setReceiptFile(null);
       await Promise.all([loadOrders(), loadListings()]);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : text("تعذر إرسال الطلب.", "Could not submit the request."));
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : text("تعذر إرسال الطلب.", "Could not submit the request."),
+      );
     } finally {
       submitInFlightRef.current = false;
       setSaving(false);
@@ -256,7 +261,10 @@ function PromotionPage() {
               "Search Boost is available for approved listings you own.",
             )}
           >
-            <Link to="/login" className="rawaj-button-primary mt-4 inline-flex px-5 py-2.5">
+            <Link
+              to="/login"
+              className="rawaj-button-primary rawaj-promotion-action mt-4 inline-flex px-5 py-2.5"
+            >
               {text("تسجيل الدخول", "Log in")}
             </Link>
           </Panel>
@@ -268,10 +276,13 @@ function PromotionPage() {
   return (
     <>
       <PageHeader title="Boost" to="/more" backMode="history" />
-      <main className="container-wide mobile-page-bottom space-y-5 pt-4" dir={language === "ar" ? "rtl" : "ltr"}>
-        <section className="overflow-hidden rounded-2xl bg-[#241b0d] p-5 text-[#fff8e8] shadow-soft sm:p-6">
+      <main
+        className="container-wide mobile-page-bottom space-y-5 pt-4"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        <section className="rawaj-trust-intro rawaj-promotion-intro overflow-hidden">
           <div className="flex items-start gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-400 text-[#241b0d]">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl rawaj-trust-intro__icon">
               <Rocket className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -287,19 +298,32 @@ function PromotionPage() {
         </section>
 
         {listingsError && !hasLoadedListings ? (
-          <Panel title={text("تعذر تحميل إعلاناتك", "Could not load your listings")} body={listingsError.message}>
-            <RetryButton loading={listingsLoading} onClick={() => void loadListings()} text={text} />
+          <Panel
+            title={text("تعذر تحميل إعلاناتك", "Could not load your listings")}
+            body={listingsError.message}
+          >
+            <RetryButton
+              loading={listingsLoading}
+              onClick={() => void loadListings()}
+              text={text}
+            />
           </Panel>
         ) : ordersError && !hasLoadedOrders ? (
-          <Panel title={text("تعذر تحميل طلبات Boost", "Could not load Boost requests")} body={ordersError.message}>
+          <Panel
+            title={text("تعذر تحميل طلبات Boost", "Could not load Boost requests")}
+            body={ordersError.message}
+          >
             <RetryButton loading={ordersLoading} onClick={() => void loadOrders()} text={text} />
           </Panel>
         ) : listingsLoading || ordersLoading || !hasLoadedListings || !hasLoadedOrders ? (
           <Panel title={text("جارٍ تجهيز Search Boost", "Preparing Search Boost")} />
         ) : (
           <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-5">
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
-              <StepTitle number="1" title={text("اختر إعلاناً مؤهلاً", "Choose an eligible listing")} />
+            <section className="rawaj-promotion-card p-4 sm:p-5">
+              <StepTitle
+                number="1"
+                title={text("اختر إعلاناً مؤهلاً", "Choose an eligible listing")}
+              />
               {eligibleListings.length ? (
                 <select
                   value={selectedListingId}
@@ -308,7 +332,9 @@ function PromotionPage() {
                   aria-label={text("الإعلان", "Listing")}
                 >
                   {eligibleListings.map((listing) => (
-                    <option key={listing.id} value={listing.id}>{listing.title}</option>
+                    <option key={listing.id} value={listing.id}>
+                      {listing.title}
+                    </option>
                   ))}
                 </select>
               ) : (
@@ -321,7 +347,7 @@ function PromotionPage() {
               )}
             </section>
 
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+            <section className="rawaj-promotion-card p-4 sm:p-5">
               <StepTitle number="2" title={text("اختر مدة Boost", "Choose a Boost duration")} />
               <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {SEARCH_BOOST_PACKAGES.map((boostPackage) => {
@@ -334,7 +360,9 @@ function PromotionPage() {
                       aria-checked={selected}
                       onClick={() => setSelectedPackageCode(boostPackage.code)}
                       className={`relative min-w-0 rounded-2xl p-4 text-start transition hairline ${
-                        selected ? "bg-amber-500/12 ring-2 ring-amber-600" : "bg-muted-surface hover:bg-amber-500/7"
+                        selected
+                          ? "bg-amber-500/12 ring-2 ring-amber-600"
+                          : "bg-muted-surface hover:bg-amber-500/7"
                       }`}
                     >
                       {boostPackage.recommended ? (
@@ -342,19 +370,25 @@ function PromotionPage() {
                           {text("الأكثر اختياراً", "Popular")}
                         </span>
                       ) : null}
-                      <span className="block pe-14 text-sm font-black">{searchBoostName(boostPackage.code, text)}</span>
-                      <span className="mt-2 block text-xs text-muted-foreground">{searchBoostDurationLabel(boostPackage.code, text)}</span>
+                      <span className="block pe-14 text-sm font-black">
+                        {searchBoostName(boostPackage.code, text)}
+                      </span>
+                      <span className="mt-2 block text-xs text-muted-foreground">
+                        {searchBoostDurationLabel(boostPackage.code, text)}
+                      </span>
                       <span className="mt-3 block text-base font-black text-amber-800 dark:text-amber-300">
                         {formatSearchBoostPrice(boostPackage.priceMinor, language)}
                       </span>
-                      {selected ? <CheckCircle2 className="absolute bottom-3 end-3 h-4 w-4 text-amber-700" /> : null}
+                      {selected ? (
+                        <CheckCircle2 className="absolute bottom-3 end-3 h-4 w-4 text-amber-700" />
+                      ) : null}
                     </button>
                   );
                 })}
               </div>
             </section>
 
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+            <section className="rawaj-promotion-card p-4 sm:p-5">
               <StepTitle number="3" title={text("أثبت عملية الدفع", "Provide payment proof")} />
               <div className="mt-3 rounded-xl bg-amber-500/10 p-4 text-xs leading-6 text-foreground">
                 <div className="flex items-start gap-2">
@@ -414,34 +448,62 @@ function PromotionPage() {
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 <Rocket className="h-4 w-4" />
-                {saving ? text("جارٍ إرسال الطلب", "Submitting request") : text("إرسال طلب Search Boost", "Submit Search Boost")}
+                {saving
+                  ? text("جارٍ إرسال الطلب", "Submitting request")
+                  : text("إرسال طلب Search Boost", "Submit Search Boost")}
               </button>
-              {notice ? <p role="status" className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold leading-6">{notice}</p> : null}
+              {notice ? (
+                <p
+                  role="status"
+                  className="mt-3 rounded-xl bg-muted-surface p-3 text-xs font-semibold leading-6"
+                >
+                  {notice}
+                </p>
+              ) : null}
             </section>
           </form>
         )}
 
-        <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+        <section className="rawaj-promotion-card p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-black">{text("طلبات Search Boost", "Search Boost requests")}</h2>
-            <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">{orders.length}</span>
+            <h2 className="text-base font-black">
+              {text("طلبات Search Boost", "Search Boost requests")}
+            </h2>
+            <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">
+              {orders.length}
+            </span>
           </div>
           {orders.length ? (
             <div className="mt-3 grid gap-3">
               {orders.map((order) => {
                 const remaining = remainingBoostTime(order.promotion.endsAt, nowMs);
                 const active = order.promotion.status === "approved" && remaining > 0;
-                const expired = order.promotion.status === "expired" || (order.promotion.status === "approved" && order.promotion.endsAt && remaining === 0);
+                const expired =
+                  order.promotion.status === "expired" ||
+                  (order.promotion.status === "approved" &&
+                    order.promotion.endsAt &&
+                    remaining === 0);
                 return (
-                  <article key={order.promotion.id} className="rounded-xl bg-muted-surface p-4 hairline">
+                  <article
+                    key={order.promotion.id}
+                    className="rounded-xl bg-muted-surface p-4 hairline"
+                  >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-black">{order.promotion.listingTitle ?? order.promotion.listingId}</h3>
+                        <h3 className="truncate text-sm font-black">
+                          {order.promotion.listingTitle ?? order.promotion.listingId}
+                        </h3>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {searchBoostDurationLabel(order.package.code, text)} · {formatSearchBoostPrice(order.promotion.searchBoostPriceSyp ?? order.package.priceMinor, language)}
+                          {searchBoostDurationLabel(order.package.code, text)} ·{" "}
+                          {formatSearchBoostPrice(
+                            order.promotion.searchBoostPriceSyp ?? order.package.priceMinor,
+                            language,
+                          )}
                         </p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold ${active ? "bg-emerald-500/12 text-emerald-800" : expired ? "bg-muted text-muted-foreground" : order.promotion.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-amber-500/12 text-amber-800"}`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[10px] font-extrabold ${active ? "bg-emerald-500/12 text-emerald-800" : expired ? "bg-muted text-muted-foreground" : order.promotion.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-amber-500/12 text-amber-800"}`}
+                      >
                         {active
                           ? text("نشط", "Active")
                           : expired
@@ -456,20 +518,30 @@ function PromotionPage() {
                     {active ? (
                       <p className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-800">
                         <Clock3 className="h-4 w-4" />
-                        {text("الوقت المتبقي", "Time remaining")}: <span dir="ltr">{formatBoostCountdown(remaining)}</span>
+                        {text("الوقت المتبقي", "Time remaining")}:{" "}
+                        <span dir="ltr">{formatBoostCountdown(remaining)}</span>
                       </p>
                     ) : null}
-                    {order.promotion.adminNote ? <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{order.promotion.adminNote}</p> : null}
+                    {order.promotion.adminNote ? (
+                      <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+                        {order.promotion.adminNote}
+                      </p>
+                    ) : null}
                   </article>
                 );
               })}
             </div>
           ) : (
-            <p className="mt-3 text-sm text-muted-foreground">{text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}
+            </p>
           )}
         </section>
 
-        <Link to="/support" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold hairline">
+        <Link
+          to="/support"
+          className="rawaj-promotion-help inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"
+        >
           <LifeBuoy className="h-4 w-4" />
           {text("الدعم والمساعدة", "Support & help")}
         </Link>
@@ -481,37 +553,73 @@ function PromotionPage() {
 function StepTitle({ number, title }: { number: string; title: string }) {
   return (
     <h2 className="flex items-center gap-3 text-base font-black">
-      <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-600 text-xs text-white">{number}</span>
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-amber-600 text-xs text-white">
+        {number}
+      </span>
       {title}
     </h2>
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block min-w-0">
       <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
-        {label}{required ? " *" : ""}
+        {label}
+        {required ? " *" : ""}
       </span>
       {children}
     </label>
   );
 }
 
-function Panel({ icon, title, body, children }: { icon?: React.ReactNode; title: string; body?: string; children?: React.ReactNode }) {
+function Panel({
+  icon,
+  title,
+  body,
+  children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  body?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
+    <section className="rawaj-promotion-card p-8 text-center">
       {icon ? <span className="mx-auto grid place-items-center">{icon}</span> : null}
       <h2 className={`${icon ? "mt-3" : ""} text-base font-black`}>{title}</h2>
-      {body ? <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p> : null}
+      {body ? (
+        <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p>
+      ) : null}
       {children}
     </section>
   );
 }
 
-function RetryButton({ loading, onClick, text }: { loading: boolean; onClick: () => void; text: (ar: string, en: string) => string }) {
+function RetryButton({
+  loading,
+  onClick,
+  text,
+}: {
+  loading: boolean;
+  onClick: () => void;
+  text: (ar: string, en: string) => string;
+}) {
   return (
-    <button type="button" disabled={loading} onClick={onClick} className="rawaj-button-primary mt-4 px-4 py-2 disabled:opacity-60">
+    <button
+      type="button"
+      disabled={loading}
+      onClick={onClick}
+      className="rawaj-button-primary rawaj-promotion-action mt-4 px-4 py-2 disabled:opacity-60"
+    >
       {loading ? text("جارٍ التحميل", "Loading") : text("إعادة المحاولة", "Try again")}
     </button>
   );

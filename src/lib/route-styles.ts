@@ -170,6 +170,7 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/support",
       "/safety",
       "/verification",
+      "/promotion",
       "/privacy",
       "/terms",
       "/prohibited",

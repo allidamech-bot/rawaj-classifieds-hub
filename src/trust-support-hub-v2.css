@@ -770,6 +770,38 @@
     max-width: 64rem;
   }
 
+  & :is(.rawaj-policy-card, .rawaj-promotion-card, .rawaj-promotion-help) {
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--rawaj-identity-ink) 14%, transparent);
+    border-radius: var(--radius-card);
+    background: #fcf8f2 !important;
+    color: var(--rawaj-identity-ink) !important;
+  }
+
+  & :is(.rawaj-policy-card, .rawaj-promotion-card) :is(h2, h3, li) {
+    color: var(--rawaj-identity-ink) !important;
+  }
+
+  & :is(.rawaj-policy-card, .rawaj-promotion-card) p {
+    color: #475b55 !important;
+  }
+
+  & :is(.rawaj-promotion-intro, .rawaj-promotion-action) {
+    background: var(--rawaj-identity-petrol) !important;
+    color: var(--rawaj-identity-ivory) !important;
+  }
+
+  & .rawaj-promotion-intro :is(h1, p) {
+    color: var(--rawaj-identity-ivory) !important;
+  }
+
+  & .rawaj-promotion-card :is(input:not([type="checkbox"]), select, textarea) {
+    border-color: #bdcdc3 !important;
+    background: #fffdf9 !important;
+    color: var(--rawaj-identity-ink) !important;
+    color-scheme: light;
+  }
+
   & main :is(h1, h2, h3, p, li, label, small) {
     line-height: 1.65;
   }

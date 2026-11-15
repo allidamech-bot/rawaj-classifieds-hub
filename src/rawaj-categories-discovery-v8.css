@@ -2,6 +2,12 @@
  * Real promoted/latest listing continuation below the category directory.
  */
 
+.rawaj-app-shell[data-resolved-pathname="/categories"] {
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+}
+
 .rawaj-categories-discovery {
   display: grid;
   gap: clamp(1rem, 3vw, 1.6rem);

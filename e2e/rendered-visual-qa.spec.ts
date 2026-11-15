@@ -106,6 +106,21 @@ for (const viewport of viewports) {
           mobile: viewport.project === "mobile",
         });
 
+        if (route.name === "categories") {
+          await expect(page.locator(".rawaj-shell-header--context")).toHaveCSS(
+            "background-color",
+            "rgb(7, 56, 54)",
+          );
+        }
+        if (route.name === "offers") {
+          await expect(page.locator(".rawaj-offers-results")).toHaveCSS("background-image", "none");
+        }
+        if (["terms", "privacy", "prohibited", "promotion"].includes(route.name)) {
+          const card = page.locator(".rawaj-policy-card, .rawaj-promotion-card").first();
+          await expect(card).toHaveCSS("background-color", "rgb(252, 248, 242)");
+          await expect(card).toHaveCSS("background-image", "none");
+        }
+
         await page.screenshot({
           path: testInfo.outputPath(`${viewport.name}-${route.name}.png`),
           fullPage: true,

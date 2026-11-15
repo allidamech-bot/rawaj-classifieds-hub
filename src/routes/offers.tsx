@@ -55,10 +55,7 @@ function OffersPage() {
                   {text("تخفيضات موثقة", "Recorded price drops")}
                 </span>
                 <h1 className="mt-3 max-w-xl text-[1.7rem] font-extrabold leading-[1.38] text-[#fffaf0] sm:text-[2.3rem]">
-                  {text(
-                    "السعر نزل فعلاً — وهنا يظهر.",
-                    "The price really dropped — it shows here.",
-                  )}
+                  {text("السعر نزل فعلاً — وهنا يظهر.", "The price really dropped — it shows here.")}
                 </h1>
                 <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
@@ -93,7 +90,7 @@ function OffersPage() {
             </div>
           </section>
 
-          <section className="mt-7">
+          <section className="rawaj-offers-results mt-7">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span className="rawaj-signature-kicker">

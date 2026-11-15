@@ -139,7 +139,7 @@ function ProhibitedPage() {
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {items.map(([ar, en]) => (
-            <article key={en} className="flex items-start gap-3 rounded-xl bg-card p-3 hairline">
+            <article key={en} className="rawaj-policy-card flex items-start gap-3 p-3">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive">
                 <Ban className="h-4 w-4" />
               </span>
@@ -148,7 +148,7 @@ function ProhibitedPage() {
           ))}
         </div>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-policy-card p-4">
           <div className="flex items-start gap-2">
             <Flag className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>

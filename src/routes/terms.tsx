@@ -203,7 +203,7 @@ function TermsPage() {
 
         <div className="grid gap-3">
           {sections.map((section) => (
-            <section key={section.enTitle} className="rounded-2xl bg-card p-4 hairline">
+            <section key={section.enTitle} className="rawaj-policy-card p-4">
               <h2 className="text-sm font-extrabold">{text(section.arTitle, section.enTitle)}</h2>
               <p className="mt-2 text-xs leading-7 text-muted-foreground">
                 {text(section.arBody, section.enBody)}
@@ -212,7 +212,7 @@ function TermsPage() {
           ))}
         </div>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-policy-card p-4">
           <div className="flex items-center gap-2 text-xs font-bold">
             <ShieldCheck className="h-4 w-4 text-[var(--rawaj-success)]" />
             {text("سياسات مرتبطة", "Related policies")}
