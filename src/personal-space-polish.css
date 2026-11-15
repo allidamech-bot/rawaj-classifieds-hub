@@ -30,8 +30,7 @@
   pointer-events: none;
 }
 
-.rawaj-account-collection-v3 > section:first-child,
-.rawaj-account-activity-v3 > section:first-child {
+.rawaj-account-collection-v3 > section:first-child {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--account-v3-line) !important;

@@ -57,6 +57,23 @@ test.describe("authenticated rendered visual QA", () => {
         await expect(surface).toHaveCSS("background-image", "none");
       }
 
+      if (route.name === "notifications") {
+        await expect(page.locator("main > section").first()).toHaveCSS(
+          "background-color",
+          "rgba(0, 0, 0, 0)",
+        );
+      }
+      if (route.name === "chats") {
+        await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
+          "background-color",
+          "rgb(247, 243, 236)",
+        );
+        await expect(page.locator(".rawaj-app-shell__content")).toHaveCSS(
+          "background-color",
+          "rgba(0, 0, 0, 0)",
+        );
+      }
+
       await page.screenshot({
         path: testInfo.outputPath(`authenticated-${route.name}.png`),
         fullPage: true,
