@@ -19,6 +19,18 @@
   --rawaj-text-primary: var(--rawaj-shell-chrome-ink);
 }
 
+/* Header text and background must be explicitly opaque in Chromium and WebKit.
+ * Inheriting a light account token otherwise places ivory copy on ivory chrome. */
+.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
+  .rawaj-shell-header--workspace {
+  background-color: var(--rawaj-identity-petrol) !important;
+  background-image: none !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
+  .rawaj-shell-header--workspace .rawaj-shell-header__title :is(h1, p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 .rawaj-admin-v3 {
   color: var(--rawaj-identity-ink);
 }
@@ -310,6 +322,17 @@
   border-color: var(--rawaj-border) !important;
   background: var(--rawaj-card-background) !important;
   color: var(--rawaj-text-primary) !important;
+  box-shadow: none !important;
+}
+
+/* A guest gate also needs a solid surface before any authorized workspace
+ * controls or role-scoped styles are mounted. */
+.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
+  main.rawaj-admin-v3 section.rawaj-admin-gate {
+  border: 1px solid var(--rawaj-border) !important;
+  background-color: #fffaf3 !important;
+  background-image: none !important;
+  color: var(--rawaj-identity-ink) !important;
   box-shadow: none !important;
 }
 
