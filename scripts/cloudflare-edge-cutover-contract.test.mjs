@@ -60,7 +60,7 @@ test("changing only the frontend URL fails before deployment", async () => {
   const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.includes("rewrite")));
-  assert.ok(result.errors.some((error) => error.includes("workers_dev")));
+  assert.ok(result.errors.some((error) => error.includes("custom domain")));
 });
 
 test("protected endpoint without its explicit Cloudflare Worker route is rejected", async () => {
@@ -71,12 +71,47 @@ test("protected endpoint without its explicit Cloudflare Worker route is rejecte
   assert.ok(result.errors.some((error) => error.includes("custom domain")));
 });
 
-test("leaving workers.dev public after endpoint cutover is rejected", async () => {
+test("staged new domain can coexist with the old live endpoint during verification", async () => {
+  const sources = protectSources(await currentSources());
+  sources.environmentSource = sources.environmentSource.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN);
+  sources.vercelConfig.rewrites = sources.vercelConfig.rewrites.map((route) => ({
+    ...route,
+    destination: route.destination.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN),
+  }));
+  sources.workerConfig.workers_dev = true;
+  sources.productionWorkflowSource = sources.productionWorkflowSource.replace(
+    "RAWAJ_WORKER_BASE_URL: " + PROTECTED_API_ORIGIN,
+    "RAWAJ_WORKER_BASE_URL: " + LEGACY_API_ORIGIN,
+  );
+  const result = validateCloudflareEdgeCutover(sources);
+  assert.equal(result.mode, "staging");
+  assert.equal(result.valid, true, result.errors.join("; "));
+});
+
+test("temporary dual-route handoff is supported before the final workers.dev shutdown", async () => {
   const sources = protectSources(await currentSources());
   sources.workerConfig.workers_dev = true;
   const result = validateCloudflareEdgeCutover(sources);
+  assert.equal(result.mode, "cutover");
+  assert.equal(result.valid, true, result.errors.join("; "));
+});
+
+test("staging rejects an old render freeze that would undo custom domain support", async () => {
+  const sources = protectSources(await currentSources());
+  sources.workerConfig.workers_dev = true;
+  sources.environmentSource = sources.environmentSource.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN);
+  sources.vercelConfig.rewrites = sources.vercelConfig.rewrites.map((route) => ({
+    ...route,
+    destination: route.destination.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN),
+  }));
+  sources.productionWorkflowSource = sources.productionWorkflowSource.replace(
+    "RAWAJ_WORKER_BASE_URL: " + PROTECTED_API_ORIGIN,
+    "RAWAJ_WORKER_BASE_URL: " + LEGACY_API_ORIGIN,
+  );
+  sources.renderConfigSource += "\nRefusing production render: the Syria Worker must remain\n";
+  const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.valid, false);
-  assert.ok(result.errors.some((error) => error.includes("workers_dev=false")));
+  assert.ok(result.errors.some((error) => error.includes("render")));
 });
 
 test("protected endpoint with old smoke URL or freeze is rejected", async () => {
