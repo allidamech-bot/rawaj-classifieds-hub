@@ -82,17 +82,27 @@ for (const pathname of ["/", "/seller/90fc1187-0357-46da-9c19-d984536df794"] as 
 }
 
 /**
- * Admin is not marked with the generic ivory opt-in flag because it owns a
- * separate premium workspace identity. Exercise all 16 routes as an authorized
- * fixture owner, not just the guest gate. Scan rendered cards and controls for
- * the actual pre-redesign magenta/violet/charcoal colors after CSS cascading.
+ * Admin has a separate approved workspace design rather than the generic
+ * ivory route flag. Inspect every authorized fixture route, not just its
+ * signed-out gate, for retired V17–V20 chromatic and charcoal paints.
  */
 const adminWorkspaceRoutes = [
-  "/admin", "/admin/pending", "/admin/listings", "/admin/data-quality",
-  "/admin/reviews", "/admin/reports", "/admin/message-reports", "/admin/safety",
-  "/admin/verifications", "/admin/users", "/admin/promotions",
-  "/admin/ad-placements", "/admin/campaigns", "/admin/audit",
-  "/admin/notifications", "/admin/owner-controls",
+  "/admin",
+  "/admin/pending",
+  "/admin/listings",
+  "/admin/data-quality",
+  "/admin/reviews",
+  "/admin/reports",
+  "/admin/message-reports",
+  "/admin/safety",
+  "/admin/verifications",
+  "/admin/users",
+  "/admin/promotions",
+  "/admin/ad-placements",
+  "/admin/campaigns",
+  "/admin/audit",
+  "/admin/notifications",
+  "/admin/owner-controls",
 ] as const;
 
 for (const language of ["ar", "en"] as const) {
@@ -104,22 +114,33 @@ for (const language of ["ar", "en"] as const) {
       width: mobile ? 390 : 1440,
       height: mobile ? 844 : 900,
     });
-    await page.addInitScript((value) => {
-      localStorage.setItem("rawaj-language", value);
-      localStorage.setItem("rawaj:e2e:firebase-user", "{}");
-    }, language);
+    await page.addInitScript(
+      (value) => {
+        localStorage.setItem("rawaj-language", value);
+        localStorage.setItem("rawaj:e2e:firebase-user", "{}");
+      },
+      language,
+    );
     await page.route("**/api/profile", async (route) => {
       expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
       const response = await route.fetch();
       const payload = await response.json();
-      await route.fulfill({ response, json: { data: { ...payload.data, roles: ["owner"] } } });
+      await route.fulfill({
+        response,
+        json: { data: { ...payload.data, roles: ["owner"] } },
+      });
     });
     await page.route("**/v1/admin/**", async (route) => {
       expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
       expect(route.request().method()).toBe("GET");
       await route.fulfill({
         status: 503,
-        json: { error: { code: "service_unavailable", message: "Isolated admin fixture" } },
+        json: {
+          error: {
+            code: "service_unavailable",
+            message: "Isolated admin fixture",
+          },
+        },
       });
     });
     for (const pathname of adminWorkspaceRoutes) {
@@ -132,25 +153,55 @@ for (const language of ["ar", "en"] as const) {
       });
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute("href", pathname);
       await expect(main).toHaveCSS("color", "rgb(19, 39, 36)");
+
       const collisions = await page.evaluate(() => {
-        const legacy = /rgba?\(\s*(?:219\s*,\s*73\s*,\s*179|198\s*,\s*44\s*,\s*120|155\s*,\s*40\s*,\s*111|116\s*,\s*101\s*,\s*239|36\s*,\s*37\s*,\s*41|25\s*,\s*29\s*,\s*39)(?:\s*[,)]|\s*\/)/i;
+        const retiredRgb = [
+          "219, 73, 179",
+          "198, 44, 120",
+          "155, 40, 111",
+          "116, 101, 239",
+          "36, 37, 41",
+          "25, 29, 39",
+        ];
         const elements = document.querySelectorAll(
           "main.rawaj-admin-v3 :is(section, article, button, input, textarea, select, [data-ui='card'], .rawaj-admin-card, .rawaj-admin-panel), .rawaj-admin-nav-shell, .rawaj-admin-access-notice",
         );
-        return Array.from(elements).flatMap((el) => {
-          const node = el as HTMLElement;
-          const style = getComputedStyle(node);
-          const rect = node.getBoundingClientRect();
-          if (!rect.width || !rect.height || style.visibility === "hidden" || style.display === "none")
-            return [];
-          const observed = [style.backgroundColor, style.backgroundImage, style.color, style.borderTopColor];
-          return observed.filter((value) => legacy.test(value)).map((value) => ({
-            node: node.tagName.toLowerCase() + "." + Array.from(node.classList).slice(0, 2).join("."),
-            value: value.slice(0, 180),
-          }));
-        }).slice(0, 25);
+        return Array.from(elements)
+          .flatMap((el) => {
+            const node = el as HTMLElement;
+            const style = getComputedStyle(node);
+            const rect = node.getBoundingClientRect();
+            if (
+              !rect.width ||
+              !rect.height ||
+              style.visibility === "hidden" ||
+              style.display === "none"
+            ) {
+              return [];
+            }
+            const observed = [
+              style.backgroundColor,
+              style.backgroundImage,
+              style.color,
+              style.borderTopColor,
+            ];
+            const name =
+              node.tagName.toLowerCase() +
+              "." +
+              Array.from(node.classList).slice(0, 2).join(".");
+            return observed
+              .filter((value) => retiredRgb.some((rgb) => value.includes(rgb)))
+              .map((value) => ({
+                node: name,
+                value: value.slice(0, 180),
+              }));
+          })
+          .slice(0, 25);
       });
-      expect(collisions, `${pathname} ${language} must contain no legacy chromatic admin surfaces`).toEqual([]);
+      expect(
+        collisions,
+        `${pathname} ${language} must contain no legacy chromatic admin surfaces`,
+      ).toEqual([]);
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
         pathname,
