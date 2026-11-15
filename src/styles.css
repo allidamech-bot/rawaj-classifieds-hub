@@ -583,61 +583,46 @@
 }
 /* Premium UI phase 8: coherent operational admin console. */
 .rawaj-admin-v3 {
-  --admin-v3-green: #123f36;
-  --admin-v3-coral: #df693c;
-  --admin-v3-gold: #cda04c;
-  --admin-v3-line: color-mix(in srgb, var(--color-primary) 11%, var(--color-border));
-  --admin-v3-surface: linear-gradient(145deg, #fffefa, #f7f7f1);
+  --admin-v3-green: var(--rawaj-identity-petrol);
+  --admin-v3-coral: var(--rawaj-identity-teal);
+  --admin-v3-gold: var(--rawaj-identity-champagne);
+  --admin-v3-line: var(--rawaj-border);
+  --admin-v3-surface: var(--rawaj-card-background);
   position: relative;
-}
-
-.rawaj-admin-v3::before {
-  content: "";
-  position: absolute;
-  inset: -1rem 0 auto;
-  z-index: -1;
-  height: 18rem;
-  border-radius: 2rem;
-  background:
-    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--admin-v3-gold) 12%, transparent), transparent 38%),
-    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--admin-v3-coral) 8%, transparent), transparent 34%);
-  pointer-events: none;
 }
 
 .rawaj-admin-v3 > div:first-child {
   border: 1px solid color-mix(in srgb, var(--color-warning) 23%, var(--admin-v3-line)) !important;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--color-warning) 9%, #fffefa), #fffefa) !important;
-  box-shadow: 0 10px 28px rgba(91, 70, 23, 0.07);
+  background: var(--rawaj-badge-warning-surface) !important;
+  box-shadow: none;
 }
 
 .rawaj-admin-v3 > div:nth-child(2) {
   border: 1px solid var(--admin-v3-line) !important;
-  background: rgba(255, 254, 250, 0.9) !important;
-  box-shadow: 0 15px 38px rgba(16, 63, 53, 0.09) !important;
+  background: var(--rawaj-elevated-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-v3 nav a {
   border: 1px solid var(--admin-v3-line);
-  background: linear-gradient(145deg, #fffefa, #f5f5ef);
+  background: var(--rawaj-card-background);
   color: var(--admin-v3-green);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  box-shadow: none;
 }
 
 .rawaj-admin-v3 nav a[aria-current="page"] {
   border-color: color-mix(in srgb, var(--admin-v3-green) 72%, var(--admin-v3-line));
-  background: linear-gradient(140deg, #174b41, #0f5b4d);
-  color: white;
-  box-shadow: 0 10px 23px rgba(16, 70, 58, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--rawaj-identity-petrol);
+  color: var(--rawaj-identity-ivory);
+  box-shadow: none;
 }
 
 .rawaj-admin-dashboard-v3 > section:first-child {
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--admin-v3-gold) 28%, transparent);
-  background:
-    radial-gradient(circle at 92% 0%, rgba(223, 105, 60, 0.21), transparent 38%),
-    linear-gradient(145deg, #174b41, #0c332b 74%);
-  box-shadow: 0 25px 64px rgba(13, 54, 45, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: var(--rawaj-identity-petrol);
+  box-shadow: none;
 }
 
 .rawaj-admin-dashboard-v3 > section:first-child::after {
@@ -646,13 +631,13 @@
   inset-inline: 8%;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--admin-v3-gold), transparent);
+  background: var(--admin-v3-gold);
 }
 
 .rawaj-admin-v3 :is(section, article, div).bg-card {
   border-color: var(--admin-v3-line) !important;
   background: var(--admin-v3-surface) !important;
-  box-shadow: 0 13px 32px rgba(16, 63, 53, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  box-shadow: none;
 }
 
 .rawaj-admin-dashboard-v3 > div.grid > div,
@@ -663,7 +648,7 @@
 
 .rawaj-admin-dashboard-v3 > section.grid > a:hover {
   border-color: color-mix(in srgb, var(--admin-v3-coral) 28%, var(--admin-v3-line)) !important;
-  box-shadow: 0 19px 42px rgba(16, 63, 53, 0.11);
+  box-shadow: none;
   transform: translateY(-2px);
 }
 
@@ -671,14 +656,14 @@
   width: 100%;
   border: 1px solid var(--admin-v3-line);
   border-radius: 1rem;
-  background: #fffefa;
+  background: var(--rawaj-card-background);
   border-collapse: separate;
   border-spacing: 0;
   overflow: hidden;
 }
 
 .rawaj-admin-v3 :is(th, [role="columnheader"]) {
-  background: color-mix(in srgb, var(--admin-v3-green) 6%, #f8f7f1);
+  background: var(--rawaj-muted-surface);
   color: var(--admin-v3-green);
   font-size: 0.7rem;
   font-weight: 800;
@@ -690,25 +675,27 @@
   text-align: start;
 }
 
-.rawaj-admin-v3 tbody tr:hover { background: color-mix(in srgb, var(--admin-v3-gold) 5%, #fffefa); }
+.rawaj-admin-v3 tbody tr:hover { background: var(--rawaj-surface-selected); }
 
 .rawaj-admin-v3 :is(input, textarea, select) {
   min-height: 2.75rem;
   border-color: var(--admin-v3-line) !important;
   border-radius: 0.85rem !important;
-  background: #fffefa !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-admin-v3 :is(input, textarea, select):focus-visible {
-  border-color: color-mix(in srgb, var(--admin-v3-coral) 55%, var(--admin-v3-line)) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-v3-coral) 14%, transparent);
+  border-color: var(--rawaj-identity-teal) !important;
+  outline: 2px solid var(--rawaj-identity-teal);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .rawaj-admin-v3 :is(button, a).bg-primary {
-  border: 1px solid color-mix(in srgb, var(--admin-v3-coral) 76%, #98381d) !important;
-  background: linear-gradient(145deg, #ee7a4c, #d75c32) !important;
-  color: white !important;
-  box-shadow: 0 11px 24px rgba(201, 78, 35, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--rawaj-identity-petrol) !important;
+  background: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  box-shadow: none;
 }
 
 .rawaj-admin-v3 :is(button, a).text-destructive,

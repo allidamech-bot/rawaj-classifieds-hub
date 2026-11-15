@@ -448,7 +448,7 @@ test("B2.2 removes competing V17 shell and breadcrumb colors at their source", a
 test("B2.2 retires generic V17 dark control styles for the detail route", async () => {
   const css = await readFile(new URL("../src/rawaj-chromatic-premium-system-v17.css", import.meta.url), "utf8");
   assert.ok(!css.includes(':where(:not([data-resolved-pathname="/listings"]))'));
-  assert.ok(css.includes(':where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
+  assert.ok(css.includes(':where(:not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]))'));
   assert.ok(css.includes('[data-resolved-pathname="/add-listing"]'));
 });
 
