@@ -237,8 +237,10 @@ body :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-co
     linear-gradient(155deg, #191d27, #10151d) !important;
 }
 
-/* One petrol-and-gold mobile dock; retain the home and storefront-specific refinements. */
-.rawaj-bottom-nav-shell {
+/* Use one deterministic petrol dock canvas on all marketplace routes.
+ * Retain the already approved separate owner/public storefront dock instead. */
+.rawaj-app-shell:not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/seller/"])
+  .rawaj-bottom-nav-shell {
   border-color: rgba(234, 195, 143, 0.52) !important;
   background:
     radial-gradient(ellipse at 92% -20%, #409687, transparent 55%),
