@@ -37,7 +37,6 @@ test("phase 9 contract is permanent", () => {
   assert.match(parsed.scripts.precheck, /test:responsive-accessibility-v1/);
 });
 
-
 test("B4 route inventory does not silently omit visual QA route families", async () => {
   const [tree, visualSpec] = await Promise.all([
     readFile(new URL("../src/routeTree.gen.ts", import.meta.url), "utf8"),
@@ -46,16 +45,25 @@ test("B4 route inventory does not silently omit visual QA route families", async
   const fullPathInterface = tree.match(
     /export interface FileRoutesByFullPath \{([\s\S]*?)\n\}/,
   )?.[1];
-  const visualCases = visualSpec.match(/const routes = \[([\s\S]*?)\] as const;/)?.[1];
+  const visualCases = visualSpec.match(
+    /const routes = \[([\s\S]*?)\] as const;/,
+  )?.[1];
 
-  assert.ok(fullPathInterface, "TanStack's generated full-path inventory is required");
+  assert.ok(
+    fullPathInterface,
+    "TanStack's generated full-path inventory is required",
+  );
   assert.ok(visualCases, "Rendered visual QA route inventory is required");
 
   const knownPaths = [...fullPathInterface.matchAll(/^\s*'([^']+)':/gm)].map(
     (match) => match[1],
   );
   const normalizedRoutes = [
-    ...new Set(knownPaths.map((path) => (path === "/" ? path : path.replace(/\/$/, "")))),
+    ...new Set(
+      knownPaths.map((path) =>
+        path === "/" ? path : path.replace(/\/$/, ""),
+      ),
+    ),
   ].filter((path) => path !== "/sitemap.xml");
   const checkedUrls = [...visualCases.matchAll(/path:\s*"([^"]+)"/g)].map(
     (match) => match[1],
@@ -63,7 +71,7 @@ test("B4 route inventory does not silently omit visual QA route families", async
   const matchRoute = (route, url) => {
     const pattern = route
       .split("/")
-      .map((segment) => segment.startsWith("$") ? "[^/]+" : segment)
+      .map((segment) => (segment.startsWith("$") ? "[^/]+" : segment))
       .join("/");
     return new RegExp("^" + pattern + "$").test(url);
   };
