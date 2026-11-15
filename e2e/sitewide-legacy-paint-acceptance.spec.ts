@@ -183,8 +183,7 @@ for (const language of ["ar", "en"] as const) {
               style.borderTopColor,
             ];
             const name =
-              node.tagName.toLowerCase() + "." +
-              Array.from(node.classList).slice(0, 2).join(".");
+              node.tagName.toLowerCase() + "." + Array.from(node.classList).slice(0, 2).join(".");
             return observed
               .filter((value) => retiredRgb.some((rgb) => value.includes(rgb)))
               .map((value) => ({
