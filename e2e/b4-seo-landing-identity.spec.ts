@@ -35,6 +35,28 @@ for (const route of routes) {
         await expect(main).toHaveCSS("background-color", "rgb(249, 240, 228)");
         const hero = main.locator("section.rawaj-surface").first();
         await expect(hero).toHaveCSS("background-color", "rgb(255, 250, 243)");
+
+        // Previously rendered price/title/category were ~1.02–2.55:1 on
+        // inherited V17/V18 dark cards. Guard the actual computed colors.
+        const card = main.locator(".rawaj-adaptive-card").first();
+        await expect(card).toBeVisible();
+        await expect(card).toHaveCSS("background-color", "rgb(255, 250, 243)");
+        await expect(card.locator(".rawaj-adaptive-card__price")).toHaveCSS(
+          "color",
+          "rgb(7, 56, 54)",
+        );
+        await expect(card.locator(".rawaj-adaptive-card__title")).toHaveCSS(
+          "color",
+          "rgb(19, 39, 36)",
+        );
+        await expect(card.locator(".rawaj-adaptive-card__category")).toHaveCSS(
+          "color",
+          "rgb(8, 99, 94)",
+        );
+        await expect(card.locator(".rawaj-adaptive-card__meta")).toHaveCSS(
+          "color",
+          "rgb(67, 86, 80)",
+        );
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth),
           `${route} ${language} ${width}px viewport`,
