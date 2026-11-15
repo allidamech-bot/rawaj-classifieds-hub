@@ -183,6 +183,14 @@
 }
 
 
+/* Safari rubber-band and standalone PWA viewport must not expose
+ * V17's charcoal html/body beneath an explicitly approved ivory route. */
+html:has(.rawaj-app-shell[data-design-palette="ivory"]),
+body:has(.rawaj-app-shell[data-design-palette="ivory"]) {
+  color-scheme: light !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
+
 /* Opt-in route palette only. No routes are enabled by this foundation change.
  * Apply after screen-level visual acceptance; keep approved home and My Store
  * unchanged until their own compatibility is verified. */
