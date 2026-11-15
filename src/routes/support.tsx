@@ -485,5 +485,5 @@ function SupportHistoryError({
 }
 
 function SupportDetail({ label }: { label: string }) {
-  return <div className="rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold">{label}</div>;
+  return <div className="rawaj-support-detail rounded-xl px-3 py-2 text-xs font-bold">{label}</div>;
 }

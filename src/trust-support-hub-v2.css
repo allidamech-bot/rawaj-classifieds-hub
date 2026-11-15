@@ -559,6 +559,19 @@
   line-height: 1.6;
 }
 
+/* Support advice belongs to the approved ivory workspace, not the legacy
+   dark bg-muted-surface utility. This includes plain-text detail rows. */
+.rawaj-support-detail {
+  min-width: 0;
+  border: 1px solid #d4ded7;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: #173d38;
+  background: #f0eee6;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
 .rawaj-support-topic-grid,
 .rawaj-safety-guide-grid {
   display: grid;
