@@ -33,6 +33,10 @@ for (const language of ["ar", "en"] as const) {
         const shell = page.locator(".rawaj-app-shell");
         await expect(shell).toHaveAttribute("data-design-palette", "ivory");
         await expect(shell).toHaveCSS("color-scheme", "light");
+        await expect(page.locator(".rawaj-shell-header__title :is(h1, p)")).toHaveCSS(
+          "color",
+          "rgb(249, 240, 228)",
+        );
         await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
           "content",
           route.chrome,
