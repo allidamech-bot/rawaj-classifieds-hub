@@ -163,7 +163,7 @@ export function OwnerStoreWorkspaceSummary({
         </Link>
         <Link to="/promotion" data-tone="boost" data-priority="promotion">
           <Rocket aria-hidden="true" />
-          <span>Boost</span>
+          <span>{text("تعزيز الظهور", "Boost")}</span>
         </Link>
         <Link to="/promotion-request" data-tone="promotion" data-priority="promotion">
           <Megaphone aria-hidden="true" />
