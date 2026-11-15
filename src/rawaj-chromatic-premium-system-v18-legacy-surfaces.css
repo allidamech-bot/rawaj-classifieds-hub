@@ -80,12 +80,8 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* Activity, notifications, favorites, saved searches                         */
+/* Protected favorites and saved-searches collection routes                   */
 /* -------------------------------------------------------------------------- */
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/activity"],
-  [data-resolved-pathname="/notifications"]
-) :is(.rawaj-communication-hero, .rawaj-activity-panel, .rawaj-notification-panel, .rawaj-communication-follow-up),
 .rawaj-app-shell:is(
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
@@ -99,15 +95,6 @@
   box-shadow: 0 13px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03) !important;
 }
 
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/activity"],
-  [data-resolved-pathname="/notifications"]
-) .rawaj-communication-hero {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74,140,255,.13), transparent 35%),
-    radial-gradient(circle at 0% 100%, rgba(219,73,179,.095), transparent 40%),
-    linear-gradient(150deg, #1c2029, #141820) !important;
-}
 
 .rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
   .rawaj-account-collection-v3 [class*="bg-card"] {
@@ -292,8 +279,6 @@
 .rawaj-app-shell:is(
   [data-resolved-pathname="/profile"],
   [data-resolved-pathname="/more"],
-  [data-resolved-pathname="/activity"],
-  [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"],
   [data-resolved-pathname^="/admin"]
