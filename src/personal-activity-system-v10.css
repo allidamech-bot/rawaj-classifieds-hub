@@ -241,7 +241,7 @@
   color: #083d38 !important;
   background: #f5d8a4 !important;
 }
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel {
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/activity"] .rawaj-activity-panel {
   min-width: 0;
   border: 1px solid #d2ddd5 !important;
   border-radius: 1.1rem !important;
@@ -276,7 +276,7 @@
 }
 
 /* Notifications: reading order first, actions visible and legible. */
-.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-panel,
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"] .rawaj-notification-panel,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-preferences,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up {
   border: 1px solid #d2ddd5 !important;

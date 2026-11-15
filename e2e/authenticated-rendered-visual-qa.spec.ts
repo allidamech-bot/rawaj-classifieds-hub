@@ -44,6 +44,19 @@ test.describe("authenticated rendered visual QA", () => {
         mobile,
       });
 
+      const communicationSurfaces: Record<string, { selector: string; color: string }> = {
+        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 250, 243)" },
+        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 250, 243)" },
+        chats: { selector: ".rawaj-communication-search", color: "rgb(255, 255, 255)" },
+      };
+      const communicationSurface = communicationSurfaces[route.name];
+      if (communicationSurface) {
+        const surface = page.locator(communicationSurface.selector);
+        await expect(surface).toBeVisible();
+        await expect(surface).toHaveCSS("background-color", communicationSurface.color);
+        await expect(surface).toHaveCSS("background-image", "none");
+      }
+
       await page.screenshot({
         path: testInfo.outputPath(`authenticated-${route.name}.png`),
         fullPage: true,

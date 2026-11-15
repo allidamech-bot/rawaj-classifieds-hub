@@ -21,35 +21,6 @@
   -webkit-backdrop-filter: none !important;
 }
 
-/* Own the exact route-scoped search selectors used by older systems. */
-
-.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search {
-  border-color: rgba(216, 174, 95, 0.14) !important;
-  color: #d8d2cc !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 42%),
-    linear-gradient(145deg, #0c121a, #080d13) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.022) !important;
-}
-
-
-.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input {
-  color: #f7f3ed !important;
-  background: transparent !important;
-}
-
-
-.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search input::placeholder {
-  color: #9099a5 !important;
-  opacity: 1 !important;
-}
-
-
-.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-search:focus-within {
-  border-color: rgba(216, 174, 95, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(216, 174, 95, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
-}
-
 /* /account was the remaining personal-space route still inheriting a broad grey
  * identity surface. Keep the same content and layout, but align its canvas with
  * the approved /more and /profile visual language. */

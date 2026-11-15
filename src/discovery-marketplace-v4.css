@@ -383,9 +383,6 @@ body,
     .rawaj-account-section,
     .rawaj-conversation-sidebar,
     .rawaj-message-panel,
-    .rawaj-notification-panel,
-    .rawaj-activity-panel,
-    .rawaj-communication-follow-up,
     .rawaj-trust-empty
   ) {
   border-color: rgba(216, 174, 95, 0.11) !important;
