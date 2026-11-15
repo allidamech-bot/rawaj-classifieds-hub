@@ -67,8 +67,8 @@ const routes = [
   { name: "admin-ad-placements", path: "/admin/ad-placements" },
   { name: "admin-campaigns", path: "/admin/campaigns" },
   { name: "admin-audit", path: "/admin/audit" },
+  { name: "admin-notifications", path: "/admin/notifications" },
   { name: "admin-owner-controls", path: "/admin/owner-controls" },
-  { name: "admin-notifications-guest", path: "/admin/notifications", focused: true },
   { name: "not-found", path: "/__rawaj_visual_audit_not_found__", expectedStatus: 404 },
 ] as const;
 
@@ -79,7 +79,8 @@ for (const viewport of viewports) {
     for (const route of routes) {
       if ("homeOnly" in viewport && route.name !== "home") continue;
       // Complete route coverage without multiplying screenshot time across all sizes.
-      // The new B4 fixtures cover 390px mobile and 1440px desktop guest states.
+      // Additional focused B4 fixtures cover 390px mobile and 1440px desktop states.
+      // Admin notifications follow the full matrix (also owned by B3.4).
       if ("focused" in route && viewport.name !== "mobile-390" && viewport.name !== "desktop-1440")
         continue;
       test(`${route.name} rendered layout audit`, async ({ page }, testInfo) => {
