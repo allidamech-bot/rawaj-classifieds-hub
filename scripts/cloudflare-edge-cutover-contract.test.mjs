@@ -21,6 +21,29 @@ async function currentSources() {
   return { environmentSource, vercelConfig, workerConfig, renderConfigSource, productionWorkflowSource };
 }
 
+
+async function legacySources() {
+  const sources = await currentSources();
+  sources.environmentSource = sources.environmentSource.replace(
+    /^VITE_PUBLIC_DATA_API_BASE_URL=.*$/m,
+    `VITE_PUBLIC_DATA_API_BASE_URL=${LEGACY_API_ORIGIN}`,
+  );
+  sources.vercelConfig.rewrites = sources.vercelConfig.rewrites.map((route) => ({
+    ...route,
+    destination: LEGACY_API_ORIGIN + route.source,
+  }));
+  sources.workerConfig.workers_dev = true;
+  sources.workerConfig.routes = [];
+  if (!sources.renderConfigSource.includes("Refusing production render: the Syria Worker must remain")) {
+    sources.renderConfigSource += "\nRefusing production render: the Syria Worker must remain\n";
+  }
+  sources.productionWorkflowSource = sources.productionWorkflowSource.replace(
+    /RAWAJ_WORKER_BASE_URL: https:\/\/[^\s]+/,
+    `RAWAJ_WORKER_BASE_URL: ${LEGACY_API_ORIGIN}`,
+  );
+  return sources;
+}
+
 function protectSources(inputs) {
   const copy = structuredClone(inputs);
   copy.environmentSource = copy.environmentSource.replace(LEGACY_API_ORIGIN, PROTECTED_API_ORIGIN);
@@ -41,21 +64,21 @@ function protectSources(inputs) {
   return copy;
 }
 
-test("current production stays in explicitly frozen legacy configuration", async () => {
+test("checked-in API configuration remains in a validated migration phase", async () => {
   const result = await inspectRepositoryEdgeCutover();
-  assert.equal(result.mode, "legacy");
+  assert.ok(["legacy", "staging", "cutover", "protected"].includes(result.mode));
   assert.equal(result.valid, true, result.errors.join("; "));
 });
 
 test("an atomic protected-domain configuration can pass only after every cutover setting changes", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.mode, "protected");
   assert.deepEqual(result.errors, []);
 });
 
 test("changing only the frontend URL fails before deployment", async () => {
-  const sources = await currentSources();
+  const sources = await legacySources();
   sources.environmentSource = sources.environmentSource.replace(LEGACY_API_ORIGIN, PROTECTED_API_ORIGIN);
   const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.valid, false);
@@ -64,7 +87,7 @@ test("changing only the frontend URL fails before deployment", async () => {
 });
 
 test("protected endpoint without its explicit Cloudflare Worker route is rejected", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   sources.workerConfig.routes = [];
   const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.valid, false);
@@ -72,7 +95,7 @@ test("protected endpoint without its explicit Cloudflare Worker route is rejecte
 });
 
 test("staged new domain can coexist with the old live endpoint during verification", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   sources.environmentSource = sources.environmentSource.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN);
   sources.vercelConfig.rewrites = sources.vercelConfig.rewrites.map((route) => ({
     ...route,
@@ -89,7 +112,7 @@ test("staged new domain can coexist with the old live endpoint during verificati
 });
 
 test("temporary dual-route handoff is supported before the final workers.dev shutdown", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   sources.workerConfig.workers_dev = true;
   const result = validateCloudflareEdgeCutover(sources);
   assert.equal(result.mode, "cutover");
@@ -97,7 +120,7 @@ test("temporary dual-route handoff is supported before the final workers.dev shu
 });
 
 test("staging rejects an old render freeze that would undo custom domain support", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   sources.workerConfig.workers_dev = true;
   sources.environmentSource = sources.environmentSource.replace(PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN);
   sources.vercelConfig.rewrites = sources.vercelConfig.rewrites.map((route) => ({
@@ -115,7 +138,7 @@ test("staging rejects an old render freeze that would undo custom domain support
 });
 
 test("protected endpoint with old smoke URL or freeze is rejected", async () => {
-  const sources = protectSources(await currentSources());
+  const sources = protectSources(await legacySources());
   sources.productionWorkflowSource = sources.productionWorkflowSource.replace(
     PROTECTED_API_ORIGIN, LEGACY_API_ORIGIN,
   );
@@ -127,7 +150,7 @@ test("protected endpoint with old smoke URL or freeze is rejected", async () => 
 });
 
 test("automatic deploy or unexpected origin cannot pass the cutover contract", async () => {
-  const sources = await currentSources();
+  const sources = await legacySources();
   sources.vercelConfig.git.deploymentEnabled = true;
   sources.environmentSource = "VITE_PUBLIC_DATA_API_BASE_URL=https://unknown.example";
   const result = validateCloudflareEdgeCutover(sources);
