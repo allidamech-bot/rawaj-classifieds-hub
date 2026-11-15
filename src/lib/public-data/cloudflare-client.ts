@@ -13,6 +13,10 @@ import type {
   TaxonomyNode,
 } from "@/lib/classifieds-types";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
+import {
+  isWorkerQuotaReadCooldownActive,
+  observeWorkerQuotaResponse,
+} from "@/lib/public-data/worker-quota-backoff";
 import type { LocationSearchResult } from "@/lib/api/location-taxonomy";
 import type { LocationNode } from "@/lib/location-types";
 
@@ -283,6 +287,17 @@ async function requestJson<T>(
   const baseResult = requireCloudflarePublicApiBaseUrl();
   if (!baseResult.ok) return baseResult;
 
+  if (isWorkerQuotaReadCooldownActive()) {
+    return {
+      ok: false,
+      error: {
+        code: "rate_limited",
+        message: "خدمة بيانات رَوَاج متوقفة مؤقتًا بسبب حد طلبات الخادم.",
+        operation: `cloudflare_public_api:${path}`,
+      },
+    };
+  }
+
   const url = new URL(path, `${baseResult.data}/`);
   appendQuery(url.searchParams, query);
 
@@ -297,6 +312,7 @@ async function requestJson<T>(
       signal: controller.signal,
     });
 
+    await observeWorkerQuotaResponse(response);
     const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
     if (!response.ok) {
       return {
