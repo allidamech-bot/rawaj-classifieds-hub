@@ -929,6 +929,9 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip {
   color: var(--rawaj-identity-ink) !important;
+  /* Keep the approved cream artwork; its CSS gradients otherwise have a
+   * transparent computed background and fail WCAG at 200% text scaling. */
+  background-color: #fffaf3 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip strong {
