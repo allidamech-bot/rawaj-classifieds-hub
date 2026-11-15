@@ -37,9 +37,11 @@ test("bottom dock keeps the primary action restrained", () => {
   assert.doesNotMatch(dock, /rawaj-dock-active-indicator/);
 });
 
-test("bottom dock grid is derived from actual navigation destinations", () => {
+test("bottom dock has one five-item navigation contract on every route", () => {
   assert.ok(dock.includes("data-item-count={items.length}"));
-  assert.ok(dock.includes('items.length === 6 ? "grid-cols-6" : "grid-cols-5"'));
-  assert.ok(dock.includes('pathname === "/"'));
-  assert.ok(dock.includes('section: "favorites"'));
+  assert.ok(
+    dock.includes('className="rawaj-bottom-nav-shell pointer-events-auto mx-auto grid grid-cols-5 items-end"'),
+  );
+  assert.doesNotMatch(dock, /grid-cols-6|section: "favorites"/);
+  assert.doesNotMatch(dock, /pathname === "\/"/);
 });
