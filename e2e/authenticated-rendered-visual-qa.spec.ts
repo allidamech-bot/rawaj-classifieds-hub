@@ -44,6 +44,35 @@ test.describe("authenticated rendered visual QA", () => {
         mobile,
       });
 
+      const communicationSurfaces: Record<string, { selector: string; color: string }> = {
+        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 250, 243)" },
+        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 250, 243)" },
+        chats: { selector: ".rawaj-communication-search", color: "rgb(255, 255, 255)" },
+      };
+      const communicationSurface = communicationSurfaces[route.name];
+      if (communicationSurface) {
+        const surface = page.locator(communicationSurface.selector);
+        await expect(surface).toBeVisible();
+        await expect(surface).toHaveCSS("background-color", communicationSurface.color);
+        await expect(surface).toHaveCSS("background-image", "none");
+      }
+
+      if (route.name === "notifications") {
+        const content = page.locator(".rawaj-notifications-content");
+        await expect(content).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(content).toHaveCSS("background-image", "none");
+      }
+      if (route.name === "chats") {
+        await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
+          "background-color",
+          "rgb(247, 243, 236)",
+        );
+        await expect(page.locator(".rawaj-app-shell__content")).toHaveCSS(
+          "background-color",
+          "rgba(0, 0, 0, 0)",
+        );
+      }
+
       await page.screenshot({
         path: testInfo.outputPath(`authenticated-${route.name}.png`),
         fullPage: true,

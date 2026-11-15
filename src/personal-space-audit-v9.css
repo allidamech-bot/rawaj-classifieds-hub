@@ -416,7 +416,7 @@
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__copy > p {
   color: var(--rawaj-identity-teal) !important;
-  font-size: 0.66rem !important;
+  font-size: 0.75rem !important;
   font-weight: 800 !important;
 }
 
@@ -429,7 +429,7 @@
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__copy :is(small, span) {
   color: #536660 !important;
-  font-size: 0.67rem !important;
+  font-size: 0.75rem !important;
 }
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__badges {
@@ -445,7 +445,7 @@
   padding: 0.25rem 0.5rem !important;
   color: var(--rawaj-identity-ink) !important;
   background: color-mix(in srgb, var(--rawaj-identity-teal) 6%, white) !important;
-  font-size: 0.61rem !important;
+  font-size: 0.75rem !important;
 }
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__actions {
@@ -468,7 +468,7 @@
   padding: 0.45rem !important;
   color: var(--rawaj-identity-ink) !important;
   background: color-mix(in srgb, var(--rawaj-identity-teal) 6%, white) !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   font-weight: 800 !important;
 }
 
@@ -552,7 +552,7 @@
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section > header p {
   color: var(--rawaj-identity-teal) !important;
-  font-size: 0.63rem !important;
+  font-size: 0.75rem !important;
   font-weight: 800 !important;
 }
 
@@ -563,7 +563,7 @@
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section > header small {
   color: #536660 !important;
-  font-size: 0.66rem !important;
+  font-size: 0.75rem !important;
   line-height: 1.5 !important;
 }
 
@@ -573,7 +573,7 @@
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body :is(label > span, h3) {
   color: var(--rawaj-identity-ink) !important;
-  font-size: 0.72rem !important;
+  font-size: 0.75rem !important;
 }
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-section__body .bg-muted-surface {

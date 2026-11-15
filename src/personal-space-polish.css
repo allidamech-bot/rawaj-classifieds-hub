@@ -30,8 +30,7 @@
   pointer-events: none;
 }
 
-.rawaj-account-collection-v3 > section:first-child,
-.rawaj-account-activity-v3 > section:first-child {
+.rawaj-account-collection-v3 > section:first-child {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--account-v3-line) !important;
@@ -41,8 +40,7 @@
   box-shadow: var(--shadow-soft, 0 6px 18px rgba(9, 45, 41, 0.045));
 }
 
-.rawaj-account-collection-v3 > section:first-child::after,
-.rawaj-account-activity-v3 > section:first-child::after {
+.rawaj-account-collection-v3 > section:first-child::after {
   content: "";
   position: absolute;
   inset-block: 0.9rem;

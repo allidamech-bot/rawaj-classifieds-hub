@@ -137,6 +137,7 @@
   color: var(--account-teal) !important;
 }
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card strong {
+  font-size: 0.78rem !important;
   overflow-wrap: anywhere;
   white-space: normal !important;
   line-height: 1.45 !important;

@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "src/account-command-premium.css"
+      - "src/lib/browser-chrome.ts"
+      - "e2e/b3-core-account-readability.spec.ts"
       - "src/account-shortcuts-compact-row.css"
       - "src/auth-feedback-system-v12.css"
       - "src/offers-signature.css"
@@ -41,7 +43,7 @@ jobs:
           RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
           VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
-        run: npx playwright test e2e/b3-account-hub.spec.ts e2e/b3-account-family.spec.ts --project=mobile-webkit
+        run: npx playwright test e2e/b3-account-hub.spec.ts e2e/b3-account-family.spec.ts e2e/b3-core-account-readability.spec.ts --project=mobile-webkit
       - name: Upload WebKit screenshots and failure traces
         if: always()
         uses: actions/upload-artifact@v4

@@ -12,7 +12,7 @@ for (const { path, selector } of routes) {
       page,
     }, testInfo) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
-      for (const width of [320, 390, 430, 768, 1440]) {
+      for (const width of [320, 360, 390, 430, 768, 1440]) {
         await page.setViewportSize({ width, height: 850 });
         const response = await page.goto(path, { waitUntil: "domcontentloaded" });
         expect(response?.status() ?? 200).toBeLessThan(500);
@@ -33,6 +33,16 @@ for (const { path, selector } of routes) {
         const shell = page.locator(".rawaj-app-shell");
         await expect(shell).toHaveAttribute("data-resolved-pathname", path);
         if (width === 390) {
+          const signInPanel = page.locator(".rawaj-communication-signed-out");
+          await expect(signInPanel).toBeVisible();
+          expect(
+            await signInPanel.evaluate((node) => getComputedStyle(node, "::after").content),
+          ).toBe("none");
+          if (path === "/chats") {
+            await expect(shell).toHaveCSS("background-color", "rgb(247, 243, 236)");
+            await expect(page.locator(selector)).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+          }
+
           const screenshot = testInfo.outputPath(
             `b3-communication-${path.slice(1)}-${language}.png`,
           );
@@ -48,23 +58,25 @@ for (const { path, selector } of routes) {
 }
 
 test("B3.2 chats preserves list-first mobile layout and keyboard access", async ({ page }) => {
+  test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local account fixtures");
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "rawaj:e2e:firebase-user",
+      JSON.stringify({ email: "browser-smoke@rawa-j.test" }),
+    );
+  });
   await page.setViewportSize({ width: 390, height: 780 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/chats", { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 
   const workspace = page.locator(".rawaj-message-workspace");
-  if (await workspace.isVisible()) {
-    const view = await workspace.getAttribute("data-view");
-    expect(["list", "conversation"]).toContain(view);
-    if (view === "list") {
-      await expect(workspace.locator(".rawaj-message-panel")).toBeHidden();
-    }
-  }
+  await expect(workspace).toBeVisible();
+  await expect(workspace).toHaveAttribute("data-view", "list");
+  await expect(workspace.locator(".rawaj-message-panel")).toBeHidden();
 
-  const firstControl = page.locator("main.rawaj-communication-v2 :is(a, button, input)").first();
-  if (await firstControl.isVisible()) {
-    await firstControl.focus();
-    await expect(firstControl).toBeFocused();
-  }
+  const firstControl = workspace.locator(":is(a, button, input):visible").first();
+  await expect(firstControl).toBeVisible();
+  await firstControl.focus();
+  await expect(firstControl).toBeFocused();
 });
