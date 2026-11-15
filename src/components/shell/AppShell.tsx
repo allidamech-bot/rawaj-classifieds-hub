@@ -193,7 +193,12 @@ export function AppShell({
 }: AppShellProps) {
   const config = resolveAppShellConfig(pathname);
   const routeStyles = resolveRouteStyleScope(pathname);
-  const useIvoryPalette = routeStyles.listingStudio || routeStyles.trustWorkspace;
+  // B3.1/B3.2 account and communication routes already own the approved light
+  // surfaces. Their shell must opt into the same semantics so retired V7/V7B
+  // charcoal defaults cannot override cards, controls or empty states.
+  // Keep the approved homepage and owner/public storefronts unchanged.
+  const useIvoryPalette =
+    routeStyles.listingStudio || routeStyles.trustWorkspace || routeStyles.personalSpace;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
