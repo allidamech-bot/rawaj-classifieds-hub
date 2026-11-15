@@ -52,7 +52,9 @@ test("B4 authenticated promotion hero uses petrol and champagne, without submitt
   await page.goto("/promotion-request", { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
   const hero = page.locator("main.container-wide > section").first();
-  await expect(hero.getByRole("heading", { name: "Choose where your listing should appear" })).toBeVisible();
+  await expect(
+    hero.getByRole("heading", { name: "Choose where your listing should appear" }),
+  ).toBeVisible();
   await expect(hero).toHaveCSS("background-color", "rgb(7, 56, 54)");
   await expect(page.locator(".rawaj-app-shell")).toHaveAttribute("data-design-palette", "ivory");
   // Read-only acceptance: never submit a request, receipt or payment.
