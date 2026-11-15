@@ -5,13 +5,13 @@
 @import "./rawaj-chromatic-premium-system-v17-corrections.css";
 @import "./rawaj-chromatic-premium-system-v18-chats.css";
 @import "./rawaj-chromatic-premium-system-v18-categories-listings.css";
-@import "./rawaj-chromatic-premium-system-v18-legacy-surfaces.css";
+/* Retired: ${a.match(/"\.\/(.*)"/)[1]} — legacy charcoal/pink route paint superseded by approved route owners. */
 @import "./rawaj-chromatic-premium-system-v18-home-discovery.css";
 @import "./rawaj-chromatic-premium-system-v18-ad-placement.css";
 @import "./rawaj-chromatic-premium-system-v18-contract-fixes.css";
 @import "./rawaj-chromatic-premium-system-v19-consistency.css";
 @import "./rawaj-chromatic-premium-system-v19-specificity.css";
-@import "./rawaj-chromatic-premium-system-v20-state-consistency.css";
+/* Retired: ${a.match(/"\.\/(.*)"/)[1]} — legacy charcoal/pink route paint superseded by approved route owners. */
 @import "./rawaj-account-profile-media-v21.css";
 @import "./rawaj-live-repair-sweep-v22.css";
 @import "./rawaj-live-repair-sweep-v23.css";
