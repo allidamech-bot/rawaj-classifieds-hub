@@ -35,6 +35,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Format source for acceptance diagnostics (temporary)
+        if: matrix.project == 'desktop-chromium'
+        run: |
+          npx prettier --write e2e/b4-admin-authorization-matrix.spec.ts e2e/b4-functional-marketplace-journeys.spec.ts
+          echo B4_ADMIN_BEGIN
+          base64 -w0 e2e/b4-admin-authorization-matrix.spec.ts
+          echo
+          echo B4_ADMIN_END
+          echo B4_PUBLIC_BEGIN
+          base64 -w0 e2e/b4-functional-marketplace-journeys.spec.ts
+          echo
+          echo B4_PUBLIC_END
       - name: Install selected browser
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Functional journeys and permission boundaries (isolated local fixtures only)
