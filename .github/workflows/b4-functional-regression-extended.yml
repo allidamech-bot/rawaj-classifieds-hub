@@ -1,0 +1,57 @@
+name: B4 Extended Functional Regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "e2e/b4-functional-acceptance.spec.ts"
+      - ".github/workflows/b4-functional-regression-extended.yml"
+
+concurrency:
+  group: b4-functional-extended-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  functional:
+    name: Extended functional (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: mobile-chromium
+            browser: chromium
+          - project: desktop-chromium
+            browser: chromium
+          - project: desktop-firefox
+            browser: firefox
+          - project: mobile-webkit
+            browser: webkit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify supplemental B4 journeys against isolated fixtures
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          VITE_PUBLIC_DATA_API_BASE_URL: http://127.0.0.1:4173
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b4-functional-acceptance.spec.ts --project=${{ matrix.project }}
+      - name: Upload functional evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b4-extended-${{ matrix.project }}-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
