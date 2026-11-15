@@ -114,13 +114,10 @@ for (const language of ["ar", "en"] as const) {
       width: mobile ? 390 : 1440,
       height: mobile ? 844 : 900,
     });
-    await page.addInitScript(
-      (value) => {
-        localStorage.setItem("rawaj-language", value);
-        localStorage.setItem("rawaj:e2e:firebase-user", "{}");
-      },
-      language,
-    );
+    await page.addInitScript((value) => {
+      localStorage.setItem("rawaj-language", value);
+      localStorage.setItem("rawaj:e2e:firebase-user", "{}");
+    }, language);
     await page.route("**/api/profile", async (route) => {
       expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
       const response = await route.fetch();
@@ -186,8 +183,7 @@ for (const language of ["ar", "en"] as const) {
               style.borderTopColor,
             ];
             const name =
-              node.tagName.toLowerCase() +
-              "." +
+              node.tagName.toLowerCase() + "." +
               Array.from(node.classList).slice(0, 2).join(".");
             return observed
               .filter((value) => retiredRgb.some((rgb) => value.includes(rgb)))
