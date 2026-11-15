@@ -601,7 +601,7 @@ function NotificationsPage() {
         {auth.status !== "signedIn" ? (
           <CommunicationSignedOut returnTo="/notifications" />
         ) : (
-          <section className="space-y-4">
+          <div className="rawaj-notifications-content space-y-4">
             <CommunicationCenterHero
               mode="notifications"
               unreadMessages={counts.messages}
@@ -718,7 +718,7 @@ function NotificationsPage() {
                 </>
               )}
             </section>
-          </section>
+          </div>
         )}
 
         <div className="rawaj-notification-preferences">

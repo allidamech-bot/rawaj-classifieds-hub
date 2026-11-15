@@ -594,6 +594,13 @@
   box-shadow: none !important;
 }
 
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
+  .rawaj-communication-v2 > .rawaj-notifications-content {
+  background: transparent !important;
+  border: 0;
+  box-shadow: none !important;
+}
+
 /* Notification cards, headings and preference rows must win over inherited
  * white-on-dark declaration and color utilities at both browser-smoke sizes. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]

@@ -58,10 +58,9 @@ test.describe("authenticated rendered visual QA", () => {
       }
 
       if (route.name === "notifications") {
-        await expect(page.locator("main > section").first()).toHaveCSS(
-          "background-color",
-          "rgba(0, 0, 0, 0)",
-        );
+        const content = page.locator(".rawaj-notifications-content");
+        await expect(content).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(content).toHaveCSS("background-image", "none");
       }
       if (route.name === "chats") {
         await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
