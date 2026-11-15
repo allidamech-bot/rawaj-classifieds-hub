@@ -109,24 +109,6 @@
     linear-gradient(150deg, #1c2029, #141820) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
-  border-color: rgba(216,174,95,.12) !important;
-  background: #10141b !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
-  border-color: rgba(216,174,95,.24) !important;
-  color: #f8ead0 !important;
-  background: linear-gradient(145deg, rgba(216,174,95,.1), rgba(198,44,120,.075)) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/notifications"] :is(.rawaj-notification-timeline, .rawaj-notification-card),
-.rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-activity-feed > a, .rawaj-activity-feed > article) {
-  border-color: rgba(255,255,255,.07) !important;
-  color: #f7f3ed !important;
-  background: linear-gradient(145deg, #181c25, #12161d) !important;
-}
-
 .rawaj-app-shell:is([data-resolved-pathname="/favorites"], [data-resolved-pathname="/saved-searches"])
   .rawaj-account-collection-v3 [class*="bg-card"] {
   border-color: rgba(216,174,95,.12) !important;
