@@ -14,6 +14,7 @@ const viewports = [
 const routes = [
   { name: "home", path: "/" },
   { name: "categories", path: "/categories" },
+  { name: "governorate-damascus", path: "/syria/damascus", focused: true },
   { name: "category-vehicles", path: "/category/vehicles" },
   { name: "category-real-estate", path: "/category/real-estate" },
   { name: "category-phones", path: "/category/phones" },
@@ -33,6 +34,11 @@ const routes = [
   { name: "add-listing", path: "/add-listing" },
   { name: "account", path: "/profile" },
   { name: "my-listings", path: "/profile/listings" },
+  {
+    name: "owner-listing-editor-guest",
+    path: "/profile/listings/00000000-0000-4000-8000-000000000071",
+    focused: true,
+  },
   { name: "favorites", path: "/favorites" },
   { name: "saved-searches", path: "/saved-searches" },
   { name: "notifications", path: "/notifications" },
@@ -43,6 +49,7 @@ const routes = [
   { name: "safety", path: "/safety" },
   { name: "verification", path: "/verification" },
   { name: "promotion", path: "/promotion" },
+  { name: "promotion-request-guest", path: "/promotion-request", focused: true },
   { name: "terms", path: "/terms" },
   { name: "privacy", path: "/privacy" },
   { name: "prohibited", path: "/prohibited" },
@@ -61,6 +68,7 @@ const routes = [
   { name: "admin-campaigns", path: "/admin/campaigns" },
   { name: "admin-audit", path: "/admin/audit" },
   { name: "admin-owner-controls", path: "/admin/owner-controls" },
+  { name: "admin-notifications-guest", path: "/admin/notifications", focused: true },
   { name: "not-found", path: "/__rawaj_visual_audit_not_found__", expectedStatus: 404 },
 ] as const;
 
@@ -70,6 +78,14 @@ for (const viewport of viewports) {
 
     for (const route of routes) {
       if ("homeOnly" in viewport && route.name !== "home") continue;
+      // Complete route coverage without multiplying screenshot time across all sizes.
+      // The new B4 fixtures cover 390px mobile and 1440px desktop guest states.
+      if (
+        "focused" in route &&
+        viewport.name !== "mobile-390" &&
+        viewport.name !== "desktop-1440"
+      )
+        continue;
       test(`${route.name} rendered layout audit`, async ({ page }, testInfo) => {
         test.skip(
           !testInfo.project.name.startsWith(viewport.project),
