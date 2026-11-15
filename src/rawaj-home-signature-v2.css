@@ -759,7 +759,8 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-site-footer {
-  background-color: #172823 !important;
+  /* Follow the same approved petrol footer as discovery and support. */
+  background-color: var(--rawaj-identity-petrol) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"]
@@ -789,18 +790,6 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item {
   color: #fff4de !important;
   min-width: 0;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="favorites"] {
-  order: 1;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="chats"] {
-  order: 2;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-section="account"] {
-  order: 3;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-dock-item[data-active="true"] {
