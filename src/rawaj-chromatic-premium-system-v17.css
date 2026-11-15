@@ -305,7 +305,7 @@ body {
 }
 
 /* Inputs, selects, search, and form controls. */
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-ui="input"], [data-slot="input"], [data-slot="textarea"], [role="combobox"]) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]):not([data-resolved-pathname="/categories"])) :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select, [data-ui="input"], [data-slot="input"], [data-slot="textarea"], [role="combobox"]) {
   border-color: rgba(216, 174, 95, 0.16) !important;
   color: #f5f0e9 !important;
   background:
@@ -314,16 +314,16 @@ body {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 5px 14px rgba(0,0,0,.12) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(input, textarea)::placeholder {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]):not([data-resolved-pathname="/categories"])) :is(input, textarea)::placeholder {
   color: #797f88 !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(input, textarea, select, [role="combobox"]):focus {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]):not([data-resolved-pathname="/categories"])) :is(input, textarea, select, [role="combobox"]):focus {
   border-color: rgba(216, 174, 95, 0.52) !important;
   box-shadow: 0 0 0 3px rgba(216,174,95,.095), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(input[type="checkbox"], input[type="radio"]) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"]):not([data-resolved-pathname="/categories"])) :is(input[type="checkbox"], input[type="radio"]) {
   accent-color: var(--rawaj-v17-magenta);
 }
 

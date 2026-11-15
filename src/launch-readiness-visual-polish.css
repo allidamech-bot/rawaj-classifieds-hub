@@ -5,10 +5,13 @@
   object-position: center;
 }
 
+/* Never hide numeric prices or negotiability inside responsive cards.
+   The grid column can wrap without changing the card's ownership or geometry. */
 .rawaj-adaptive-card__price {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .rawaj-adaptive-card__title,
