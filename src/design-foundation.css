@@ -184,16 +184,18 @@
 
 
 /* The Radix portal root is a direct body child, outside AppShell. Give
- * approved light routes and approved storefronts their canonical palette,
+ * approved light routes, administration and storefronts their canonical palette,
  * including iPhone overscroll, popovers and dialogs. Unlike V17 body
  * overrides, this stays inactive on the distinct approved homepage. */
 html:has(.rawaj-app-shell:is(
   [data-design-palette="ivory"],
+  [data-resolved-pathname^="/admin"],
   [data-resolved-pathname^="/seller/"],
   [data-resolved-pathname="/profile/listings"]
 )),
 body:has(.rawaj-app-shell:is(
   [data-design-palette="ivory"],
+  [data-resolved-pathname^="/admin"],
   [data-resolved-pathname^="/seller/"],
   [data-resolved-pathname="/profile/listings"]
 )) {
@@ -203,6 +205,7 @@ body:has(.rawaj-app-shell:is(
 
 body:has(.rawaj-app-shell:is(
   [data-design-palette="ivory"],
+  [data-resolved-pathname^="/admin"],
   [data-resolved-pathname^="/seller/"],
   [data-resolved-pathname="/profile/listings"]
 )) {
