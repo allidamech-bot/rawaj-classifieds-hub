@@ -53,43 +53,52 @@ test.describe("B4 admin route and authorization acceptance (isolated fixtures on
         const response = await page.goto(path, { waitUntil: "domcontentloaded" });
         expect(response?.status() ?? 200, "route " + path).toBeLessThan(500);
         await ready(page, language);
-        await expect(page.getByRole("heading", {
-          name: /تسجيل الدخول مطلوب|Login required/,
-        })).toBeVisible();
+        await expect(
+          page.getByRole("heading", {
+            name: /تسجيل الدخول مطلوب|Login required/,
+          }),
+        ).toBeVisible();
         await expect(page.locator(".rawaj-admin-nav-rail")).toHaveCount(0);
         await expect(page.locator('.rawaj-admin-v3 a[href="/login"]')).toBeVisible();
         await expect(page.locator('a[href="/admin/owner-controls"]')).toHaveCount(0);
       }
 
-      expect(privilegedRequests, "Signed-out visitors must never load administrative data").toEqual([]);
+      expect(privilegedRequests, "Signed-out visitors must never load administrative data").toEqual(
+        [],
+      );
     });
 
-    test("authenticated ordinary member is denied privileged admin workspaces: " + language, async ({
-      page,
-    }) => {
-      await page.addInitScript((value) => {
-        localStorage.setItem("rawaj-language", value);
-        localStorage.setItem("rawaj:e2e:firebase-user", "{}");
-      }, language);
+    test(
+      "authenticated ordinary member is denied privileged admin workspaces: " + language,
+      async ({ page }) => {
+        await page.addInitScript((value) => {
+          localStorage.setItem("rawaj-language", value);
+          localStorage.setItem("rawaj:e2e:firebase-user", "{}");
+        }, language);
 
-      const privilegedRequests: string[] = [];
-      page.on("request", (request) => {
-        const path = new URL(request.url()).pathname;
-        if (/^\/(?:api|v1)\/admin(?:\/|$)/.test(path)) {
-          privilegedRequests.push(request.method() + " " + path);
+        const privilegedRequests: string[] = [];
+        page.on("request", (request) => {
+          const path = new URL(request.url()).pathname;
+          if (/^\/(?:api|v1)\/admin(?:\/|$)/.test(path)) {
+            privilegedRequests.push(request.method() + " " + path);
+          }
+        });
+
+        for (const path of ["/admin", "/admin/users", "/admin/owner-controls"]) {
+          const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+          expect(response?.status() ?? 200).toBeLessThan(500);
+          await ready(page, language);
+          await expect(
+            page.getByRole("heading", {
+              name: /غير مخوّل|Not authorized/,
+            }),
+          ).toBeVisible();
+          await expect(page.locator(".rawaj-admin-nav-rail")).toHaveCount(0);
         }
-      });
-
-      for (const path of ["/admin", "/admin/users", "/admin/owner-controls"]) {
-        const response = await page.goto(path, { waitUntil: "domcontentloaded" });
-        expect(response?.status() ?? 200).toBeLessThan(500);
-        await ready(page, language);
-        await expect(page.getByRole("heading", {
-          name: /غير مخوّل|Not authorized/,
-        })).toBeVisible();
-        await expect(page.locator(".rawaj-admin-nav-rail")).toHaveCount(0);
-      }
-      expect(privilegedRequests, "A normal user must not initiate privileged requests").toEqual([]);
-    });
+        expect(privilegedRequests, "A normal user must not initiate privileged requests").toEqual(
+          [],
+        );
+      },
+    );
   }
 });
