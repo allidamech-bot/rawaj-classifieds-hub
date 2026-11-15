@@ -46,6 +46,7 @@ interface ApiEnvelope<T> {
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const REFERENCE_CACHE_TTL_MS = 5 * 60_000;
+const REFERENCE_FAILURE_COOLDOWN_MS = 30_000;
 let referenceCache: {
   expiresAt: number;
   promise: Promise<ClassifiedsResult<CloudflareReferenceBundle>>;
@@ -58,7 +59,11 @@ export async function fetchCloudflareReferences(): Promise<
   if (referenceCache && referenceCache.expiresAt > now) return referenceCache.promise;
 
   const promise = requestJson<CloudflareReferenceBundle>("/v1/references").then((result) => {
-    if (!result.ok && referenceCache?.promise === promise) referenceCache = null;
+    if (!result.ok && referenceCache?.promise === promise) {
+      // Prevent repeated SSR/browser bursts while the Worker is unavailable.
+      // Unlike a successful response, retain the failure only briefly.
+      referenceCache.expiresAt = Date.now() + REFERENCE_FAILURE_COOLDOWN_MS;
+    }
     return result;
   });
   referenceCache = { expiresAt: now + REFERENCE_CACHE_TTL_MS, promise };

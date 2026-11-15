@@ -68,6 +68,9 @@ jobs:
       - name: Enforce local-only browser fixtures and bounded production checks
         run: npm run test:ci-worker-egress-isolation
 
+      - name: Enforce Cloudflare low-traffic and outage backoff contracts
+        run: npm run test:cloudflare-traffic-budget
+
       - name: Verify runtime backend boundary
         run: npm run test:runtime-boundary
 

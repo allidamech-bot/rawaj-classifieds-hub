@@ -1,4 +1,8 @@
-import type { ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 import type { CanonicalLocationNode } from "@/lib/api/location-taxonomy";
 import { fetchLocationPath } from "@/lib/api/location-taxonomy";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
@@ -6,11 +10,16 @@ import { fetchCloudflareListingDetail } from "@/lib/public-data/cloudflare-clien
 
 export async function fetchPublicListingLocationPath(
   listingId: string,
+  existingListing?: Pick<ClassifiedListing, "locationNodeId" | "districtAr">,
 ): Promise<ClassifiedsResult<CanonicalLocationNode[]>> {
   try {
     const cleanId = listingId.trim();
     if (!cleanId) return unavailable();
-    const result = await fetchCloudflareListingDetail(cleanId);
+    // Public listing loaders already have the listing and should not fetch its
+    // detail endpoint again just to read a location node id.
+    const result = existingListing
+      ? { ok: true as const, data: { listing: existingListing } }
+      : await fetchCloudflareListingDetail(cleanId);
     if (!result.ok) return result;
     const listing = result.data.listing;
     const locationNodeId =

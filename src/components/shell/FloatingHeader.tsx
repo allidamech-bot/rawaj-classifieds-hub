@@ -34,20 +34,42 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
       return;
     }
     let cancelled = false;
-    const load = async () => {
-      const result = await adminFetchNotificationSummary(true);
-      if (!cancelled && result.ok) setAdminUnread(result.data.unreadTotal);
+    let inFlight = false;
+    let nextAllowedFetchAt = 0;
+    const load = async (force = false) => {
+      if (document.visibilityState !== "visible" || navigator.onLine === false) return;
+      if (inFlight || (!force && Date.now() < nextAllowedFetchAt)) return;
+      inFlight = true;
+      try {
+        const result = await adminFetchNotificationSummary(true);
+        if (cancelled) return;
+        if (result.ok) {
+          setAdminUnread(result.data.unreadTotal);
+          nextAllowedFetchAt = Date.now() + 60_000;
+        } else {
+          nextAllowedFetchAt = Date.now() + 5 * 60_000;
+        }
+      } catch {
+        nextAllowedFetchAt = Date.now() + 5 * 60_000;
+      } finally {
+        inFlight = false;
+      }
     };
     void load();
     const onFocus = () => void load();
+    const onAdminEvent = () => void load(true);
     window.addEventListener("focus", onFocus);
-    window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
-    const timer = window.setInterval(load, 60000);
+    window.addEventListener("online", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onAdminEvent);
+    const timer = window.setInterval(onFocus, 60_000);
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onFocus);
-      if (timer) window.clearInterval(timer);
+      window.removeEventListener("online", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener(ADMIN_NOTIFICATIONS_UPDATED_EVENT, onAdminEvent);
+      window.clearInterval(timer);
     };
   }, [auth.canAccessAdmin]);
 

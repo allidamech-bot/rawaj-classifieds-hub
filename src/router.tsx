@@ -17,7 +17,8 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreload: "intent",
-    defaultPreloadDelay: 60,
+    // Avoid dispatching public API loaders for incidental brief link hovers.
+    defaultPreloadDelay: 180,
     defaultPreloadStaleTime: 30_000,
   });
 
