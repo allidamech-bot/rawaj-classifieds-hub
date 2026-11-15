@@ -133,14 +133,9 @@ export async function inspectRepositoryEdgeCutover() {
   ] = await Promise.all([
     readFile(new URL(".env.production", root), "utf8"),
     readFile(new URL("vercel.json", root), "utf8").then(JSON.parse),
-    readFile(new URL("cloudflare/worker/wrangler.base.jsonc", root), "utf8").then(
-      JSON.parse,
-    ),
+    readFile(new URL("cloudflare/worker/wrangler.base.jsonc", root), "utf8").then(JSON.parse),
     readFile(new URL("cloudflare/worker/scripts/render-config.mjs", root), "utf8"),
-    readFile(
-      new URL(".github/workflows/cloudflare-production-worker-deploy.yml", root),
-      "utf8",
-    ),
+    readFile(new URL(".github/workflows/cloudflare-production-worker-deploy.yml", root), "utf8"),
   ]);
   return validateCloudflareEdgeCutover({
     environmentSource,
