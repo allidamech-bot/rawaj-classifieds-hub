@@ -15,6 +15,27 @@ permissions:
   contents: read
 
 jobs:
+
+  format-report:
+    name: Canonical test formatting (temporary)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Report canonical Prettier output
+        run: |
+          npx prettier --write e2e/b4-admin-authorization.spec.ts e2e/b4-functional-acceptance.spec.ts
+          echo 'B4_ADMIN_FORMAT_START'
+          cat e2e/b4-admin-authorization.spec.ts
+          echo 'B4_ADMIN_FORMAT_END'
+          echo 'B4_JOURNEY_FORMAT_START'
+          cat e2e/b4-functional-acceptance.spec.ts
+          echo 'B4_JOURNEY_FORMAT_END'
   functional:
     name: Functional routes (${{ matrix.project }})
     runs-on: ubuntu-latest
