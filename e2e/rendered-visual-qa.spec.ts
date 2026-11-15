@@ -80,11 +80,7 @@ for (const viewport of viewports) {
       if ("homeOnly" in viewport && route.name !== "home") continue;
       // Complete route coverage without multiplying screenshot time across all sizes.
       // The new B4 fixtures cover 390px mobile and 1440px desktop guest states.
-      if (
-        "focused" in route &&
-        viewport.name !== "mobile-390" &&
-        viewport.name !== "desktop-1440"
-      )
+      if ("focused" in route && viewport.name !== "mobile-390" && viewport.name !== "desktop-1440")
         continue;
       test(`${route.name} rendered layout audit`, async ({ page }, testInfo) => {
         test.skip(
