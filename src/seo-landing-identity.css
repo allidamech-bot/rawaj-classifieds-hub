@@ -1,0 +1,94 @@
+/* Approved RAWAJ identity for active category and governorate landing routes.
+ * Preserve existing content, listing cards, SEO and navigation behavior.
+ * Target the shared landing owner, not global cards or the approved homepage. */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) {
+  --rawaj-shell-ambient-opacity: 0;
+  --rawaj-shell-canvas: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
+  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  background: var(--rawaj-identity-ivory) !important;
+  color: var(--rawaj-identity-ink) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) :is(.rawaj-app-shell__page, .rawaj-app-shell__content) {
+  background: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-shell-header {
+  background: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-shell-header :is(.rawaj-brand-lockup__name, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) main.rawaj-seo-landing {
+  min-width: 0;
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-surface {
+  border: 1px solid var(--rawaj-border) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing :is(h1, h2, .text-foreground) {
+  color: var(--rawaj-identity-ink) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing :is(.rawaj-eyebrow, .text-primary) {
+  color: var(--rawaj-identity-teal) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .text-muted-foreground {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-button-primary {
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-site-footer :is(h2, p, a, span) {
+  color: var(--rawaj-identity-ivory) !important;
+}

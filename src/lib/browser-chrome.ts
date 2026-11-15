@@ -7,6 +7,9 @@ export function resolveBrowserChrome(pathname: string) {
   if (pathname === "/" || pathname === "/admin" || pathname.startsWith("/admin/")) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
+  if (/^\/(?:category|syria)\/[^/]+$/.test(pathname)) {
+    return { colorScheme: "light", themeColor: "#073836" } as const;
+  }
   if (
     pathname === "/categories" ||
     pathname === "/listings" ||

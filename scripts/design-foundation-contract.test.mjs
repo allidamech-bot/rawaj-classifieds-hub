@@ -245,9 +245,21 @@ test("shared badge variants use central status tokens, never embedded colors", a
     appShell.includes('data-design-palette={useIvoryPalette ? "ivory" : undefined}'),
     "Only an explicitly approved route may opt into the ivory foundation",
   );
+  for (const explicitScope of [
+    "routeStyles.listingStudio",
+    "routeStyles.trustWorkspace",
+    "routeStyles.personalSpace",
+    "useSeoLandingPalette",
+  ]) {
+    assert.ok(
+      appShell.includes(explicitScope),
+      `Missing explicitly approved ivory scope: ${explicitScope}`,
+    );
+  }
   assert.ok(
-    appShell.includes("routeStyles.listingStudio || routeStyles.trustWorkspace"),
-    "The opt-in must be limited to the approved studio and trust workspaces",
+    appShell.includes("const useSeoLandingPalette =") &&
+      appShell.includes("(?:category|syria)"),
+    "Only active category and governorate landing paths may opt into SEO ivory",
   );
   assert.ok(!appShell.includes('data-design-palette="ivory"'), "Never force ivory across the whole app");
 });
