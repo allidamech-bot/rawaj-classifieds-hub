@@ -183,12 +183,58 @@
 }
 
 
-/* Safari rubber-band and standalone PWA viewport must not expose
- * V17's charcoal html/body beneath an explicitly approved ivory route. */
-html:has(.rawaj-app-shell[data-design-palette="ivory"]),
-body:has(.rawaj-app-shell[data-design-palette="ivory"]) {
+/* The Radix portal root is a direct body child, outside AppShell. Give
+ * approved light routes and approved storefronts their canonical palette,
+ * including iPhone overscroll, popovers and dialogs. Unlike V17 body
+ * overrides, this stays inactive on the distinct approved homepage. */
+html:has(.rawaj-app-shell:is(
+  [data-design-palette="ivory"],
+  [data-resolved-pathname^="/seller/"],
+  [data-resolved-pathname="/profile/listings"]
+)),
+body:has(.rawaj-app-shell:is(
+  [data-design-palette="ivory"],
+  [data-resolved-pathname^="/seller/"],
+  [data-resolved-pathname="/profile/listings"]
+)) {
   color-scheme: light !important;
   background: var(--rawaj-identity-ivory) !important;
+}
+
+body:has(.rawaj-app-shell:is(
+  [data-design-palette="ivory"],
+  [data-resolved-pathname^="/seller/"],
+  [data-resolved-pathname="/profile/listings"]
+)) {
+  --rawaj-card-background: #fffaf3;
+  --rawaj-elevated-background: #fffdf9;
+  --rawaj-muted-surface: #f4ebde;
+  --rawaj-text-primary: var(--rawaj-identity-ink);
+  --rawaj-text-secondary: #435650;
+  --rawaj-border: #dfd3c1;
+  --background: var(--rawaj-identity-ivory);
+  --foreground: var(--rawaj-identity-ink);
+  --card: #fffaf3;
+  --card-foreground: var(--rawaj-identity-ink);
+  --popover: #fffdf9;
+  --popover-foreground: var(--rawaj-identity-ink);
+  --muted: #f4ebde;
+  --muted-foreground: #435650;
+  --primary: var(--rawaj-identity-petrol);
+  --primary-foreground: #ffffff;
+  --accent: #e0ece8;
+  --accent-foreground: var(--rawaj-identity-ink);
+  --border: #dfd3c1;
+  --input: #ad9c86;
+  --ring: var(--rawaj-identity-teal);
+  --color-background: var(--rawaj-identity-ivory);
+  --color-foreground: var(--rawaj-identity-ink);
+  --color-card: #fffaf3;
+  --color-popover: #fffdf9;
+  --color-popover-foreground: var(--rawaj-identity-ink);
+  --color-muted: #f4ebde;
+  --color-muted-foreground: #435650;
+  color: var(--rawaj-identity-ink);
 }
 
 /* Opt-in route palette only. No routes are enabled by this foundation change.
