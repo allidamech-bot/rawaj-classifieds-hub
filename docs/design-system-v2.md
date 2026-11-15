@@ -217,43 +217,57 @@ B2.3 follow-up: the retired V20 primary-gradient selector no longer targets `/ad
 
 Final browser contrast corrections are explicitly owned by the studio: form field captions use verified dark ink on ivory, selected taxonomy copy has dark foreground on a pale teal surface, and the clipped input label retains a legible semantic background without changing its accessible name. Existing label hierarchy and form behavior are preserved.
 
-## B4 pre-integration audit: route and visual-QA coverage (15 November 2026)
+## B4 integration audit — route and visual-QA coverage (15 November 2026)
 
-This is a **pre-merge baseline**, not final B4 acceptance. It was derived from
-`src/routeTree.gen.ts` and `e2e/rendered-visual-qa.spec.ts` on the main branch
-after B3.1 merged; it must be refreshed after B3.2–B3.4 are merged.
+**Implementation status: pending final CI and final combined-main acceptance.**
+The generated route inventory currently contains **48 declarations**; two duplicate
+trailing-slash aliases and the nonvisual `/sitemap.xml` leave **45 distinct UI
+route patterns**. The rendered-visual matrix now includes representative
+fixtures for **all 45 route patterns** (48 route cases including the fallback
+404 and additional category cases). Route *presence* is not equivalent to
+authenticated state, function, or real-device acceptance.
 
-- TanStack generated route inventory: **48** entries.
-- Removing the two duplicate trailing-slash route aliases and the non-visual
-  `/sitemap.xml` endpoint leaves **45 distinct UI routes**.
-- Rendered Visual QA declares **44 cases**, including the 404 fallback and
-  multiple category fixtures; **41 of the 45 UI routes** have representative
-  paths in that suite. This is *route presence*, not proof that each state or
-  role has already passed.
-- Four UI routes have no direct rendered-visual fixture:
-  `/promotion-request`, `/admin/notifications`,
-  `/syria/$slug`, and `/profile/listings/$id`.
-- The generated router has **16 distinct admin UI routes**, including
-  `/admin/notifications`. The earlier admin action inventory lists both
-  `/admin` and `/admin/` as separate entries but omits
-  `/admin/notifications`. Reconcile against the generated router and
-  actual permissions during B3.4/B4 acceptance.
-- `scripts/responsive-accessibility-v1.test.mjs` now rejects newly
-  untracked visual-QA gaps while explicitly allowing these four known
-  incomplete fixtures. Remove each exception only when a deterministic
-  fixture with correct expected authentication/error behavior is present.
+Four representative cases were added in B4 to remove the old coverage
+exceptions:
 
-### Required final B4 action
+- `/syria/damascus`: uses the **active governorate fixture** declared in
+  `e2e/rawaj-e2e-api-fixtures.ts`, never a fabricated production location.
+- `/promotion-request`: signed-out guest request surface only; do not submit
+  any promotion or upload a receipt during rendered visual QA.
+- `/admin/notifications`: guest authorization boundary only. Protected
+  administrator functionality requires the isolated account/role tests.
+- `/profile/listings/00000000-0000-4000-8000-000000000071`: signed-out
+  owner-editor gate only. The **authenticated** fixture editor is independently
+  exercised by `e2e/b2-listing-editor-acceptance.spec.ts`.
 
-After B3.2, B3.3 and B3.4 land in main, add appropriate fixtures for all four
-routes, exercise the relevant authenticated, anonymous, mobile, RTL and LTR
-states, refresh the actual route inventory, and reduce the exception set to
-empty. Existing redirects, private records and parameterized routes require
-isolated fixtures; never fabricate production user or listing IDs.
+For CI performance, these four additions capture the isolated guest/public
+states at **390px mobile Chromium** and **1440px desktop Chromium**; existing
+routes retain their previous viewport matrix. This does **not** establish
+iPhone hardware or all-role acceptance.
 
-B3.3 and B3.4 both edit historical CSS owners such as V7/V7B and V18 legacy
-surfaces. Their source-level changes must be reconciled and revalidated in
-sequence before final legacy retirement. Separate passing branch checks do
-not establish combined-main acceptance.
+`scripts/responsive-accessibility-v1.test.mjs` now requires every generated
+UI route to be represented in rendered QA **with no exception list**. Any
+additional route must introduce a representative fixture before the test passes.
 
-No production deployment or production mutations are authorized by this audit.
+The router includes **16 distinct administration UI routes**, including
+`/admin/notifications`. The independent B4 role matrix added via merged
+PR #881 covers guest/non-admin boundaries, while authenticated admin actions
+remain dependent on the B3.4 admin implementation/acceptance in PR #876.
+
+### Required integration closeout
+
+1. Verify exact-HEAD Quality Gate, Browser Smoke, Rendered Visual QA and
+   the appropriate security/WebKit checks on this B4 branch.
+2. Keep PR #877 a draft until admin PR #876 is merged and re-run final
+   integration checks against the actual updated `main` branch.
+3. Do not claim authenticated moderator/owner functionality or production
+   user-data safety from guest screenshots. Use isolated approved fixtures;
+   never mutate production.
+4. Verify the combined CSS/source ownership and visual route behavior in
+   Arabic RTL, English LTR, desktop and emulated iPhone WebKit. Physical iPhone
+   Safari/standalone PWA acceptance still requires a real-device check.
+5. Only mark **final acceptance** once the complete integrated commit has
+   passed and been visually reviewed. Source green checks alone do not prove
+   live production acceptance.
+
+No production deployment or production mutations are authorized.
