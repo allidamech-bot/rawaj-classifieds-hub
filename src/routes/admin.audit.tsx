@@ -153,8 +153,6 @@ function AdminAuditPage() {
           ))}
         </section>
       )}
-
-
     </div>
   );
 }
