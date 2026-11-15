@@ -240,10 +240,12 @@ exceptions:
   owner-editor gate only. The **authenticated** fixture editor is independently
   exercised by `e2e/b2-listing-editor-acceptance.spec.ts`.
 
-For CI performance, these four additions capture the isolated guest/public
-states at **390px mobile Chromium** and **1440px desktop Chromium**; existing
-routes retain their previous viewport matrix. This does **not** establish
-iPhone hardware or all-role acceptance.
+For CI performance, the three additional public/guest cases capture
+**390px mobile Chromium** and **1440px desktop Chromium**; the admin
+notifications route uses the full existing viewport matrix and matches the
+B3.4 administration PR's visual fixture exactly. All existing routes retain
+their previous viewport matrix. This does **not** establish iPhone hardware or
+all-role acceptance.
 
 `scripts/responsive-accessibility-v1.test.mjs` now requires every generated
 UI route to be represented in rendered QA **with no exception list**. Any
