@@ -508,6 +508,17 @@ test("Listing detail and listing cards use approved petrol/ivory missing-image a
   assert.match(cards, /<PlaceholderArt[\s\S]*?aspect=\{placeholderAspect\}[\s\S]*?\bidentity\b[\s\S]*?className=/);
 });
 
+test("category and favorites fallbacks reuse the approved identity", async () => {
+  const [categories, favorites, categoryCard] = await Promise.all([
+    readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/CategoryCard.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(categories, /<PlaceholderArt type=\{category\.placeholder\} aspect="square" identity \/>/);
+  assert.match(favorites, /<PlaceholderArt type="misc" aspect="square" identity \/>/);
+  assert.match(categoryCard, /<PlaceholderArt type=\{category\.placeholder\} aspect="square" identity \/>/);
+});
+
 test("More page localizes the Boost shortcut for Arabic users", async () => {
   const more = await readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8");
   assert.match(more, /titleAr: "تعزيز الظهور",\s*titleEn: "Boost"/);
