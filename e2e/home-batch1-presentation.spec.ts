@@ -44,9 +44,13 @@ for (const language of ["ar", "en"] as const) {
     await expect(search).toBeVisible();
     const geometry = await page.evaluate(() => {
       const header = document.querySelector(".rawaj-app-header")!.getBoundingClientRect();
-      const heading = document.querySelector(".rawaj-signature-hero__tagline")!.getBoundingClientRect();
+      const heading = document
+        .querySelector(".rawaj-signature-hero__tagline")!
+        .getBoundingClientRect();
       const form = document.querySelector(".rawaj-signature-search")!.getBoundingClientRect();
-      const button = document.querySelector(".rawaj-signature-search button")!.getBoundingClientRect();
+      const button = document
+        .querySelector(".rawaj-signature-search button")!
+        .getBoundingClientRect();
       return {
         headlineClear: heading.top >= header.bottom - 2,
         formWithinViewport: form.left >= -2 && form.right <= innerWidth + 2,
