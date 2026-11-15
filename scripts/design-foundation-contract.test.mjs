@@ -563,5 +563,14 @@ test("retired V7/V17/V18 paints cannot overwrite migrated light routes and store
   assert.match(appShell, /routeStyles\.offers/);
   assert.match(appShell, /\["\/login", "\/reset-password", "\/auth\/callback"\]\.includes\(pathname\)/);
   assert.match(browserChrome, /\["\/login", "\/reset-password", "\/auth\/callback"\]\.includes\(pathname\)/);
-  assert.match(foundation, /html:has\(\.rawaj-app-shell\[data-design-palette="ivory"\]\)/);
+  assert.match(foundation, /html:has\(\.rawaj-app-shell:is\(/);
+  const [primitives, portals, stability] = await Promise.all([
+    read("rawaj-chromatic-premium-system-v17-primitives.css"),
+    read("rawaj-chromatic-premium-system-v17-portals.css"),
+    read("stability-accessibility-fixes.css"),
+  ]);
+  assert.match(primitives, /\.rawaj-app-shell:not\(\[data-design-palette="ivory"\]\)/);
+  assert.match(portals, /body:where\(:not\(:has\(\.rawaj-app-shell\[data-design-palette="ivory"\]\)\)/);
+  assert.doesNotMatch(stability, /^@import.*v18-legacy-surfaces\.css/m);
+  assert.doesNotMatch(stability, /^@import.*v20-state-consistency\.css/m);
 });
