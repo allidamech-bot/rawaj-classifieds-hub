@@ -71,6 +71,9 @@ jobs:
       - name: Enforce Cloudflare low-traffic and outage backoff contracts
         run: npm run test:cloudflare-traffic-budget
 
+      - name: Verify Cloudflare edge quota 1027 read circuit and write safety
+        run: npm run test:cloudflare-quota-circuit
+
       - name: Verify runtime backend boundary
         run: npm run test:runtime-boundary
 

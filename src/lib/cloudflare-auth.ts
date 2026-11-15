@@ -3,6 +3,10 @@ import type { AuthUser } from "@/lib/auth-context";
 import type { User as FirebaseUser } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
+import {
+  isWorkerQuotaReadCooldownActive,
+  observeWorkerQuotaResponse,
+} from "@/lib/public-data/worker-quota-backoff";
 
 type Envelope<T> = { data?: T; error?: { code?: string; message?: string } };
 type ApiResult<T> = { ok: true; data: T } | { ok: false; error: string; code: string };
@@ -38,6 +42,9 @@ export async function cloudflareAuthorizedFetch(
 ): Promise<Response | null> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return null;
+  if ((init.method ?? "GET").toUpperCase() === "GET" && isWorkerQuotaReadCooldownActive()) {
+    return null;
+  }
   const currentUser = firebaseAuth.currentUser;
   let initialToken: string | null = null;
   try {
@@ -63,7 +70,7 @@ async function sendAuthorizedFetch(
   accessToken: string | null,
 ): Promise<Response | null> {
   try {
-    return await fetch(new URL(path, `${base}/`), {
+    const response = await fetch(new URL(path, `${base}/`), {
       method: init.method ?? "GET",
       credentials: "omit",
       headers: {
@@ -73,6 +80,10 @@ async function sendAuthorizedFetch(
       },
       body: init.body ?? undefined,
     });
+    if ((init.method ?? "GET").toUpperCase() === "GET") {
+      await observeWorkerQuotaResponse(response);
+    }
+    return response;
   } catch {
     return null;
   }
@@ -84,6 +95,14 @@ export async function cloudflareApiRequest<T>(
 ): Promise<ApiResult<T>> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return { ok: false, error: base.error.message, code: base.error.code };
+
+  if ((init.method ?? "GET").toUpperCase() === "GET" && isWorkerQuotaReadCooldownActive()) {
+    return {
+      ok: false,
+      error: "خدمة بيانات رَوَاج متوقفة مؤقتًا بسبب حد طلبات الخادم.",
+      code: "rate_limited",
+    };
+  }
 
   const currentUser = firebaseAuth.currentUser;
   let initialToken: string | null = null;
@@ -134,6 +153,9 @@ async function sendRequest<T>(
       },
       body: isForm ? body : jsonBody,
     });
+    if ((init.method ?? "GET").toUpperCase() === "GET") {
+      await observeWorkerQuotaResponse(response);
+    }
     const payload = (await response.json().catch(() => null)) as Envelope<T> | null;
     const result: ApiResult<T> =
       response.ok && payload?.data !== undefined
