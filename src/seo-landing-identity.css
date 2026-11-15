@@ -92,3 +92,78 @@
 ) .rawaj-site-footer :is(h2, p, a, span) {
   color: var(--rawaj-identity-ivory) !important;
 }
+
+/* Listing previews in the SEO landing inherit retired dark V17/V18 rules.
+ * Keep their card geometry and actual media untouched; own only the
+ * high-contrast semantic colors on these two approved light route families. */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card {
+  border-color: var(--rawaj-border) !important;
+  background: var(--rawaj-card-background) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card :is(.rawaj-adaptive-card__link, .rawaj-adaptive-card__body) {
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-card-background) !important;
+  background-image: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__price {
+  color: var(--rawaj-identity-petrol) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__title {
+  color: var(--rawaj-identity-ink) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__category {
+  border-color: var(--rawaj-border) !important;
+  color: var(--rawaj-identity-teal) !important;
+  background: var(--rawaj-surface-selected) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__meta,
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__meta span,
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__facts dt {
+  color: var(--rawaj-text-secondary) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__facts > div {
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-muted-surface) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname^="/category/"],
+  [data-resolved-pathname^="/syria/"]
+) .rawaj-seo-landing .rawaj-adaptive-card__facts dd {
+  color: var(--rawaj-identity-ink) !important;
+}
