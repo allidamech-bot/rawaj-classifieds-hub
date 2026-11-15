@@ -36,7 +36,6 @@ const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
 if (rawajE2eUseFixtures && rawajE2eApiProxyTarget) {
   throw new Error("RAWAJ E2E isolation: remove RAWAJ_E2E_API_PROXY_TARGET when using fixtures.");
 }
-const rawajE2eApiProxyPath = "/v1";
 const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
 export default defineConfig({
@@ -53,17 +52,6 @@ export default defineConfig({
           createRawajE2eApiFixturePlugin(),
         ]
       : [],
-    server: !rawajE2eUseFixtures && rawajE2eApiProxyTarget
-      ? {
-          proxy: {
-            [rawajE2eApiProxyPath]: {
-              target: rawajE2eApiProxyTarget,
-              changeOrigin: true,
-              secure: true,
-            },
-          },
-        }
-      : undefined,
     resolve: {
       alias: [
         ...(rawajE2eUseFixtures
