@@ -11,6 +11,21 @@
   padding-bottom: 1rem !important;
 }
 
+/* B4: approved account and communication headers retain the petrol surface.
+ * Scope the inverse text to their title, instead of inheriting dark ink from
+ * the ivory content canvas (which fails 4.5:1 contrast across devices). */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname="/more"],
+  [data-resolved-pathname="/profile"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"],
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/chats"]
+) .rawaj-shell-header__title :is(h1, p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 /* More / personal hub */
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
   display: grid;
