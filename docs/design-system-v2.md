@@ -216,3 +216,44 @@ B2.3 browser acceptance correction: solid petrol background beneath decorative h
 B2.3 follow-up: the retired V20 primary-gradient selector no longer targets `/add-listing`, leaving the approved petrol CTA owner authoritative; studio canvas owns its light card tokens and hidden taxonomy labels have an opaque inherited card surface for accessibility auditing. No other route was changed.
 
 Final browser contrast corrections are explicitly owned by the studio: form field captions use verified dark ink on ivory, selected taxonomy copy has dark foreground on a pale teal surface, and the clipped input label retains a legible semantic background without changing its accessible name. Existing label hierarchy and form behavior are preserved.
+
+## B4 pre-integration audit: route and visual-QA coverage (15 November 2026)
+
+This is a **pre-merge baseline**, not final B4 acceptance. It was derived from
+`src/routeTree.gen.ts` and `e2e/rendered-visual-qa.spec.ts` on the main branch
+after B3.1 merged; it must be refreshed after B3.2–B3.4 are merged.
+
+- TanStack generated route inventory: **48** entries.
+- Removing the two duplicate trailing-slash route aliases and the non-visual
+  `/sitemap.xml` endpoint leaves **45 distinct UI routes**.
+- Rendered Visual QA declares **44 cases**, including the 404 fallback and
+  multiple category fixtures; **41 of the 45 UI routes** have representative
+  paths in that suite. This is *route presence*, not proof that each state or
+  role has already passed.
+- Four UI routes have no direct rendered-visual fixture:
+  `/promotion-request`, `/admin/notifications`,
+  `/syria/$slug`, and `/profile/listings/$id`.
+- The generated router has **16 distinct admin UI routes**, including
+  `/admin/notifications`. The earlier admin action inventory lists both
+  `/admin` and `/admin/` as separate entries but omits
+  `/admin/notifications`. Reconcile against the generated router and
+  actual permissions during B3.4/B4 acceptance.
+- `scripts/responsive-accessibility-v1.test.mjs` now rejects newly
+  untracked visual-QA gaps while explicitly allowing these four known
+  incomplete fixtures. Remove each exception only when a deterministic
+  fixture with correct expected authentication/error behavior is present.
+
+### Required final B4 action
+
+After B3.2, B3.3 and B3.4 land in main, add appropriate fixtures for all four
+routes, exercise the relevant authenticated, anonymous, mobile, RTL and LTR
+states, refresh the actual route inventory, and reduce the exception set to
+empty. Existing redirects, private records and parameterized routes require
+isolated fixtures; never fabricate production user or listing IDs.
+
+B3.3 and B3.4 both edit historical CSS owners such as V7/V7B and V18 legacy
+surfaces. Their source-level changes must be reconciled and revalidated in
+sequence before final legacy retirement. Separate passing branch checks do
+not establish combined-main acceptance.
+
+No production deployment or production mutations are authorized by this audit.
