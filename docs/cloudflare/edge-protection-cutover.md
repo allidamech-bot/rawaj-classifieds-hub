@@ -40,40 +40,55 @@ until each prerequisite and rollback check is verified independently.
 6. Prepare a pre-approved rollback release and previous Vercel environment values
    before changing live routing. Never disable the last working API endpoint first.
 
-## Atomic source cutover contract
+## Phase-aware source cutover contract
 
-Run `npm run test:cloudflare-edge-cutover`. The script is **offline/read-only**.
+Run `npm run test:cloudflare-edge-cutover`. The guard is **offline/read-only**.
 It currently returns `mode: "legacy"`, because production is intentionally pinned.
+It rejects **split Vercel rewrite/frontend origins**, unsupported Worker routing,
+unexpected deploy targets, and half-configured custom domains.
 
-For a later approved change, these must move **together** and pass the test:
+The following four deliberate phases support a zero-downtime transition:
 
-- `.env.production`: `VITE_PUBLIC_DATA_API_BASE_URL=https://api.rawa-j.com`
-- `vercel.json`: both `/v1/:path*` and `/api/:path*` rewrites to the matching host
-- `cloudflare/worker/wrangler.base.jsonc`: `workers_dev: false`, `preview_urls: false`,
-  explicit `routes: [{ "pattern": "api.rawa-j.com", "custom_domain": true }]`
-- `cloudflare/worker/scripts/render-config.mjs`: change the explicit custom-domain
-  rejection only after the authorized target has been validated and reviewed
-- `.github/workflows/cloudflare-production-worker-deploy.yml`: keep manual SHA-gated
-  `syria-production` protection and use the protected health/smoke origin
+1. **legacy:** `workers_dev: true`, no custom domain, old frontend API origin,
+   old Vercel rewrites, old production smoke URL, explicit custom-domain freeze.
+2. **staging:** Create and validate the new custom domain alongside the old route
+   while Vercel and the frontend still use `workers.dev`. Keep `workers_dev: true`;
+   the custom domain route is explicit and the custom-domain render freeze is
+   removed only through an approved, reviewed change. Smoke still checks old live origin.
+3. **cutover:** Switch `.env.production`, **both** Vercel rewrites, Vercel production
+   environment variables, and smoke tests to `https://api.rawa-j.com`.
+   Keep `workers_dev: true` **temporarily**, only until the new production
+   deployment and all media/auth journeys pass. The old route is still vulnerable
+   during this short handoff; do not leave the system in this state indefinitely.
+4. **protected:** After independent acceptance, change `workers_dev: false`
+   while retaining `preview_urls: false` and explicit
+   `routes: [{ "pattern": "api.rawa-j.com", "custom_domain": true }]`.
+   Verify old hostname is unreachable and future Wrangler redeploys keep it off.
 
-**Important:** Passing static tests is never proof that Cloudflare DNS, WAF, TLS,
-permissions, or Vercel encrypted production environment values are correct.
-The script prevents a partial *source* cutover, not an infrastructure incident.
+For stages 2–4 the Worker must have the explicit Custom Domain route, and the
+render-config freeze must be deliberately reviewed and updated. The manual
+SHA-gated `syria-production` deployment flow and Syria-only D1/R2/Firebase
+identity must remain intact throughout.
+
+**Important:** A static source contract does not prove Cloudflare DNS, zone
+ownership, WAF, TLS, Worker routing, mobile app configuration or Vercel
+encrypted production environment values. The short-lived `cutover` phase
+does not itself block bots on the old endpoint.
 
 ## Release sequence
 
-1. Verify protected endpoint and WAF policies in Cloudflare, without production routing changes.
-2. Obtain a change window and explicit owner approval for Worker/domain and frontend rollout.
-3. Stage the complete source configuration. Pass all Quality Gate, browser/WebKit,
-   security, account, media and read-only remote tests.
-4. Deploy the authorized Cloudflare Worker version through its guarded manual workflow.
-   Keep the old hostname reachable during the handoff.
-5. Update and deploy Vercel production configuration to the new origin. Verify the
-   exact deployed commit, Vercel environment variables and user journeys.
-6. Disable `workers.dev` only after the new route is independently confirmed
-   operational and the source Wrangler config will keep it disabled on redeploy.
-7. Monitor Worker invocation totals, WAF blocks, error 1027, authentication and media.
-   Roll back only using reviewed versions and the recorded original settings.
+1. Record Cloudflare usage and confirm ownership of the active domain zone,
+   edge WAF/rate-limiting capability and route prerequisites.
+2. Obtain explicit owner approval and a documented rollback procedure.
+3. In `staging`, attach and test the protected custom domain without
+   changing the frontend or disabling the old route; run manual read-only
+   acceptance (health, listing/media, auth, CORS, PWA) and inspect WAF results.
+4. In `cutover`, deploy the matching client/Vercel environment and rewrite
+   changes using an exact reviewed SHA. Verify real browser and SSR routes.
+5. In `protected`, disable `workers.dev` only after verified new-domain
+   functionality. Confirm the Wrangler source will not re-enable it.
+6. Monitor invocation totals, WAF blocks, Error 1027, auth and media failures.
+   Revert only through reviewed versions and documented original settings.
 
 ## Explicit exclusions
 
