@@ -146,6 +146,8 @@ test.describe("B4 independent marketplace journeys", () => {
     test(
       "non-destructive public and member route inventory renders: " + language,
       async ({ page }) => {
+        // Nineteen isolated route navigations can exceed the default 60s test budget.
+        test.slow();
         await page.addInitScript(
           (value) => localStorage.setItem("rawaj-language", value),
           language,
