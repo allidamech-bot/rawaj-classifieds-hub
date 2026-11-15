@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 
 for (const language of ["ar", "en"] as const) {
-  test(`B3 account hub and profile use ivory Safari chrome in ${language}`, async ({ page }) => {
+  test(`B3 account and saved collections use ivory Safari chrome in ${language}`, async ({
+    page,
+  }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.addInitScript((locale) => localStorage.setItem("rawaj-language", locale), language);
-    for (const route of ["/more", "/profile"]) {
+    for (const route of ["/more", "/profile", "/favorites", "/saved-searches"]) {
       const response = await page.goto(route, { waitUntil: "domcontentloaded" });
       expect(response?.status() ?? 200).toBe(200);
       await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1);

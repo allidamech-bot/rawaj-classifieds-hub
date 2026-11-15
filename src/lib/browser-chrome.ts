@@ -17,7 +17,12 @@ export function resolveBrowserChrome(pathname: string) {
   if (pathname === "/add-listing" || /^\/profile\/listings\/[^/]+$/.test(pathname)) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
-  if (pathname === "/more" || pathname === "/profile") {
+  if (
+    pathname === "/more" ||
+    pathname === "/profile" ||
+    pathname === "/favorites" ||
+    pathname === "/saved-searches"
+  ) {
     return { colorScheme: "light", themeColor: "#f9f0e4" } as const;
   }
   if (pathname === "/profile/listings" || pathname.startsWith("/seller/")) {
