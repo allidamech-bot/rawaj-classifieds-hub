@@ -393,6 +393,17 @@
 
 /* Messages: list-first mobile behavior remains owned by communication V3;
    every desktop and mobile state shares accessible opaque surface roles. */
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"] .rawaj-communication-safety {
+  border-color: #d2ddd5;
+  background: #eff7f1;
+}
+
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"]
+  .rawaj-communication-safety :is(strong, p) {
+  color: #173d38 !important;
+  font-size: max(0.75rem, 12px);
+}
+
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
   border: 1px solid #cedbd3 !important;
   border-radius: 1.1rem !important;
