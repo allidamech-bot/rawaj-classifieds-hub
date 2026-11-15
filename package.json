@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run test:listings-filters && npm run test:mobile-ux-polish && npm run check:cloudflare",
     "test:design-foundation": "node --test scripts/design-foundation-contract.test.mjs",
+    "test:ci-worker-egress-isolation": "node --test scripts/ci-worker-egress-isolation.test.mjs",
     "test:discovery-marketplace-v4": "node --test scripts/discovery-marketplace-v4.test.mjs",
     "test:listing-studio-v4": "node --test scripts/listing-studio-v4.test.mjs",
     "test:messaging-v4": "node --test scripts/messaging-v4.test.mjs scripts/b3-communication.test.mjs",
