@@ -39,6 +39,11 @@ export function resolveBrowserChrome(pathname: string) {
   ) {
     return { colorScheme: "light", themeColor: "#f9f0e4" } as const;
   }
+  // B3.2 communication workspaces use the petrol header over a light canvas.
+  // Safari chrome must not fall back to the retired charcoal route theme.
+  if (["/activity", "/notifications", "/chats"].includes(pathname)) {
+    return { colorScheme: "light", themeColor: "#073836" } as const;
+  }
   if (pathname === "/profile/listings" || pathname.startsWith("/seller/")) {
     return { colorScheme: "light", themeColor: "#fcfaf7" } as const;
   }
