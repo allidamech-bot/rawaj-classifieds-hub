@@ -26,6 +26,42 @@
   color: var(--rawaj-identity-ivory) !important;
 }
 
+/* B4: the ivory content palette must not turn petrol header branding or
+ * footer copy into dark-on-dark text. This is deliberately route-scoped to the
+ * seven migrated screens and leaves the approved home/store chrome intact. */
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname="/more"],
+  [data-resolved-pathname="/profile"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"],
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/chats"]
+) .rawaj-shell-header .rawaj-brand-lockup__name,
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname="/more"],
+  [data-resolved-pathname="/profile"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"],
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/chats"]
+) .rawaj-shell-header .rawaj-brand-lockup__latin {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]:is(
+  [data-resolved-pathname="/more"],
+  [data-resolved-pathname="/profile"],
+  [data-resolved-pathname="/favorites"],
+  [data-resolved-pathname="/saved-searches"],
+  [data-resolved-pathname="/activity"],
+  [data-resolved-pathname="/notifications"],
+  [data-resolved-pathname="/chats"]
+) .rawaj-site-footer :is(h2, p, a, span) {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 /* More / personal hub */
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
   display: grid;
