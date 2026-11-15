@@ -711,14 +711,17 @@
   color: var(--personal-text) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 svg,
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  color: #8fc2ff !important;
+/* Approved messaging uses dark petrol ink on a pale selected-state
+ * surface. The retired blue badge was 1.55:1 in authenticated visual QA. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-conversation-sidebar__heading :is(h2 svg, span) {
+  color: var(--rawaj-identity-petrol) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  border: 1px solid rgba(104, 173, 255, 0.13) !important;
-  background: rgba(104, 173, 255, 0.07) !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-conversation-sidebar__heading > span {
+  border: 1px solid var(--rawaj-border) !important;
+  background: #e0ece8 !important;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-search {
