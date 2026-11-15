@@ -324,6 +324,73 @@
   color: #075d52 !important;
 }
 
+/* B3.2 accessibility: the retired dark personal-space layer can still supply
+   light foreground tokens to nested notification cards and signed-out gates.
+   Own both sides of each contrast pair at the communication route source.
+   These selectors intentionally do not match B3.1 collections or other routes. */
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-communication-section-header p {
+  color: #075d52 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-panel .rawaj-communication-section-header h2,
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-panel .rawaj-notification-timeline__copy strong,
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-communication-follow-up > h2 {
+  color: #173d38 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-panel .rawaj-notification-timeline__copy :is(p, small) {
+  color: #435650 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-preferences > section {
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-preferences :is(h2, p:not(.text-destructive)) {
+  color: #173d38 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-preferences .text-muted-foreground {
+  color: #435650 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-preferences .bg-muted-surface {
+  background: #f2f0e8 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
+  .rawaj-notification-preferences .bg-card {
+  background: #fffaf3 !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
+  .rawaj-communication-v2 .rawaj-communication-signed-out {
+  border: 1px solid #d2ddd5 !important;
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
+  .rawaj-communication-v2 .rawaj-communication-signed-out h1 {
+  color: #173d38 !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
+  .rawaj-communication-v2 .rawaj-communication-signed-out p {
+  color: #435650 !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
+  .rawaj-communication-v2 .rawaj-communication-signed-out > a:first-of-type {
+  color: #fffaf3 !important;
+  background: #075d52 !important;
+}
+.rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
+  .rawaj-communication-v2 .rawaj-communication-signed-out > a + a {
+  color: #075d52 !important;
+  background: #e1f1e8 !important;
+}
+
 /* Messages: list-first mobile behavior remains owned by communication V3;
    every desktop and mobile state shares accessible opaque surface roles. */
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
