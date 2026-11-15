@@ -1,0 +1,55 @@
+name: B4 Functional Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "e2e/b4-*.spec.ts"
+      - ".github/workflows/b4-functional-acceptance.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: b4-functional-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  functional:
+    name: functional (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: mobile-webkit
+            browser: webkit
+          - project: desktop-chromium
+            browser: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install selected browser
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Functional journeys and permission boundaries (isolated local fixtures only)
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          VITE_PUBLIC_DATA_API_BASE_URL: http://127.0.0.1:4173
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b4-admin-authorization-matrix.spec.ts e2e/b4-functional-marketplace-journeys.spec.ts --project=${{ matrix.project }}
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b4-functional-${{ matrix.project }}-${{ github.run_id }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
