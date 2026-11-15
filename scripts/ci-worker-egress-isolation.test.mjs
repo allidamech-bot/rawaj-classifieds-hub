@@ -31,7 +31,7 @@ test("Vite and Playwright refuse unsafe fixture and production combinations", as
   const vite = await read("vite.config.ts");
   const playwright = await read("playwright.config.ts");
   assert.match(vite, /if \(rawajE2eUseFixtures && rawajE2eApiProxyTarget\)/);
-  assert.doesNotMatch(vite, /server:\\s*.*proxy:/s);
+  assert.doesNotMatch(vite, /proxy:/);
   assert.match(vite, /throw new Error\("RAWAJ E2E isolation:/);
   assert.match(playwright, /if \(usesLocalFixtures && usesExternalServer\)/);
   assert.match(playwright, /throw new Error\("RAWAJ E2E isolation:/);
