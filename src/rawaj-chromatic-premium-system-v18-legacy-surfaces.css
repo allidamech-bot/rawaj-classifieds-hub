@@ -210,69 +210,12 @@
     linear-gradient(145deg, #19211f, #131820) !important;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Admin                                                                       */
-/* -------------------------------------------------------------------------- */
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(
-  section,
-  article,
-  form,
-  div
-)[class*="rounded-2xl"][class*="bg-card"][class*="hairline"],
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-card,
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-panel {
-  border-color: rgba(216,174,95,.12) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74,140,255,.045), transparent 38%),
-    linear-gradient(150deg, #191d26, #12161d) !important;
-  box-shadow: 0 12px 28px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 > .min-w-0 > .space-y-5 > section:first-child[class*="rounded-2xl"] {
-  border-color: rgba(216,174,95,.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74,140,255,.09), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(219,73,179,.065), transparent 36%),
-    linear-gradient(150deg, #1c2029, #141820) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(table, [role="table"]) {
-  border-color: rgba(216,174,95,.11) !important;
-  color: #c8c2be !important;
-  background: linear-gradient(150deg, #171b24, #11151c) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 th {
-  color: #f7f3ed !important;
-  background: rgba(216,174,95,.035) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input) {
-  border-color: rgba(216,174,95,.13) !important;
-  color: #f7f3ed !important;
-  background: #0f131a !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select, .input):focus-visible {
-  border-color: rgba(216,174,95,.48) !important;
-  box-shadow: 0 0 0 3px rgba(216,174,95,.08) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-access-notice {
-  border-color: rgba(216,174,95,.2) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216,174,95,.08), transparent 38%),
-    linear-gradient(150deg, #211e18, #15171a) !important;
-}
-
 /* Generic route-local inset surfaces that still carried neutral grey. */
 .rawaj-app-shell:is(
   [data-resolved-pathname="/profile"],
   [data-resolved-pathname="/more"],
   [data-resolved-pathname="/favorites"],
-  [data-resolved-pathname="/saved-searches"],
-  [data-resolved-pathname^="/admin"]
+  [data-resolved-pathname="/saved-searches"]
 ) [class*="bg-muted-surface"] {
   border-color: rgba(255,255,255,.065) !important;
   background: rgba(255,255,255,.026) !important;

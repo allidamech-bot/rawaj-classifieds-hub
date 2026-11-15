@@ -2,7 +2,7 @@
 
 This inventory covers the complete generated /admin/* route surface at the audited baseline.
 
-## Routes (16)
+## Route surfaces (17)
 
 1. /admin — protected layout and permission-scoped navigation
 2. /admin/ — command center and retry/navigation actions
@@ -19,7 +19,8 @@ This inventory covers the complete generated /admin/* route surface at the audit
 13. /admin/ad-placements — placement CRUD, image upload, status, and delete confirmation
 14. /admin/campaigns — campaign and creative management
 15. /admin/audit — filters, retry, and pagination
-16. /admin/owner-controls — owner-only system controls
+16. /admin/notifications — notification inbox and read state
+17. /admin/owner-controls — owner-only system controls
 
 ## Integrity rules
 

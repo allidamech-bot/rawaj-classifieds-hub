@@ -4,7 +4,7 @@
  */
 
 /* Shared route-scoped legacy white-surface removal. */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -24,7 +24,7 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -52,18 +52,18 @@
 /* B2.3: studio route CSS is no longer owned by legacy V7B. */
 
 /* 7. Login and password recovery */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 {
   color: #f4f1ed !important;
   background: transparent !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) :is(.rawaj-auth-layout, .rawaj-auth-card) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) :is(.rawaj-auth-layout, .rawaj-auth-card) {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: linear-gradient(155deg, #303137, #282a2f) !important;
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-aside {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-aside {
   background:
     radial-gradient(circle at 4% 110%, rgba(255, 117, 89, 0.46), transparent 34%),
     radial-gradient(circle at 42% -15%, rgba(223, 73, 181, 0.37), transparent 38%),
@@ -72,18 +72,18 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(h1, h2, h3, strong, label) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(h1, h2, h3, strong, label) {
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(input, textarea, select, .input) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname="/login"], [data-resolved-pathname="/reset-password"]) .rawaj-auth-premium-v3 :is(input, textarea, select, .input) {
   border-color: rgba(255, 255, 255, 0.09) !important;
   background: rgba(24, 25, 30, 0.72) !important;
   color: #f4f1ed !important;
 }
 
 /* 8. Profile, favorites, saved searches, activity, notifications */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -95,7 +95,7 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -108,7 +108,7 @@
   color: #c9c3bf !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -119,7 +119,7 @@
   color: #f4f1ed !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/profile"],
     [data-resolved-pathname="/profile/listings"],
     [data-resolved-pathname="/favorites"],
@@ -157,14 +157,14 @@
 }
 
 /* 10. Support, safety, legal, verification and promotion */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-v2 {
   color: #f4f1ed !important;
   background: transparent !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-hero {
   border-color: rgba(255, 255, 255, 0.09) !important;
@@ -176,7 +176,7 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/promotion"]
   ) main :is(section, article, form, .rawaj-support-panel, .rawaj-safety-guide, .rawaj-trust-link-card, .rawaj-trust-empty) {
   border-color: rgba(255, 255, 255, 0.08) !important;
@@ -185,7 +185,7 @@
 }
 
 /* 11. Seller storefront and offers */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) :is(.rawaj-storefront-v2, main) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) :is(.rawaj-storefront-v2, main) {
   color: #f4f1ed !important;
   background: transparent !important;
 }
@@ -200,46 +200,14 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel) {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: linear-gradient(155deg, #303137, #282a2f) !important;
   color: #c9c3bf !important;
-}
-
-/* 12. Admin */
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 {
-  color: #f4f1ed !important;
-  background: transparent !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(section, article, form, .rawaj-surface, .bg-card, table) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(155deg, #303137, #282a2f) !important;
-  color: #c9c3bf !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(h1, h2, h3, h4, strong, th) {
-  color: #f4f1ed !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(p, small, time, td, .text-muted-foreground) {
-  color: #9697a0 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 :is(input, textarea, select) {
-  border-color: rgba(255, 255, 255, 0.09) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #f4f1ed !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-v3 nav > a[aria-current="page"] {
-  border-color: rgba(104, 173, 255, 0.18) !important;
-  background: rgba(104, 173, 255, 0.1) !important;
-  color: #ffffff !important;
 }
 
 /* Shared functional controls */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],
@@ -255,7 +223,7 @@
     [data-resolved-pathname="/offers"],
     [data-resolved-pathname^="/admin"]
   ) :is(button, a).bg-primary,
-.rawaj-app-shell:where(:not([data-design-palette="ivory"])):is(
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
     [data-resolved-pathname="/add-listing"],
     [data-resolved-pathname="/login"],
     [data-resolved-pathname="/reset-password"],

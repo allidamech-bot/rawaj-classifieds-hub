@@ -60,6 +60,7 @@ const routes = [
   { name: "admin-ad-placements", path: "/admin/ad-placements" },
   { name: "admin-campaigns", path: "/admin/campaigns" },
   { name: "admin-audit", path: "/admin/audit" },
+  { name: "admin-notifications", path: "/admin/notifications" },
   { name: "admin-owner-controls", path: "/admin/owner-controls" },
   { name: "not-found", path: "/__rawaj_visual_audit_not_found__", expectedStatus: 404 },
 ] as const;

@@ -187,6 +187,7 @@
  * Apply after screen-level visual acceptance; keep approved home and My Store
  * unchanged until their own compatibility is verified. */
 .rawaj-app-shell[data-design-palette="ivory"],
+.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]),
 .rawaj-categories-v2[data-design-palette="ivory"],
 .rawaj-search-results-v1[data-design-palette="ivory"],
 .rawaj-detail-v2[data-design-palette="ivory"],

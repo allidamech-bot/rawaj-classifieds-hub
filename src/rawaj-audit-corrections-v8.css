@@ -477,49 +477,11 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   position: relative;
   z-index: 3;
   display: grid;
-  width: 2.55rem;
-  height: 2.55rem;
-  min-width: 2.55rem;
-  min-height: 2.55rem;
   place-items: center;
-  border: 1px solid var(--rawaj-border) !important;
-  border-radius: 0.75rem !important;
-  background: var(--rawaj-surface-inset) !important;
-  color: var(--rawaj-text-secondary) !important;
-}
-
-.rawaj-admin-nav-scroll-button:hover,
-.rawaj-admin-nav-scroll-button:focus-visible {
-  border-color: var(--rawaj-border-active) !important;
-  background: var(--rawaj-surface-active) !important;
-  color: var(--rawaj-text-primary) !important;
 }
 
 .rawaj-admin-nav-rail {
   scroll-padding-inline: 1.25rem;
-}
-
-.rawaj-admin-nav-rail > a {
-  position: relative;
-  border: 1px solid var(--rawaj-border) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
-  color: var(--rawaj-text-secondary) !important;
-}
-
-.rawaj-admin-nav-rail > a[aria-current="page"] {
-  border-color: rgba(225, 100, 180, 0.3) !important;
-  background: rgba(225, 100, 180, 0.09) !important;
-  color: var(--rawaj-text-primary) !important;
-}
-
-.rawaj-admin-nav-rail > a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0.75rem;
-  inset-block-end: 0.2rem;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--rawaj-accent-coral), var(--rawaj-accent-pink), var(--rawaj-accent-blue));
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section {
