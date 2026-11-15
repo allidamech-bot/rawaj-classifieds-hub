@@ -55,6 +55,7 @@ export function ListingCardImage({
       <PlaceholderArt
         type={placeholder}
         aspect={placeholderAspect}
+        identity
         className={cn("rawaj-listing-media rawaj-listing-media--placeholder", className)}
       />
     );
