@@ -176,7 +176,6 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/prohibited",
     ].includes(normalizedPathname),
     trustSupport: [
-      "/promotion",
       "/more",
       "/support",
       "/safety",

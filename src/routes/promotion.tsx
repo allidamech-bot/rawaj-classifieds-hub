@@ -261,7 +261,10 @@ function PromotionPage() {
               "Search Boost is available for approved listings you own.",
             )}
           >
-            <Link to="/login" className="rawaj-button-primary mt-4 inline-flex px-5 py-2.5">
+            <Link
+              to="/login"
+              className="rawaj-button-primary rawaj-promotion-action mt-4 inline-flex px-5 py-2.5"
+            >
               {text("تسجيل الدخول", "Log in")}
             </Link>
           </Panel>
@@ -277,7 +280,7 @@ function PromotionPage() {
         className="container-wide mobile-page-bottom space-y-5 pt-4"
         dir={language === "ar" ? "rtl" : "ltr"}
       >
-        <section className="rawaj-trust-intro overflow-hidden">
+        <section className="rawaj-trust-intro rawaj-promotion-intro overflow-hidden">
           <div className="flex items-start gap-4">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl rawaj-trust-intro__icon">
               <Rocket className="h-7 w-7" aria-hidden="true" />
@@ -537,7 +540,7 @@ function PromotionPage() {
 
         <Link
           to="/support"
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold hairline"
+          className="rawaj-promotion-help inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"
         >
           <LifeBuoy className="h-4 w-4" />
           {text("الدعم والمساعدة", "Support & help")}
@@ -615,7 +618,7 @@ function RetryButton({
       type="button"
       disabled={loading}
       onClick={onClick}
-      className="rawaj-button-primary mt-4 px-4 py-2 disabled:opacity-60"
+      className="rawaj-button-primary rawaj-promotion-action mt-4 px-4 py-2 disabled:opacity-60"
     >
       {loading ? text("جارٍ التحميل", "Loading") : text("إعادة المحاولة", "Try again")}
     </button>
