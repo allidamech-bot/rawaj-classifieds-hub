@@ -246,9 +246,7 @@ function PromotionsPage() {
                     <p className="break-all text-[10px]">{request.requesterUserId}</p>
                   </InfoBlock>
                   <InfoBlock label={text("الدفع", "Payment")}>
-                    <p>
-                      {request.paymentMethod || text("لم تُذكر الطريقة", "Method not provided")}
-                    </p>
+                    <p>{request.paymentMethod || text("لم تُذكر الطريقة", "Method not provided")}</p>
                     <p className="break-words">
                       {request.paymentReference || text("لا يوجد مرجع", "No reference")}
                     </p>
