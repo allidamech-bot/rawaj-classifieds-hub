@@ -221,3 +221,39 @@ test("B3.4 private evidence stays behind the protected document action and can r
   await expect(page.locator(`[href*="${documentPath}"]`)).toHaveCount(0);
   expect(documentRequests).toBe(2);
 });
+
+test("B3.4 destructive placement actions require a labelled confirmation and reason", async ({
+  page,
+}) => {
+  await setFixtureRole(page, "owner");
+  const fixture = {
+    id: "fixture-placement",
+    name: "Fixture placement",
+    placementPage: "home",
+    imageUrl: "/favicon.svg",
+    destinationUrl: "https://example.invalid/",
+    status: "draft",
+    priority: 1,
+    targetMobile: true,
+    targetDesktop: true,
+    version: 3,
+  };
+  await page.route("**/v1/admin/ad-placements", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().method()).toBe("GET");
+    await route.fulfill({ json: { data: [fixture] } });
+  });
+  await page.goto("/admin/ad-placements");
+  const remove = page.getByRole("button", { name: "Delete", exact: true });
+  await remove.click();
+  const dialog = page.getByRole("dialog", { name: "Delete ad placement" });
+  const cancel = dialog.getByRole("button", { name: "Cancel" });
+  const confirm = dialog.getByRole("button", { name: "Delete permanently" });
+  await expect(cancel).toBeFocused();
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel("Deletion reason (for audit)").fill("Fixture cleanup");
+  await expect(confirm).toBeEnabled();
+  await cancel.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(remove).toBeVisible();
+});

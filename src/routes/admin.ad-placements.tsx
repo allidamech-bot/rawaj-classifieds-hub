@@ -709,21 +709,25 @@ function AdPlacementsPage() {
       {pendingDelete ? (
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4"
-          role="dialog"
-          aria-modal="true"
           onClick={() => {
             if (!deleteInFlight) setPendingDelete(null);
           }}
         >
           <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rawaj-admin-delete-placement-title"
             className="w-full max-w-md rounded-2xl bg-card p-5 hairline shadow-soft"
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && !deleteInFlight) setPendingDelete(null);
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-destructive/10 text-destructive">
                 <Trash2 className="h-4 w-4" />
               </span>
-              <h3 className="text-sm font-extrabold">
+              <h3 id="rawaj-admin-delete-placement-title" className="text-sm font-extrabold">
                 {text("حذف المساحة الإعلانية", "Delete ad placement")}
               </h3>
             </div>
@@ -759,6 +763,7 @@ function AdPlacementsPage() {
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
+                autoFocus
                 disabled={deleteInFlight}
                 onClick={() => setPendingDelete(null)}
                 className="flex-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
