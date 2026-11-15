@@ -431,18 +431,16 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
    -------------------------------------------------------------------------- */
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-access-notice {
-  border: 1px solid rgba(227, 160, 75, 0.2) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 38%),
-    linear-gradient(150deg, #373229, #2e2c29) !important;
+  border: 1px solid var(--rawaj-border) !important;
+  background: var(--rawaj-badge-warning-surface) !important;
   color: var(--rawaj-text-secondary) !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-nav-shell {
   border: 1px solid var(--rawaj-border) !important;
-  background: rgba(37, 38, 44, 0.94) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.17) !important;
+  background: var(--rawaj-elevated-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-nav-controls {
@@ -465,12 +463,12 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-admin-nav-controls::before {
   inset-inline-start: 2.85rem;
-  background: linear-gradient(to inline-end, rgba(37, 38, 44, 0.96), transparent);
+  background: none;
 }
 
 .rawaj-admin-nav-controls::after {
   inset-inline-end: 2.85rem;
-  background: linear-gradient(to inline-start, rgba(37, 38, 44, 0.96), transparent);
+  background: none;
 }
 
 .rawaj-admin-nav-scroll-button {
@@ -486,18 +484,14 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section {
   border: 1px solid var(--rawaj-border) !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
+  background: var(--rawaj-card-background) !important;
   color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section:first-child {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background:
-    radial-gradient(circle at 8% 112%, rgba(255, 117, 89, 0.38), transparent 32%),
-    radial-gradient(circle at 46% -14%, rgba(223, 73, 181, 0.3), transparent 38%),
-    radial-gradient(circle at 94% 18%, rgba(77, 141, 255, 0.27), transparent 36%),
-    linear-gradient(145deg, #2c2d33, #25262b 58%, #222329) !important;
-  color: #fff !important;
+  border-color: var(--rawaj-identity-petrol) !important;
+  background: var(--rawaj-identity-petrol) !important;
+  color: var(--rawaj-identity-ivory) !important;
 }
 
 @media (max-width: 39.99rem) {
