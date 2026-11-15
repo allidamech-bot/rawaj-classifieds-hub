@@ -38,6 +38,9 @@ test.describe("B4 independent marketplace journeys", () => {
         await categories.click();
         await expect(page).toHaveURL(/\/categories(?:[?#]|$)/);
         await expect(page.locator("main h1")).toBeVisible();
+        const shell = page.locator(".rawaj-app-shell");
+        await expect(shell).toHaveAttribute("data-route-state", "idle");
+        await expect(shell).toHaveAttribute("data-resolved-pathname", "/categories");
 
         await visit(page, "/", language);
         const search = page.locator("#rawaj-signature-search-input");
