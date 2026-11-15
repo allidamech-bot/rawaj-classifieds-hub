@@ -68,10 +68,11 @@ for (const pathname of ivoryRoutes) {
   }
 }
 
-for (const pathname of ["/", "/seller/90fc1187-0357-46da-9c19-d984536df794"] as const) {
+for (const pathname of ["/", "/seller/00000000-0000-4000-8000-000000000010"] as const) {
   test(`preserve pre-approved homepage/storefront route: ${pathname}`, async ({ page }) => {
     test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Isolated fixture browser only");
-    await page.goto(pathname, { waitUntil: "domcontentloaded" });
+    const response = await page.goto(pathname, { waitUntil: "domcontentloaded" });
+    expect(response?.status() ?? 200).toBe(200);
     await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1);
     await expect(page.locator(".rawaj-app-shell")).not.toHaveAttribute(
       "data-design-palette",
