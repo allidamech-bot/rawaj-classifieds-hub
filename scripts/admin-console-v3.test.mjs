@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [shell, dashboard, baseCss, finalCss, stableStyles, pkg] = await Promise.all([
+const [shell, dashboard, baseCss, finalCss, stableStyles, pkg, auditV8] = await Promise.all([
   readFile(new URL("../src/routes/admin.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/routes/admin.index.tsx", import.meta.url), "utf8"),
   readFile(new URL("../src/styles.css", import.meta.url), "utf8"),
   readFile(new URL("../src/admin-final-polish.css", import.meta.url), "utf8"),
   readFile(new URL("../src/auth-stable-route-styles.css", import.meta.url), "utf8"),
   readFile(new URL("../package.json", import.meta.url), "utf8"),
+  readFile(new URL("../src/rawaj-audit-corrections-v8.css", import.meta.url), "utf8"),
 ]);
 
 const css = `${baseCss}\n${finalCss}`;
@@ -28,6 +29,21 @@ test("admin navigation, KPI surfaces, tables, and inputs share one premium syste
   assert.match(css, /rawaj-admin-dashboard-v3/);
   assert.match(css, /role="columnheader"/);
   assert.match(css, /:focus-visible/);
+});
+
+test("admin source styles retain approved petrol/ivory colors without retired gradients", () => {
+  const phase8 = baseCss.split("/* Premium UI phase 8:")[1]?.split("/* Premium UI phase 9:")[0];
+  assert.ok(phase8, "phase 8 base admin styles exist");
+  assert.match(phase8, /--admin-v3-coral: var\(--rawaj-identity-teal\)/);
+  assert.match(phase8, /background: var\(--rawaj-identity-petrol\)/);
+  assert.doesNotMatch(phase8, /(?:linear|radial)-gradient|#df693c|#ee7a4c|#d75c32|#98381d/);
+
+  const adminV8 = auditV8.split("Admin: readable semantic surfaces")[1]
+    ?.split("@media (max-width: 39.99rem)")[0];
+  assert.ok(adminV8, "legacy V8 admin paint section exists");
+  assert.match(adminV8, /background: var\(--rawaj-card-background\)/);
+  assert.match(adminV8, /background: var\(--rawaj-elevated-background\)/);
+  assert.doesNotMatch(adminV8, /(?:linear|radial)-gradient|#373229|#303137|#2c2d33/);
 });
 
 test("admin console remains touch-safe and reduced-motion safe", () => {
