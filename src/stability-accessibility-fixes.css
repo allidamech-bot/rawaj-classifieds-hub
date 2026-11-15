@@ -3,15 +3,15 @@
 @import "./rawaj-chromatic-premium-system-v17-primitives.css";
 @import "./rawaj-chromatic-premium-system-v17-portals.css";
 @import "./rawaj-chromatic-premium-system-v17-corrections.css";
-@import "./rawaj-chromatic-premium-system-v18-chats.css";
+/* Retired V18 dark chats colors; messaging-v4 + communication-center-v3 own the approved layout. */
 @import "./rawaj-chromatic-premium-system-v18-categories-listings.css";
-@import "./rawaj-chromatic-premium-system-v18-legacy-surfaces.css";
-@import "./rawaj-chromatic-premium-system-v18-home-discovery.css";
+/* Retired V18 legacy-surface paint: route-owned account, auth and seller styles supersede it. */
+/* Retired V18 rainbow homepage paint; home-discovery-v3 + home-signature are the approved owners. */
 @import "./rawaj-chromatic-premium-system-v18-ad-placement.css";
 @import "./rawaj-chromatic-premium-system-v18-contract-fixes.css";
 @import "./rawaj-chromatic-premium-system-v19-consistency.css";
 @import "./rawaj-chromatic-premium-system-v19-specificity.css";
-@import "./rawaj-chromatic-premium-system-v20-state-consistency.css";
+/* Retired V20 dark state skin: approved light empty/loading/auth states now own colors. */
 @import "./rawaj-account-profile-media-v21.css";
 @import "./rawaj-live-repair-sweep-v22.css";
 @import "./rawaj-live-repair-sweep-v23.css";

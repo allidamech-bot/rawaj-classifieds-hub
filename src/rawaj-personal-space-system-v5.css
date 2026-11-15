@@ -711,28 +711,35 @@
   color: var(--personal-text) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 svg,
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  color: #8fc2ff !important;
+/* On the approved ivory chats route, the section heading, its icon and
+ * unread badge need petrol ink on pale surfaces. The former light heading
+ * inherited from the retired dark workspace measured only 1.01:1. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-conversation-sidebar__heading :is(h2, h2 svg, span) {
+  color: var(--rawaj-identity-petrol) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-conversation-sidebar__heading > span {
-  border: 1px solid rgba(104, 173, 255, 0.13) !important;
-  background: rgba(104, 173, 255, 0.07) !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-conversation-sidebar__heading > span {
+  border: 1px solid var(--rawaj-border) !important;
+  background: #e0ece8 !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search {
-  border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #8fc2ff !important;
+/* The /chats search field belongs to the approved ivory workspace, not
+ * the retired charcoal messaging skin. Keep its input and icon legible. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search {
+  border: 1px solid var(--rawaj-border) !important;
+  background: #ffffff !important;
+  color: var(--rawaj-identity-petrol) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search input {
-  color: var(--personal-text) !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search input {
+  background: transparent !important;
+  color: var(--rawaj-text-primary) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search input::placeholder {
-  color: #777983 !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search input::placeholder {
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary {

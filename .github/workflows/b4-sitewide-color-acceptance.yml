@@ -1,0 +1,63 @@
+name: B4 Sitewide Color Identity Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/shell/AppShell.tsx"
+      - "src/lib/browser-chrome.ts"
+      - "src/design-foundation.css"
+      - "src/rawaj-chromatic-premium-system-v17.css"
+      - "src/rawaj-chromatic-premium-system-v17-shell.css"
+      - "src/rawaj-chromatic-premium-system-v17-primitives.css"
+      - "src/rawaj-chromatic-premium-system-v17-portals.css"
+      - "src/rawaj-chromatic-premium-system-v18-ad-placement.css"
+      - "src/rawaj-chromatic-premium-system-v19-consistency.css"
+      - "src/stability-accessibility-fixes.css"
+      - "src/rawaj-chromatic-premium-system-v18-categories-listings.css"
+      - "src/rawaj-discovery-system-v3.css"
+      - "src/rawaj-page-by-page-recovery-v7.css"
+      - "src/rawaj-page-by-page-recovery-v7b.css"
+      - "scripts/design-foundation-contract.test.mjs"
+      - "e2e/sitewide-legacy-paint-acceptance.spec.ts"
+      - ".github/workflows/b4-sitewide-color-acceptance.yml"
+
+concurrency:
+  group: b4-color-contract-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  visual-identity:
+    name: B4 color identity Chromium + iPhone WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Verify migrated screens and unchanged home/store
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: >-
+          npx playwright test e2e/sitewide-legacy-paint-acceptance.spec.ts
+          --project=mobile-webkit --project=desktop-chromium
+      - name: Preserve screenshots and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b4-color-identity-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

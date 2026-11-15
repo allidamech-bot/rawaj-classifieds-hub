@@ -142,3 +142,16 @@
 .rawaj-offers-premium-v3 .rawaj-offers-stage p.mt-3.max-w-xl {
   color: #fffaf3 !important;
 }
+
+/* Keep the offers-stat captions readable after V17/V18 dark-paint retirement.
+ * A solid petrol stat surface is required for translucent light copy at
+ * intermediate tablet widths; preserve all offer calculation behavior. */
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat {
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-petrol) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/offers"] .rawaj-offers-stage .rawaj-id-stat
+  :is(span, strong) {
+  color: #fffaf3 !important;
+}

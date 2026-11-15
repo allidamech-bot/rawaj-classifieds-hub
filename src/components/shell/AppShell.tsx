@@ -198,10 +198,16 @@ export function AppShell({
   // charcoal defaults cannot override cards, controls or empty states.
   // Keep the approved homepage and owner/public storefronts unchanged.
   const useSeoLandingPalette = /^\/(?:category|syria)\/[^/]+$/.test(pathname);
+  // Route-owned light marketplace, account and auth surfaces must share the
+  // canonical shell tokens; otherwise V7's forced-dark fallback wins inside
+  // search, offers, and login despite their approved light page styles.
   const useIvoryPalette =
     routeStyles.listingStudio ||
     routeStyles.trustWorkspace ||
     routeStyles.personalSpace ||
+    routeStyles.listingResults ||
+    routeStyles.offers ||
+    ["/login", "/reset-password", "/auth/callback"].includes(pathname) ||
     useSeoLandingPalette;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();

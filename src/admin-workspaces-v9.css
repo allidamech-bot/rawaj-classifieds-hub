@@ -62,6 +62,8 @@
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 {
+  /* An authorized workspace must not inherit the retired V17 light-on-charcoal ink. */
+  color: var(--rawaj-identity-ink) !important;
   padding-top: 0.75rem !important;
   padding-bottom: calc(1rem + var(--rawaj-safe-bottom)) !important;
 }

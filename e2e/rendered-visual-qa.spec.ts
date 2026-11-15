@@ -26,7 +26,7 @@ const routes = [
   { name: "offers", path: "/offers" },
   {
     name: "seller-storefront",
-    path: "/seller/90fc1187-0357-46da-9c19-d984536df794",
+    path: "/seller/00000000-0000-4000-8000-000000000010",
   },
   { name: "login", path: "/login" },
   { name: "reset-password-invalid", path: "/reset-password" },

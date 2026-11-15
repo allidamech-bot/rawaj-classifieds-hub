@@ -918,3 +918,39 @@
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
   color: #102c29 !important;
 }
+
+/* The approved home composition remains unchanged. Ensure the bright
+ * typography stays on opaque bright surfaces when desktop text is enlarged
+ * to 200% and older global skins no longer supply the dark backdrop. */
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-location {
+  color: var(--rawaj-identity-ink) !important;
+  background: #fffaf3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip {
+  color: var(--rawaj-identity-ink) !important;
+  /* Keep the approved cream artwork; its CSS gradients otherwise have a
+   * transparent computed background and fail WCAG at 200% text scaling. */
+  background-color: #fffaf3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-category-chip strong {
+  color: var(--rawaj-identity-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-signature-section-header > div:last-child a {
+  color: var(--rawaj-identity-petrol) !important;
+  background-color: #fffaf3 !important;
+  border-radius: 0.65rem;
+  padding-inline: 0.3rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] :is(.rawaj-signature-trust-row, .rawaj-signature-safety) {
+  color: var(--rawaj-identity-ink) !important;
+  background-color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] :is(.rawaj-signature-trust-row, .rawaj-signature-safety)
+  :is(span, strong, small, a) {
+  color: var(--rawaj-identity-ink) !important;
+}
