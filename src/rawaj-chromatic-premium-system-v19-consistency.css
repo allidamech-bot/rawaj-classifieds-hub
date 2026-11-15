@@ -212,6 +212,15 @@
   background: var(--rawaj-identity-petrol, #073836) !important;
 }
 
+/* B2 mobile footer prose must not inherit the earlier dark-shell muted ink.
+ * Exclude the approved ivory owner and public storefront footers. */
+.rawaj-app-shell:not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/seller/"])
+  footer.rawaj-site-footer
+  .rawaj-site-footer__mobile
+  :is(.rawaj-site-footer__mobile-brand p, .rawaj-site-footer__mobile-copy) {
+  color: var(--rawaj-identity-ivory, #f9f0e4) !important;
+}
+
 /* The old full-width dock blur belonged to the retired dark shell, not this navigation. */
 .rawaj-app-shell .rawaj-mobile-dock {
   border: 0 !important;
