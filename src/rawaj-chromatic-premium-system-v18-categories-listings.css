@@ -1,9 +1,10 @@
-/* Historical dark listing-card presentation for routes not yet migrated.
+/* Historical dark listing-card presentation only on unmigrated routes.
+ * Approved main discovery, store, owner, offers and ivory workspaces are excluded.
  * Categories now own the approved light identity in their source styles.
  * Do not reintroduce category-scoped dark rules here. */
 
 /* Listing cards sitewide */
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card {
   border: 1px solid rgba(216, 174, 95, 0.12) !important;
   color: #f7f3ed !important;
   background:
@@ -13,7 +14,7 @@
   box-shadow: 0 15px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card[data-featured="true"] {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card[data-featured="true"] {
   border-color: rgba(219, 73, 179, 0.3) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(219,73,179,.13), transparent 40%),
@@ -22,51 +23,51 @@
   box-shadow: 0 18px 40px rgba(65,25,55,.28), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__media {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__media {
   background: #0d1117 !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__body {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__body {
   background: transparent !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__price {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__price {
   color: #f1d7df !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__category {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__category {
   border: 1px solid rgba(219,73,179,.12) !important;
   color: #d889bd !important;
   background: rgba(219,73,179,.055) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__title {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__title {
   color: #f7f3ed !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts > div {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts > div {
   border: 1px solid rgba(255,255,255,.055) !important;
   background: rgba(255,255,255,.025) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts dt {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts dt {
   color: #858d98 !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts dd {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__facts dd {
   color: #ddd7d1 !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__meta {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__meta {
   border-top-color: rgba(216,174,95,.085) !important;
   color: #9299a2 !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__meta svg {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__meta svg {
   color: #67b7cf !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__action > :is(button, a) {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__action > :is(button, a) {
   border: 1px solid rgba(216,174,95,.14) !important;
   color: #f1ece5 !important;
   background: rgba(24,27,35,.84) !important;
@@ -74,26 +75,26 @@
   backdrop-filter: blur(14px) saturate(120%) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__status[data-tone="featured"] {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__status[data-tone="featured"] {
   border-color: rgba(255,255,255,.14) !important;
   color: #fff !important;
   background: linear-gradient(135deg, #d93a68, #bb2b92 58%, #725fe7) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__status[data-tone="reserved"] {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__status[data-tone="reserved"] {
   border-color: rgba(216,174,95,.22) !important;
   color: #f8ead0 !important;
   background: rgba(111,82,40,.9) !important;
 }
 
-.rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__viewed {
+.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card__viewed {
   border-color: rgba(216,174,95,.14) !important;
   color: #e8ca8d !important;
   background: rgba(18,21,28,.82) !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .rawaj-app-shell:not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card:hover {
+  .rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname="/"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/offers"]):not([data-resolved-pathname="/categories"]):where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"])) .rawaj-adaptive-card:hover {
     border-color: rgba(216, 174, 95, 0.36) !important;
     box-shadow: 0 20px 46px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(216, 174, 95, 0.035) !important;
   }
