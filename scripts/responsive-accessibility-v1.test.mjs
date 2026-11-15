@@ -79,18 +79,10 @@ test("B4 route inventory does not silently omit visual QA route families", async
   const uncovered = normalizedRoutes.filter(
     (route) => !checkedUrls.some((url) => matchRoute(route, url)),
   );
-  // Known B4 acceptance gaps. Shrink this set as test fixtures are added.
-  // New routes cannot silently grow this exception list.
-  const pendingB4Fixtures = new Set([
-    "/admin/notifications",
-    "/profile/listings/$id",
-    "/promotion-request",
-    "/syria/$slug",
-  ]);
   assert.deepEqual(
-    uncovered.filter((route) => !pendingB4Fixtures.has(route)),
+    uncovered,
     [],
-    "Every new UI route must be included in rendered visual QA",
+    "Every generated UI route must have at least one rendered visual QA fixture",
   );
   assert.ok(
     normalizedRoutes.includes("/admin/notifications"),
