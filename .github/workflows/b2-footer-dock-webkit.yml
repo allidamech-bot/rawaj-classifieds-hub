@@ -1,0 +1,44 @@
+name: B2 Footer Dock iPhone WebKit Acceptance
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/footer-contrast-system-v13.css"
+      - "src/rawaj-chromatic-premium-system-v19-consistency.css"
+      - "e2e/footer-dock-batch2-acceptance.spec.ts"
+      - ".github/workflows/b2-footer-dock-webkit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-webkit:
+    name: iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Verify bilingual footer and dock across mobile routes
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/footer-dock-batch2-acceptance.spec.ts --project=mobile-webkit
+      - name: Upload WebKit diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b2-footer-dock-webkit-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
