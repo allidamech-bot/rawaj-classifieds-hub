@@ -200,7 +200,7 @@
   color: #ffffff !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is([data-resolved-pathname^="/seller/"], [data-resolved-pathname="/offers"]) main :is(section, article, form, .rawaj-surface, .rawaj-storefront-panel):where(:not(.rawaj-offers-results)) {
   border-color: rgba(255, 255, 255, 0.08) !important;
   background: linear-gradient(155deg, #303137, #282a2f) !important;
   color: #c9c3bf !important;

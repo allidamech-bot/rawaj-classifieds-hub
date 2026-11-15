@@ -770,6 +770,14 @@
     max-width: 64rem;
   }
 
+  & :is(.rawaj-policy-card, .rawaj-promotion-card) {
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--rawaj-identity-ink) 14%, transparent);
+    border-radius: var(--radius-card);
+    background: #fcf8f2;
+    color: var(--rawaj-identity-ink);
+  }
+
   & main :is(h1, h2, h3, p, li, label, small) {
     line-height: 1.65;
   }

@@ -269,9 +269,9 @@ function PromotionPage() {
     <>
       <PageHeader title="Boost" to="/more" backMode="history" />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4" dir={language === "ar" ? "rtl" : "ltr"}>
-        <section className="overflow-hidden rounded-2xl bg-[#241b0d] p-5 text-[#fff8e8] shadow-soft sm:p-6">
+        <section className="rawaj-trust-intro overflow-hidden">
           <div className="flex items-start gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-400 text-[#241b0d]">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl rawaj-trust-intro__icon">
               <Rocket className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -298,7 +298,7 @@ function PromotionPage() {
           <Panel title={text("جارٍ تجهيز Search Boost", "Preparing Search Boost")} />
         ) : (
           <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-5">
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+            <section className="rawaj-promotion-card p-4 sm:p-5">
               <StepTitle number="1" title={text("اختر إعلاناً مؤهلاً", "Choose an eligible listing")} />
               {eligibleListings.length ? (
                 <select
@@ -321,7 +321,7 @@ function PromotionPage() {
               )}
             </section>
 
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+            <section className="rawaj-promotion-card p-4 sm:p-5">
               <StepTitle number="2" title={text("اختر مدة Boost", "Choose a Boost duration")} />
               <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {SEARCH_BOOST_PACKAGES.map((boostPackage) => {
@@ -354,7 +354,7 @@ function PromotionPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+            <section className="rawaj-promotion-card p-4 sm:p-5">
               <StepTitle number="3" title={text("أثبت عملية الدفع", "Provide payment proof")} />
               <div className="mt-3 rounded-xl bg-amber-500/10 p-4 text-xs leading-6 text-foreground">
                 <div className="flex items-start gap-2">
@@ -421,7 +421,7 @@ function PromotionPage() {
           </form>
         )}
 
-        <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
+        <section className="rawaj-promotion-card p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-black">{text("طلبات Search Boost", "Search Boost requests")}</h2>
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">{orders.length}</span>
@@ -500,7 +500,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
 
 function Panel({ icon, title, body, children }: { icon?: React.ReactNode; title: string; body?: string; children?: React.ReactNode }) {
   return (
-    <section className="rounded-2xl bg-card p-8 text-center hairline">
+    <section className="rawaj-promotion-card p-8 text-center">
       {icon ? <span className="mx-auto grid place-items-center">{icon}</span> : null}
       <h2 className={`${icon ? "mt-3" : ""} text-base font-black`}>{title}</h2>
       {body ? <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{body}</p> : null}

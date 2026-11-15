@@ -170,11 +170,13 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/support",
       "/safety",
       "/verification",
+      "/promotion",
       "/privacy",
       "/terms",
       "/prohibited",
     ].includes(normalizedPathname),
     trustSupport: [
+      "/promotion",
       "/more",
       "/support",
       "/safety",

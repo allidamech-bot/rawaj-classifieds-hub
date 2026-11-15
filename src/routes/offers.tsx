@@ -93,7 +93,7 @@ function OffersPage() {
             </div>
           </section>
 
-          <section className="mt-7">
+          <section className="rawaj-offers-results mt-7">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span className="rawaj-signature-kicker">
