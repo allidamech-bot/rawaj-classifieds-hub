@@ -129,6 +129,8 @@ test("B3.4 owners can open every documented workspace with isolated service erro
       "rgb(249, 240, 228)",
     );
     await expect(page.locator(".rawaj-app-shell")).toHaveCSS("background-image", "none");
+    await expect(page.locator(".rawaj-admin-nav-shell")).toHaveCSS("background-image", "none");
+    await expect(page.locator(".rawaj-admin-access-notice")).toHaveCSS("background-image", "none");
     await expect(nav.locator('[aria-current="page"]')).toHaveCSS(
       "background-color",
       "rgb(7, 56, 54)",
