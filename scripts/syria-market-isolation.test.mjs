@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { extname, relative, resolve } from "node:path";
 import test from "node:test";
+import { inspectRepositoryEdgeCutover } from "./cloudflare-edge-cutover-contract.mjs";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
@@ -78,7 +79,11 @@ test("Syria Cloudflare render pins exact D1 R2 and Firebase identities", async (
   assert.match(render, /firebaseProjectId !== EXPECTED_FIREBASE_PROJECT_ID/);
   assert.match(render, /LOCAL_D1_NAME = "rawaj-syria-local"/);
   assert.match(render, /LOCAL_R2_NAME = "rawaj-syria-media-local"/);
-  assert.match(render, /if \(!local && customDomain\)/);
+  const phase = await inspectRepositoryEdgeCutover();
+  assert.equal(phase.valid, true, phase.errors.join("; "));
+  if (phase.mode === "legacy") {
+    assert.match(render, /if \(!local && customDomain\)/);
+  }
 });
 
 test("Syria SSR and frontend API stay pinned to Syria services", async () => {
@@ -88,25 +93,30 @@ test("Syria SSR and frontend API stay pinned to Syria services", async () => {
 
   assert.match(vite, /server:\s*\{\s*entry:\s*["']server["']\s*\}/);
   assert.doesNotMatch(vite, /market-server/);
-  assert.match(
-    vercel,
-    /https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev\/v1\/\:path\*/,
-  );
-  assert.match(
-    vercel,
-    /https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev\/api\/\:path\*/,
-  );
+  const phase = await inspectRepositoryEdgeCutover();
+  assert.equal(phase.valid, true, phase.errors.join("; "));
+  const rewrites = JSON.parse(vercel).rewrites;
+  for (const source of ["/v1/:path*", "/api/:path*"]) {
+    const matches = rewrites.filter((rewrite) => rewrite.source === source);
+    assert.equal(matches.length, 1, `missing or duplicated Syria API rewrite: ${source}`);
+    assert.equal(matches[0].destination, phase.currentOrigin + source);
+  }
   assert.match(wrangler, /"name":\s*"rawaj-classifieds-hub"/);
   assert.match(wrangler, /"FIREBASE_PROJECT_ID":\s*"project-af18fcaf-c46e-4ec5-93a"/);
 });
 
-test("every committed Syria environment uses the Syria API only", async () => {
+test("every committed Syria environment uses the selected validated API origin", async () => {
+  const phase = await inspectRepositoryEdgeCutover();
+  assert.equal(phase.valid, true, phase.errors.join("; "));
   for (const path of [".env", ".env.example", ".env.production"]) {
     const content = await read(path);
-    assert.match(
-      content,
-      /^VITE_PUBLIC_DATA_API_BASE_URL=https:\/\/rawaj-classifieds-hub\.allidamech\.workers\.dev\/?$/m,
-      `${path} must use the Syria Worker API`,
+    const values = content.split(/\r?\n/).filter((line) =>
+      line.startsWith("VITE_PUBLIC_DATA_API_BASE_URL="),
+    );
+    assert.deepEqual(
+      values,
+      [`VITE_PUBLIC_DATA_API_BASE_URL=${phase.currentOrigin}`],
+      `${path} must match the validated Syria API origin`,
     );
   }
 });
