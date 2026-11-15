@@ -28,6 +28,13 @@ for (const path of adminRoutes) {
     await expect(main.getByRole("heading", { name: "Login required" })).toBeVisible();
     await expect(main.getByRole("link", { name: "Log in" })).toBeVisible();
     await expect(main).toHaveCSS("color", "rgb(19, 39, 36)");
+    const header = page.locator(".rawaj-shell-header--workspace");
+    await expect(header).toHaveCSS("background-color", "rgb(7, 56, 54)");
+    await expect(header).toHaveCSS("background-image", "none");
+    await expect(header.locator(".rawaj-shell-header__title h1")).toHaveCSS(
+      "color",
+      "rgb(249, 240, 228)",
+    );
     const gate = main.locator(".rawaj-admin-gate");
     await expect(gate).toHaveCSS("background-color", "rgb(255, 250, 243)");
     await expect(gate).toHaveCSS("background-image", "none");
