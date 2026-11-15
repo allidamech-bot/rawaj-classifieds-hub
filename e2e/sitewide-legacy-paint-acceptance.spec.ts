@@ -150,6 +150,8 @@ for (const language of ["ar", "en"] as const) {
       });
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute("href", pathname);
       await expect(main).toHaveCSS("color", "rgb(19, 39, 36)");
+      await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
+      await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 240, 228)");
 
       const collisions = await page.evaluate(() => {
         const retiredRgb = [
