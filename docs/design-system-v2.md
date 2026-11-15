@@ -216,3 +216,62 @@ B2.3 browser acceptance correction: solid petrol background beneath decorative h
 B2.3 follow-up: the retired V20 primary-gradient selector no longer targets `/add-listing`, leaving the approved petrol CTA owner authoritative; studio canvas owns its light card tokens and hidden taxonomy labels have an opaque inherited card surface for accessibility auditing. No other route was changed.
 
 Final browser contrast corrections are explicitly owned by the studio: form field captions use verified dark ink on ivory, selected taxonomy copy has dark foreground on a pale teal surface, and the clipped input label retains a legible semantic background without changing its accessible name. Existing label hierarchy and form behavior are preserved.
+
+## B4 integration audit — route and visual-QA coverage (15 November 2026)
+
+**Implementation status: pending final CI and final combined-main acceptance.**
+The generated route inventory currently contains **48 declarations**; two duplicate
+trailing-slash aliases and the nonvisual `/sitemap.xml` leave **45 distinct UI
+route patterns**. The rendered-visual matrix now includes representative
+fixtures for **all 45 route patterns** (48 route cases including the fallback
+404 and additional category cases). Route *presence* is not equivalent to
+authenticated state, function, or real-device acceptance.
+
+Four representative cases were added in B4 to remove the old coverage
+exceptions:
+
+- `/syria/damascus`: uses the **active governorate fixture** declared in
+  `e2e/rawaj-e2e-api-fixtures.ts`, never a fabricated production location.
+- `/promotion-request`: signed-out guest request surface only; do not submit
+  any promotion or upload a receipt during rendered visual QA.
+- `/admin/notifications`: guest authorization boundary only. Protected
+  administrator functionality requires the isolated account/role tests.
+- `/profile/listings/00000000-0000-4000-8000-000000000071`: signed-out
+  owner-editor gate only. The **authenticated** fixture editor is independently
+  exercised by `e2e/b2-listing-editor-acceptance.spec.ts`.
+
+For CI performance, the three additional public/guest cases capture
+**390px mobile Chromium** and **1440px desktop Chromium**; the admin
+notifications route uses the full existing viewport matrix and matches the
+B3.4 administration PR's visual fixture exactly. All existing routes retain
+their previous viewport matrix. This does **not** establish iPhone hardware or
+all-role acceptance.
+
+`scripts/responsive-accessibility-v1.test.mjs` now requires every generated
+UI route to be represented in rendered QA **with no exception list**. Any
+additional route must introduce a representative fixture before the test passes.
+
+The router includes **16 distinct administration UI routes**, including
+`/admin/notifications`. The independent B4 role matrix added via merged
+PR #881 covers guest/non-admin boundaries, while the B3.4 administration implementation from merged PR #876
+(commit `a04464acc86798ae471601ac1d7ab2ae5c3cdfd3`) now exists in
+`main`. Full authorized admin interactions still need isolated role acceptance.
+
+### Required integration closeout
+
+1. Verify exact-HEAD Quality Gate, Browser Smoke, Rendered Visual QA and
+   the appropriate security/WebKit checks on this B4 branch.
+2. B3.4 PR #876 has now merged; the B4 branch has reconciled its files with
+   that commit. Keep PR #877 a draft until all **exact integrated HEAD**
+   checks and a route-state review complete against the updated `main`.
+3. Do not claim authenticated moderator/owner functionality or production
+   user-data safety from guest screenshots. Use isolated approved fixtures;
+   never mutate production.
+4. Verify the combined CSS/source ownership and visual route behavior in
+   Arabic RTL, English LTR, desktop and emulated iPhone WebKit. Physical iPhone
+   Safari/standalone PWA acceptance still requires a real-device check.
+5. Only mark **final acceptance** once the complete integrated commit has
+   passed and been visually reviewed. Source green checks alone do not prove
+   live production acceptance.
+
+No production deployment or production mutations are authorized.
