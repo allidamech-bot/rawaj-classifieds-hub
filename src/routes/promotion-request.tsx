@@ -299,19 +299,19 @@ function PromotionRequestPage() {
         backMode="history"
       />
       <main className="container-wide mobile-page-bottom space-y-5 pt-4">
-        <section className="rounded-2xl bg-[#17131d] p-5 text-white shadow-soft sm:p-6">
+        <section className="rounded-2xl bg-[var(--rawaj-identity-petrol)] p-5 text-[var(--rawaj-identity-ivory)] sm:p-6">
           <div className="flex items-start gap-4">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-fuchsia-500/15 text-fuchsia-200 hairline">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-[var(--rawaj-identity-champagne)] hairline">
               <Megaphone className="h-6 w-6" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200/80">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[var(--rawaj-identity-champagne)]">
                 RAWAJ PROMOTION
               </p>
               <h1 className="mt-1 text-xl font-black">
                 {text("اختر أين تريد أن يظهر إعلانك", "Choose where your listing should appear")}
               </h1>
-              <p className="mt-2 max-w-2xl text-xs leading-6 text-white/70">
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-[var(--rawaj-identity-ivory)]">
                 {text(
                   "للمساحات والحملات استخدم هذا الطلب. لرفع ترتيب إعلانك تلقائياً استخدم Boost.",
                   "Use this request for placements and campaigns. Use Boost for automatic ranking lift.",
@@ -321,7 +321,7 @@ function PromotionRequestPage() {
           </div>
           <Link
             to="/promotion"
-            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-black text-[#241b0d]"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--rawaj-identity-champagne)] px-4 py-2 text-xs font-black text-[var(--rawaj-identity-petrol)]"
           >
             <Rocket className="h-4 w-4" />
             Boost
@@ -371,7 +371,7 @@ function PromotionRequestPage() {
                 ))}
               </select>
               {hasPendingForSelectedListing ? (
-                <p className="mt-3 rounded-xl bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-200">
+                <p className="mt-3 rounded-xl bg-[var(--rawaj-badge-warning-surface)] p-3 text-xs font-semibold text-[var(--rawaj-badge-warning-ink)]">
                   {text(
                     "يوجد طلب ترويج أو Boost قيد المراجعة لهذا الإعلان.",
                     "A promotion or Boost request is already under review for this listing.",
@@ -465,7 +465,7 @@ function PromotionRequestPage() {
                 type="submit"
                 disabled={saving || loading || hasPendingForSelectedListing}
                 aria-busy={saving}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-fuchsia-600 px-5 py-2 text-xs font-black text-white disabled:opacity-50"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--rawaj-identity-petrol)] px-5 py-2 text-xs font-black text-[var(--rawaj-identity-ivory)] disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />
                 {saving
@@ -560,12 +560,12 @@ function PromotionOption({
       onClick={onSelect}
       className={`rounded-2xl p-4 text-start transition hairline ${
         selected
-          ? "bg-fuchsia-500/10 ring-2 ring-fuchsia-500/55"
-          : "bg-muted-surface hover:bg-fuchsia-500/5"
+          ? "bg-[var(--rawaj-surface-selected)] ring-2 ring-[var(--rawaj-identity-teal)]"
+          : "bg-muted-surface hover:bg-[var(--rawaj-surface-selected)]"
       }`}
     >
       <span className="flex items-center gap-2 text-sm font-black text-foreground">
-        <Icon className="h-4 w-4 text-fuchsia-500" />
+        <Icon className="h-4 w-4 text-[var(--rawaj-identity-teal)]" />
         {option.label}
       </span>
       <span className="mt-2 block text-xs leading-6 text-muted-foreground">
@@ -602,7 +602,7 @@ function TextField({
 function StepTitle({ number, title }: { number: string; title: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="grid h-7 w-7 place-items-center rounded-full bg-fuchsia-500/10 text-xs font-black text-fuchsia-500">
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-[var(--rawaj-surface-selected)] text-xs font-black text-[var(--rawaj-identity-teal)]">
         {number}
       </span>
       <h2 className="text-sm font-black text-foreground">{title}</h2>

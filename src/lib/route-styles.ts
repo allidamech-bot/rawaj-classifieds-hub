@@ -171,6 +171,7 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/safety",
       "/verification",
       "/promotion",
+      "/promotion-request",
       "/privacy",
       "/terms",
       "/prohibited",
@@ -184,6 +185,7 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/prohibited",
       "/verification",
       "/promotion",
+      "/promotion-request",
     ].includes(normalizedPathname),
   };
 }

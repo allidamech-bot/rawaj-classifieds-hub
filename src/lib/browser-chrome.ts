@@ -24,6 +24,7 @@ export function resolveBrowserChrome(pathname: string) {
       "/prohibited",
       "/verification",
       "/promotion",
+      "/promotion-request",
     ].includes(pathname)
   ) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
