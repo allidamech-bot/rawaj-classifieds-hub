@@ -133,7 +133,7 @@ test("public listing detail and all admin workspaces use Cloudflare implementati
   ]);
   assert.match(detail, /fetchPublicSellerProfile\(listing\.ownerId\)/);
   assert.match(detail, /fetchPublicListingTaxonomyAssignment\(listing\.id\)/);
-  assert.match(detail, /fetchPublicListingLocationPath\(listing\.id\)/);
+  assert.match(detail, /fetchPublicListingLocationPath\(listing\.id, listing\)/);
   assert.doesNotMatch(detail, /cloudflareMode|Promise\.resolve\(\{ ok: true as const, data: null/);
   assert.doesNotMatch(availability, /:\s*false/);
 });
