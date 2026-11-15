@@ -21,9 +21,9 @@ for (const language of ["ar", "en"] as const) {
       const metrics = await page.evaluate(() => ({
         viewport: innerWidth,
         document: document.documentElement.scrollWidth,
-        footerLinkHeights: Array.from(document.querySelectorAll(".rawaj-site-footer__mobile nav a")).map(
-          (link) => link.getBoundingClientRect().height,
-        ),
+        footerLinkHeights: Array.from(
+          document.querySelectorAll(".rawaj-site-footer__mobile nav a"),
+        ).map((link) => link.getBoundingClientRect().height),
       }));
       expect(metrics.document).toBeLessThanOrEqual(metrics.viewport + 2);
       expect(metrics.footerLinkHeights).toHaveLength(3);
@@ -37,7 +37,9 @@ for (const language of ["ar", "en"] as const) {
   });
 }
 
-test("B2 owner storefront still uses its approved light footer and separate dock", async ({ page }) => {
+test("B2 owner storefront still uses its approved light footer and separate dock", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/profile/listings", { waitUntil: "domcontentloaded" });
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1);
