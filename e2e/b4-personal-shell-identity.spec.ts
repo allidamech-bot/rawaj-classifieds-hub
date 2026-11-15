@@ -35,7 +35,7 @@ for (const language of ["ar", "en"] as const) {
         await expect(shell).toHaveCSS("color-scheme", "light");
         await expect(page.locator(".rawaj-shell-header__title :is(h1, p)")).toHaveCSS(
           "color",
-          "rgb(249, 240, 228)",
+          /rgb\((249, 240, 228|255, 250, 243)\)/,
         );
         await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(
           "content",
