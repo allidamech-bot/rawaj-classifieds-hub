@@ -1,6 +1,4 @@
 import {
-  fetchListingDetail,
-  fetchListingImages,
   fetchPublicCategories,
   fetchPublicListingTaxonomyAssignment,
   fetchPublicListings,
@@ -16,6 +14,7 @@ import type {
   TaxonomyNode,
 } from "@/lib/classifieds-types";
 import type { CanonicalLocationNode } from "@/lib/api/location-taxonomy";
+import { fetchCloudflareListingDetail } from "@/lib/public-data/cloudflare-client";
 import { fetchPublicListingLocationPath } from "@/lib/api/listing-location-read";
 import { resolveListingTaxonomyContext } from "@/lib/listing-taxonomy-context";
 import {
@@ -39,13 +38,14 @@ export interface PublicListingDetailPageData {
 export async function loadPublicListingDetailPageData(
   listingId: string,
 ): Promise<PublicListingDetailPageData | null> {
-  const listingResult = await fetchListingDetail(listingId);
+  // One Worker request returns the public listing and all its media. Avoid
+  // re-fetching /v1/listings/:id for the image and location sub-sections.
+  const listingResult = await fetchCloudflareListingDetail(listingId);
   if (!listingResult.ok) return null;
 
-  const listing = listingResult.data;
+  const listing = listingResult.data.listing;
   if (!isPublicListingVisible(listing)) return null;
   const [
-    imagesResult,
     sellerResult,
     similarResult,
     categoriesResult,
@@ -54,7 +54,6 @@ export async function loadPublicListingDetailPageData(
     taxonomyAssignmentResult,
     locationPathResult,
   ] = await Promise.all([
-    fetchListingImages(listing.id),
     fetchPublicSellerProfile(listing.ownerId),
     fetchPublicListings(
       {
@@ -69,7 +68,7 @@ export async function loadPublicListingDetailPageData(
     fetchPublicSubcategories(),
     fetchPublicTaxonomyNodes(),
     fetchPublicListingTaxonomyAssignment(listing.id),
-    fetchPublicListingLocationPath(listing.id),
+    fetchPublicListingLocationPath(listing.id, listing),
   ]);
   const taxonomyContext = resolveListingTaxonomyContext({
     taxonomyNodes: taxonomyNodesResult.ok ? taxonomyNodesResult.data : [],
@@ -86,7 +85,7 @@ export async function loadPublicListingDetailPageData(
 
   return {
     listing,
-    images: normalizePublicListingImages(imagesResult.ok ? imagesResult.data : [], listing),
+    images: normalizePublicListingImages(listingResult.data.images, listing),
     seller: sellerResult.ok ? sellerResult.data : null,
     similarListings: similarResult.ok
       ? similarResult.data.items.filter((item) => item.id !== listing.id).slice(0, 8)
@@ -105,6 +104,6 @@ export async function loadPublicListingDetailPageData(
         })()
       : null,
     locationPath: locationPathResult.ok ? locationPathResult.data : [],
-    imagesUnavailable: !imagesResult.ok,
+    imagesUnavailable: false,
   };
 }
