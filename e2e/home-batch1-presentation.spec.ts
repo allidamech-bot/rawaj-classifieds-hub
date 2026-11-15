@@ -30,11 +30,13 @@ for (const language of ["ar", "en"] as const) {
           text.top < hitTarget.top - 1 ||
           text.bottom > hitTarget.bottom + 1,
         hitHeight: hitTarget.height,
+        generatedLabel: getComputedStyle(node.parentElement!, "::after").content,
       };
     });
     expect(metrics.fontSize).toBeGreaterThanOrEqual(11);
     expect(metrics.clipped).toBe(false);
     expect(metrics.hitHeight).toBeGreaterThanOrEqual(44);
+    expect(metrics.generatedLabel).toBe("none");
 
     const hero = page.locator(".rawaj-signature-hero");
     const search = page.locator(".rawaj-signature-search");

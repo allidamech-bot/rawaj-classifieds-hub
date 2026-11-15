@@ -103,6 +103,11 @@
     0 8px 22px rgba(183, 126, 24, 0.16) !important;
 }
 
+/* The earlier shared store highlight still declares ::after. Do not show two labels. */
+.rawaj-app-header .rawaj-shell-header__actions .rawaj-header-store.rawaj-header-action::after {
+  content: none !important;
+}
+
 .rawaj-app-header .rawaj-shell-header__actions .rawaj-header-store.rawaj-header-action .rawaj-header-store__label {
   position: relative;
   z-index: 1;
