@@ -519,7 +519,11 @@ test("category and favorites fallbacks reuse the approved identity", async () =>
   assert.match(categoryCard, /<PlaceholderArt type=\{category\.placeholder\} aspect="square" identity \/>/);
 });
 
-test("More page localizes the Boost shortcut for Arabic users", async () => {
-  const more = await readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8");
+test("More page and My Store localize the Boost action for Arabic users", async () => {
+  const [more, ownerSummary] = await Promise.all([
+    readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/storefront/OwnerStoreWorkspaceSummary.tsx", import.meta.url), "utf8"),
+  ]);
   assert.match(more, /titleAr: "تعزيز الظهور",\s*titleEn: "Boost"/);
+  assert.match(ownerSummary, /text\("تعزيز الظهور", "Boost"\)/);
 });
