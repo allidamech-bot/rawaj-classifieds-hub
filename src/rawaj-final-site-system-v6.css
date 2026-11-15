@@ -349,13 +349,11 @@
 
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/reset-password"],
-    [data-resolved-pathname^="/admin"]
+    [data-resolved-pathname="/reset-password"]
   ) main > .rawaj-surface,
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/reset-password"],
-    [data-resolved-pathname^="/admin"]
+    [data-resolved-pathname="/reset-password"]
   ) main > section.rounded-2xl {
   border: 1px solid var(--v6-line) !important;
   background:

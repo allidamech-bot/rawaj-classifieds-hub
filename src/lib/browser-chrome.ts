@@ -4,7 +4,7 @@
  * CSS variables cannot be used directly in HTML theme-color metadata.
  */
 export function resolveBrowserChrome(pathname: string) {
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/admin" || pathname.startsWith("/admin/")) {
     return { colorScheme: "light", themeColor: "#073836" } as const;
   }
   if (

@@ -28,6 +28,13 @@ for (const path of adminRoutes) {
     await expect(main.getByRole("heading", { name: "Login required" })).toBeVisible();
     await expect(main.getByRole("link", { name: "Log in" })).toBeVisible();
     await expect(main).toHaveCSS("color", "rgb(19, 39, 36)");
+    const gate = main.locator(".rawaj-admin-gate");
+    await expect(gate).toHaveCSS("background-color", "rgb(255, 250, 243)");
+    await expect(gate).toHaveCSS("background-image", "none");
+    const action = gate.getByRole("link", { name: "Log in" });
+    await expect(action).toHaveCSS("background-color", "rgb(7, 56, 54)");
+    await expect(action).toHaveCSS("background-image", "none");
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#073836");
     await expect(page.getByRole("navigation", { name: "Admin navigation" })).toHaveCount(0);
   });
 }
@@ -117,6 +124,15 @@ test("B3.4 owners can open every documented workspace with isolated service erro
     const nav = page.getByRole("navigation", { name: "Admin navigation" });
     await expect(nav.locator('[aria-current="page"]'), path).toHaveAttribute("href", path);
     await expect(page.locator("main.rawaj-admin-v3")).toBeVisible();
+    await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
+      "background-color",
+      "rgb(249, 240, 228)",
+    );
+    await expect(page.locator(".rawaj-app-shell")).toHaveCSS("background-image", "none");
+    await expect(nav.locator('[aria-current="page"]')).toHaveCSS(
+      "background-color",
+      "rgb(7, 56, 54)",
+    );
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
       path,

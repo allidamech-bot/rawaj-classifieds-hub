@@ -387,7 +387,7 @@ function AdminLayout() {
                     <tab.icon className="h-4 w-4" />
                     {text(tab.labelAr, tab.labelEn)}
                     {badge > 0 ? (
-                      <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-extrabold leading-5 text-white">
+                      <span className="rawaj-admin-unread rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-5 text-white">
                         {badge > 99 ? "99+" : badge}
                       </span>
                     ) : null}
@@ -465,7 +465,7 @@ function AdminShellState({
     <>
       <PageHeader title={text("لوحة الإدارة", "Admin dashboard")} />
       <main className="rawaj-admin-v3 container-wide pt-4 pb-8">
-        <section className="rounded-[var(--rawaj-radius-surface)] bg-card p-5 text-center hairline shadow-none">
+        <section className="rawaj-admin-gate rounded-[var(--rawaj-radius-surface)] bg-card p-5 text-center hairline shadow-none">
           <Lock className="mx-auto h-7 w-7 text-warning" />
           <h2 className="mt-3 text-base font-extrabold">{title}</h2>
           <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted-foreground">{message}</p>

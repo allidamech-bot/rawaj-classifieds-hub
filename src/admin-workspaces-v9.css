@@ -11,6 +11,7 @@
   --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
   --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
   --rawaj-v17-gradient-action: var(--rawaj-identity-petrol);
+  background: var(--rawaj-shell-canvas) !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
@@ -208,8 +209,8 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 :is(input, textarea, select, .input):focus-visible {
   border-color: var(--rawaj-identity-teal) !important;
-  outline: 0 !important;
-  box-shadow: none !important;
+  outline: 2px solid var(--rawaj-identity-teal) !important;
+  outline-offset: 2px;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 label > span:first-child {
@@ -227,7 +228,7 @@
   font-weight: 800 !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 :is(button, a)[class*="bg-primary"] {
+.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 :is(button, a):is(.bg-primary, .rawaj-button-primary) {
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
   color: #fff !important;
   background: var(--rawaj-identity-petrol) !important;
@@ -301,6 +302,44 @@
 
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"]) .rawaj-admin-v3 tr:last-child td {
   border-bottom: 0;
+}
+
+.rawaj-admin-v3 :is(.rawaj-admin-card, .rawaj-admin-panel, [data-ui="card"], [data-slot="card"]),
+.rawaj-admin-v3 .rawaj-admin-gate,
+.rawaj-admin-notification-panel {
+  border-color: var(--rawaj-border) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-text-primary) !important;
+  box-shadow: none !important;
+}
+
+.rawaj-admin-v3 .rawaj-admin-gate h2 {
+  color: var(--rawaj-text-primary) !important;
+}
+
+.rawaj-admin-notification-trigger {
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  border-color: var(--rawaj-border) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-identity-petrol) !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 640px) {
+  .rawaj-admin-notification-panel {
+    inset-inline: 0 auto;
+    margin-inline: 0;
+  }
+}
+
+.rawaj-admin-notification-panel button {
+  min-block-size: 44px;
+}
+
+.rawaj-admin-unread {
+  background: var(--rawaj-danger);
+  color: var(--rawaj-text-inverse);
 }
 
 /* Empty/loading/permission panels */

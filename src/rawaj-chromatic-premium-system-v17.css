@@ -115,13 +115,6 @@ body {
 
 /* B2.3: studio shell canvas is now owned by listing-studio-v4.css, not legacy V17 gradients. */
 
-.rawaj-app-shell[data-resolved-pathname^="/admin"] {
-  background:
-    radial-gradient(circle at 92% 6%, rgba(216, 174, 95, 0.08), transparent 27rem),
-    radial-gradient(circle at 3% 56%, rgba(58, 102, 158, 0.08), transparent 30rem),
-    linear-gradient(180deg, #101319, #0a0d12) !important;
-}
-
 /* Header and navigation. */
 .rawaj-app-header {
   border-bottom: 1px solid rgba(216, 174, 95, 0.11) !important;
@@ -180,15 +173,13 @@ body {
 .rawaj-account-section,
 .rawaj-listing-card,
 .rawaj-result-card,
-.rawaj-admin-card,
-.rawaj-admin-panel,
 .rawaj-support-card,
 .rawaj-notification-card,
 .rawaj-message-card,
 .rawaj-saved-search-card,
 .rawaj-favorite-card,
-[data-ui="card"],
-[data-slot="card"] {
+[data-ui="card"]:where(:not(.rawaj-admin-v3 *)),
+[data-slot="card"]:where(:not(.rawaj-admin-v3 *)) {
   border-color: var(--rawaj-v17-border) !important;
   color: var(--rawaj-v17-text) !important;
   background:
@@ -198,12 +189,12 @@ body {
   box-shadow: var(--rawaj-v17-shadow), var(--rawaj-v17-inset) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="border"] {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="border"] {
   border-color: rgba(216, 174, 95, 0.14) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="bg-card"],
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="bg-background"] {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="bg-card"],
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(section, article)[class*="rounded-"][class*="bg-background"] {
   background:
     radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.035), transparent 38%),
     linear-gradient(150deg, #181c25, #12161e) !important;
@@ -373,16 +364,16 @@ body {
 }
 
 /* Tables and admin workspaces. */
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(table, [role="table"]) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(table, [role="table"]) {
   border-color: rgba(216,174,95,.13) !important;
   color: var(--rawaj-v17-text) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(thead, [role="rowgroup"]:first-child) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(thead, [role="rowgroup"]:first-child) {
   background: linear-gradient(90deg, rgba(216,174,95,.075), rgba(111,39,91,.065)) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(th, td, [role="cell"], [role="columnheader"]) {
+.rawaj-app-shell:where(:not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(th, td, [role="cell"], [role="columnheader"]) {
   border-color: rgba(216,174,95,.095) !important;
 }
 
@@ -392,14 +383,6 @@ body {
 
 .rawaj-app-shell tbody tr:hover {
   background: rgba(216,174,95,.035) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname^="/admin"] :is(.rawaj-admin-card, .rawaj-admin-panel, [data-ui="card"]) {
-  border-color: rgba(216,174,95,.18) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216,174,95,.06), transparent 38%),
-    radial-gradient(circle at 0% 100%, rgba(57,91,145,.06), transparent 42%),
-    linear-gradient(150deg, #191d26, #12161d) !important;
 }
 
 /* Listing discovery and marketplace cards. */

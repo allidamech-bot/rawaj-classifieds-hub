@@ -30,9 +30,6 @@
 .rawaj-app-shell[data-resolved-pathname="/promotion"]
   main.container-wide
   > section.text-center[class*="bg-card"],
-.rawaj-app-shell[data-resolved-pathname^="/admin"]
-  main.rawaj-admin-v3
-  > section.text-center[class*="bg-card"],
 .rawaj-feedback-state {
   overflow: hidden;
   border: 1px solid rgba(216, 174, 95, 0.15) !important;
@@ -80,10 +77,6 @@
   main.container-wide
   > section.text-center[class*="bg-card"]
   > :is(h1, h2, h3),
-.rawaj-app-shell[data-resolved-pathname^="/admin"]
-  main.rawaj-admin-v3
-  > section.text-center[class*="bg-card"]
-  > :is(h1, h2, h3),
 .rawaj-feedback-state > :is(h1, h2, h3) {
   color: #f7f3ed !important;
 }
@@ -116,10 +109,6 @@
   > p,
 .rawaj-app-shell[data-resolved-pathname="/promotion"]
   main.container-wide
-  > section.text-center[class*="bg-card"]
-  > p,
-.rawaj-app-shell[data-resolved-pathname^="/admin"]
-  main.rawaj-admin-v3
   > section.text-center[class*="bg-card"]
   > p,
 .rawaj-feedback-state > p:not(:first-child) {
@@ -158,10 +147,6 @@
 .rawaj-app-shell[data-resolved-pathname="/verification"]
   main.container-wide
   > section.text-center[class*="bg-card"]
-  > svg:first-child,
-.rawaj-app-shell[data-resolved-pathname^="/admin"]
-  main.rawaj-admin-v3
-  > section.text-center[class*="bg-card"]
   > svg:first-child {
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.24));
 }
@@ -176,10 +161,6 @@
   )
   main.container-wide
   :is(.rawaj-button-primary, a.bg-primary, button.bg-primary),
-.rawaj-app-shell[data-resolved-pathname^="/admin"]
-  main.rawaj-admin-v3
-  > section.text-center[class*="bg-card"]
-  a.bg-primary,
 .rawaj-app-shell:is(
     [data-resolved-pathname="/activity"],
     [data-resolved-pathname="/notifications"],
@@ -243,9 +224,6 @@
   .rawaj-app-shell[data-resolved-pathname="/promotion"]
     main.container-wide
     > section.text-center[class*="bg-card"],
-  .rawaj-app-shell[data-resolved-pathname^="/admin"]
-    main.rawaj-admin-v3
-    > section.text-center[class*="bg-card"],
   .rawaj-feedback-state {
     padding: 1.6rem 1.25rem !important;
     border-radius: 1.35rem !important;
@@ -261,10 +239,6 @@
     )
     main.container-wide
     :is(.rawaj-button-primary, a.bg-primary, button.bg-primary):hover,
-  .rawaj-app-shell[data-resolved-pathname^="/admin"]
-    main.rawaj-admin-v3
-    > section.text-center[class*="bg-card"]
-    a.bg-primary:hover,
   .rawaj-app-shell:is(
       [data-resolved-pathname="/activity"],
       [data-resolved-pathname="/notifications"],

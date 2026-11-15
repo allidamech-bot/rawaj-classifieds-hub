@@ -63,21 +63,21 @@ export function AdminNotificationBell({
           setOpen(true);
           if (unreadTotal > 0) onOpenNotifications();
         }}
-        className="rawaj-icon-button rawaj-touch-target relative grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="rawaj-admin-notification-trigger rawaj-icon-button rawaj-touch-target relative grid h-9 w-9 place-items-center rounded-xl text-foreground hover:bg-muted-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={text("الإشعارات", "Notifications")}
         title={text("الإشعارات", "Notifications")}
         aria-expanded={open}
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadTotal > 0 ? (
-          <span className="absolute -top-0.5 -left-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-extrabold leading-5 text-white">
+          <span className="absolute -top-0.5 -left-0.5 min-w-[18px] rawaj-admin-unread rounded-full px-1 text-center text-[10px] font-extrabold leading-5 text-white">
             {unreadTotal > 99 ? "99+" : unreadTotal}
           </span>
         ) : null}
       </button>
 
       {open ? (
-        <div className="fixed left-1/2 top-1/2 z-50 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-3 shadow-2xl sm:absolute sm:right-0 sm:left-auto sm:top-full sm:mt-2 sm:w-80 sm:translate-x-0 sm:translate-y-0">
+        <div className="rawaj-admin-notification-panel fixed inset-x-0 top-1/2 mx-auto z-50 w-[min(20rem,calc(100vw-2rem))] -translate-y-1/2 rounded-2xl border border-border bg-card p-3 shadow-2xl sm:absolute sm:top-full sm:mt-2 sm:w-80 sm:translate-y-0">
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</p>
             <span className="text-[10px] text-muted-foreground">
