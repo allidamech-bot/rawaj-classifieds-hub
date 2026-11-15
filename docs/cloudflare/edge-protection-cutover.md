@@ -26,10 +26,13 @@ until each prerequisite and rollback check is verified independently.
 2. Record Cloudflare Workers analytics for the last full day: total invocations,
    busiest routes, peak UTC hours, worker name, and error/1027 counts. If other
    Workers share the same Free plan, attribute their usage separately.
-3. Add a **carefully scoped** Cloudflare WAF rate-limiting rule for `api.rawa-j.com`
-   and the API/media routes; use real traffic data to select thresholds. Avoid
-   indiscriminate blocking of legitimate shared-IP Syrian mobile users.
-   Confirm unwanted requests are blocked **before** invoking Workers.
+3. Add a **carefully scoped** Cloudflare WAF rate-limiting rule to protect
+   API/media paths; use real traffic data to select thresholds. On Cloudflare
+   Free, rate-limiting expressions offer **Path** and **Verified Bot**, not
+   arbitrary Host matching, so verify the rule's effect on all routes in the
+   zone before enabling it. Avoid indiscriminate blocking of legitimate
+   shared-IP Syrian mobile users. Confirm unwanted requests are blocked
+   **before** invoking Workers.
 4. Test a protected custom domain in isolation: HTTPS/TLS, `/v1/health`,
    references, listings, images, public seller profiles, Firebase-authorized
    account requests, browser uploads, CORS and iPhone Safari/PWA. Check both
