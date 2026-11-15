@@ -17,14 +17,19 @@ const routes = [
 
 for (const language of ["ar", "en"] as const) {
   for (const route of routes) {
-    test(`B4 ${route.pathname} uses approved personal shell: ${language}`, async ({ page }, testInfo) => {
+    test(`B4 ${route.pathname} uses approved personal shell: ${language}`, async ({
+      page,
+    }, testInfo) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
       for (const width of [320, 390, 1440]) {
         await page.setViewportSize({ width, height: 860 });
         const response = await page.goto(route.pathname, { waitUntil: "domcontentloaded" });
         expect(response?.status() ?? 200, route.pathname).toBeLessThan(500);
         await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
-        await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
+        await expect(page.locator("html")).toHaveAttribute(
+          "dir",
+          language === "ar" ? "rtl" : "ltr",
+        );
         const shell = page.locator(".rawaj-app-shell");
         await expect(shell).toHaveAttribute("data-design-palette", "ivory");
         await expect(shell).toHaveCSS("color-scheme", "light");
