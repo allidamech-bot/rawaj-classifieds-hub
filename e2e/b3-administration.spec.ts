@@ -257,3 +257,148 @@ test("B3.4 destructive placement actions require a labelled confirmation and rea
   await expect(dialog).toHaveCount(0);
   await expect(remove).toBeVisible();
 });
+
+test("B3.4 account restrictions submit exactly one audited change", async ({ page }) => {
+  await setFixtureRole(page, "admin");
+  const user = {
+    id: "fixture-restricted-user",
+    email: "restricted@example.invalid",
+    displayName: "Fixture Restriction Candidate",
+    accountStatus: "active",
+    verificationStatus: "unverified",
+    createdAt: "2026-11-15T00:00:00.000Z",
+    roles: ["user"],
+    listingCount: 1,
+    reportsSubmitted: 0,
+    reportsReceived: 0,
+    activeRestrictions: [],
+  };
+  let restrictionWrites = 0;
+  await page.route("**/v1/admin/users", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().method()).toBe("GET");
+    await route.fulfill({ json: { data: [user] } });
+  });
+  await page.route("**/v1/admin/users/restrictions", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject({
+      userId: user.id,
+      restrictionType: "messaging",
+      reason: "Isolated restriction acceptance",
+    });
+    restrictionWrites += 1;
+    await route.fulfill({ json: { data: "fixture-restriction-id" } });
+  });
+  await page.goto("/admin/users");
+  await page.getByRole("button", { name: /Fixture Restriction Candidate/ }).click();
+  await page.getByPlaceholder("Enter a clear reason for the audit trail.").fill(
+    "Isolated restriction acceptance",
+  );
+  await page.getByRole("combobox", { name: "Restriction type" }).selectOption("messaging");
+  const apply = page.getByRole("button", { name: "Apply restriction" });
+  await expect(apply).toBeEnabled();
+  await apply.click();
+  await expect(page.getByText("Action completed and audited.")).toBeVisible();
+  expect(restrictionWrites).toBe(1);
+});
+
+test("B3.4 owner campaign status requires a reason and optimistic version", async ({ page }) => {
+  await setFixtureRole(page, "owner");
+  const campaign = {
+    id: "fixture-campaign",
+    name: "Fixture Acceptance Campaign",
+    status: "draft",
+    startsAt: null,
+    endsAt: null,
+    targetPages: [],
+    targetCategoryIds: [],
+    version: 3,
+    createdAt: "2026-11-15T00:00:00.000Z",
+    updatedAt: "2026-11-15T00:00:00.000Z",
+    creativeCount: 0,
+    impressions: 100,
+    clicks: 5,
+    ctr: 5,
+  };
+  let changed = false;
+  let statusWrites = 0;
+  await page.route("**/v1/admin/campaigns", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().method()).toBe("GET");
+    await route.fulfill({
+      json: { data: [{ ...campaign, status: changed ? "active" : "draft", version: changed ? 4 : 3 }] },
+    });
+  });
+  await page.route("**/v1/admin/campaigns/fixture-campaign/status", async (route) => {
+    expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
+    expect(route.request().method()).toBe("PATCH");
+    expect(route.request().postDataJSON()).toMatchObject({
+      id: campaign.id,
+      status: "active",
+      expectedVersion: 3,
+      reason: "Isolated campaign acceptance",
+    });
+    statusWrites += 1;
+    changed = true;
+    await route.fulfill({ json: { data: { id: campaign.id, version: 4, updatedAt: campaign.updatedAt } } });
+  });
+  await page.goto("/admin/campaigns");
+  const activate = page.getByRole("button", { name: "Activate", exact: true });
+  await expect(activate).toBeVisible();
+  await activate.click();
+  await expect(page.getByText("Enter a clear reason for the status change.")).toBeVisible();
+  expect(statusWrites).toBe(0);
+  await page.getByPlaceholder("Status change reason").fill("Isolated campaign acceptance");
+  await activate.click();
+  await expect(page.getByText("Campaign status changed and audited.")).toBeVisible();
+  expect(statusWrites).toBe(1);
+});
+
+test("B3.4 audit filters only the bounded history the backend actually returns", async ({ page }) => {
+  await setFixtureRole(page, "admin");
+  let auditReads = 0;
+  await page.route("**/v1/admin/audit?*", async (route) => {
+    const url = new URL(route.request().url());
+    expect(url.hostname).toBe("127.0.0.1");
+    expect(url.searchParams.get("limit")).toBe("100");
+    expect(url.searchParams.has("offset")).toBe(false);
+    expect(url.searchParams.has("actionPrefix")).toBe(false);
+    expect(route.request().method()).toBe("GET");
+    auditReads += 1;
+    await route.fulfill({
+      json: {
+        data: [
+          {
+            id: "fixture-audit-user",
+            actorId: "fixture-admin",
+            actorRole: "admin",
+            action: "user.restricted",
+            targetTable: "users",
+            targetId: "fixture-user",
+            metadata: { reason: "Isolated audit" },
+            createdAt: "2026-11-15T01:00:00.000Z",
+          },
+          {
+            id: "fixture-audit-notification",
+            actorId: "fixture-admin",
+            actorRole: "admin",
+            action: "notification.sent",
+            targetTable: "notifications",
+            targetId: "fixture-notification",
+            metadata: {},
+            createdAt: "2026-11-15T01:01:00.000Z",
+          },
+        ],
+      },
+    });
+  });
+  await page.goto("/admin/audit");
+  await expect(page.getByText("user.restricted")).toBeVisible();
+  await expect(page.getByText("notification.sent")).toBeVisible();
+  await page.locator('main.rawaj-admin-v3 select').selectOption("user.");
+  await expect(page.getByText("user.restricted")).toBeVisible();
+  await expect(page.getByText("notification.sent")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Load more" })).toHaveCount(0);
+  expect(auditReads).toBe(1);
+});
