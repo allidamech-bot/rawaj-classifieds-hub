@@ -795,6 +795,13 @@
     color: var(--rawaj-identity-ivory) !important;
   }
 
+  & .rawaj-promotion-card :is(input:not([type="checkbox"]), select, textarea) {
+    border-color: #bdcdc3 !important;
+    background: #fffdf9 !important;
+    color: var(--rawaj-identity-ink) !important;
+    color-scheme: light;
+  }
+
   & main :is(h1, h2, h3, p, li, label, small) {
     line-height: 1.65;
   }
