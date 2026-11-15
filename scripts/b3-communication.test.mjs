@@ -47,3 +47,11 @@ test("B3.2 messenger keeps list-first mobile state, safety and distinct sender b
   assert.match(messaging, /prefers-reduced-motion/);
   assert.doesNotMatch(messaging, /--rawaj-accent-orange/);
 });
+
+test("B3.2 removes legacy V18 dark route overrides instead of masking them", () => {
+  const legacy = read("src/rawaj-chromatic-premium-system-v18-legacy-surfaces.css");
+  assert.doesNotMatch(legacy, /data-resolved-pathname="\/notifications"/);
+  assert.doesNotMatch(legacy, /data-resolved-pathname="\/activity"/);
+  assert.match(legacy, /data-resolved-pathname="\/favorites"/);
+  assert.match(legacy, /data-resolved-pathname="\/saved-searches"/);
+});
