@@ -204,11 +204,28 @@
   background: #10151d !important;
 }
 
-/* Shared footer identity: a solid petrol canvas; storefronts keep their scoped light footer. */
-.rawaj-site-footer,
-.rawaj-site-footer__mobile {
+/* The retired v17 global `.rawaj-app-shell footer` selector is more specific than
+ * a standalone footer class. Override that exact legacy rule at its shared boundary. */
+.rawaj-app-shell footer.rawaj-site-footer,
+.rawaj-app-shell footer.rawaj-site-footer .rawaj-site-footer__mobile {
   border-color: rgba(234, 195, 143, 0.24) !important;
   background: var(--rawaj-identity-petrol, #073836) !important;
+}
+
+/* The old full-width dock blur belonged to the retired dark shell, not this navigation. */
+.rawaj-app-shell .rawaj-mobile-dock {
+  border: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.rawaj-app-shell .rawaj-mobile-dock::before,
+.rawaj-app-shell .rawaj-mobile-dock::after {
+  content: none !important;
+  display: none !important;
 }
 
 /* Portal content is outside the route shell in older Radix primitives. */
