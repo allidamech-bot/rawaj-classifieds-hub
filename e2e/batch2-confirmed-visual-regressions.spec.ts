@@ -14,9 +14,7 @@ function contrastRatio(foreground: string, background: string): number {
   const luminance = (value: string) => {
     const channels = rgb(value).map((channel) => {
       const normalized = channel / 255;
-      return normalized <= 0.04045
-        ? normalized / 12.92
-        : ((normalized + 0.055) / 1.055) ** 2.4;
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
     });
     return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
   };
@@ -82,9 +80,7 @@ for (const language of ["ar", "en"] as const) {
     }
   });
 
-  test(`Batch 2 complete listing prices remain visible in ${language}`, async ({
-    page,
-  }) => {
+  test(`Batch 2 complete listing prices remain visible in ${language}`, async ({ page }) => {
     await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
     await page.setViewportSize({ width: 320, height: 850 });
     await page.goto("/listings");
@@ -99,13 +95,8 @@ for (const language of ["ar", "en"] as const) {
         elements.flatMap((element) => {
           const style = getComputedStyle(element);
           const lostPixels = element.scrollWidth - element.clientWidth;
-          if (
-            (style.overflowX === "hidden" || style.overflowX === "clip") &&
-            lostPixels > 2
-          ) {
-            return [
-              `${element.textContent?.trim()} [${lostPixels}px hidden; ${style.whiteSpace}]`,
-            ];
+          if ((style.overflowX === "hidden" || style.overflowX === "clip") && lostPixels > 2) {
+            return [`${element.textContent?.trim()} [${lostPixels}px hidden; ${style.whiteSpace}]`];
           }
           return [];
         }),
