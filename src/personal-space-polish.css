@@ -42,7 +42,7 @@
 }
 
 .rawaj-account-collection-v3 > section:first-child::after,
-.rawaj-account-activity-v3 > section:first-child::after {
+.rawaj-account-activity-v3 > section:first-child:not(.rawaj-communication-signed-out)::after {
   content: "";
   position: absolute;
   inset-block: 0.9rem;

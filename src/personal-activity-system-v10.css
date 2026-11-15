@@ -513,7 +513,13 @@
  * copy. They must not leak onto ivory notification/activity surfaces. Scope only
  * to the three communication paths and preserve B3.1 account styles. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"]:has(.rawaj-communication-signed-out) {
-  background: var(--rawaj-identity-ivory) !important;
+  --rawaj-shell-canvas: #f7f3ec;
+  background: var(--rawaj-shell-canvas) !important;
+}
+
+.rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"]:has(.rawaj-communication-signed-out)
+  :is(.rawaj-app-shell__page, .rawaj-app-shell__content, main.rawaj-communication-v2) {
+  background: transparent !important;
 }
 
 .rawaj-app-shell[data-shell-mode]:is(

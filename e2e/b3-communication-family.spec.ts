@@ -33,6 +33,16 @@ for (const { path, selector } of routes) {
         const shell = page.locator(".rawaj-app-shell");
         await expect(shell).toHaveAttribute("data-resolved-pathname", path);
         if (width === 390) {
+          const signInPanel = page.locator(".rawaj-communication-signed-out");
+          await expect(signInPanel).toBeVisible();
+          expect(
+            await signInPanel.evaluate((node) => getComputedStyle(node, "::after").content),
+          ).toBe("none");
+          if (path === "/chats") {
+            await expect(shell).toHaveCSS("background-color", "rgb(247, 243, 236)");
+            await expect(page.locator(selector)).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+          }
+
           const screenshot = testInfo.outputPath(
             `b3-communication-${path.slice(1)}-${language}.png`,
           );
