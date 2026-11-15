@@ -43,12 +43,21 @@ export function validateCloudflareEdgeCutover({
   const currentOrigin = normalizeOrigin(
     envValue(environmentSource, "VITE_PUBLIC_DATA_API_BASE_URL"),
   );
-  const mode =
-    currentOrigin === LEGACY_API_ORIGIN
-      ? "legacy"
-      : currentOrigin === PROTECTED_API_ORIGIN
-        ? "protected"
-        : "invalid";
+  const routes = Array.isArray(workerConfig.routes) ? workerConfig.routes : [];
+  const hasProtectedRoute =
+    routes.length === 1 &&
+    routes[0]?.pattern === "api.rawa-j.com" &&
+    routes[0]?.custom_domain === true;
+  const isFrozen = renderConfigSource.includes(
+    "Refusing production render: the Syria Worker must remain",
+  );
+
+  let mode = "invalid";
+  if (currentOrigin === LEGACY_API_ORIGIN) {
+    mode = hasProtectedRoute ? "staging" : "legacy";
+  } else if (currentOrigin === PROTECTED_API_ORIGIN) {
+    mode = workerConfig.workers_dev === false ? "protected" : "cutover";
+  }
 
   const check = (pass, message) => {
     if (!pass) errors.push(message);
@@ -83,34 +92,29 @@ export function validateCloudflareEdgeCutover({
 
   if (mode === "legacy") {
     check(workerConfig.workers_dev === true, "Legacy routing requires workers_dev=true");
-    check(
-      !Array.isArray(workerConfig.routes) || workerConfig.routes.length === 0,
-      "Legacy mode cannot unexpectedly enable a custom-domain route",
-    );
-    check(
-      renderConfigSource.includes("Refusing production render: the Syria Worker must remain"),
-      "Legacy production render freeze was removed prematurely",
-    );
+    check(routes.length === 0, "Legacy mode cannot unexpectedly enable a custom-domain route");
+    check(isFrozen, "Legacy production render freeze was removed prematurely");
     check(legacyReleaseCheck, "Legacy production smoke endpoint must remain pinned");
   }
 
-  if (mode === "protected") {
-    check(workerConfig.workers_dev === false, "Protected routing requires workers_dev=false");
-    check(
-      Array.isArray(workerConfig.routes) &&
-        workerConfig.routes.some(
-          (route) => route.pattern === "api.rawa-j.com" && route.custom_domain === true,
-        ),
-      "Protected mode requires an explicit api.rawa-j.com custom domain",
-    );
-    check(
-      !renderConfigSource.includes("Refusing production render: the Syria Worker must remain"),
-      "Protected render configuration must be explicitly reviewed",
-    );
-    check(
-      protectedReleaseCheck && !legacyReleaseCheck,
-      "Production release smoke must use protected domain",
-    );
+  if (mode === "staging" || mode === "cutover" || mode === "protected") {
+    check(hasProtectedRoute, "Protected routing requires api.rawa-j.com custom domain");
+    check(!isFrozen, "Custom-domain render configuration must be explicitly reviewed");
+
+    if (mode === "staging") {
+      check(workerConfig.workers_dev === true, "Staging must keep workers.dev operational");
+      check(legacyReleaseCheck, "Staging release smoke must still verify the old live route");
+    } else {
+      check(
+        protectedReleaseCheck && !legacyReleaseCheck,
+        "Production release smoke must use protected domain",
+      );
+      if (mode === "cutover") {
+        check(workerConfig.workers_dev === true, "Temporary handoff must preserve the old route");
+      } else {
+        check(workerConfig.workers_dev === false, "Final routing requires workers_dev=false");
+      }
+    }
   }
 
   check(
