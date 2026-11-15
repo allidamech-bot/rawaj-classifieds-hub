@@ -527,7 +527,7 @@ function LegacyCategoryDirectory({
             className="group flex items-center gap-3 p-3.5 transition hover:bg-muted-surface/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:items-start sm:p-4"
           >
             <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl sm:h-14 sm:w-14">
-              <PlaceholderArt type={category.placeholder} aspect="square" />
+              <PlaceholderArt type={category.placeholder} aspect="square" identity />
             </div>
             <div className="min-w-0 flex-1 py-0.5">
               <div className="flex items-center justify-between gap-2">

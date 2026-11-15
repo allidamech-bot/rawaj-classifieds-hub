@@ -493,15 +493,37 @@ test("B2.2 price change outside main uses accessible semantic identity roles", a
 });
 
 
-test("B2.2 placeholder uses approved gold/petrol only for listing detail", async () => {
+test("Listing detail and listing cards use approved petrol/ivory missing-image artwork", async () => {
   const load = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
-  const [placeholder, gallery, viewer] = await Promise.all([
+  const [placeholder, gallery, viewer, cards] = await Promise.all([
     load("components/PlaceholderArt.tsx"),
     load("features/listing-detail/ListingMediaExperience.tsx"),
     load("features/listing-detail/ListingMediaViewer.tsx"),
+    load("features/listings/cards/ListingCardImage.tsx"),
   ]);
-  assert.ok(placeholder.includes("identity = false"), "Other routes keep the existing placeholder design");
+  assert.ok(placeholder.includes("identity = false"), "The placeholder default remains explicitly opt-in");
   assert.ok(placeholder.includes('identity ? "#ffe3b0"'));
   assert.equal((gallery.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
   assert.equal((viewer.match(/<PlaceholderArt[^>]* identity \/>/g) || []).length, 2);
+  assert.match(cards, /<PlaceholderArt[\s\S]*?aspect=\{placeholderAspect\}[\s\S]*?\bidentity\b[\s\S]*?className=/);
+});
+
+test("category and favorites fallbacks reuse the approved identity", async () => {
+  const [categories, favorites, categoryCard] = await Promise.all([
+    readFile(new URL("../src/routes/categories.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/routes/favorites.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/CategoryCard.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(categories, /<PlaceholderArt type=\{category\.placeholder\} aspect="square" identity \/>/);
+  assert.match(favorites, /<PlaceholderArt type="misc" aspect="square" identity \/>/);
+  assert.match(categoryCard, /<PlaceholderArt type=\{category\.placeholder\} aspect="square" identity \/>/);
+});
+
+test("More page and My Store localize the Boost action for Arabic users", async () => {
+  const [more, ownerSummary] = await Promise.all([
+    readFile(new URL("../src/routes/more.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/storefront/OwnerStoreWorkspaceSummary.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(more, /titleAr: "تعزيز الظهور",\s*titleEn: "Boost"/);
+  assert.match(ownerSummary, /text\("تعزيز الظهور", "Boost"\)/);
 });
