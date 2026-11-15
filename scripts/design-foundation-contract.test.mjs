@@ -573,4 +573,9 @@ test("retired V7/V17/V18 paints cannot overwrite migrated light routes and store
   assert.match(portals, /body:where\(:not\(:has\(\.rawaj-app-shell\[data-design-palette="ivory"\]\)\)/);
   assert.doesNotMatch(stability, /^@import.*v18-legacy-surfaces\.css/m);
   assert.doesNotMatch(stability, /^@import.*v20-state-consistency\.css/m);
+  assert.doesNotMatch(stability, /^@import.*v18-home-discovery\.css/m);
+  assert.doesNotMatch(stability, /^@import.*v18-chats\.css/m);
+  const adPlacement = await read("rawaj-chromatic-premium-system-v18-ad-placement.css");
+  assert.match(adPlacement, /var\(--rawaj-ad-placement-frame-background, var\(--rawaj-identity-petrol\)\)/);
+  assert.doesNotMatch(adPlacement, /rgba\(219, ?73, ?179|#(?:d83658|c12b84|7465ef)/i);
 });
