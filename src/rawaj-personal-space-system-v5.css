@@ -711,10 +711,11 @@
   color: var(--personal-text) !important;
 }
 
-/* Approved messaging uses dark petrol ink on a pale selected-state
- * surface. The retired blue badge was 1.55:1 in authenticated visual QA. */
+/* On the approved ivory chats route, the section heading, its icon and
+ * unread badge need petrol ink on pale surfaces. The former light heading
+ * inherited from the retired dark workspace measured only 1.01:1. */
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
-  .rawaj-conversation-sidebar__heading :is(h2 svg, span) {
+  .rawaj-conversation-sidebar__heading :is(h2, h2 svg, span) {
   color: var(--rawaj-identity-petrol) !important;
 }
 
