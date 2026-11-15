@@ -14,6 +14,7 @@
     "test:design-foundation": "node --test scripts/design-foundation-contract.test.mjs",
     "test:ci-worker-egress-isolation": "node --test scripts/ci-worker-egress-isolation.test.mjs",
     "test:cloudflare-traffic-budget": "node --test scripts/cloudflare-traffic-budget-guards.test.mjs",
+    "test:cloudflare-quota-circuit": "node --test scripts/cloudflare-quota-circuit.test.mjs",
     "test:discovery-marketplace-v4": "node --test scripts/discovery-marketplace-v4.test.mjs",
     "test:listing-studio-v4": "node --test scripts/listing-studio-v4.test.mjs",
     "test:messaging-v4": "node --test scripts/messaging-v4.test.mjs scripts/b3-communication.test.mjs",
