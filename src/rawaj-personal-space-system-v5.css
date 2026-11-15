@@ -725,18 +725,21 @@
   background: #e0ece8 !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search {
-  border: 1px solid var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: #8fc2ff !important;
+/* The /chats search field belongs to the approved ivory workspace, not
+ * the retired charcoal messaging skin. Keep its input and icon legible. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search {
+  border: 1px solid var(--rawaj-border) !important;
+  background: #ffffff !important;
+  color: var(--rawaj-identity-petrol) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search input {
-  color: var(--personal-text) !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search input {
+  background: transparent !important;
+  color: var(--rawaj-text-primary) !important;
 }
 
-.rawaj-messaging-v4 .rawaj-communication-search input::placeholder {
-  color: #777983 !important;
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-communication-search input::placeholder {
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary {
