@@ -1,4 +1,8 @@
-import type { ClassifiedListing, ClassifiedsErrorCode, ClassifiedsResult } from "@/lib/classifieds-types";
+import type {
+  ClassifiedListing,
+  ClassifiedsErrorCode,
+  ClassifiedsResult,
+} from "@/lib/classifieds-types";
 import type { CanonicalLocationNode } from "@/lib/api/location-taxonomy";
 import { fetchLocationPath } from "@/lib/api/location-taxonomy";
 import { cloudflareApiRequest } from "@/lib/cloudflare-auth";
