@@ -253,15 +253,17 @@ additional route must introduce a representative fixture before the test passes.
 
 The router includes **16 distinct administration UI routes**, including
 `/admin/notifications`. The independent B4 role matrix added via merged
-PR #881 covers guest/non-admin boundaries, while authenticated admin actions
-remain dependent on the B3.4 admin implementation/acceptance in PR #876.
+PR #881 covers guest/non-admin boundaries, while the B3.4 administration implementation from merged PR #876
+(commit `a04464acc86798ae471601ac1d7ab2ae5c3cdfd3`) now exists in
+`main`. Full authorized admin interactions still need isolated role acceptance.
 
 ### Required integration closeout
 
 1. Verify exact-HEAD Quality Gate, Browser Smoke, Rendered Visual QA and
    the appropriate security/WebKit checks on this B4 branch.
-2. Keep PR #877 a draft until admin PR #876 is merged and re-run final
-   integration checks against the actual updated `main` branch.
+2. B3.4 PR #876 has now merged; the B4 branch has reconciled its files with
+   that commit. Keep PR #877 a draft until all **exact integrated HEAD**
+   checks and a route-state review complete against the updated `main`.
 3. Do not claim authenticated moderator/owner functionality or production
    user-data safety from guest screenshots. Use isolated approved fixtures;
    never mutate production.
