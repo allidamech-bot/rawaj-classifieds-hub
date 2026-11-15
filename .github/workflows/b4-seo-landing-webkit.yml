@@ -1,0 +1,51 @@
+name: B4 SEO Landing iPhone WebKit Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/shell/AppShell.tsx"
+      - "src/lib/browser-chrome.ts"
+      - "src/lib/route-styles.ts"
+      - "src/features/seo/MarketplaceLandingPage.tsx"
+      - "src/seo-landing-identity.css"
+      - "e2e/b4-seo-landing-identity.spec.ts"
+      - ".github/workflows/b4-seo-landing-webkit.yml"
+
+concurrency:
+  group: b4-seo-landing-webkit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  webkit:
+    name: B4 SEO iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Check active category and governorate landings in Arabic and English
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b4-seo-landing-identity.spec.ts --project=mobile-webkit
+      - name: Save failure traces and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b4-seo-landing-webkit-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

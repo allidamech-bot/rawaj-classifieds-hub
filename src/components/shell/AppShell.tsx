@@ -197,8 +197,12 @@ export function AppShell({
   // surfaces. Their shell must opt into the same semantics so retired V7/V7B
   // charcoal defaults cannot override cards, controls or empty states.
   // Keep the approved homepage and owner/public storefronts unchanged.
+  const useSeoLandingPalette = /^\/(?:category|syria)\/[^/]+$/.test(pathname);
   const useIvoryPalette =
-    routeStyles.listingStudio || routeStyles.trustWorkspace || routeStyles.personalSpace;
+    routeStyles.listingStudio ||
+    routeStyles.trustWorkspace ||
+    routeStyles.personalSpace ||
+    useSeoLandingPalette;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(

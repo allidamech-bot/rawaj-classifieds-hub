@@ -25,7 +25,7 @@ export function MarketplaceLandingPage({
   const Icon = kind === "category" ? Shapes : MapPin;
 
   return (
-    <main className="container-wide mobile-page-bottom space-y-6 pb-10 pt-4 sm:pt-6">
+    <main className="rawaj-seo-landing container-wide mobile-page-bottom space-y-6 pb-10 pt-4 sm:pt-6">
       <section className="rawaj-surface rounded-[1.6rem] p-5 sm:p-7">
         <div className="flex items-start gap-4">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
