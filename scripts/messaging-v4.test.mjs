@@ -34,7 +34,7 @@ test("messages retain one page heading and accessible interaction contracts", ()
 
 test("phase 5 provides readable, restrained, responsive messaging UI", () => {
   assert.match(css, /font-size:\s*max\(0\.84rem, 13\.5px\)/);
-  assert.match(css, /background:\s*var\(--rawaj-primary/);
+  assert.match(css, /background:\s*#075d52/);
   assert.match(css, /box-shadow:\s*0 3px 10px/);
   assert.match(css, /min-height:\s*3rem/);
   assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
@@ -45,7 +45,7 @@ test("phase 5 provides readable, restrained, responsive messaging UI", () => {
 
 test("phase 5 contract runs after the immutable realtime precheck prefix", () => {
   const parsed = JSON.parse(packageJson);
-  assert.equal(parsed.scripts["test:messaging-v4"], "node --test scripts/messaging-v4.test.mjs");
+  assert.equal(parsed.scripts["test:messaging-v4"], "node --test scripts/messaging-v4.test.mjs scripts/b3-communication.test.mjs");
   assert.match(parsed.scripts.precheck, /^npm run test:conversations-messaging-realtime/);
   assert.match(parsed.scripts.precheck, /test:messaging-v4/);
 });
