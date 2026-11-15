@@ -23,7 +23,9 @@ for (const language of ["ar", "en"] as const) {
         "content",
         "#073836",
       );
-      await expect(page.getByRole("link", { name: language === "ar" ? "تسجيل الدخول" : "Log in" })).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: language === "ar" ? "تسجيل الدخول" : "Log in" }),
+      ).toBeVisible();
 
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
