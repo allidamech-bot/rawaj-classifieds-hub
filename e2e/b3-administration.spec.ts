@@ -292,9 +292,9 @@ test("B3.4 account restrictions submit exactly one audited change", async ({ pag
   });
   await page.goto("/admin/users");
   await page.getByRole("button", { name: /Fixture Restriction Candidate/ }).click();
-  await page.getByPlaceholder("Enter a clear reason for the audit trail.").fill(
-    "Isolated restriction acceptance",
-  );
+  await page
+    .getByPlaceholder("Enter a clear reason for the audit trail.")
+    .fill("Isolated restriction acceptance");
   await page.getByRole("combobox", { name: "Restriction type" }).selectOption("messaging");
   const apply = page.getByRole("button", { name: "Apply restriction" });
   await expect(apply).toBeEnabled();
@@ -327,7 +327,9 @@ test("B3.4 owner campaign status requires a reason and optimistic version", asyn
     expect(new URL(route.request().url()).hostname).toBe("127.0.0.1");
     expect(route.request().method()).toBe("GET");
     await route.fulfill({
-      json: { data: [{ ...campaign, status: changed ? "active" : "draft", version: changed ? 4 : 3 }] },
+      json: {
+        data: [{ ...campaign, status: changed ? "active" : "draft", version: changed ? 4 : 3 }],
+      },
     });
   });
   await page.route("**/v1/admin/campaigns/fixture-campaign/status", async (route) => {
@@ -341,7 +343,9 @@ test("B3.4 owner campaign status requires a reason and optimistic version", asyn
     });
     statusWrites += 1;
     changed = true;
-    await route.fulfill({ json: { data: { id: campaign.id, version: 4, updatedAt: campaign.updatedAt } } });
+    await route.fulfill({
+      json: { data: { id: campaign.id, version: 4, updatedAt: campaign.updatedAt } },
+    });
   });
   await page.goto("/admin/campaigns");
   const activate = page.getByRole("button", { name: "Activate", exact: true });
@@ -355,7 +359,9 @@ test("B3.4 owner campaign status requires a reason and optimistic version", asyn
   expect(statusWrites).toBe(1);
 });
 
-test("B3.4 audit filters only the bounded history the backend actually returns", async ({ page }) => {
+test("B3.4 audit filters only the bounded history the backend actually returns", async ({
+  page,
+}) => {
   await setFixtureRole(page, "admin");
   let auditReads = 0;
   await page.route("**/v1/admin/audit?*", async (route) => {
@@ -396,7 +402,7 @@ test("B3.4 audit filters only the bounded history the backend actually returns",
   await page.goto("/admin/audit");
   await expect(page.getByText("user.restricted")).toBeVisible();
   await expect(page.getByText("notification.sent")).toBeVisible();
-  await page.locator('main.rawaj-admin-v3 select').selectOption("user.");
+  await page.locator("main.rawaj-admin-v3 select").selectOption("user.");
   await expect(page.getByText("user.restricted")).toBeVisible();
   await expect(page.getByText("notification.sent")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Load more" })).toHaveCount(0);
