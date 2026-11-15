@@ -21,74 +21,86 @@ test.describe("B4 independent marketplace journeys", () => {
   }
 
   for (const language of ["ar", "en"] as const) {
-    test("home to categories, search, filters, listing, seller and guest contact: " + language, async ({
-      page,
-    }, testInfo) => {
-      await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
-      await visit(page, "/", language);
+    test(
+      "home to categories, search, filters, listing, seller and guest contact: " + language,
+      async ({ page }, testInfo) => {
+        await page.addInitScript(
+          (value) => localStorage.setItem("rawaj-language", value),
+          language,
+        );
+        await visit(page, "/", language);
 
-      // Follow the real home category entry point, not a programmatic route push.
-      const categories = page.locator('.rawaj-signature-categories a[href="/categories"]').first();
-      await expect(categories).toBeVisible();
-      await categories.click();
-      await expect(page).toHaveURL(/\/categories(?:[?#]|$)/);
-      await expect(page.locator("main h1")).toBeVisible();
+        // Follow the real home category entry point, not a programmatic route push.
+        const categories = page
+          .locator('.rawaj-signature-categories a[href="/categories"]')
+          .first();
+        await expect(categories).toBeVisible();
+        await categories.click();
+        await expect(page).toHaveURL(/\/categories(?:[?#]|$)/);
+        await expect(page.locator("main h1")).toBeVisible();
 
-      await visit(page, "/", language);
-      const search = page.locator("#rawaj-signature-search-input");
-      await expect(search).toBeVisible();
-      await search.fill("  سيارة  ");
-      await search.press("Enter");
-      await expect(page).toHaveURL(/\/listings(?:\?|$)/);
-      expect(new URL(page.url()).searchParams.get("q")).toBe("سيارة");
+        await visit(page, "/", language);
+        const search = page.locator("#rawaj-signature-search-input");
+        await expect(search).toBeVisible();
+        await search.fill("  سيارة  ");
+        await search.press("Enter");
+        await expect(page).toHaveURL(/\/listings(?:\?|$)/);
+        expect(new URL(page.url()).searchParams.get("q")).toBe("سيارة");
 
-      // Filter state must be expressed in the URL, including after reload.
-      const toolbar = page.locator(".rawaj-search-toolbar");
-      await expect(toolbar).toBeVisible();
-      await toolbar.getByRole("combobox", { name: /ترتيب النتائج|Sort results/ })
-        .selectOption("cheapest");
-      await expect(page).toHaveURL(/sort=cheapest/);
-      await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
-      await expect(toolbar.getByRole("combobox", { name: /ترتيب النتائج|Sort results/ }))
-        .toHaveValue("cheapest");
+        // Filter state must be expressed in the URL, including after reload.
+        const toolbar = page.locator(".rawaj-search-toolbar");
+        await expect(toolbar).toBeVisible();
+        await toolbar
+          .getByRole("combobox", { name: /ترتيب النتائج|Sort results/ })
+          .selectOption("cheapest");
+        await expect(page).toHaveURL(/sort=cheapest/);
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+        await expect(
+          toolbar.getByRole("combobox", { name: /ترتيب النتائج|Sort results/ }),
+        ).toHaveValue("cheapest");
 
-      const listingLink = page.locator('a[href^="/listings/e2e-listing-"]').first();
-      await expect(listingLink).toBeVisible();
-      await listingLink.click();
-      await expect(page).toHaveURL(/\/listings\/e2e-listing-/);
-      await expect(page.locator(".rawaj-detail-summary h1")).toBeVisible();
+        const listingLink = page.locator('a[href^="/listings/e2e-listing-"]').first();
+        await expect(listingLink).toBeVisible();
+        await listingLink.click();
+        await expect(page).toHaveURL(/\/listings\/e2e-listing-/);
+        await expect(page.locator(".rawaj-detail-summary h1")).toBeVisible();
 
-      const contact = page.locator('aside[data-action-contract="conversation-and-direct-contact"]');
-      await expect(contact).toBeVisible();
-      await expect(contact.getByRole("button", { name: /مراسلة|Message/ })).toBeEnabled();
-      await expect(contact.getByRole("button", { name: /قدّم عرضًا|Make an offer/ })).toBeEnabled();
+        const contact = page.locator(
+          'aside[data-action-contract="conversation-and-direct-contact"]',
+        );
+        await expect(contact).toBeVisible();
+        await expect(contact.getByRole("button", { name: /مراسلة|Message/ })).toBeEnabled();
+        await expect(contact.getByRole("button", { name: /قدّم عرضًا|Make an offer/ })).toBeEnabled();
 
-      const seller = page.locator(".rawaj-detail-seller a[href^='/seller/']").first();
-      await expect(seller).toBeVisible();
-      await seller.click();
-      await expect(page).toHaveURL(/\/seller\/[^/?#]+/);
-      await expect(page.locator("#storefront-listings")).toBeVisible();
-      await expect(page.locator("#seller-about")).toBeAttached();
-      await expect(page.locator("#seller-reviews")).toBeAttached();
+        const seller = page.locator(".rawaj-detail-seller a[href^='/seller/']").first();
+        await expect(seller).toBeVisible();
+        await seller.click();
+        await expect(page).toHaveURL(/\/seller\/[^/?#]+/);
+        await expect(page.locator("#storefront-listings")).toBeVisible();
+        await expect(page.locator("#seller-about")).toBeAttached();
+        await expect(page.locator("#seller-reviews")).toBeAttached();
 
-      await page.goBack();
-      await expect(page.locator('aside[data-action-contract="conversation-and-direct-contact"]')).toBeVisible();
-      await contact.getByRole("button", { name: /مراسلة|Message/ }).click();
-      await expect(page).toHaveURL(/\/login(?:\?|$)/);
-      expect(new URL(page.url()).searchParams.get("returnTo")).toMatch(/^\/listings\//);
-      await expect(page.locator('input[type="email"]')).toBeVisible();
+        await page.goBack();
+        await expect(
+          page.locator('aside[data-action-contract="conversation-and-direct-contact"]'),
+        ).toBeVisible();
+        await contact.getByRole("button", { name: /مراسلة|Message/ }).click();
+        await expect(page).toHaveURL(/\/login(?:\?|$)/);
+        expect(new URL(page.url()).searchParams.get("returnTo")).toMatch(/^\/listings\//);
+        await expect(page.locator('input[type="email"]')).toBeVisible();
 
-      // This verifies the user journey, not a production-authenticated message write.
-      await testInfo.attach("b4-guest-contact-" + language, {
-        body: JSON.stringify({
-          contactOutcome: "login required",
-          reason: "anonymous visitor cannot create private conversations",
-          productionWrites: 0,
-        }),
-        contentType: "application/json",
-      });
-    });
+        // This verifies the user journey, not a production-authenticated message write.
+        await testInfo.attach("b4-guest-contact-" + language, {
+          body: JSON.stringify({
+            contactOutcome: "login required",
+            reason: "anonymous visitor cannot create private conversations",
+            productionWrites: 0,
+          }),
+          contentType: "application/json",
+        });
+      },
+    );
 
     test("failed listings request recovers on explicit retry: " + language, async ({ page }) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
@@ -128,31 +140,50 @@ test.describe("B4 independent marketplace journeys", () => {
       await expect(page.locator(".rawaj-adaptive-card")).toHaveCount(0);
     });
 
-    test("non-destructive public and member route inventory renders: " + language, async ({
-      page,
-    }) => {
-      await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
-      const routes = [
-        "/login", "/reset-password", "/more", "/offers", "/promotion",
-        "/promotion-request", "/support", "/safety", "/prohibited",
-        "/privacy", "/terms", "/verification", "/favorites", "/saved-searches",
-        "/notifications", "/activity", "/chats", "/add-listing", "/profile",
-        "/profile/listings",
-      ] as const;
-      const remoteWrites: string[] = [];
-      page.on("request", (request) => {
-        if (["GET", "HEAD", "OPTIONS"].includes(request.method())) return;
-        const hostname = new URL(request.url()).hostname;
-        if (hostname !== "127.0.0.1" && hostname !== "localhost") {
-          remoteWrites.push(request.method() + " " + request.url());
+    test(
+      "non-destructive public and member route inventory renders: " + language,
+      async ({ page }) => {
+        await page.addInitScript(
+          (value) => localStorage.setItem("rawaj-language", value),
+          language,
+        );
+        const routes = [
+          "/login",
+          "/reset-password",
+          "/more",
+          "/offers",
+          "/promotion",
+          "/promotion-request",
+          "/support",
+          "/safety",
+          "/prohibited",
+          "/privacy",
+          "/terms",
+          "/verification",
+          "/favorites",
+          "/saved-searches",
+          "/notifications",
+          "/activity",
+          "/chats",
+          "/add-listing",
+          "/profile",
+          "/profile/listings",
+        ] as const;
+        const remoteWrites: string[] = [];
+        page.on("request", (request) => {
+          if (["GET", "HEAD", "OPTIONS"].includes(request.method())) return;
+          const hostname = new URL(request.url()).hostname;
+          if (hostname !== "127.0.0.1" && hostname !== "localhost") {
+            remoteWrites.push(request.method() + " " + request.url());
+          }
+        });
+        for (const route of routes) {
+          await visit(page, route, language);
+          // Avoid false success from an unexpected client-side route crash.
+          await expect(page.locator(".rawaj-app-shell")).toBeVisible();
         }
-      });
-      for (const route of routes) {
-        await visit(page, route, language);
-        // Avoid false success from an unexpected client-side route crash.
-        await expect(page.locator(".rawaj-app-shell")).toBeVisible();
-      }
-      expect(remoteWrites, "Local fixture inventory must never write remotely").toEqual([]);
-    });
+        expect(remoteWrites, "Local fixture inventory must never write remotely").toEqual([]);
+      },
+    );
   }
 });
