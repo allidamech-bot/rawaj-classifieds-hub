@@ -195,10 +195,9 @@ for (const language of ["ar", "en"] as const) {
           })
           .slice(0, 25);
       });
-      expect.soft(
-        collisions,
-        `${pathname} ${language} must contain no legacy chromatic admin surfaces`,
-      ).toEqual([]);
+      expect
+        .soft(collisions, `${pathname} ${language} must contain no legacy chromatic admin surfaces`)
+        .toEqual([]);
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
         pathname,
