@@ -36,3 +36,24 @@ for (const language of ["ar", "en"] as const) {
     }
   });
 }
+
+test("B4 authenticated promotion hero uses petrol and champagne, without submitting", async ({
+  page,
+}) => {
+  test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local Firebase fixtures");
+  await page.addInitScript(() => {
+    localStorage.setItem("rawaj-language", "en");
+    localStorage.setItem(
+      "rawaj:e2e:firebase-user",
+      JSON.stringify({ email: "browser-smoke@rawa-j.test" }),
+    );
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/promotion-request", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+  const hero = page.locator("main.container-wide > section").first();
+  await expect(hero.getByRole("heading", { name: "Choose where your listing should appear" })).toBeVisible();
+  await expect(hero).toHaveCSS("background-color", "rgb(7, 56, 54)");
+  await expect(page.locator(".rawaj-app-shell")).toHaveAttribute("data-design-palette", "ivory");
+  // Read-only acceptance: never submit a request, receipt or payment.
+});
