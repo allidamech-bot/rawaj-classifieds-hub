@@ -5,6 +5,10 @@ import type {
   PublicSellerSearchResult,
 } from "@/lib/classifieds-types";
 import { requireCloudflarePublicApiBaseUrl } from "@/lib/public-data/config";
+import {
+  isWorkerQuotaReadCooldownActive,
+  observeWorkerQuotaResponse,
+} from "@/lib/public-data/worker-quota-backoff";
 
 interface ApiEnvelope<T> {
   data?: T;
@@ -68,6 +72,16 @@ export async function searchCloudflarePublicSellers(
 async function requestJson<T>(path: string, operation: string): Promise<ClassifiedsResult<T>> {
   const base = requireCloudflarePublicApiBaseUrl();
   if (!base.ok) return base;
+  if (isWorkerQuotaReadCooldownActive()) {
+    return {
+      ok: false,
+      error: {
+        code: "rate_limited",
+        message: "خدمة بيانات رَوَاج متوقفة مؤقتًا بسبب حد طلبات الخادم.",
+        operation,
+      },
+    };
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
 
@@ -78,6 +92,7 @@ async function requestJson<T>(path: string, operation: string): Promise<Classifi
       credentials: "omit",
       signal: controller.signal,
     });
+    await observeWorkerQuotaResponse(response);
     const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
     if (!response.ok || payload?.data === undefined) {
       const code = responseErrorCode(response.status);
