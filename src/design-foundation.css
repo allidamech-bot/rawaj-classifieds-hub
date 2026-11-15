@@ -486,3 +486,19 @@ textarea,
     scroll-behavior: auto;
   }
 }
+
+/* Approved ivory-route header has an explicit petrol paint owner at every
+ * viewport size. Without this, 768px desktop/tablet layout can show ivory
+ * brand/route title text on the ivory page canvas (observed ~1.21:1).
+ * Do not alter the independently approved homepage or seller storefront. */
+.rawaj-app-shell[data-design-palette="ivory"] .rawaj-app-header {
+  background-color: var(--rawaj-identity-petrol) !important;
+  background-image: none !important;
+  color: var(--rawaj-identity-ivory) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"]
+  .rawaj-app-header
+  :is(.rawaj-brand-lockup__name, .rawaj-brand-lockup__latin, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
+  color: var(--rawaj-identity-ivory) !important;
+}
