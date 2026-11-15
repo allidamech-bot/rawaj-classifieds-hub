@@ -102,7 +102,7 @@ test.describe("B4 independent marketplace journeys", () => {
       },
     );
 
-    test("transient listings API failure preserves recovery controls and results: " + language, async ({ page }) => {
+    test("transient listing failure stays recoverable: " + language, async ({ page }) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
       let attempts = 0;
       await page.route(/\/v1\/listings(?:\?|$)/, async (route) => {
