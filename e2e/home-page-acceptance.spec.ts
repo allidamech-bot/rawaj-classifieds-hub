@@ -229,3 +229,25 @@ test("signed-out My Store keeps approved light shell and sign-in affordance", as
   await expect(page.locator(".my-store-guest__action")).toBeVisible();
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#fcfaf7");
 });
+
+for (const language of ["ar", "en"] as const) {
+  for (const width of [390, 1440]) {
+    test(`homepage footer follows the shared petrol identity in ${language} at ${width}px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
+      await page.setViewportSize({ width, height: 850 });
+      for (const route of ["/", "/categories", "/listings"]) {
+        await openHydrated(page, route);
+        await expect(page.locator("html")).toHaveAttribute(
+          "dir",
+          language === "ar" ? "rtl" : "ltr",
+        );
+        await expect(page.locator(".rawaj-site-footer")).toHaveCSS(
+          "background-color",
+          "rgb(7, 56, 54)",
+        );
+      }
+    });
+  }
+}
