@@ -251,7 +251,7 @@ function FavoritesPage() {
                     >
                       <div className="grid grid-cols-[96px_1fr] gap-3">
                         <div className="overflow-hidden rounded-xl opacity-70" aria-hidden="true">
-                          <PlaceholderArt type="misc" aspect="square" />
+                          <PlaceholderArt type="misc" aspect="square" identity />
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-extrabold">{item.snapshot.title}</p>
