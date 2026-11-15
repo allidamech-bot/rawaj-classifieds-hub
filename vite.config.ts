@@ -30,7 +30,12 @@ const rawajDisableRemoteMedia =
 
 const rawajE2eUseFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
 const rawajE2eApiProxyTarget = process.env.RAWAJ_E2E_API_PROXY_TARGET?.trim();
-const rawajE2eApiProxyPath = "/v1";
+
+// Never proxy local E2E fixture traffic to the production Worker.
+// Missing fixtures are a test defect, not permission to access live data.
+if (rawajE2eUseFixtures && rawajE2eApiProxyTarget) {
+  throw new Error("RAWAJ E2E isolation: remove RAWAJ_E2E_API_PROXY_TARGET when using fixtures.");
+}
 const rawajE2eLocalApiBaseUrl = "http://127.0.0.1:4173";
 
 export default defineConfig({
@@ -47,17 +52,6 @@ export default defineConfig({
           createRawajE2eApiFixturePlugin(),
         ]
       : [],
-    server: rawajE2eApiProxyTarget
-      ? {
-          proxy: {
-            [rawajE2eApiProxyPath]: {
-              target: rawajE2eApiProxyTarget,
-              changeOrigin: true,
-              secure: true,
-            },
-          },
-        }
-      : undefined,
     resolve: {
       alias: [
         ...(rawajE2eUseFixtures
