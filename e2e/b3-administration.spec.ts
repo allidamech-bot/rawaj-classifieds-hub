@@ -402,9 +402,14 @@ test("B3.4 audit filters only the bounded history the backend actually returns",
   await page.goto("/admin/audit");
   await expect(page.getByText("user.restricted")).toBeVisible();
   await expect(page.getByText("notification.sent")).toBeVisible();
+  // The E2E dev server may run mount effects twice under React StrictMode.
+  // Assert that a client-side filter makes no additional backend request.
+  const initialAuditReads = auditReads;
+  expect(initialAuditReads).toBeGreaterThanOrEqual(1);
+  expect(initialAuditReads).toBeLessThanOrEqual(2);
   await page.locator("main.rawaj-admin-v3 select").selectOption("user.");
   await expect(page.getByText("user.restricted")).toBeVisible();
   await expect(page.getByText("notification.sent")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Load more" })).toHaveCount(0);
-  expect(auditReads).toBe(1);
+  expect(auditReads).toBe(initialAuditReads);
 });
