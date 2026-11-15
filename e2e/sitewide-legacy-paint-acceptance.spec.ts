@@ -149,7 +149,7 @@ for (const language of ["ar", "en"] as const) {
         name: language === "ar" ? "تنقل الإدارة" : "Admin navigation",
       });
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute("href", pathname);
-      await expect(main).toHaveCSS("color", "rgb(19, 39, 36)");
+      await expect.soft(main, pathname).toHaveCSS("color", "rgb(19, 39, 36)", { timeout: 2_000 });
       await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
       await expect(page.locator("body")).toHaveCSS("background-color", "rgb(249, 240, 228)");
 
@@ -195,7 +195,7 @@ for (const language of ["ar", "en"] as const) {
           })
           .slice(0, 25);
       });
-      expect(
+      expect.soft(
         collisions,
         `${pathname} ${language} must contain no legacy chromatic admin surfaces`,
       ).toEqual([]);
