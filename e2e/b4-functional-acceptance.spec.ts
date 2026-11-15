@@ -146,6 +146,9 @@ test.describe("B4 independent marketplace journeys", () => {
     test(
       "non-destructive public and member route inventory renders: " + language,
       async ({ page }) => {
+        // Twenty sequential SSR/hydration transitions exceed the generic 60s timeout on cold WebKit/Firefox.
+        // Keep each route's assertion timeout unchanged so a genuinely stuck route still fails.
+        test.setTimeout(180_000);
         await page.addInitScript(
           (value) => localStorage.setItem("rawaj-language", value),
           language,
