@@ -159,7 +159,7 @@ function PromotionsPage() {
     <div className="space-y-5">
       <section className="rounded-2xl bg-card p-4 hairline sm:p-5">
         <h1 className="flex items-center gap-2 text-lg font-black">
-          <Rocket className="h-5 w-5 text-amber-700" />
+          <Rocket className="h-5 w-5 text-[var(--rawaj-identity-teal)]" />
           {text("الترويج و Search Boost", "Promotions & Search Boost")}
         </h1>
         <p className="mt-2 max-w-3xl text-xs leading-6 text-muted-foreground">
@@ -228,13 +228,13 @@ function PromotionsPage() {
                         : `${request.requestedDays} ${text("يوم", "days")}`}
                     </p>
                     {boostPackage ? (
-                      <p className="font-bold text-amber-800 dark:text-amber-300">
+                      <p className="font-bold text-[var(--rawaj-badge-warning-ink)]">
                         {request.searchBoostPriceSyp != null
                           ? formatSearchBoostPrice(request.searchBoostPriceSyp, language)
                           : text("المبلغ غير متاح", "Amount unavailable")}
                       </p>
                     ) : (
-                      <p className="font-bold text-fuchsia-700 dark:text-fuchsia-300">
+                      <p className="font-bold text-[var(--rawaj-text-secondary)]">
                         {text("السعر يُحدد عند المراجعة", "Pricing confirmed on review")}
                       </p>
                     )}
