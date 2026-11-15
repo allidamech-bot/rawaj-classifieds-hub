@@ -277,7 +277,7 @@ function VerificationPage() {
               <h1 className="text-lg font-extrabold">
                 {text("التوثيق ليس تلقائياً", "Verification is not automatic")}
               </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              <p className="mt-1 text-xs leading-6">
                 {text(
                   "الشارة تمنح بعد استيفاء شروط الأهلية وفحص وثيقة خاصة ومراجعة يدوية. الشارة تعني أن رواج راجع الأدلة المقدمة وقت الطلب فقط؛ ولا تعني ضمان السلعة أو الملكية أو جودة الإعلان أو الدفع أو نجاح أي صفقة.",
                   "The badge is granted only after eligibility checks, private-document review, and manual moderation. It means RAWAJ reviewed the evidence supplied at the time of the request; it does not guarantee an item, ownership, listing accuracy, payment, or any transaction.",
@@ -287,7 +287,7 @@ function VerificationPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-verification-panel rounded-2xl p-4 hairline">
           <h2 className="text-sm font-extrabold">
             {text("شروط الأهلية قبل إرسال الطلب", "Eligibility before submitting")}
           </h2>
@@ -295,7 +295,7 @@ function VerificationPage() {
             {eligibilityRules.map(([ar, en]) => (
               <div
                 key={en}
-                className="flex items-start gap-2 rounded-xl bg-muted-surface p-3 text-xs leading-5"
+                className="flex items-start gap-2 rawaj-verification-inset rounded-xl p-3 text-xs leading-5"
               >
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--rawaj-success)]" />
                 <span>{text(ar, en)}</span>
@@ -321,7 +321,7 @@ function VerificationPage() {
           <form
             onSubmit={(event) => void submit(event)}
             aria-busy={saving}
-            className="rounded-2xl bg-card p-4 hairline"
+            className="rawaj-verification-panel rounded-2xl p-4 hairline"
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text("نوع الطلب", "Request type")}>
@@ -387,7 +387,7 @@ function VerificationPage() {
               </Field>
             </div>
 
-            <label className="mt-4 block rounded-2xl bg-muted-surface p-4 hairline">
+            <label className="mt-4 block rawaj-verification-inset rounded-2xl p-4 hairline">
               <span className="flex items-center gap-2 text-xs font-bold">
                 <Upload className="h-4 w-4 text-primary" />
                 {text("وثيقة خاصة للمراجعة", "Private evidence for review")}
@@ -401,13 +401,13 @@ function VerificationPage() {
                 className="mt-3 block w-full text-xs file:me-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-card file:px-3 file:py-2 file:font-bold file:text-foreground"
               />
               {documentFile ? (
-                <span className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="mt-2 flex items-center gap-2 text-xs rawaj-verification-copy">
                   <FileKey2 className="h-4 w-4" />
                   <span className="min-w-0 truncate">{documentFile.name}</span>
                   <span className="shrink-0">{formatFileSize(documentFile.size)}</span>
                 </span>
               ) : null}
-              <small className="mt-2 block text-[11px] leading-5 text-muted-foreground">
+              <small className="mt-2 block text-[11px] leading-5 rawaj-verification-copy">
                 {text(
                   "JPG أو PNG أو WebP أو PDF بحد أقصى 10 MB. لا تُنشر الوثيقة في ملفك العام.",
                   "JPG, PNG, WebP, or PDF up to 10 MB. The document is not published on your public profile.",
@@ -415,7 +415,7 @@ function VerificationPage() {
               </small>
             </label>
 
-            <div className="mt-4 flex items-start gap-3 rounded-xl bg-muted-surface p-3 hairline">
+            <div className="mt-4 flex items-start gap-3 rawaj-verification-inset rounded-xl p-3 hairline">
               <input
                 id="verification-rules"
                 type="checkbox"
@@ -426,20 +426,17 @@ function VerificationPage() {
               />
               <label
                 htmlFor="verification-rules"
-                className="text-[11px] leading-5 text-muted-foreground"
+                className="text-[11px] leading-5 rawaj-verification-copy"
               >
                 {text(
                   "أقر بصحة البيانات والوثيقة، وأفهم أن التوثيق قابل للرفض أو السحب عند ظهور معلومات غير صحيحة أو إساءة استخدام، وأن الشارة ليست ضماناً لأي معاملة. كما أوافق على ",
                   "I confirm the information and evidence are accurate, understand verification may be refused or revoked for false information or abuse, and understand the badge is not a transaction guarantee. I also agree to the ",
                 )}
-                <Link to="/terms" className="rawaj-policy-inline font-bold text-primary underline">
+                <Link to="/terms" className="rawaj-policy-inline font-bold underline">
                   {text("شروط الاستخدام", "Terms of Use")}
                 </Link>
                 {text(" و", " and ")}
-                <Link
-                  to="/privacy"
-                  className="rawaj-policy-inline font-bold text-primary underline"
-                >
+                <Link to="/privacy" className="rawaj-policy-inline font-bold underline">
                   {text("سياسة الخصوصية", "Privacy Policy")}
                 </Link>
                 .
@@ -470,12 +467,14 @@ function VerificationPage() {
           </form>
         )}
 
-        <section className="rounded-2xl bg-card p-4 hairline">
+        <section className="rawaj-verification-panel rounded-2xl p-4 hairline">
           <h2 className="text-sm font-extrabold">
             {text("سجل طلبات التوثيق", "Verification history")}
           </h2>
           {requestsLoading ? (
-            <p className="mt-3 text-xs text-muted-foreground">{text("جارٍ التحميل…", "Loading…")}</p>
+            <p className="mt-3 text-xs rawaj-verification-copy">
+              {text("جارٍ التحميل…", "Loading…")}
+            </p>
           ) : requestsError ? (
             <div className="mt-3">
               <p role="alert" className="text-sm text-destructive">
@@ -490,7 +489,7 @@ function VerificationPage() {
               </button>
             </div>
           ) : requests.length === 0 ? (
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-3 text-xs rawaj-verification-copy">
               {text("لا توجد طلبات سابقة.", "No previous requests.")}
             </p>
           ) : (
@@ -527,14 +526,14 @@ function RequestRow({
   const approved = request.status === "approved";
   const rejected = request.status === "rejected";
   return (
-    <article className="flex items-start justify-between gap-3 rounded-xl bg-muted-surface p-3 hairline">
+    <article className="flex items-start justify-between gap-3 rawaj-verification-inset rounded-xl p-3 hairline">
       <div className="min-w-0">
         <strong className="block truncate text-xs">
           {request.requestType === "business"
             ? request.businessName || request.legalName
             : request.legalName}
         </strong>
-        <small className="mt-1 block text-[10px] text-muted-foreground">
+        <small className="mt-1 block text-[10px] rawaj-verification-copy">
           {new Date(request.createdAt).toLocaleDateString(language === "ar" ? "ar-SY" : "en-US")}
         </small>
       </div>

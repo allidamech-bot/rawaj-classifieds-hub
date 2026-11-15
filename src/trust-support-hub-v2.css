@@ -880,7 +880,7 @@
     color: var(--rawaj-identity-ivory);
   }
 
-  & .rawaj-verification-gate {
+  & :is(.rawaj-verification-panel, .rawaj-verification-gate) {
     background: var(--rawaj-card-background);
     color: var(--rawaj-identity-ink);
   }
@@ -889,8 +889,17 @@
     color: var(--rawaj-identity-ink);
   }
 
-  & .rawaj-verification-gate p {
+  & :is(.rawaj-verification-gate p, .rawaj-verification-copy) {
     color: var(--rawaj-text-secondary);
+  }
+
+  & .rawaj-verification-inset {
+    background: var(--rawaj-muted-surface);
+    color: var(--rawaj-identity-ink);
+  }
+
+  & .rawaj-policy-inline {
+    color: var(--rawaj-identity-teal);
   }
 
   & .rawaj-safety-actions a:last-child {

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectRenderedLayout } from "./layout-audit";
 
 const routes = ["/support", "/safety", "/verification", "/privacy", "/terms", "/prohibited"];
 
@@ -102,7 +103,8 @@ test.describe("authenticated trust requests", () => {
 
   test("verification sends fixture evidence only to the private request endpoint", async ({
     page,
-  }) => {
+    browserName,
+  }, testInfo) => {
     let submissions = 0;
     const filename = "fixture-identity.pdf";
     const record = {
@@ -126,6 +128,12 @@ test.describe("authenticated trust requests", () => {
     await page.goto("/verification");
     const submit = page.getByRole("button", { name: "Submit verification request" });
     await expect(submit).toBeDisabled();
+    if (browserName === "chromium") {
+      await expectRenderedLayout(page, {
+        label: `B3.3:${testInfo.project.name}:authenticated-verification`,
+        mobile: testInfo.project.name.startsWith("mobile"),
+      });
+    }
     await page.getByLabel("Legal name exactly as shown on the document").fill("Fixture User");
     await page.getByLabel("Document type").selectOption("national_id");
     await page.locator('input[type="file"]').setInputFiles({
