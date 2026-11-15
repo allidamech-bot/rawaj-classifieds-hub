@@ -22,7 +22,7 @@ async function navigateAndDeny(page: Page, path: string, expectedTitle: RegExp) 
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
   expect(response?.status() ?? 200, path + " HTTP status").toBeLessThan(500);
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
-  await expect(page).toHaveURL(new RegExp("^https?://[^/]+" + path.replace(/[.*+?^$()|[\]{}\\]/g, "\\$&") + "/?(?:[?#]|$)"));
+  expect(new URL(page.url()).pathname.replace(/\/$/, "")).toBe(path);
   await expect(page.locator("main.rawaj-admin-v3 h2")).toHaveText(expectedTitle);
   await expect(page.locator('main a[href^="/admin/"]')).toHaveCount(0);
   await expect(page.locator("main button").filter({ hasText: /approve|delete|ban|تعليق|حذف|موافقة/i })).toHaveCount(0);
