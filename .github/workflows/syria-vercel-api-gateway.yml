@@ -34,7 +34,8 @@ jobs:
 
   production:
     name: Verify Syrian custom-domain API routing
-    if: github.event_name != 'pull_request'
+    # Live API checks consume Workers quota: explicit manual dispatch only.
+    if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -52,7 +53,7 @@ jobs:
             local label="$4"
             local attempt body status code
 
-            for attempt in $(seq 1 40); do
+            for attempt in $(seq 1 3); do
               body="$(mktemp)"
               status="$(curl --silent --show-error --max-time 30 \
                 -H 'Accept: application/json' \
