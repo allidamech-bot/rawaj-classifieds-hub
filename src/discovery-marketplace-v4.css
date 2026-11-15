@@ -438,51 +438,6 @@ body,
 
 /* Support, safety and policy routes: remove the legacy white/grey cards while
  * retaining warning, danger, gold and coral meaning. */
-.rawaj-support-v2 :is(.rawaj-support-panel, .rawaj-support-topics, .rawaj-support-faq),
-.rawaj-safety-v2 .rawaj-safety-guide,
-.rawaj-support-topic,
-.rawaj-support-faq details {
-  border-color: rgba(216, 174, 95, 0.11) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(74, 140, 255, 0.035), transparent 40%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
-}
-
-.rawaj-safety-v2 .rawaj-safety-guide[data-warning="true"] {
-  border-color: rgba(216, 174, 95, 0.28) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(216, 174, 95, 0.09), transparent 42%),
-    linear-gradient(150deg, #1d1a14, #12151b) !important;
-}
-
-.rawaj-legal-v3 > p:first-child {
-  border-color: rgba(216, 174, 95, 0.2) !important;
-  color: #c8c0b7 !important;
-  background: linear-gradient(145deg, #1d1a14, #13171e) !important;
-}
-
-.rawaj-legal-v3 > div > section,
-.rawaj-prohibited-v3 > div:first-child,
-.rawaj-prohibited-v3 > div.grid > div {
-  border-color: rgba(216, 174, 95, 0.12) !important;
-  color: #f7f3ed !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(198, 44, 120, 0.04), transparent 42%),
-    linear-gradient(150deg, #171b24, #11151d) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
-}
-
-.rawaj-legal-v3 :is(h2, h3),
-.rawaj-prohibited-v3 :is(h2, h3) {
-  color: #f7f3ed !important;
-}
-
-.rawaj-legal-v3 :is(p, li),
-.rawaj-prohibited-v3 :is(p, li) {
-  color: #b8b3b1 !important;
-}
 
 /* Listing detail palette is now canonical and route-owned (B2.2). */
 

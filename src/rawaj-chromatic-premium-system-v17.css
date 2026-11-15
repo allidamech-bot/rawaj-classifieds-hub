@@ -453,10 +453,7 @@ body {
 }
 
 /* Storefront, verification, safety and support. */
-.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(.rawaj-storefront-card, [data-ui="card"]),
-.rawaj-app-shell[data-resolved-pathname="/verification"] :is(.rawaj-support-card, [data-ui="card"]),
-.rawaj-app-shell[data-resolved-pathname="/safety"] :is(.rawaj-support-card, [data-ui="card"]),
-.rawaj-app-shell[data-resolved-pathname="/support"] :is(.rawaj-support-card, [data-ui="card"]) {
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] :is(.rawaj-storefront-card, [data-ui="card"]) {
   border-color: rgba(92,178,144,.18) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(60,145,112,.08), transparent 42%),

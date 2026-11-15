@@ -1,0 +1,49 @@
+name: B3 Trust WebKit Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/trust-support-hub-v2.css"
+      - "src/routes/support.tsx"
+      - "src/routes/safety.tsx"
+      - "src/routes/verification.tsx"
+      - "src/routes/privacy.tsx"
+      - "src/routes/terms.tsx"
+      - "src/routes/prohibited.tsx"
+      - "e2e/b3-trust-support.spec.ts"
+      - ".github/workflows/b3-trust-webkit.yml"
+
+concurrency:
+  group: b3-trust-webkit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-webkit:
+    name: iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Verify trust journeys with isolated fixtures
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b3-trust-support.spec.ts --project=mobile-webkit
+      - name: Upload failure traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b3-trust-webkit-${{ github.run_id }}
+          path: test-results
+          retention-days: 7

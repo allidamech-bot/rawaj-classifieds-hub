@@ -319,15 +319,28 @@ function SupportPage() {
                       ? text("جار الإرسال", "Submitting")
                       : text("إرسال الطلب", "Submit request")}
                   </button>
-                  {notice && <p className="rawaj-support-notice">{notice}</p>}
+                  {notice && (
+                    <p role="status" className="rawaj-support-notice">
+                      {notice}
+                    </p>
+                  )}
                 </form>
               ) : (
-                <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                  {text(
-                    "سجل الدخول لإرسال طلب دعم محفوظ ومتابعة حالته.",
-                    "Log in to submit a stored support request and track its status.",
-                  )}
-                </p>
+                <div>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                    {text(
+                      "سجل الدخول لإرسال طلب دعم محفوظ ومتابعة حالته.",
+                      "Log in to submit a stored support request and track its status.",
+                    )}
+                  </p>
+                  <Link
+                    to="/login"
+                    search={{ returnTo: "/support" }}
+                    className="mt-3 rounded-xl bg-primary px-4 py-2 font-bold text-primary-foreground"
+                  >
+                    {text("تسجيل الدخول", "Log in")}
+                  </Link>
+                </div>
               )}
             </section>
 
@@ -459,7 +472,7 @@ function SupportHistoryError({
 }) {
   return (
     <div className="rawaj-support-notice">
-      <p>{message}</p>
+      <p role="alert">{message}</p>
       <button
         type="button"
         onClick={onRetry}

@@ -242,12 +242,12 @@ test("shared badge variants use central status tokens, never embedded colors", a
   assert.doesNotMatch(badge, /#[0-9a-f]{3,8}/i);
   assert.ok(foundation.includes('.rawaj-app-shell[data-design-palette="ivory"]'));
   assert.ok(
-    appShell.includes('data-design-palette={useApprovedStudioIdentity ? "ivory" : undefined}'),
+    appShell.includes('data-design-palette={useIvoryPalette ? "ivory" : undefined}'),
     "Only an explicitly approved route may opt into the ivory foundation",
   );
   assert.ok(
-    appShell.includes("resolveRouteStyleScope(pathname).listingStudio"),
-    "The opt-in must be limited to the listing studio route scope",
+    appShell.includes("routeStyles.listingStudio || routeStyles.trustWorkspace"),
+    "The opt-in must be limited to the approved studio and trust workspaces",
   );
   assert.ok(!appShell.includes('data-design-palette="ivory"'), "Never force ivory across the whole app");
 });

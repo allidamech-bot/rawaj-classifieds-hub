@@ -170,16 +170,16 @@ function TermsPage() {
     <>
       <PageHeader title={text("شروط وسياسة الاستخدام", "Terms of Use")} />
       <main className="rawaj-legal-v3 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
-        <section className="rounded-2xl bg-card p-5 hairline">
+        <section className="rawaj-trust-intro">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl rawaj-trust-intro__icon">
               <Scale className="h-5 w-5" />
             </span>
             <div>
               <h1 className="text-lg font-extrabold">
                 {text("قواعد واضحة قبل البيع أو الشراء", "Clear rules before buying or selling")}
               </h1>
-              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              <p className="mt-1 text-xs leading-6">
                 {text(
                   "آخر تحديث: 15 أغسطس 2026. هذه الشروط جزء من اتفاق استخدام المنصة وتُقرأ مع سياسة الخصوصية والمحتوى المحظور وإرشادات الأمان.",
                   "Last updated: 15 August 2026. These Terms form part of the platform-use agreement and should be read with the Privacy Policy, prohibited-content rules, and safety guidance.",
@@ -214,28 +214,31 @@ function TermsPage() {
 
         <section className="rounded-2xl bg-card p-4 hairline">
           <div className="flex items-center gap-2 text-xs font-bold">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <ShieldCheck className="h-4 w-4 text-[var(--rawaj-success)]" />
             {text("سياسات مرتبطة", "Related policies")}
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <Link
               to="/privacy"
-              className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
             >
               {text("سياسة الخصوصية", "Privacy Policy")}
             </Link>
-            <Link to="/safety" className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline">
+            <Link
+              to="/safety"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
+            >
               {text("إرشادات الأمان", "Safety guidance")}
             </Link>
             <Link
               to="/prohibited"
-              className="rounded-xl bg-muted-surface px-3 py-2 font-bold hairline"
+              className="rounded-xl rawaj-trust-secondary px-3 py-2 font-bold hairline"
             >
               {text("المحتوى المحظور", "Prohibited content")}
             </Link>
             <Link
               to="/support"
-              className="rounded-xl bg-primary px-3 py-2 font-bold text-primary-foreground"
+              className="rounded-xl rawaj-trust-primary px-3 py-2 font-bold text-primary-foreground"
             >
               {text("الدعم والبلاغات", "Support and reports")}
             </Link>
