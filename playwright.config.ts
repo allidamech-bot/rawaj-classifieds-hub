@@ -3,6 +3,11 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = process.env.E2E_BASE_URL ?? "http://127.0.0.1:4173";
 const usesExternalServer = Boolean(process.env.E2E_BASE_URL);
 const usesLocalFixtures = process.env.RAWAJ_E2E_USE_FIXTURES === "1";
+
+// Isolated browser fixtures and a remote production base URL are mutually exclusive.
+if (usesLocalFixtures && usesExternalServer) {
+  throw new Error("RAWAJ E2E isolation: E2E_BASE_URL cannot be set with local fixtures.");
+}
 const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 
 export default defineConfig({
