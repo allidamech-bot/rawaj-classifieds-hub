@@ -131,6 +131,7 @@ export interface RouteStyleScope {
   communication: boolean;
   personalSpace: boolean;
   trustSupport: boolean;
+  trustWorkspace: boolean;
 }
 
 function normalizePathname(pathname: string) {
@@ -164,6 +165,14 @@ export function resolveRouteStyleScope(pathname: string): RouteStyleScope {
       "/notifications",
       "/more",
       "/profile",
+    ].includes(normalizedPathname),
+    trustWorkspace: [
+      "/support",
+      "/safety",
+      "/verification",
+      "/privacy",
+      "/terms",
+      "/prohibited",
     ].includes(normalizedPathname),
     trustSupport: [
       "/more",

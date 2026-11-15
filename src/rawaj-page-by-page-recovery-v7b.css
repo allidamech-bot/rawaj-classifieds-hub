@@ -15,12 +15,6 @@
     [data-resolved-pathname="/activity"],
     [data-resolved-pathname="/notifications"],
     [data-resolved-pathname="/chats"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/offers"],
@@ -41,12 +35,6 @@
     [data-resolved-pathname="/activity"],
     [data-resolved-pathname="/notifications"],
     [data-resolved-pathname="/chats"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/offers"],
@@ -170,12 +158,6 @@
 
 /* 10. Support, safety, legal, verification and promotion */
 .rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-v2 {
   color: #f4f1ed !important;
@@ -183,12 +165,6 @@
 }
 
 .rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-hero {
   border-color: rgba(255, 255, 255, 0.09) !important;
@@ -201,12 +177,6 @@
 }
 
 .rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname="/admin"]):not([data-resolved-pathname^="/admin/"])):is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) main :is(section, article, form, .rawaj-support-panel, .rawaj-safety-guide, .rawaj-trust-link-card, .rawaj-trust-empty) {
   border-color: rgba(255, 255, 255, 0.08) !important;
@@ -248,12 +218,6 @@
     [data-resolved-pathname="/activity"],
     [data-resolved-pathname="/notifications"],
     [data-resolved-pathname="/chats"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/offers"],
@@ -270,9 +234,6 @@
     [data-resolved-pathname="/activity"],
     [data-resolved-pathname="/notifications"],
     [data-resolved-pathname="/chats"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname^="/seller/"],
     [data-resolved-pathname="/offers"],

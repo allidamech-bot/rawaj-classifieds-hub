@@ -192,7 +192,8 @@ export function AppShell({
   pendingPathname,
 }: AppShellProps) {
   const config = resolveAppShellConfig(pathname);
-  const useApprovedStudioIdentity = resolveRouteStyleScope(pathname).listingStudio;
+  const routeStyles = resolveRouteStyleScope(pathname);
+  const useIvoryPalette = routeStyles.listingStudio || routeStyles.trustWorkspace;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
@@ -214,7 +215,8 @@ export function AppShell({
         data-keyboard-open={keyboardOpen}
         data-route-state={isRouteNavigating ? "pending" : "idle"}
         data-resolved-pathname={pathname}
-        data-design-palette={useApprovedStudioIdentity ? "ivory" : undefined}
+        data-design-palette={useIvoryPalette ? "ivory" : undefined}
+        data-trust-workspace={routeStyles.trustWorkspace || undefined}
         data-pending-pathname={isRouteNavigating ? pendingPathname : undefined}
         aria-busy={isRouteNavigating}
       >

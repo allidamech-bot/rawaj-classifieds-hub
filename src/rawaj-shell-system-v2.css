@@ -66,7 +66,7 @@
 }
 
 .rawaj-shell-header__title :is(h1, p) {
-  color: var(--rawaj-text-primary) !important;
+  color: var(--rawaj-shell-title-ink, var(--rawaj-text-primary)) !important;
 }
 
 .rawaj-shell-header__compact-title {

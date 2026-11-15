@@ -172,19 +172,19 @@ function SafetyPage() {
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Link
               to="/prohibited"
-              className="rounded-xl bg-muted-surface px-4 py-2.5 text-center text-xs font-bold hairline"
+              className="rounded-xl rawaj-trust-secondary px-4 py-2.5 text-center text-xs font-bold hairline"
             >
               {text("المحتوى المحظور", "Prohibited content")}
             </Link>
             <Link
               to="/terms"
-              className="rounded-xl bg-muted-surface px-4 py-2.5 text-center text-xs font-bold hairline"
+              className="rounded-xl rawaj-trust-secondary px-4 py-2.5 text-center text-xs font-bold hairline"
             >
               {text("شروط الاستخدام", "Terms of Use")}
             </Link>
             <Link
               to="/support"
-              className="rounded-xl bg-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
+              className="rounded-xl rawaj-trust-primary px-4 py-2.5 text-center text-xs font-bold text-primary-foreground"
             >
               {text("الإبلاغ أو الدعم", "Report or support")}
             </Link>

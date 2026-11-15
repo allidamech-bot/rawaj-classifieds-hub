@@ -99,26 +99,8 @@
 
 /* Support copy was materially smaller than the rest of the Arabic product.
    Keep the hierarchy compact while restoring a comfortable reading floor. */
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-hero__description {
-  max-width: 58ch !important;
-  border-inline-start: 0 !important;
-  border-block-start: 1px solid rgba(245, 239, 231, 0.12) !important;
-  padding-block-start: 0.8rem !important;
-  padding-inline-start: 0 !important;
-  color: var(--rawaj-text-secondary) !important;
-  font-size: max(0.84rem, 13px) !important;
-  line-height: 1.85 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-link-card {
-  transition:
-    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
 
 @media (hover: hover) and (pointer: fine) {
-  .rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-trust-link-card:hover,
   .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-category-directory-card:hover {
     transform: translateY(-2px);
     border-color: var(--rawaj-border-active) !important;
@@ -292,24 +274,12 @@
 /* -------------------------------------------------------------------------- */
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-v2 {
   color: var(--rawaj-text-primary, #f5efe7);
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero {
   border-color: rgba(255, 255, 255, 0.09) !important;
@@ -323,24 +293,12 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero::after {
   opacity: 0.38;
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero__symbol {
   width: 3.5rem !important;
@@ -352,12 +310,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero__identity h1 {
   color: #fff7f1 !important;
@@ -369,12 +321,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) :is(
   .rawaj-trust-hero__description,
@@ -387,12 +333,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero__badges :is(span, b) {
   min-height: 2rem !important;
@@ -401,12 +341,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero__actions {
   flex-wrap: wrap !important;
@@ -414,12 +348,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-hero__actions :is(a, button) {
   min-height: 2.65rem !important;
@@ -427,18 +355,7 @@
   font-size: max(0.76rem, 12px) !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/support"] :is(
-  .rawaj-support-panel,
-  .rawaj-support-topics,
-  .rawaj-support-faq,
-  .rawaj-support-requests
-),
-.rawaj-app-shell[data-resolved-pathname="/safety"] .rawaj-safety-guide,
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-v2 section:not(.rawaj-trust-hero) {
   border: 1px solid rgba(255, 255, 255, 0.085) !important;
@@ -449,12 +366,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-section-header h2 {
   color: var(--rawaj-text-primary, #f5efe7) !important;
@@ -463,12 +374,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) :is(
   .rawaj-trust-section-header span,
@@ -481,42 +386,7 @@
   line-height: 1.75 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel :is(input, textarea, select) {
-  min-height: 2.9rem;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 0.8rem !important;
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  background: rgba(255, 255, 255, 0.035) !important;
-  font-size: 0.82rem !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel textarea {
-  min-height: 8rem;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-panel label > span {
-  color: var(--rawaj-text-secondary, #c9c4bd) !important;
-  font-size: max(0.78rem, 12.5px) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-timeline article {
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
-  border-radius: 0.9rem !important;
-  background: rgba(255, 255, 255, 0.025) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/support"] .rawaj-support-timeline h3,
-.rawaj-app-shell[data-resolved-pathname="/safety"] .rawaj-safety-guide h2 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-}
-
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-link-card {
   border-color: rgba(255, 255, 255, 0.08) !important;
@@ -526,12 +396,6 @@
 }
 
 .rawaj-app-shell:is(
-  [data-resolved-pathname="/support"],
-  [data-resolved-pathname="/safety"],
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"],
-  [data-resolved-pathname="/prohibited"],
-  [data-resolved-pathname="/verification"],
   [data-resolved-pathname="/promotion"]
 ) .rawaj-trust-link-card strong {
   color: var(--rawaj-text-primary, #f5efe7) !important;
@@ -545,48 +409,8 @@
 /* Legal content previously retained a bright paper-like intro strip and 12px
    Arabic copy inside the dark public shell. Preserve its editorial cue without
    breaking the route palette or readability. */
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"]
-) .rawaj-legal-v3 > p:first-child {
-  border-color: rgba(227, 160, 75, 0.2) !important;
-  color: var(--rawaj-text-secondary, #c9c4bd) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.08), transparent 42%),
-    linear-gradient(150deg, #303137, #2a2b30) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"]
-) .rawaj-legal-v3 :is(p, li) {
-  color: var(--rawaj-text-secondary, #c9c4bd) !important;
-  font-size: max(0.84rem, 13px) !important;
-  line-height: 1.85 !important;
-}
-
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"]
-) .rawaj-legal-v3 h2 {
-  color: var(--rawaj-text-primary, #f5efe7) !important;
-  font-size: clamp(0.98rem, 2.8vw, 1.12rem) !important;
-  line-height: 1.6 !important;
-}
 
 /* Replace the repeated heavy vertical stripe with a quieter editorial marker. */
-.rawaj-app-shell:is(
-  [data-resolved-pathname="/terms"],
-  [data-resolved-pathname="/privacy"]
-) .rawaj-legal-v3 > div > section::before {
-  inset-block: 0 auto !important;
-  inset-inline-start: 1rem !important;
-  width: 2.75rem !important;
-  height: 2px !important;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--rawaj-accent-coral), var(--rawaj-accent-gold)) !important;
-}
 
 @media (max-width: 767px) {
 
@@ -611,12 +435,6 @@
   }
 
   .rawaj-app-shell:is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-hero__badges {
     display: grid !important;
@@ -624,12 +442,6 @@
   }
 
   .rawaj-app-shell:is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-hero__badges :is(span, b) {
     justify-content: center;
@@ -655,12 +467,6 @@
   }
 
   .rawaj-app-shell:is(
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"]
   ) .rawaj-trust-hero__identity {
     align-items: flex-start !important;
