@@ -17,7 +17,14 @@ function normalizeOrigin(value) {
   if (!value) return null;
   try {
     const u = new URL(value);
-    if (u.protocol !== "https:" || u.username || u.password || u.pathname !== "/" || u.search || u.hash)
+    if (
+      u.protocol !== "https:" ||
+      u.username ||
+      u.password ||
+      u.pathname !== "/" ||
+      u.search ||
+      u.hash
+    )
       return null;
     return u.origin;
   } catch {
@@ -33,16 +40,24 @@ export function validateCloudflareEdgeCutover({
   productionWorkflowSource,
 }) {
   const errors = [];
-  const currentOrigin = normalizeOrigin(envValue(environmentSource, "VITE_PUBLIC_DATA_API_BASE_URL"));
-  const mode = currentOrigin === LEGACY_API_ORIGIN
-    ? "legacy"
-    : currentOrigin === PROTECTED_API_ORIGIN
-      ? "protected"
-      : "invalid";
+  const currentOrigin = normalizeOrigin(
+    envValue(environmentSource, "VITE_PUBLIC_DATA_API_BASE_URL"),
+  );
+  const mode =
+    currentOrigin === LEGACY_API_ORIGIN
+      ? "legacy"
+      : currentOrigin === PROTECTED_API_ORIGIN
+        ? "protected"
+        : "invalid";
 
-  const check = (pass, message) => { if (!pass) errors.push(message); };
+  const check = (pass, message) => {
+    if (!pass) errors.push(message);
+  };
   check(mode !== "invalid", "Unexpected production API origin");
-  check(vercelConfig.git?.deploymentEnabled === false, "Automatic Vercel Git deployments must stay disabled");
+  check(
+    vercelConfig.git?.deploymentEnabled === false,
+    "Automatic Vercel Git deployments must stay disabled",
+  );
   check(workerConfig.preview_urls === false, "Worker preview URLs must stay disabled");
   check(workerConfig.name === "rawaj-classifieds-hub", "The Syria Worker identity changed");
 
@@ -83,8 +98,8 @@ export function validateCloudflareEdgeCutover({
     check(workerConfig.workers_dev === false, "Protected routing requires workers_dev=false");
     check(
       Array.isArray(workerConfig.routes) &&
-        workerConfig.routes.some((route) =>
-          route.pattern === "api.rawa-j.com" && route.custom_domain === true,
+        workerConfig.routes.some(
+          (route) => route.pattern === "api.rawa-j.com" && route.custom_domain === true,
         ),
       "Protected mode requires an explicit api.rawa-j.com custom domain",
     );
@@ -92,7 +107,10 @@ export function validateCloudflareEdgeCutover({
       !renderConfigSource.includes("Refusing production render: the Syria Worker must remain"),
       "Protected render configuration must be explicitly reviewed",
     );
-    check(protectedReleaseCheck && !legacyReleaseCheck, "Production release smoke must use protected domain");
+    check(
+      protectedReleaseCheck && !legacyReleaseCheck,
+      "Production release smoke must use protected domain",
+    );
   }
 
   check(
@@ -106,14 +124,24 @@ export function validateCloudflareEdgeCutover({
 
 export async function inspectRepositoryEdgeCutover() {
   const root = new URL("../", import.meta.url);
-  const [environmentSource, vercelConfig, workerConfig, renderConfigSource, productionWorkflowSource] =
-    await Promise.all([
-      readFile(new URL(".env.production", root), "utf8"),
-      readFile(new URL("vercel.json", root), "utf8").then(JSON.parse),
-      readFile(new URL("cloudflare/worker/wrangler.base.jsonc", root), "utf8").then(JSON.parse),
-      readFile(new URL("cloudflare/worker/scripts/render-config.mjs", root), "utf8"),
-      readFile(new URL(".github/workflows/cloudflare-production-worker-deploy.yml", root), "utf8"),
-    ]);
+  const [
+    environmentSource,
+    vercelConfig,
+    workerConfig,
+    renderConfigSource,
+    productionWorkflowSource,
+  ] = await Promise.all([
+    readFile(new URL(".env.production", root), "utf8"),
+    readFile(new URL("vercel.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("cloudflare/worker/wrangler.base.jsonc", root), "utf8").then(
+      JSON.parse,
+    ),
+    readFile(new URL("cloudflare/worker/scripts/render-config.mjs", root), "utf8"),
+    readFile(
+      new URL(".github/workflows/cloudflare-production-worker-deploy.yml", root),
+      "utf8",
+    ),
+  ]);
   return validateCloudflareEdgeCutover({
     environmentSource,
     vercelConfig,
@@ -123,7 +151,10 @@ export async function inspectRepositoryEdgeCutover() {
   });
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === fileURLToPath(new URL("file://" + process.argv[1]))) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === fileURLToPath(new URL("file://" + process.argv[1]))
+) {
   const report = await inspectRepositoryEdgeCutover();
   console.log(JSON.stringify(report, null, 2));
   assert.ok(report.valid, "Cloudflare edge cutover is partially configured; stop release");
