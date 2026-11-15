@@ -74,6 +74,9 @@ jobs:
       - name: Verify Cloudflare edge quota 1027 read circuit and write safety
         run: npm run test:cloudflare-quota-circuit
 
+      - name: Reject partial Cloudflare protected-domain cutovers
+        run: npm run test:cloudflare-edge-cutover
+
       - name: Verify runtime backend boundary
         run: npm run test:runtime-boundary
 
