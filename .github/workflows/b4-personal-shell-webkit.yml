@@ -1,0 +1,49 @@
+name: B4 Personal Shell iPhone WebKit Acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/shell/AppShell.tsx"
+      - "src/lib/browser-chrome.ts"
+      - "src/rawaj-page-by-page-recovery-v7.css"
+      - "e2e/b4-personal-shell-identity.spec.ts"
+      - ".github/workflows/b4-personal-shell-webkit.yml"
+
+concurrency:
+  group: b4-personal-shell-webkit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  webkit:
+    name: B4 iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Verify all seven bilingual personal shell routes
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/b4-personal-shell-identity.spec.ts --project=mobile-webkit
+      - name: Save diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b4-personal-shell-webkit-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

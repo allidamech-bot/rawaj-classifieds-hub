@@ -141,6 +141,21 @@
   box-shadow: 0 0 0 1px var(--message-border);
 }
 
+/* Guest initials and empty/loading copy remain legible on the approved
+ * ivory chat workspace. Preserve real avatar images and message behavior. */
+.rawaj-app-shell[data-design-palette="ivory"][data-resolved-pathname="/chats"]
+  .rawaj-messaging-v4 .rawaj-participant-avatar__fallback {
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"][data-resolved-pathname="/chats"]
+  .rawaj-messaging-v4 .rawaj-messaging-panel-state {
+  color: var(--message-ink) !important;
+  background: var(--message-muted) !important;
+}
+
+
 .rawaj-messaging-v4 .rawaj-conversation-summary__copy strong {
   color: var(--message-ink);
   font-size: max(0.88rem, 14px);

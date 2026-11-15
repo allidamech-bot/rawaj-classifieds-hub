@@ -1249,7 +1249,7 @@ function PanelText({
   return (
     <p
       role={role}
-      className="rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground"
+      className="rawaj-messaging-panel-state rounded-xl bg-muted-surface p-3 text-xs leading-6 text-muted-foreground"
     >
       {children}
     </p>
