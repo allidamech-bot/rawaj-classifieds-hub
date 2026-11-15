@@ -1,0 +1,45 @@
+name: B1 Home iPhone WebKit Acceptance
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/components/shell/FloatingHeader.tsx"
+      - "src/rawaj-chromatic-premium-system-v19-consistency.css"
+      - "src/rawaj-home-signature-v2.css"
+      - "e2e/home-batch1-presentation.spec.ts"
+      - ".github/workflows/b1-home-webkit.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-webkit:
+    name: iPhone WebKit (emulated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps webkit
+      - name: Verify header label, hero, and search in WebKit
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          RAWAJ_E2E_API_PROXY_TARGET: "https://rawaj-classifieds-hub.allidamech.workers.dev"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+        run: npx playwright test e2e/home-batch1-presentation.spec.ts --project=mobile-webkit
+      - name: Upload WebKit diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b1-home-webkit-${{ github.run_id }}
+          path: |
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7

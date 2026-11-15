@@ -201,7 +201,10 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               data-active={pathname.startsWith("/profile/listings") ? "true" : undefined}
               className="rawaj-header-store rawaj-header-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
             >
-              <Store className="h-4 w-4" strokeWidth={1.9} />
+              <Store className="h-4 w-4" strokeWidth={1.9} aria-hidden="true" />
+              <span className="rawaj-header-store__label" aria-hidden="true">
+                {text("متجري", "My store")}
+              </span>
             </Link>
           ) : null}
         </div>
