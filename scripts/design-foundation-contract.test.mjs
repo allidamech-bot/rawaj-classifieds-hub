@@ -539,3 +539,29 @@ test("More page and My Store localize the Boost action for Arabic users", async 
   assert.match(more, /titleAr: "تعزيز الظهور",\s*titleEn: "Boost"/);
   assert.match(ownerSummary, /text\("تعزيز الظهور", "Boost"\)/);
 });
+
+test("retired V7/V17/V18 paints cannot overwrite migrated light routes and storefronts", async () => {
+  const read = (name) => readFile(new URL(`../src/${name}`, import.meta.url), "utf8");
+  const [v7, v7b, v17, v18, discovery] = await Promise.all([
+    read("rawaj-page-by-page-recovery-v7.css"),
+    read("rawaj-page-by-page-recovery-v7b.css"),
+    read("rawaj-chromatic-premium-system-v17.css"),
+    read("rawaj-chromatic-premium-system-v18-categories-listings.css"),
+    read("rawaj-discovery-system-v3.css"),
+  ]);
+  assert.match(v7, /:not\(\[data-design-palette="ivory"\]\)/);
+  assert.match(v7, /:not\(\[data-resolved-pathname\^="\/seller\/"\]\)/);
+  assert.match(v7, /:not\(\[data-resolved-pathname="\/profile\/listings"\]\)/);
+  assert.match(v7b, /\.rawaj-app-shell:not\(\[data-design-palette="ivory"\]\)\[data-resolved-pathname="\/chats"\]/);
+  assert.doesNotMatch(v7b, /rgba\(223, 73, 181, 0\.34\)/);
+  assert.match(v17, /Retired V17 dark surfaces must not apply to approved ivory pages/);
+  assert.match(v17, /:where\(\.rawaj-app-shell:not\(\[data-design-palette="ivory"\]\)/);
+  assert.doesNotMatch(v17, /^\.rawaj-surface:where\(:not\(\.rawaj-search-results-v1 \*\)\),/m);
+  assert.match(v18, /\.rawaj-app-shell:not\(\[data-design-palette="ivory"\]\):not\(\[data-resolved-pathname="\/"\]\)/);
+  assert.match(discovery, /:where\(\.rawaj-app-shell:not\(\[data-design-palette="ivory"\]\)/);
+  assert.match(appShell, /routeStyles\.listingResults/);
+  assert.match(appShell, /routeStyles\.offers/);
+  assert.match(appShell, /\["\/login", "\/reset-password", "\/auth\/callback"\]\.includes\(pathname\)/);
+  assert.match(browserChrome, /\["\/login", "\/reset-password", "\/auth\/callback"\]\.includes\(pathname\)/);
+  assert.match(foundation, /html:has\(\.rawaj-app-shell\[data-design-palette="ivory"\]\)/);
+});
