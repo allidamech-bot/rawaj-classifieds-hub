@@ -16,10 +16,9 @@ const routes = [
 ] as const;
 
 for (const language of ["ar", "en"] as const) {
-  test(`B4 approved personal shell: ${language}`, async ({ page }, testInfo) => {
-    test.setTimeout(120_000);
-    await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
-    for (const route of routes) {
+  for (const route of routes) {
+    test(`B4 ${route.pathname} uses approved personal shell: ${language}`, async ({ page }, testInfo) => {
+      await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
       for (const width of [320, 390, 1440]) {
         await page.setViewportSize({ width, height: 860 });
         const response = await page.goto(route.pathname, { waitUntil: "domcontentloaded" });
@@ -45,6 +44,6 @@ for (const language of ["ar", "en"] as const) {
           });
         }
       }
-    }
-  });
+    });
+  }
 }
