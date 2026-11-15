@@ -221,7 +221,8 @@ test("activity messages notifications favorites and saved searches share one cle
   assert.doesNotMatch(activityCorrections, /main\s+:is\(section, article, form/);
 });
 
-test("public listing seller offers and trust journeys use compact readable route ownership", () => {
+test("public listing seller offers and trust journeys use compact readable route ownership", async () => {
+  const trust = await readFile(new URL("../src/trust-support-hub-v2.css", import.meta.url), "utf8");
   assert.doesNotMatch(publicCorrections, /data-resolved-pathname\^="\/listings\/"/);
   assert.match(publicCorrections, /data-resolved-pathname\^="\/seller\/"/);
   assert.match(
@@ -230,8 +231,8 @@ test("public listing seller offers and trust journeys use compact readable route
   );
   assert.match(publicCorrections, /data-resolved-pathname="\/offers"/);
   assert.match(publicCorrections, /\.rawaj-offers-stage > div[\s\S]*min-height: 11\.5rem/);
-  assert.match(publicCorrections, /data-resolved-pathname="\/support"/);
-  assert.match(publicCorrections, /\.rawaj-support-panel :is\(input, textarea, select\)/);
+  assert.doesNotMatch(publicCorrections, /data-resolved-pathname="\/support"/);
+  assert.match(trust, /\.rawaj-support-panel, \.rawaj-verification\) :is\(input/);
   assert.match(publicCorrections, /data-resolved-pathname="\/promotion"/);
   assert.doesNotMatch(publicCorrections, /main\s+:is\(section, article, form/);
 });

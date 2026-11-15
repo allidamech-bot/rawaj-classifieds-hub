@@ -20,26 +20,8 @@
   border-radius: 1.35rem !important;
   padding: clamp(1.05rem, 2.7vw, 1.45rem) !important;
   color: #fff !important;
-  background:
-    radial-gradient(circle at 8% 118%, rgba(255, 112, 84, 0.42), transparent 33%),
-    radial-gradient(circle at 50% -28%, rgba(220, 62, 182, 0.33), transparent 40%),
-    radial-gradient(circle at 100% 8%, rgba(63, 145, 255, 0.3), transparent 36%),
-    linear-gradient(145deg, #2f3036, #26272d 58%, #232429) !important;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.23), inset 0 1px 0 rgba(255, 255, 255, 0.075) !important;
-}
-
-.rawaj-admin-command-hero::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.16) 0 0.7px, transparent 0.9px),
-    radial-gradient(circle, rgba(225, 100, 180, 0.18) 0 0.65px, transparent 0.9px);
-  background-position: 0 0, 8px 9px;
-  background-size: 18px 18px, 24px 24px;
-  opacity: 0.16;
+  background: var(--rawaj-identity-petrol) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-command-hero__copy {
@@ -57,9 +39,9 @@
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
-  color: #1f2024;
-  background: linear-gradient(145deg, #e7bf7b, #b98738);
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  color: var(--rawaj-identity-ink);
+  background: var(--rawaj-identity-champagne);
+  box-shadow: none;
 }
 
 .rawaj-admin-command-hero__icon svg {
@@ -73,8 +55,8 @@
 
 .rawaj-admin-command-hero__copy p {
   margin: 0;
-  color: #e9c997 !important;
-  font-size: 0.7rem;
+  color: var(--rawaj-identity-champagne) !important;
+  font-size: 0.875rem;
   font-weight: 800;
 }
 
@@ -90,7 +72,7 @@
   display: block;
   max-width: 68ch;
   margin-top: 0.4rem;
-  color: rgba(242, 239, 235, 0.76) !important;
+  color: var(--rawaj-identity-ivory) !important;
   font-size: 0.73rem;
   font-weight: 500;
   line-height: 1.7;
@@ -104,9 +86,9 @@
   border: 1px solid rgba(205, 162, 96, 0.25);
   border-radius: 0.85rem;
   padding: 0.5rem 0.8rem;
-  color: #f0d6aa !important;
-  background: rgba(205, 162, 96, 0.08);
-  font-size: 0.7rem;
+  color: var(--rawaj-badge-gold-ink) !important;
+  background: var(--rawaj-badge-gold-surface);
+  font-size: 0.875rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -119,8 +101,8 @@
   border: 1px solid rgba(234, 113, 104, 0.2);
   border-radius: 1rem;
   padding: 0.75rem 0.85rem;
-  color: #f2aaa4;
-  background: rgba(234, 113, 104, 0.055);
+  color: var(--rawaj-badge-destructive-ink);
+  background: var(--rawaj-badge-destructive-surface);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -135,8 +117,8 @@
   border: 1px solid rgba(234, 113, 104, 0.18);
   border-radius: 0.78rem;
   padding: 0.45rem 0.7rem;
-  color: #f5c1bd;
-  background: rgba(234, 113, 104, 0.07);
+  color: var(--rawaj-badge-destructive-ink);
+  background: var(--rawaj-badge-destructive-surface);
   font-size: 0.68rem;
   font-weight: 800;
 }
@@ -147,22 +129,18 @@
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.2rem !important;
   padding: clamp(0.85rem, 2vw, 1.05rem) !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="pulse"] {
   border-color: rgba(63, 145, 255, 0.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(63, 145, 255, 0.08), transparent 36%),
-    linear-gradient(150deg, #2e333c, #292b31) !important;
+  background: var(--rawaj-surface-selected) !important;
 }
 
 .rawaj-admin-dashboard-section[data-section="queues"] {
   border-color: rgba(227, 160, 75, 0.16) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(227, 160, 75, 0.07), transparent 36%),
-    linear-gradient(150deg, #34312d, #2b2b30) !important;
+  background: var(--rawaj-badge-warning-surface) !important;
 }
 
 .rawaj-admin-section-title {
@@ -179,8 +157,8 @@
   place-items: center;
   border: 1px solid var(--rawaj-border);
   border-radius: 0.72rem;
-  color: var(--rawaj-accent-pink);
-  background: rgba(225, 100, 180, 0.065);
+  color: var(--rawaj-identity-teal);
+  background: var(--rawaj-surface-selected);
 }
 
 .rawaj-admin-section-title > span svg {
@@ -210,7 +188,7 @@
   border: 1px solid var(--rawaj-border);
   border-radius: 0.95rem;
   padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.027);
+  background: var(--rawaj-muted-surface);
 }
 
 .rawaj-admin-metric-card strong {
@@ -229,11 +207,11 @@
 
 .rawaj-admin-metric-card[data-attention="true"] {
   border-color: rgba(227, 160, 75, 0.2);
-  background: rgba(227, 160, 75, 0.055);
+  background: var(--rawaj-badge-warning-surface);
 }
 
 .rawaj-admin-metric-card[data-attention="true"] strong {
-  color: #efca91;
+  color: var(--rawaj-badge-warning-ink);
 }
 
 .rawaj-admin-queue-grid {
@@ -255,13 +233,13 @@
   border-radius: 0.95rem !important;
   padding: 0.7rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
   box-shadow: none !important;
 }
 
 .rawaj-admin-queue-card:hover {
   border-color: var(--rawaj-border-active) !important;
-  background: rgba(225, 100, 180, 0.055) !important;
+  background: var(--rawaj-surface-selected) !important;
   transform: translateY(-1px);
 }
 
@@ -272,8 +250,8 @@
   height: 2.35rem;
   place-items: center;
   border-radius: 0.75rem;
-  color: var(--rawaj-accent-blue);
-  background: rgba(63, 145, 255, 0.075);
+  color: var(--rawaj-identity-teal);
+  background: var(--rawaj-surface-selected);
 }
 
 .rawaj-admin-queue-card__icon svg {
@@ -300,12 +278,12 @@
 
 .rawaj-admin-queue-card[data-active="true"] {
   border-color: rgba(227, 160, 75, 0.2) !important;
-  background: rgba(227, 160, 75, 0.045) !important;
+  background: var(--rawaj-badge-warning-surface) !important;
 }
 
 .rawaj-admin-queue-card[data-active="true"] .rawaj-admin-queue-card__icon {
-  color: #efca91;
-  background: rgba(227, 160, 75, 0.075);
+  color: var(--rawaj-badge-warning-ink);
+  background: var(--rawaj-badge-warning-surface);
 }
 
 .rawaj-admin-command-grid {
@@ -322,8 +300,8 @@
   border-radius: 1.15rem !important;
   padding: 0.95rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-mini-metrics {
@@ -349,7 +327,7 @@
   border-radius: 0.85rem;
   padding: 0.55rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--rawaj-muted-surface);
 }
 
 .rawaj-admin-mini-metric strong {
@@ -367,7 +345,7 @@
 .rawaj-admin-command-card__description {
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.69rem;
+  font-size: 0.875rem;
   line-height: 1.65;
 }
 
@@ -381,9 +359,9 @@
   border-radius: 0.82rem !important;
   padding: 0.5rem 0.8rem !important;
   color: #fff !important;
-  background: var(--rawaj-gradient-action-short) !important;
-  box-shadow: 0 9px 20px rgba(155, 40, 111, 0.2) !important;
-  font-size: 0.69rem;
+  background: var(--rawaj-identity-petrol) !important;
+  box-shadow: none !important;
+  font-size: 0.875rem;
   font-weight: 800;
 }
 
@@ -403,13 +381,13 @@
   border-radius: 1rem !important;
   padding: 0.75rem !important;
   color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
+  background: var(--rawaj-muted-surface) !important;
   box-shadow: none !important;
 }
 
 .rawaj-admin-quick-link:hover {
   border-color: var(--rawaj-border-active) !important;
-  background: rgba(225, 100, 180, 0.045) !important;
+  background: var(--rawaj-surface-selected) !important;
   transform: translateY(-1px);
 }
 
@@ -420,8 +398,8 @@
   flex: 0 0 2.55rem;
   place-items: center;
   border-radius: 0.8rem;
-  color: var(--rawaj-accent-pink);
-  background: rgba(225, 100, 180, 0.07);
+  color: var(--rawaj-identity-teal);
+  background: var(--rawaj-surface-selected);
 }
 
 .rawaj-admin-quick-link > span svg {
@@ -459,14 +437,14 @@
   padding: 1.5rem !important;
   text-align: center;
   color: var(--rawaj-text-secondary) !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-admin-dashboard-state > svg {
   width: 2rem;
   height: 2rem;
-  color: var(--rawaj-accent-blue);
+  color: var(--rawaj-identity-teal);
 }
 
 .rawaj-admin-dashboard-state h2 {
@@ -479,7 +457,7 @@
   max-width: 60ch;
   margin: 0;
   color: var(--rawaj-text-muted) !important;
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   line-height: 1.65;
 }
 
@@ -489,8 +467,8 @@
   border-radius: 0.82rem;
   padding: 0.5rem 0.8rem;
   color: #fff;
-  background: var(--rawaj-gradient-action-short);
-  font-size: 0.69rem;
+  background: var(--rawaj-identity-petrol);
+  font-size: 0.875rem;
   font-weight: 800;
 }
 

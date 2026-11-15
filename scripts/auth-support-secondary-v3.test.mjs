@@ -49,10 +49,13 @@ test("authentication keeps accessible focus and reduced-motion contracts", () =>
 });
 
 test("secondary pages use readable structural surfaces and restrained brand actions", () => {
-  assert.match(trustCss, /--legal-v3-green/);
+  assert.match(trustCss, /--rawaj-shell-canvas:\s*var\(--rawaj-identity-ivory\)/);
   assert.match(correctionCss, /--secondary-v1-border/);
   assert.match(correctionCss, /max-width:\s*72ch/);
-  assert.match(correctionCss, /\.rawaj-support-panel/);
+  assert.match(
+    trustCss,
+    /\.rawaj-support-panel[\s\S]*background:\s*var\(--rawaj-card-background\)/,
+  );
   assert.match(correctionCss, /background:\s*var\(--rawaj-primary/);
   assert.match(correctionCss, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.doesNotMatch(correctionCss, /translateY\(-2px\)/);

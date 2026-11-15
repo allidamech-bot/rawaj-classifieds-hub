@@ -99,15 +99,15 @@
   color: currentColor !important;
 }
 
-.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) > :is(p, span):first-child {
+.rawaj-app-shell:where(:not([data-trust-workspace])) :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) > :is(p, span):first-child {
   color: #e4b85f !important;
 }
 
-.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(h1, h2, h3) {
+.rawaj-app-shell:where(:not([data-trust-workspace])) :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(h1, h2, h3) {
   color: #f8f4ed !important;
 }
 
-.rawaj-app-shell :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(p, span):not(:first-child) {
+.rawaj-app-shell:where(:not([data-trust-workspace])) :is(.rawaj-page-header, .rawaj-trust-section-header, .rawaj-section-header) :is(p, span):not(:first-child) {
   color: #9298a0 !important;
 }
 

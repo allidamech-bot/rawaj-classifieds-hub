@@ -185,17 +185,13 @@
    Trust, support, safety, legal, verification, promotion
    -------------------------------------------------------------------------- */
 
-.rawaj-trust-v2,
-.rawaj-app-shell[data-resolved-pathname="/terms"] main,
-.rawaj-app-shell[data-resolved-pathname="/privacy"] main,
-.rawaj-app-shell[data-resolved-pathname="/prohibited"] main,
-.rawaj-app-shell[data-resolved-pathname="/verification"] main,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-v2,
 .rawaj-app-shell[data-resolved-pathname="/promotion"] main,
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] main {
   color: var(--v6-text);
 }
 
-.rawaj-trust-hero {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero {
   isolation: isolate;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
@@ -211,7 +207,7 @@
     0 20px 48px rgba(0, 0, 0, 0.22) !important;
 }
 
-.rawaj-trust-hero::before {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -223,50 +219,43 @@
   mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.72) 54%, transparent 94%);
 }
 
-.rawaj-trust-hero__symbol,
-.rawaj-trust-hero__avatar {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__symbol,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__avatar {
   border-color: rgba(255, 255, 255, 0.14) !important;
   background: rgba(24, 25, 30, 0.32) !important;
   color: #8fc2ff !important;
   box-shadow: none !important;
 }
 
-.rawaj-trust-hero__identity p {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__identity p {
   color: #ff9a85 !important;
 }
 
-.rawaj-trust-hero__identity h1 {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__identity h1 {
   color: #fff !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
 }
 
-.rawaj-trust-hero__identity :is(strong, small),
-.rawaj-trust-hero__description {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__identity :is(strong, small),
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__description {
   color: rgba(255, 255, 255, 0.66) !important;
 }
 
-.rawaj-trust-hero__badges > *,
-.rawaj-trust-hero__actions > * {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__badges > *,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__actions > * {
   border-color: rgba(255, 255, 255, 0.095) !important;
   background: rgba(24, 25, 30, 0.28) !important;
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.rawaj-trust-hero__actions > *:hover {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__actions > *:hover {
   border-color: rgba(104, 173, 255, 0.24) !important;
   background: rgba(104, 173, 255, 0.085) !important;
   color: #fff !important;
 }
 
-.rawaj-support-panel,
-.rawaj-safety-guide,
-.rawaj-trust-link-card,
-.rawaj-trust-empty,
-.rawaj-support-timeline > article,
-.rawaj-app-shell[data-resolved-pathname="/terms"] main :is(section, article),
-.rawaj-app-shell[data-resolved-pathname="/privacy"] main :is(section, article),
-.rawaj-app-shell[data-resolved-pathname="/prohibited"] main :is(section, article),
-.rawaj-app-shell[data-resolved-pathname="/verification"] main :is(section, article, form),
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-empty,
 .rawaj-app-shell[data-resolved-pathname="/promotion"] main :is(section, article, form),
 .rawaj-app-shell[data-resolved-pathname="/reset-password"] main :is(section, article, form) {
   border: 1px solid var(--v6-line) !important;
@@ -279,48 +268,31 @@
     0 12px 30px rgba(0, 0, 0, 0.14) !important;
 }
 
-.rawaj-trust-section-header p {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-section-header p {
   color: #ff927b !important;
 }
 
-.rawaj-trust-section-header h2,
-.rawaj-safety-guide h2,
-.rawaj-trust-link-card strong,
-.rawaj-support-timeline h3,
-.rawaj-app-shell:is([data-resolved-pathname="/terms"], [data-resolved-pathname="/privacy"], [data-resolved-pathname="/prohibited"], [data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(h1, h2, h3, strong) {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-section-header h2,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card strong,
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(h1, h2, h3, strong) {
   color: var(--v6-text) !important;
   font-family: var(--font-family, "Cairo", sans-serif) !important;
 }
 
-.rawaj-trust-section-header span,
-.rawaj-trust-link-card p,
-.rawaj-support-timeline p,
-.rawaj-trust-empty p,
-.rawaj-app-shell:is([data-resolved-pathname="/terms"], [data-resolved-pathname="/privacy"], [data-resolved-pathname="/prohibited"], [data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(p, li, small, .text-muted-foreground) {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-section-header span,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card p,
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-empty p,
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(p, li, small, .text-muted-foreground) {
   color: var(--v6-muted) !important;
 }
 
-.rawaj-safety-guide > header > span,
-.rawaj-trust-link-card > span,
-.rawaj-support-timeline__icon {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-link-card > span {
   border: 1px solid rgba(104, 173, 255, 0.14) !important;
   background: rgba(104, 173, 255, 0.075) !important;
   color: #8fc2ff !important;
 }
 
-.rawaj-safety-guide[data-warning="true"] {
-  border-color: rgba(240, 180, 94, 0.19) !important;
-  background: rgba(240, 180, 94, 0.055) !important;
-}
-
-.rawaj-safety-guide[data-warning="true"] > header > span {
-  border-color: rgba(240, 180, 94, 0.18) !important;
-  background: rgba(240, 180, 94, 0.075) !important;
-  color: #f4c47d !important;
-}
-
-.rawaj-support-panel :is(input, textarea, select),
-.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select) {
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select) {
   min-height: 3rem;
   border: 1px solid var(--v6-line) !important;
   border-radius: 0.82rem;
@@ -330,30 +302,21 @@
   box-shadow: none !important;
 }
 
-.rawaj-support-panel textarea,
-.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"]) main textarea {
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"]) main textarea {
   min-height: 8rem;
 }
 
-.rawaj-support-panel :is(input, textarea, select):focus-visible,
-.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select):focus-visible {
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(input, textarea, select):focus-visible {
   border-color: rgba(104, 173, 255, 0.46) !important;
   outline-color: rgba(104, 173, 255, 0.18) !important;
 }
 
-.rawaj-support-panel button[type="submit"],
-.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main button[type="submit"],
-.rawaj-app-shell:is([data-resolved-pathname="/verification"], [data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(a, button).bg-primary {
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main button[type="submit"],
+.rawaj-app-shell:is([data-resolved-pathname="/promotion"], [data-resolved-pathname="/reset-password"]) main :is(a, button).bg-primary {
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
   color: #fff !important;
   box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
-}
-
-.rawaj-support-timeline blockquote {
-  border-inline-start-color: #68adff !important;
-  background: rgba(104, 173, 255, 0.055) !important;
-  color: var(--v6-text-soft) !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -383,141 +346,17 @@
 }
 
 /* --------------------------------------------------------------------------
-   Admin final system
-   -------------------------------------------------------------------------- */
-
-.rawaj-admin-v3 {
-  color: var(--v6-text);
-}
-
-.rawaj-admin-v3::before {
-  content: "";
-  position: absolute;
-  inset: -2rem 0 auto;
-  z-index: -1;
-  height: 22rem;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 12% 14%, rgba(255, 117, 89, 0.055), transparent 28%),
-    radial-gradient(circle at 48% 0%, rgba(223, 73, 181, 0.05), transparent 28%),
-    radial-gradient(circle at 86% 15%, rgba(104, 173, 255, 0.055), transparent 30%);
-  filter: blur(24px);
-}
-
-.rawaj-admin-v3 > .bg-warning\/10 {
-  border: 1px solid rgba(240, 180, 94, 0.18) !important;
-  background: rgba(240, 180, 94, 0.06) !important;
-  color: var(--v6-text-soft) !important;
-}
-
-.rawaj-admin-v3 > .sticky {
-  border: 1px solid var(--v6-line) !important;
-  background: rgba(39, 40, 46, 0.92) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
-}
-
-.rawaj-admin-v3 nav > a {
-  border: 1px solid rgba(255, 255, 255, 0.065) !important;
-  background: rgba(255, 255, 255, 0.028) !important;
-  color: var(--v6-text-soft) !important;
-  box-shadow: none !important;
-}
-
-.rawaj-admin-v3 nav > a[aria-current="page"] {
-  border-color: rgba(104, 173, 255, 0.18) !important;
-  background: rgba(104, 173, 255, 0.095) !important;
-  color: #fff !important;
-}
-
-.rawaj-admin-v3 :is(section, article, form, .rawaj-surface, .bg-card) {
-  border-color: var(--v6-line) !important;
-  background: linear-gradient(155deg, rgba(48, 49, 55, 0.985), rgba(39, 40, 46, 0.985)) !important;
-  color: var(--v6-text-soft) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
-}
-
-.rawaj-admin-v3 .bg-muted-surface,
-.rawaj-admin-v3 .bg-muted,
-.rawaj-admin-v3 tbody tr,
-.rawaj-admin-v3 [role="row"] {
-  border-color: rgba(255, 255, 255, 0.055) !important;
-  background: rgba(24, 25, 30, 0.38) !important;
-  color: var(--v6-text-soft) !important;
-}
-
-.rawaj-admin-v3 :is(h1, h2, h3, h4, strong, th) {
-  color: var(--v6-text) !important;
-  font-family: var(--font-family, "Cairo", sans-serif) !important;
-}
-
-.rawaj-admin-v3 :is(p, small, time, td, .text-muted-foreground) {
-  color: var(--v6-muted) !important;
-}
-
-.rawaj-admin-v3 :is(input, textarea, select) {
-  min-height: 2.85rem;
-  border-color: var(--v6-line) !important;
-  background: rgba(24, 25, 30, 0.72) !important;
-  color: var(--v6-text) !important;
-  color-scheme: dark;
-  box-shadow: none !important;
-}
-
-.rawaj-admin-v3 :is(input, textarea, select):focus-visible {
-  border-color: rgba(104, 173, 255, 0.46) !important;
-  outline-color: rgba(104, 173, 255, 0.18) !important;
-}
-
-.rawaj-admin-v3 :is(button, a).bg-primary,
-.rawaj-admin-v3 button[type="submit"] {
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
-  color: #fff !important;
-  box-shadow: 0 9px 20px rgba(218, 67, 160, 0.14) !important;
-}
-
-.rawaj-admin-v3 table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.rawaj-admin-v3 thead {
-  background: rgba(104, 173, 255, 0.05) !important;
-}
-
-.rawaj-admin-v3 :is(.text-destructive, [data-tone="danger"]) {
-  color: #ff999f !important;
-}
-
-.rawaj-admin-v3 :is(.text-warning, [data-tone="warning"]) {
-  color: #f4c47d !important;
-}
-
-.rawaj-admin-v3 :is(.text-emerald-trust, [data-tone="success"]) {
-  color: #7ee4bc !important;
-}
-
-/* --------------------------------------------------------------------------
    Route-level loading, empty and error cards
    -------------------------------------------------------------------------- */
 
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/terms"],
-    [data-resolved-pathname="/privacy"],
-    [data-resolved-pathname="/prohibited"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname="/reset-password"],
     [data-resolved-pathname^="/admin"]
   ) main > .rawaj-surface,
 .rawaj-app-shell:is(
     [data-resolved-pathname^="/seller/"],
-    [data-resolved-pathname="/support"],
-    [data-resolved-pathname="/safety"],
-    [data-resolved-pathname="/verification"],
     [data-resolved-pathname="/promotion"],
     [data-resolved-pathname="/reset-password"],
     [data-resolved-pathname^="/admin"]
@@ -533,13 +372,13 @@
 /* Mobile closure */
 @media (max-width: 767px) {
   .rawaj-storefront-v2,
-  .rawaj-trust-v2,
-  .rawaj-admin-v3 {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-v2,
+.rawaj-admin-v3 {
     padding-inline: 0.75rem;
   }
 
   .rawaj-storefront-identity,
-  .rawaj-trust-hero {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero {
     border-radius: 1.1rem !important;
   }
 
@@ -570,7 +409,7 @@
 }
 
 @media (max-width: 390px) {
-  .rawaj-trust-hero__badges > *:nth-child(n + 3) {
+  :where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-hero__badges > *:nth-child(n + 3) {
     display: none;
   }
 
@@ -581,8 +420,8 @@
 
 @media (hover: none), (pointer: coarse) {
   .rawaj-storefront-v2 :is(button, a),
-  .rawaj-trust-v2 :is(button, a),
-  .rawaj-admin-v3 :is(button, a) {
+:where(.rawaj-app-shell:not([data-trust-workspace])) .rawaj-trust-v2 :is(button, a),
+.rawaj-admin-v3 :is(button, a) {
     transform: none !important;
   }
 }

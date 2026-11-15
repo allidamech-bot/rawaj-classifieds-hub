@@ -1,104 +1,99 @@
-/* Premium Activity Center — scoped to /activity only. */
+/* RAWAJ B3.2 — Activity command centre.
+ * Source-owned replacement for retired dark/gold activity styling.
+ * Activity feeds, unread markers, filters and navigation are unchanged.
+ */
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] {
-  background:
-    radial-gradient(circle at 92% 7%, rgba(217, 164, 65, 0.075), transparent 22rem),
-    radial-gradient(circle at 5% 42%, rgba(99, 42, 83, 0.1), transparent 26rem),
-    linear-gradient(180deg, #101319 0%, #0d1016 54%, #0b0e13 100%) !important;
+  --rawaj-shell-chrome-surface: #083d38;
+  --rawaj-shell-chrome-ink: #fffaf3;
+  --rawaj-text-primary: #173d38;
+  --rawaj-text-secondary: #435650;
+  --rawaj-text-muted: #536660;
+  color: #173d38 !important;
+  background: #f7f3ec !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-shell-header {
-  border-bottom-color: rgba(217, 164, 65, 0.13) !important;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(217, 164, 65, 0.055), transparent 34%),
-    linear-gradient(180deg, rgba(25, 28, 35, 0.98), rgba(18, 21, 27, 0.98)) !important;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+  border-bottom: 1px solid rgba(245, 216, 164, 0.18) !important;
+  color: #fffaf3 !important;
+  background: #083d38 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-shell-header__title :is(h1, p) {
-  color: #f6f1e8 !important;
-  font-weight: 850 !important;
+  color: #fffaf3 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-shell-header__actions .rawaj-icon-button,
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-shell-header__back {
-  border-color: rgba(217, 164, 65, 0.16) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
-  color: #d8c7a1 !important;
+  border-color: rgba(255, 250, 243, 0.25) !important;
+  color: #fffaf3 !important;
+  background: #14594f !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-account-activity-v3 {
-  gap: 0.95rem !important;
-  padding-bottom: 8.6rem !important;
+  min-width: 0;
+  gap: 0.85rem !important;
+  padding-bottom: calc(7.2rem + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-v2::before {
-  top: -8rem !important;
-  height: 31rem !important;
-  background:
-    radial-gradient(circle at 91% 4%, rgba(217, 164, 65, 0.085), transparent 30%),
-    radial-gradient(circle at 5% 2%, rgba(104, 43, 88, 0.095), transparent 29%) !important;
+  display: none !important;
 }
 
-/* Hero */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero[data-mode="activity"] {
   overflow: hidden;
-  border: 1px solid rgba(217, 164, 65, 0.2) !important;
-  border-radius: 1.45rem !important;
-  background:
-    radial-gradient(circle at 90% 8%, rgba(217, 164, 65, 0.1), transparent 30%),
-    radial-gradient(circle at 4% 100%, rgba(101, 43, 86, 0.13), transparent 38%),
-    linear-gradient(145deg, #1a1d25 0%, #141922 56%, #10151c 100%) !important;
-  padding: 1rem !important;
-  color: #f7f2e9 !important;
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  border: 1px solid #27665c !important;
+  border-radius: 1.1rem !important;
+  padding: 0.95rem !important;
+  color: #fffaf3 !important;
+  background: #083d38 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero[data-mode="activity"]::after {
-  border-color: rgba(217, 164, 65, 0.055) !important;
-  box-shadow:
-    0 0 0 2.8rem rgba(217, 164, 65, 0.018),
-    0 0 0 5.6rem rgba(217, 164, 65, 0.012) !important;
+  display: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__copy > p {
-  border: 1px solid rgba(217, 164, 65, 0.16) !important;
-  background: rgba(217, 164, 65, 0.055) !important;
-  color: #e8c575 !important;
+  border: 1px solid rgba(255, 250, 243, 0.22) !important;
+  border-radius: 0.6rem !important;
+  color: #f5d8a4 !important;
+  background: rgba(255, 250, 243, 0.08) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__copy :is(h1, h2) {
-  color: #f7f2e9 !important;
-  font-size: clamp(1.2rem, 5.5vw, 1.8rem) !important;
-  line-height: 1.3 !important;
+  color: #fffaf3 !important;
+  font-size: clamp(1.18rem, 4vw, 1.7rem) !important;
+  line-height: 1.35 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__copy > span {
-  color: #969da5 !important;
+  color: #e3ece5 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics {
-  gap: 0.55rem !important;
+  gap: 0.45rem !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics > div {
-  border-color: rgba(217, 164, 65, 0.14) !important;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.018)) !important;
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 250, 243, 0.22) !important;
+  border-radius: 0.7rem !important;
+  background: rgba(255, 250, 243, 0.08) !important;
+  backdrop-filter: none;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics svg {
-  color: #e3bd68 !important;
+  color: #f5d8a4 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics strong {
-  color: #f8f2e8 !important;
+  color: #fffaf3 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics span {
-  color: #989da4 !important;
+  color: #e3ece5 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__actions {
@@ -106,196 +101,164 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__actions :is(a, button) {
-  border-color: rgba(255, 255, 255, 0.075) !important;
-  background: rgba(255, 255, 255, 0.026) !important;
-  color: #b9b8b4 !important;
+  min-height: 2.75rem !important;
+  border: 1px solid rgba(255, 250, 243, 0.22) !important;
+  border-radius: 0.75rem !important;
+  color: #fffaf3 !important;
+  background: #14594f !important;
   box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__actions a[data-active="true"] {
-  border-color: rgba(217, 164, 65, 0.45) !important;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(233, 196, 106, 0.11), transparent 45%),
-    linear-gradient(145deg, #302716, #211d16) !important;
-  color: #efd28c !important;
-  box-shadow: 0 8px 22px rgba(217, 164, 65, 0.09) !important;
+  border-color: #f5d8a4 !important;
+  color: #083d38 !important;
+  background: #f5d8a4 !important;
 }
 
-/* Activity / messages tabs */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
-  gap: 0.4rem !important;
-  border: 1px solid rgba(217, 164, 65, 0.13) !important;
-  border-radius: 1.05rem !important;
-  background: linear-gradient(145deg, #181c23, #13171d) !important;
-  padding: 0.32rem !important;
-  box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+  gap: 0.3rem !important;
+  border: 1px solid #d2ddd5 !important;
+  border-radius: 0.95rem !important;
+  padding: 0.28rem !important;
+  background: #fffaf3 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button {
-  min-height: 2.85rem !important;
+  min-height: 2.75rem !important;
   border: 1px solid transparent !important;
-  border-radius: 0.82rem !important;
+  border-radius: 0.7rem !important;
+  color: #274f48 !important;
   background: transparent !important;
-  color: #999fa6 !important;
   font-weight: 800 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
-  border-color: rgba(217, 164, 65, 0.38) !important;
-  background:
-    radial-gradient(circle at 15% 0%, rgba(233, 196, 106, 0.1), transparent 48%),
-    linear-gradient(145deg, #2c2519, #211e19) !important;
-  color: #f0d28d !important;
-  box-shadow: 0 8px 20px rgba(217, 164, 65, 0.075) !important;
+  border-color: #075d52 !important;
+  color: #fffaf3 !important;
+  background: #075d52 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button b {
-  background: rgba(217, 164, 65, 0.12) !important;
-  color: #e8c575 !important;
+  color: #075d52 !important;
+  background: #e1f1e8 !important;
 }
 
-/* Feed panel */
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] b {
+  color: #083d38 !important;
+  background: #f5d8a4 !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel {
   overflow: hidden;
-  border: 1px solid rgba(217, 164, 65, 0.14) !important;
-  border-radius: 1.25rem !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(217, 164, 65, 0.045), transparent 32%),
-    linear-gradient(155deg, #181c23 0%, #13171d 100%) !important;
-  padding: 0.95rem !important;
-  box-shadow:
-    0 16px 34px rgba(0, 0, 0, 0.21),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+  min-width: 0;
+  border: 1px solid #d2ddd5 !important;
+  border-radius: 1.1rem !important;
+  padding: 0.9rem !important;
+  color: #173d38 !important;
+  background: #fffaf3 !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child > h2 {
-  color: #f5f0e7 !important;
+  color: #173d38 !important;
   font-size: 0.98rem !important;
-  font-weight: 900 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child > a {
-  min-height: 2.5rem !important;
-  border: 1px solid rgba(217, 164, 65, 0.22) !important;
-  border-radius: 0.78rem !important;
-  background: rgba(217, 164, 65, 0.045) !important;
-  color: #e8c575 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed {
-  gap: 0.55rem !important;
-  margin-top: 0.75rem;
-}
-
-/* Notification cards */
-.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  border-radius: 1rem !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(217, 164, 65, 0.025), transparent 38%),
-    linear-gradient(150deg, #1a1e25, #151920) !important;
-  padding: 0.78rem !important;
-  color: #f4efe7 !important;
-  box-shadow:
-    0 9px 20px rgba(0, 0, 0, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.018) !important;
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background 160ms ease;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline[data-read="false"] {
-  border-color: rgba(217, 164, 65, 0.28) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(217, 164, 65, 0.065), transparent 40%),
-    linear-gradient(150deg, #1d2026, #171a20) !important;
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.15),
-    inset 3px 0 0 rgba(217, 164, 65, 0.42) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline:is(:hover, :focus-visible) {
-  border-color: rgba(217, 164, 65, 0.35) !important;
-  transform: translateY(-1px);
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline h2 {
-  color: #f5f0e8 !important;
-  font-size: 0.86rem !important;
-  line-height: 1.55 !important;
   font-weight: 850 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline p {
-  color: #9ca1a7 !important;
-  font-size: 0.7rem !important;
-  line-height: 1.8 !important;
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child > a {
+  min-height: 2.75rem !important;
+  border: 1px solid #c5d5cb !important;
+  border-radius: 0.75rem !important;
+  color: #075d52 !important;
+  background: #fffaf3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-feed {
+  min-width: 0;
+  gap: 0.55rem !important;
+  margin-top: 0.7rem;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline,
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation {
+  min-width: 0;
+  border: 1px solid #d2ddd5 !important;
+  border-radius: 0.9rem !important;
+  padding: 0.78rem !important;
+  color: #173d38 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline[data-read="false"] {
+  border-inline-start: 3px solid #075d52 !important;
+  background: #eff7f1 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline:is(:hover, :focus-visible),
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation:is(:hover, :focus-visible) {
+  border-color: #82aca0 !important;
+  background: #f3faf5 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline h2,
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation__copy strong {
+  color: #173d38 !important;
+  font-size: max(0.86rem, 13px) !important;
+  line-height: 1.55 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline p,
+.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation__copy span {
+  color: #435650 !important;
+  font-size: max(0.74rem, 12px) !important;
+  line-height: 1.65 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline p:last-child {
-  color: #70777f !important;
-  font-size: 0.61rem !important;
+  color: #536660 !important;
+  font-size: max(0.7rem, 11px) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline .bg-gold {
-  background: #d9a441 !important;
-  box-shadow: 0 0 0 4px rgba(217, 164, 65, 0.09);
+  background: #075d52 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline .bg-border {
-  background: #4b5159 !important;
-}
-
-/* Conversation rows */
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation {
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  border-radius: 1rem !important;
-  background: linear-gradient(150deg, #1a1e25, #151920) !important;
-  color: #f4efe7 !important;
-  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.13) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation:is(:hover, :focus-visible) {
-  border-color: rgba(217, 164, 65, 0.3) !important;
-  background: linear-gradient(150deg, #1d2027, #171b22) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation__copy strong {
-  color: #f5f0e8 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation__copy span {
-  color: #92989f !important;
+  background: #a8bcb1 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation > b {
-  background: rgba(217, 164, 65, 0.13) !important;
-  color: #edcd84 !important;
+  color: #075d52 !important;
+  background: #e1f1e8 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-participant-avatar {
-  border-color: rgba(217, 164, 65, 0.32) !important;
-  background: linear-gradient(145deg, #342919, #1b1d22) !important;
-  color: #e8c575 !important;
+  border-color: #c5d5cb !important;
+  color: #075d52 !important;
+  background: #e1f1e8 !important;
 }
 
-/* Loading / empty / error states */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-state {
-  border: 1px dashed rgba(217, 164, 65, 0.16) !important;
-  border-radius: 1rem !important;
-  background: rgba(255, 255, 255, 0.018) !important;
-  color: #969ca3 !important;
+  border: 1px dashed #b5cdc0 !important;
+  border-radius: 0.9rem !important;
+  color: #435650 !important;
+  background: #fffaf3 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-state button {
-  border-color: rgba(217, 164, 65, 0.2) !important;
-  background: #191d24 !important;
-  color: #e8c575 !important;
+  min-height: 2.75rem !important;
+  border: 1px solid #b5cdc0 !important;
+  color: #075d52 !important;
+  background: #fffaf3 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/activity"] :is(a, button):focus-visible {
+  outline: 3px solid #075d52 !important;
+  outline-offset: 3px;
 }
 
 @media (max-width: 639px) {
@@ -303,19 +266,10 @@
     padding-inline: 0.72rem !important;
     padding-top: 0.8rem !important;
   }
-
-  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero[data-mode="activity"] {
-    padding: 0.85rem !important;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero__metrics > div {
-    padding: 0.58rem !important;
-  }
-
+  .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-communication-hero[data-mode="activity"],
   .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel {
     padding: 0.78rem !important;
   }
-
   .rawaj-app-shell[data-resolved-pathname="/activity"] a.rawaj-notification-timeline {
     padding: 0.72rem !important;
   }

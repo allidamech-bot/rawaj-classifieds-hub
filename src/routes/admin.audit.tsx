@@ -11,7 +11,9 @@ export const Route = createFileRoute("/admin/audit")({
   component: AdminAuditPage,
 });
 
-const PAGE_SIZE = 40;
+// The current admin audit endpoint only exposes the most recent 100 records;
+// it does not accept an offset or action filter. Never simulate server pagination.
+const AUDIT_WINDOW_LIMIT = 100;
 
 const actionFilters = [
   { value: "", ar: "كل الإجراءات", en: "All actions" },
@@ -27,14 +29,10 @@ function AdminAuditPage() {
   const canViewAuditLogs = auth.hasPermission("canViewAuditLogs");
   const [entries, setEntries] = useState<AdminAuditLogEntry[]>([]);
   const [actionPrefix, setActionPrefix] = useState("");
-  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
   const [loadError, setLoadError] = useState("");
   const requestIdRef = useRef(0);
-  const loadMoreInFlightRef = useRef(false);
 
   const loadFirstPage = useCallback(async () => {
     const requestId = ++requestIdRef.current;
@@ -42,18 +40,14 @@ function AdminAuditPage() {
     setLoadError("");
     try {
       const result = await adminFetchAuditLogs(canViewAuditLogs, {
-        limit: PAGE_SIZE,
-        offset: 0,
-        actionPrefix: actionPrefix || null,
+        limit: AUDIT_WINDOW_LIMIT,
       });
       if (requestId !== requestIdRef.current) return;
-      setOffset(0);
       if (!result.ok) {
         setLoadError(result.error.message);
         return;
       }
       setEntries(result.data);
-      setHasMore(result.data.length === PAGE_SIZE);
       setHasLoaded(true);
     } catch (caught) {
       if (requestId !== requestIdRef.current) return;
@@ -65,59 +59,24 @@ function AdminAuditPage() {
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [actionPrefix, canViewAuditLogs, text]);
+  }, [canViewAuditLogs, text]);
 
   useEffect(() => {
     requestIdRef.current += 1;
-    loadMoreInFlightRef.current = false;
     setEntries([]);
     setHasLoaded(false);
-    setHasMore(false);
     setLoadError("");
     void loadFirstPage();
     return () => {
       requestIdRef.current += 1;
-      loadMoreInFlightRef.current = false;
     };
   }, [loadFirstPage]);
 
-  async function loadMore() {
-    if (loadMoreInFlightRef.current || loadingMore || !hasMore) return;
-    loadMoreInFlightRef.current = true;
-    const requestId = requestIdRef.current;
-    const nextOffset = offset + PAGE_SIZE;
-    setLoadingMore(true);
-    setLoadError("");
-    try {
-      const result = await adminFetchAuditLogs(canViewAuditLogs, {
-        limit: PAGE_SIZE,
-        offset: nextOffset,
-        actionPrefix: actionPrefix || null,
-      });
-      if (requestId !== requestIdRef.current) return;
-      if (!result.ok) {
-        setLoadError(result.error.message);
-        return;
-      }
-      setEntries((current) => {
-        const byId = new Map(current.map((entry) => [entry.id, entry]));
-        for (const entry of result.data) byId.set(entry.id, entry);
-        return [...byId.values()];
-      });
-      setOffset(nextOffset);
-      setHasMore(result.data.length === PAGE_SIZE);
-    } catch (caught) {
-      if (requestId !== requestIdRef.current) return;
-      setLoadError(
-        caught instanceof Error
-          ? caught.message
-          : text("تعذر تحميل المزيد من السجل.", "Could not load more audit entries."),
-      );
-    } finally {
-      loadMoreInFlightRef.current = false;
-      if (requestId === requestIdRef.current) setLoadingMore(false);
-    }
-  }
+  // The backend does not support actionPrefix. Filter the fetched window locally
+  // rather than falsely showing unfiltered records for a selected action type.
+  const visibleEntries = actionPrefix
+    ? entries.filter((entry) => entry.action.startsWith(actionPrefix))
+    : entries;
 
   return (
     <div className="space-y-5">
@@ -139,7 +98,7 @@ function AdminAuditPage() {
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline">
             <Activity className="h-4 w-4 text-primary" />
-            {new Intl.NumberFormat(marketLocale(language)).format(entries.length)}
+            {new Intl.NumberFormat(marketLocale(language)).format(visibleEntries.length)}
           </span>
         </div>
 
@@ -157,6 +116,12 @@ function AdminAuditPage() {
             ))}
           </select>
         </label>
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">
+          {text(
+            "يظهر أحدث ١٠٠ إجراء فقط. التصفية تشمل السجلات المحمّلة ولا تشمل الأقدم.",
+            "Showing up to 100 recent actions. Filters apply only to the loaded history.",
+          )}
+        </p>
       </section>
 
       {loadError && hasLoaded ? (
@@ -177,29 +142,16 @@ function AdminAuditPage() {
           actionLabel={text("إعادة المحاولة", "Try again")}
           onAction={() => void loadFirstPage()}
         />
-      ) : entries.length === 0 ? (
+      ) : visibleEntries.length === 0 ? (
         <StatePanel
           title={text("لا توجد إجراءات مسجلة لهذا الفلتر", "No recorded actions for this filter")}
         />
       ) : (
         <section className="space-y-3">
-          {entries.map((entry) => (
+          {visibleEntries.map((entry) => (
             <AuditEntryCard key={entry.id} entry={entry} />
           ))}
         </section>
-      )}
-
-      {hasMore && (
-        <button
-          type="button"
-          disabled={loadingMore}
-          onClick={() => void loadMore()}
-          className="w-full rounded-xl bg-muted-surface px-4 py-3 text-xs font-bold disabled:opacity-50 hairline"
-        >
-          {loadingMore
-            ? text("جارٍ تحميل المزيد...", "Loading more...")
-            : text("تحميل المزيد", "Load more")}
-        </button>
       )}
     </div>
   );

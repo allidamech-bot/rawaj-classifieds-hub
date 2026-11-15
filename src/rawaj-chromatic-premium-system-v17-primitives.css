@@ -244,7 +244,7 @@
   box-shadow: inset 0 0 0 1px rgba(216,174,95,.1) !important;
 }
 
-.rawaj-app-shell:where(:not([data-resolved-pathname="/listings"])) :is([data-slot="label"], label) {
+.rawaj-app-shell:where(:not([data-trust-workspace]):not([data-resolved-pathname="/listings"])) :is([data-slot="label"], label) {
   color: #d5cfca !important;
 }
 

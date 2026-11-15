@@ -71,7 +71,7 @@ const primaryShortcuts: (AccountRow & { world: string })[] = [
 
 const secondaryShortcuts: (AccountRow & { world: string })[] = [
   {
-    titleAr: "Boost",
+    titleAr: "تعزيز الظهور",
     titleEn: "Boost",
     hintAr: "احصل على عملاء أكثر",
     hintEn: "Get more buyers",

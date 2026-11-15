@@ -20,7 +20,7 @@ export function CategoryCard({ category, count }: Props) {
       className="group flex items-center gap-3 rounded-2xl bg-card p-3 hairline shadow-soft transition-shadow hover:shadow-premium"
     >
       <div className="w-16 shrink-0">
-        <PlaceholderArt type={category.placeholder} aspect="square" />
+        <PlaceholderArt type={category.placeholder} aspect="square" identity />
       </div>
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-[15px] font-bold text-foreground">

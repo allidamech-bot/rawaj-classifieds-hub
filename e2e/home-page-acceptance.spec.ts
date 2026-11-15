@@ -188,20 +188,22 @@ test("featured homepage carousel selects another listing using its pagination", 
   await expect(pagination.first()).not.toHaveAttribute("aria-current", "true");
 });
 
-test("mobile dock grid matches its 6 home and 5 destination links", async ({ page }) => {
+test("mobile dock has five consistent destinations on home and secondary routes", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await openHydrated(page, "/");
 
-  const dock = page.locator('[data-shell-region="bottom-dock-region"]');
-  await expect(dock).toBeVisible();
-  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "6");
-  await expect(dock.getByRole("listitem")).toHaveCount(6);
-  await expect(dock.locator(".grid-cols-6")).toHaveCount(1);
-
-  await openHydrated(page, "/categories");
-  await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "5");
-  await expect(dock.getByRole("listitem")).toHaveCount(5);
-  await expect(dock.locator(".grid-cols-5")).toHaveCount(1);
+  const paths = ["/", "/categories", "/listings", "/more", "/support"];
+  for (const path of paths) {
+    await openHydrated(page, path);
+    const dock = page.locator('[data-shell-region="bottom-dock-region"]');
+    await expect(dock).toBeVisible();
+    await expect(dock.locator("[data-item-count]")).toHaveAttribute("data-item-count", "5");
+    await expect(dock.getByRole("listitem")).toHaveCount(5);
+    await expect(dock.locator(".grid-cols-5")).toHaveCount(1);
+    await expect(dock.locator('[data-section="favorites"]')).toHaveCount(0);
+    await expect(dock.locator('[data-section="addListing"]')).toHaveCount(1);
+  }
 });
 
 test("browser chrome follows the home and categories route colors", async ({ page }) => {
@@ -227,3 +229,25 @@ test("signed-out My Store keeps approved light shell and sign-in affordance", as
   await expect(page.locator(".my-store-guest__action")).toBeVisible();
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#fcfaf7");
 });
+
+for (const language of ["ar", "en"] as const) {
+  for (const width of [390, 1440]) {
+    test(`homepage footer follows the shared petrol identity in ${language} at ${width}px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
+      await page.setViewportSize({ width, height: 850 });
+      for (const route of ["/", "/categories", "/listings"]) {
+        await openHydrated(page, route);
+        await expect(page.locator("html")).toHaveAttribute(
+          "dir",
+          language === "ar" ? "rtl" : "ltr",
+        );
+        await expect(page.locator(".rawaj-site-footer")).toHaveCSS(
+          "background-color",
+          "rgb(7, 56, 54)",
+        );
+      }
+    });
+  }
+}
