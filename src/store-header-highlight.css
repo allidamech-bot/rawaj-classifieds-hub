@@ -34,7 +34,9 @@
 }
 .rawaj-shell-header__actions .rawaj-header-store {
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  grid-template-rows: 20px 16px;
+  gap: 0 !important;
+  align-content: center;
 }
 .rawaj-shell-header__actions .rawaj-header-store::before,
 .rawaj-shell-header__actions .rawaj-header-store::after {
@@ -42,7 +44,14 @@
   content: none !important;
 }
 .rawaj-shell-header__actions .rawaj-header-store__label {
-  display: none !important;
+  display: block !important;
+  color: #103f42 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+  max-width: 100%;
+  overflow: visible;
+  white-space: nowrap;
 }
 .rawaj-shell-header__actions :is(
   .rawaj-header-store, .rawaj-header-account, .rawaj-header-admin
