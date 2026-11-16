@@ -367,7 +367,9 @@ function PromotionPage() {
                           {text("الأكثر اختياراً", "Popular")}
                         </span>
                       ) : null}
-                      <span className={`rawaj-boost-option__title block text-sm font-black ${boostPackage.recommended ? "pt-7" : ""}`}>
+                      <span
+                        className={`rawaj-boost-option__title block text-sm font-black ${boostPackage.recommended ? "pt-7" : ""}`}
+                      >
                         {searchBoostName(boostPackage.code, text)}
                       </span>
                       <span className="mt-2 block text-xs text-muted-foreground">
