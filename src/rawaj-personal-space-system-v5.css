@@ -444,7 +444,7 @@
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child::after {
   width: 3px !important;
-  background: linear-gradient(180deg, #ff7559, #df49b5 58%, #68adff) !important;
+  background: var(--rawaj-identity-gold) !important;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child h2 {

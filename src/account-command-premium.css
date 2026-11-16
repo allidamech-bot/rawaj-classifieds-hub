@@ -150,6 +150,11 @@
   background: var(--account-petrol) !important;
   box-shadow: none !important;
 }
+/* The icon itself was still inheriting dark teal from the shared shortcut SVG
+ * selector, making its stroke almost disappear against the petrol icon tile. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon > svg {
+  color: var(--rawaj-identity-champagne) !important;
+}
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections {
   gap: 0.9rem;
 }

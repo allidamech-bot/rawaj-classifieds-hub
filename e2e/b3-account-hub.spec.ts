@@ -24,6 +24,9 @@ for (const language of ["ar", "en"] as const) {
       await expect(links.locator("a")).toHaveCount(4);
       await expect(hero).toHaveCSS("background-color", "rgb(255, 250, 243)");
       await expect(hero.locator("h1")).toHaveCSS("color", "rgb(19, 39, 36)");
+      await expect(
+        hub.locator('a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon > svg'),
+      ).toHaveCSS("color", "rgb(255, 227, 176)");
 
       const metrics = await page.evaluate(() => {
         const main = document.querySelector<HTMLElement>("main.rawaj-account-command-v3");

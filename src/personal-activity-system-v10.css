@@ -54,10 +54,7 @@
   border: 1px solid color-mix(in srgb, var(--rawaj-identity-teal) 25%, transparent) !important;
   border-radius: 1.25rem !important;
   color: var(--rawaj-identity-ink) !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(223, 73, 181, 0.08), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(104, 173, 255, 0.065), transparent 38%),
-    linear-gradient(155deg, #fffaf3, #fffaf3) !important;
+  background: var(--rawaj-card-background) !important;
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--rawaj-identity-teal) 5%, white),
     0 16px 36px color-mix(in srgb, var(--rawaj-identity-petrol) 8%, transparent) !important;
@@ -67,9 +64,9 @@
   [data-resolved-pathname="/favorites"],
   [data-resolved-pathname="/saved-searches"]
 ) .rawaj-account-collection-v3 > div.text-center > span {
-  border: 1px solid rgba(104, 173, 255, 0.14);
+  border: 1px solid var(--rawaj-border);
   color: var(--rawaj-identity-teal) !important;
-  background: rgba(104, 173, 255, 0.075) !important;
+  background: var(--rawaj-muted-surface) !important;
 }
 
 .rawaj-app-shell[data-shell-mode]:is(

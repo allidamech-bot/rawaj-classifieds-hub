@@ -20,6 +20,9 @@ interface LayoutAuditReport {
   graphicalContrastFailures: string[];
   footerDockOverlap: boolean;
   activeNavigationIssues: string[];
+  overlappingActions: string[];
+  clippedHeadings: string[];
+  unexpectedDarkSurfaces: string[];
 }
 
 export async function expectRenderedLayout(page: Page, options: LayoutAuditOptions) {
@@ -252,6 +255,67 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         })
         .slice(0, 20);
 
+      // Detect actual geometry failures rather than matching obsolete CSS literals.
+      // Only compare sibling actions to avoid intentional nested clickable cards.
+      const siblingActions = Array.from(
+        document.querySelectorAll<HTMLElement>("main button, main a[href], main [role='button']"),
+      ).filter(visible).filter((element) => !isDisabled(element));
+      const overlappingActions: string[] = [];
+      for (let i = 0; i < siblingActions.length && overlappingActions.length < 12; i++) {
+        const first = siblingActions[i];
+        const a = first.getBoundingClientRect();
+        for (let j = i + 1; j < siblingActions.length; j++) {
+          const second = siblingActions[j];
+          if (first.parentElement !== second.parentElement) continue;
+          const b = second.getBoundingClientRect();
+          const overlapWidth = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+          const overlapHeight = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          const smallerArea = Math.min(a.width * a.height, b.width * b.height);
+          if (
+            overlapWidth >= 8 &&
+            overlapHeight >= 8 &&
+            overlapWidth * overlapHeight > smallerArea * 0.15
+          ) {
+            overlappingActions.push(
+              `${describe(first)} overlaps ${describe(second)} by ${overlapWidth.toFixed(0)}x${overlapHeight.toFixed(0)}px`,
+            );
+            if (overlappingActions.length >= 12) break;
+          }
+        }
+      }
+
+      const clippedHeadings = Array.from(
+        document.querySelectorAll<HTMLElement>("main h1, main h2"),
+      )
+        .filter(visible)
+        .filter((element) => {
+          const style = getComputedStyle(element);
+          return (
+            style.overflowY !== "visible" &&
+            style.webkitLineClamp === "none" &&
+            element.clientHeight > 0 &&
+            element.scrollHeight > element.clientHeight + 3
+          );
+        })
+        .map(describe)
+        .slice(0, 12);
+
+      // These are explicitly neutral semantic surfaces. Petrol headers, brand
+      // blocks, seller imagery and dialogs are intentionally excluded.
+      const neutralSelectors = [
+        ".rawaj-more-v2__secondary > a.rawaj-color-card",
+        ".rawaj-account-collection-v3 > section:first-child",
+        ".rawaj-account-collection-v3 > div.text-center",
+        ".rawaj-admin-module-intro",
+        ".rawaj-promotion-card .rawaj-boost-option",
+        "[data-price-offer-panel='true']",
+      ].join(", ");
+      const unexpectedDarkSurfaces = Array.from(document.querySelectorAll(neutralSelectors))
+        .filter(visible)
+        .filter((element) => luminance(effectiveBackground(element)) < 0.13)
+        .map((element) => `${describe(element)} has unexpectedly dark neutral surface`)
+        .slice(0, 12);
+
       const footer = document.querySelector(".rawaj-site-footer");
       const dock = document.querySelector(".rawaj-mobile-dock");
       let footerDockOverlap = false;
@@ -350,6 +414,9 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         graphicalContrastFailures,
         footerDockOverlap,
         activeNavigationIssues,
+        overlappingActions,
+        clippedHeadings,
+        unexpectedDarkSurfaces,
       };
     },
     { mobile: options.mobile },
@@ -386,5 +453,11 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
   expect(
     report.activeNavigationIssues,
     `${options.label}: visible primary navigation needs one active state`,
+  ).toEqual([]);
+  expect(report.overlappingActions, `${options.label}: independent buttons must not overlap`).toEqual([]);
+  expect(report.clippedHeadings, `${options.label}: primary headings must not be clipped`).toEqual([]);
+  expect(
+    report.unexpectedDarkSurfaces,
+    `${options.label}: designated light semantic surfaces must not inherit dark paints`,
   ).toEqual([]);
 }
