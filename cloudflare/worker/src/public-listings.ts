@@ -436,7 +436,10 @@ function addJsonTextFilter(
 ): void {
   if (!value) return;
   const expressions = keys.map((key) => `json_extract(l.details, '$.${key}')`);
-  where.push(`COALESCE(${expressions.join(", ")}) = ?`);
+  const expression = expressions.length === 1
+    ? expressions[0]
+    : `COALESCE(${expressions.join(", ")})`;
+  where.push(`${expression} = ?`);
   values.push(value);
 }
 
