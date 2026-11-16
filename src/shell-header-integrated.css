@@ -55,25 +55,27 @@
 
 .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant] .rawaj-brand-lockup__wordmark {
   display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.12rem;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0;
 }
 
 .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant] .rawaj-brand-lockup__name {
   color: var(--rawaj-header-title) !important;
-  font-size: clamp(1.25rem, 5.2vw, 1.85rem) !important;
+  font-size: clamp(0.875rem, 4vw, 1.125rem) !important;
   font-weight: 800 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant] .rawaj-brand-lockup__latin {
   color: var(--rawaj-header-ink) !important;
-  font-size: 0.5625rem !important;
-  letter-spacing: 0.12em !important;
+  font-size: clamp(0.875rem, 4vw, 1.125rem) !important;
+  letter-spacing: normal !important;
+  text-transform: none;
 }
 
-.rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant] .rawaj-brand-divider {
-  display: none;
+.rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant] .rawaj-brand-lockup__separator {
+  color: var(--rawaj-header-ink);
+  font-size: 0.875rem;
 }
 
 .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
@@ -148,9 +150,30 @@
   }
 }
 
-@media (max-width: 360px) {
-  .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-shell-header__inner--brand {
+@media (max-width: 410px) {
+  .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+    .rawaj-shell-header__inner--brand {
     flex-wrap: wrap;
     column-gap: 0.25rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+    :is(.rawaj-shell-header__inner--context, .rawaj-shell-header__inner--workspace) {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    row-gap: 0.15rem !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+    .rawaj-shell-header__actions {
+    grid-column: 2;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+    .rawaj-shell-header__title:has(h1, p) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding-block-end: 0.35rem;
   }
 }

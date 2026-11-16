@@ -102,6 +102,13 @@ for (const language of ["ar", "en"] as const) {
       await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
       await expect(header).toHaveCSS("background-image", "none");
       await expect(header).toHaveCSS("border-bottom-width", "0px");
+      const brand = header.locator(".rawaj-brand-lockup__wordmark");
+      await expect(brand).toHaveText("رواج | Rawaj");
+      await expect(brand).toHaveCSS("flex-direction", "row");
+      await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute(
+        "content",
+        "رواج | Rawaj",
+      );
       const loginLabel = language === "ar" ? "تسجيل الدخول" : "Log in";
       const login = header.getByRole("link", { name: loginLabel });
       const label = login.locator(".rawaj-header-login-cta__label");
