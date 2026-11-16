@@ -14,6 +14,19 @@
   color: var(--account-ink);
   background: var(--account-canvas) !important;
 }
+/* /more uses the brand FloatingHeader, not the context PageHeader. The
+ * NotificationTrigger's "light" Tailwind variant inherited dark ink from
+ * the migrated ivory route against the petrol header, making its bell 1.93:1.
+ * Own its inverse pairing at the actual /more header source. */
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header .rawaj-shell-header__actions > .relative > button {
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 22%, transparent) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-petrol) !important;
+}
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header .rawaj-shell-header__actions > .relative > button > svg {
+  color: var(--rawaj-identity-ivory) !important;
+}
+
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2 {
   color: var(--account-ink);
   background: transparent;
