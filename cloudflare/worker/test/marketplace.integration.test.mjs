@@ -251,6 +251,16 @@ test("expired, pending, and rejected Search Boost states have zero default ranki
   }
 });
 
+test("public listing searches accept single-key property filters", async () => {
+  for (const filters of [
+    "taxonomyPropertyType=office",
+    "taxonomyPropertyType=house&taxonomyPropertyPurpose=rent",
+  ]) {
+    const result = await api(`/v1/listings?${filters}`);
+    assert.equal(result.response.status, 200);
+  }
+});
+
 test("default boosted cursor pagination is deterministic and produces no duplicates", async () => {
   const ids = [];
   let cursor = null;
