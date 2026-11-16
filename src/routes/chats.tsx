@@ -120,6 +120,7 @@ function ChatsPage() {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const messageStreamRef = useRef<HTMLDivElement | null>(null);
   const blockDialogRef = useRef<HTMLInputElement | null>(null);
+  const blockTriggerRef = useRef<HTMLButtonElement | null>(null);
   const liveProfileId = auth.profile?.id ?? null;
   const accountStateMatches = profileIdRef.current === liveProfileId;
   const accountConversations = accountStateMatches ? conversations : EMPTY_CONVERSATIONS;
@@ -173,7 +174,12 @@ function ChatsPage() {
   }, [selectedConversation?.id, isConversationPanelVisible, visibleMessages.length, loadingMessages]);
 
   useEffect(() => {
-    if (blockDialogOpen) blockDialogRef.current?.focus();
+    if (!blockDialogOpen) return;
+    const frame = window.requestAnimationFrame(() => blockDialogRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(frame);
+      blockTriggerRef.current?.focus();
+    };
   }, [blockDialogOpen]);
 
   useLiveChatWorkspace({
@@ -925,6 +931,7 @@ function ChatsPage() {
                     </div>
                     <button
                       type="button"
+                      ref={blockTriggerRef}
                       onClick={() => setBlockDialogOpen(true)}
                       disabled={blocking}
                       aria-busy={blocking}
@@ -1253,7 +1260,26 @@ function ChatsPage() {
             <form role="dialog" aria-modal="true" aria-labelledby="rawaj-block-confirm-title"
               className="rawaj-block-confirm-dialog w-full max-w-md rounded-2xl border border-[#E3E7E4] bg-white p-5 text-[#152322] shadow-xl"
               onSubmit={(event) => { event.preventDefault(); void handleBlock(); }}
-              onKeyDown={(event) => { if (event.key === "Escape" && !blocking) setBlockDialogOpen(false); }}>
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !blocking) {
+                  event.preventDefault();
+                  setBlockDialogOpen(false);
+                }
+                if (event.key !== "Tab") return;
+                const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
+                  "input:not(:disabled), button:not(:disabled)",
+                ));
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (first && last && event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last.focus();
+                } else if (first && last && !event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }}
+              style={{ maxHeight: "calc(var(--app-viewport-height, 100dvh) - 1rem)", overflowY: "auto" }}>
               <h2 id="rawaj-block-confirm-title" className="text-base font-extrabold">
                 {text("تأكيد حظر المستخدم", "Confirm block user")}
               </h2>
