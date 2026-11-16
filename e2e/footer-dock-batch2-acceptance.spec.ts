@@ -13,7 +13,7 @@ for (const language of ["ar", "en"] as const) {
       await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1);
       const footer = page.locator(".rawaj-site-footer");
       await expect(footer).toBeVisible();
-      await expect(footer).toHaveCSS("background-color", "rgb(7, 56, 54)");
+      await expect(footer).toHaveCSS("background-color", "rgb(16, 63, 66)");
       await expect(footer).toHaveCSS("background-image", "none");
       const dock = page.locator(".rawaj-bottom-nav-shell");
       await expect(dock).toBeVisible();
