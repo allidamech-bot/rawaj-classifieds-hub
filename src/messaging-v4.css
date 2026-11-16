@@ -463,17 +463,29 @@
   }
 
   .rawaj-messaging-v4 .rawaj-message-composer > div:last-of-type {
-    grid-template-columns: repeat(3, minmax(2.75rem, auto)) minmax(0, 1fr);
+    display: grid;
+    grid-template-columns: repeat(3, 3rem) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.4rem;
+    align-items: stretch;
   }
-
-  .rawaj-messaging-v4 .rawaj-message-composer textarea,
+  .rawaj-messaging-v4 .rawaj-message-composer > div:last-of-type > textarea {
+    grid-column: 4;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 3rem;
+    height: 3rem;
+    resize: none;
+  }
   .rawaj-messaging-v4 .rawaj-message-composer__send {
     grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 3rem;
+    position: static;
   }
-  .rawaj-messaging-v4 .rawaj-message-composer__send {
-    position: sticky;
-    bottom: 0;
-    z-index: 1;
+  .rawaj-messaging-v4 .rawaj-message-composer > div:last-of-type > button,
+  .rawaj-messaging-v4 .rawaj-message-composer > div:last-of-type > :is(button, div) {
+    min-width: 0;
   }
 }
 
