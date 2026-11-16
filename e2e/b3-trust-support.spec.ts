@@ -17,7 +17,10 @@ for (const language of ["ar", "en"] as const) {
       );
       if (path === "/support") {
         // Support now has a standalone light heading rather than the retired trust hero.
-        await expect(page.locator("main.rawaj-support-v2 h1")).toHaveCSS("color", "rgb(21, 35, 34)");
+        await expect(page.locator("main.rawaj-support-v2 h1")).toHaveCSS(
+          "color",
+          "rgb(19, 39, 36)",
+        );
       }
       if (path === "/safety") {
         const hero = page.locator("main .rawaj-trust-hero");
