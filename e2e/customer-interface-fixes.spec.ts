@@ -35,6 +35,7 @@ for (const language of ["ar", "en"] as const) {
       const dialog = page.getByRole("dialog", { name: /اقتراح أو شكوى|suggestion or complaint/i });
       await expect(dialog).toBeVisible();
       await expect(dialog).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect(dialog).toHaveCSS("background-image", "none");
       await expect(dialog).toHaveCSS("color", "rgb(21, 35, 34)");
       const close = dialog.getByRole("button", { name: language === "ar" ? "إغلاق" : "Close" });
       await expect(close).toHaveCSS("color", "rgb(16, 63, 66)");
