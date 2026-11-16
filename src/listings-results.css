@@ -18,8 +18,8 @@
 
 /* Search route ownership. The approved identity is inherited from the foundation;
  * retired route-specific palettes are removed at their original sources. */
-main.rawaj-search-results-v1,
-.rawaj-filter-sheet[data-design-palette="ivory"] {
+main.rawaj-search-results-v1[data-design-palette="ivory"],
+.rawaj-filter-sheet[data-design-palette="ivory"][data-filter-state="draft"] {
   /* The light discovery route owns true-white cards, empty states and filter surfaces.
    * The shared ivory palette still applies to other pages. */
   --rawaj-card-background: #ffffff;
