@@ -186,16 +186,16 @@ function AdminListingModerationConsole() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-3xl bg-primary p-5 text-primary-foreground shadow-premium">
+      <section className="rawaj-admin-module-intro rounded-2xl p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold text-primary-foreground/70">
+            <p className="rawaj-admin-module-intro__eyebrow text-xs font-bold">
               {text("عمليات الإعلانات", "Listing operations")}
             </p>
-            <h2 className="mt-1 text-xl font-extrabold">
+            <h2 className="rawaj-admin-module-intro__title mt-1 text-xl font-extrabold">
               {text("وحدة قرارات الإعلانات", "Listing moderation console")}
             </h2>
-            <p className="mt-2 max-w-3xl text-xs leading-6 text-primary-foreground/80">
+            <p className="rawaj-admin-module-intro__description mt-2 max-w-3xl text-xs leading-6">
               {text(
                 "قرارات محمية، متزامنة مع أحدث نسخة من الإعلان، ومثبتة بسبب وسجل تدقيق.",
                 "Protected decisions pinned to the latest listing version, with a required reason and audit trail.",
@@ -206,7 +206,7 @@ function AdminListingModerationConsole() {
             type="button"
             onClick={() => void loadListings()}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-foreground/10 px-3 py-2 text-xs font-bold disabled:opacity-50 hairline"
+            className="rawaj-admin-module-intro__refresh inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-50"
           >
             <RefreshCw className="h-4 w-4" />
             {text("تحديث", "Refresh")}
