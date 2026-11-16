@@ -12,9 +12,14 @@ async function hydrated(page: Page, path: string) {
 
 for (const language of ["ar", "en"] as const) {
   for (const path of ["/", "/support"] as const) {
-    test(`feedback dialog: ${path} ${language} contrast, focus, validation and close`, async ({ page }, testInfo) => {
+    test(`feedback dialog: ${path} ${language} contrast, focus, validation and close`, async ({
+      page,
+    }, testInfo) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
-      await page.setViewportSize({ width: testInfo.project.name.startsWith("mobile") ? 390 : 1200, height: 640 });
+      await page.setViewportSize({
+        width: testInfo.project.name.startsWith("mobile") ? 390 : 1200,
+        height: 640,
+      });
       await page.route("**/v1/feedback/config", async (route) => {
         await route.fulfill({ status: 200, json: { data: { enabled: true } } });
       });
@@ -42,7 +47,10 @@ for (const language of ["ar", "en"] as const) {
       await expect(dialog.getByRole("status")).toContainText(language === "ar" ? "4" : "4");
       expect(submissions).toBe(0);
       await expect(dialog).toBeVisible();
-      await dialog.screenshot({ path: testInfo.outputPath(`feedback-${path.slice(1) || "home"}-${language}.png`), animations: "disabled" });
+      await dialog.screenshot({
+        path: testInfo.outputPath(`feedback-${path.slice(1) || "home"}-${language}.png`),
+        animations: "disabled",
+      });
       await close.click();
       await expect(dialog).toHaveCount(0);
       await expect(entry).toBeFocused();
