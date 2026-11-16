@@ -196,7 +196,7 @@ function PromotionRequestPage() {
     if (hasPendingForSelectedListing) {
       setNotice(
         text(
-          "يوجد طلب ترويج أو Boost قيد المراجعة لهذا الإعلان حالياً.",
+          "يوجد طلب ترويج أو تعزيز ظهور قيد المراجعة لهذا الإعلان حالياً.",
           "A promotion or Boost request for this listing is already under review.",
         ),
       );
@@ -313,7 +313,7 @@ function PromotionRequestPage() {
               </h1>
               <p className="mt-2 max-w-2xl text-xs leading-6 text-[var(--rawaj-identity-ivory)]">
                 {text(
-                  "للمساحات والحملات استخدم هذا الطلب. لرفع ترتيب إعلانك تلقائياً استخدم Boost.",
+                  "للمساحات والحملات استخدم هذا الطلب. لرفع ترتيب إعلانك تلقائياً استخدم تعزيز الظهور.",
                   "Use this request for placements and campaigns. Use Boost for automatic ranking lift.",
                 )}
               </p>
@@ -324,7 +324,7 @@ function PromotionRequestPage() {
             className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--rawaj-identity-champagne)] px-4 py-2 text-xs font-black text-[var(--rawaj-identity-petrol)]"
           >
             <Rocket className="h-4 w-4" />
-            Boost
+            {text("تعزيز الظهور", "Boost")}
           </Link>
         </section>
 
@@ -373,7 +373,7 @@ function PromotionRequestPage() {
               {hasPendingForSelectedListing ? (
                 <p className="mt-3 rounded-xl bg-[var(--rawaj-badge-warning-surface)] p-3 text-xs font-semibold text-[var(--rawaj-badge-warning-ink)]">
                   {text(
-                    "يوجد طلب ترويج أو Boost قيد المراجعة لهذا الإعلان.",
+                    "يوجد طلب ترويج أو تعزيز ظهور قيد المراجعة لهذا الإعلان.",
                     "A promotion or Boost request is already under review for this listing.",
                   )}
                 </p>
@@ -488,7 +488,7 @@ function PromotionRequestPage() {
           <h2 className="text-sm font-black">{text("طلبات الترويج", "Promotion requests")}</h2>
           <p className="mt-1 text-[11px] text-muted-foreground">
             {text(
-              "طلبات Boost تبقى في صفحة Boost ولا نكررها هنا.",
+              "طلبات تعزيز الظهور تبقى في صفحة تعزيز الظهور ولا نكررها هنا.",
               "Boost orders remain on the Boost page and are not duplicated here.",
             )}
           </p>
