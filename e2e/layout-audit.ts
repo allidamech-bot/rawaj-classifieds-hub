@@ -34,14 +34,14 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       const body = document.body;
       const viewportWidth = window.innerWidth;
 
-      function visible(element: Element): element is HTMLElement {
-        if (!(element instanceof HTMLElement)) return false;
+      function visible(element: Element): element is HTMLElement | SVGElement {
+        if (!(element instanceof HTMLElement || element instanceof SVGElement)) return false;
         const style = window.getComputedStyle(element);
         if (
           style.display === "none" ||
           style.visibility === "hidden" ||
           Number(style.opacity) === 0 ||
-          element.hidden
+          element.hasAttribute("hidden")
         ) {
           return false;
         }
@@ -246,6 +246,12 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       )
         .filter(visible)
         .filter((element) => !isDisabled(element))
+        // A glyph accompanied by visible text can be decorative; an icon-only
+        // action must have an independently discernible symbol.
+        .filter((element) => {
+          const action = element.closest("button, a[href], [role='button']");
+          return action instanceof HTMLElement && !/[\p{L}]/u.test(action.innerText);
+        })
         .flatMap((element) => {
           const foreground = parseColor(window.getComputedStyle(element).color);
           if (!foreground) return [];
@@ -259,26 +265,40 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       // Only compare sibling actions to avoid intentional nested clickable cards.
       const siblingActions = Array.from(
         document.querySelectorAll<HTMLElement>("main button, main a[href], main [role='button']"),
-      ).filter(visible).filter((element) => !isDisabled(element));
+      )
+        .filter(visible)
+        .filter((element) => !isDisabled(element));
       const overlappingActions: string[] = [];
       for (let i = 0; i < siblingActions.length && overlappingActions.length < 12; i++) {
         const first = siblingActions[i];
-        const a = first.getBoundingClientRect();
         for (let j = i + 1; j < siblingActions.length; j++) {
           const second = siblingActions[j];
           if (first.parentElement !== second.parentElement) continue;
-          const b = second.getBoundingClientRect();
-          const overlapWidth = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-          const overlapHeight = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-          const smallerArea = Math.min(a.width * a.height, b.width * b.height);
+          // Favorite overlays are separate, keyboard-accessible controls above
+          // their own listing-card link, not two accidentally colliding actions.
+          const card = first.closest(".rawaj-signature-latest-card");
           if (
-            overlapWidth >= 8 &&
-            overlapHeight >= 8 &&
-            overlapWidth * overlapHeight > smallerArea * 0.15
+            card &&
+            card === second.closest(".rawaj-signature-latest-card") &&
+            (first.matches(".rawaj-signature-latest-card__favorite") ||
+              second.matches(".rawaj-signature-latest-card__favorite"))
           ) {
-            overlappingActions.push(
-              `${describe(first)} overlaps ${describe(second)} by ${overlapWidth.toFixed(0)}x${overlapHeight.toFixed(0)}px`,
-            );
+            continue;
+          }
+          // Inline links can wrap onto separate lines: boundingClientRect
+          // encloses all fragments and produces false intersections.
+          const fragmentsA = Array.from(first.getClientRects());
+          const fragmentsB = Array.from(second.getClientRects());
+          const overlapping = fragmentsA.some((a) =>
+            fragmentsB.some((b) => {
+              const width = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+              const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+              const area = Math.min(a.width * a.height, b.width * b.height);
+              return width >= 8 && height >= 8 && width * height > area * 0.15;
+            }),
+          );
+          if (overlapping) {
+            overlappingActions.push(`${describe(first)} overlaps ${describe(second)}`);
             if (overlappingActions.length >= 12) break;
           }
         }
@@ -289,12 +309,23 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       )
         .filter(visible)
         .filter((element) => {
+          if (element.classList.contains("sr-only")) return false;
           const style = getComputedStyle(element);
-          return (
-            style.overflowY !== "visible" &&
-            style.webkitLineClamp === "none" &&
-            element.clientHeight > 0 &&
-            element.scrollHeight > element.clientHeight + 3
+          if (
+            style.overflowY === "visible" ||
+            style.webkitLineClamp !== "none" ||
+            element.scrollHeight <= element.clientHeight + 6
+          ) {
+            return false;
+          }
+          // scrollHeight includes font line-box metrics and can exceed the
+          // element without clipping any painted glyphs. Measure the actual
+          // rendered text fragments against the element's visible box.
+          const bounds = element.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return Array.from(range.getClientRects()).some(
+            (rect) => rect.top < bounds.top - 8 || rect.bottom > bounds.bottom + 8,
           );
         })
         .map(describe)
@@ -306,6 +337,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         ".rawaj-more-v2__secondary > a.rawaj-color-card",
         ".rawaj-account-collection-v3 > section:first-child",
         ".rawaj-account-collection-v3 > div.text-center",
+        ".rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface)",
         ".rawaj-admin-module-intro",
         ".rawaj-promotion-card .rawaj-boost-option",
         "[data-price-offer-panel='true']",
@@ -454,8 +486,13 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
     report.activeNavigationIssues,
     `${options.label}: visible primary navigation needs one active state`,
   ).toEqual([]);
-  expect(report.overlappingActions, `${options.label}: independent buttons must not overlap`).toEqual([]);
-  expect(report.clippedHeadings, `${options.label}: primary headings must not be clipped`).toEqual([]);
+  expect(
+    report.overlappingActions,
+    `${options.label}: independent buttons must not overlap`,
+  ).toEqual([]);
+  expect(report.clippedHeadings, `${options.label}: primary headings must not be clipped`).toEqual(
+    [],
+  );
   expect(
     report.unexpectedDarkSurfaces,
     `${options.label}: designated light semantic surfaces must not inherit dark paints`,

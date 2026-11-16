@@ -76,8 +76,8 @@ test.describe("authenticated rendered visual QA", () => {
       if (route.name === "saved-searches" || route.name === "favorites") {
         const intro = page.locator("main.rawaj-account-collection-v3 > section:first-child");
         await expect(intro).toBeVisible();
-        const accent = await intro.evaluate((element) =>
-          getComputedStyle(element, "::after").backgroundImage,
+        const accent = await intro.evaluate(
+          (element) => getComputedStyle(element, "::after").backgroundImage,
         );
         expect(accent, `${route.name}: retired chromatic accent must be removed`).toBe("none");
         const emptyState = page.locator("main.rawaj-account-collection-v3 > div.text-center");
