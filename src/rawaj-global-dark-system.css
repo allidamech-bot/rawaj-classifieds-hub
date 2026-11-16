@@ -352,7 +352,7 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 /* Dialogs, sheets, menus, and popovers */
-.rawaj-app-shell [role="dialog"]:not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog),
+.rawaj-app-shell [role="dialog"]:not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog):not(.rawaj-notification-preview),
 .rawaj-app-shell [role="menu"],
 .rawaj-app-shell [role="listbox"],
 .rawaj-app-shell [data-radix-popper-content-wrapper] > *,

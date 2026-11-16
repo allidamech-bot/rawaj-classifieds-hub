@@ -11,6 +11,9 @@ on:
       - "src/components/FeedbackWidget.tsx"
       - "src/components/feedback/feedback-dialog.css"
       - "src/components/shell/FloatingHeader.tsx"
+      - "src/components/NotificationTrigger.tsx"
+      - "src/components/notification-preview.css"
+      - "e2e/home-notification-overlay.spec.ts"
       - "src/features/communication/ConversationPriceOffers.tsx"
       - "src/spatial-app-shell.css"
       - "src/rawaj-chromatic-premium-system-v18-chats.css"
@@ -49,7 +52,18 @@ jobs:
         run: >-
           npx playwright test e2e/b3-communication-family.spec.ts
           e2e/customer-interface-fixes.spec.ts e2e/authenticated-price-offers-journey.spec.ts
+          e2e/home-notification-overlay.spec.ts
           --project=mobile-webkit --workers=1
+      - name: Verify listing creation on iPhone WebKit
+        env:
+          RAWAJ_E2E_USE_FIXTURES: "1"
+          VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
+          VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/listing-creation
+        run: >-
+          npx playwright test e2e/authenticated-critical-journey.spec.ts
+          --project=mobile-webkit --workers=1 --grep "creates a draft"
+          --output=test-results/listing-creation
       - name: Preserve WebKit screenshots and failures
         if: always()
         uses: actions/upload-artifact@v4

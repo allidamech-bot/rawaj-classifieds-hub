@@ -351,7 +351,7 @@ body {
 }
 
 /* Popovers, menus, dialogs, sheets and tooltips. */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog):not(.rawaj-notification-preview)) {
   border-color: rgba(216,174,95,.2) !important;
   color: var(--rawaj-v17-text) !important;
   background:

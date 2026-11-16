@@ -60,6 +60,7 @@ test.describe("authenticated launch-critical journey", () => {
       timeout: 30_000,
     });
 
+    await expectListingActionsAtEnd(page);
     await chooseFirstFinalCategory(page);
     await page
       .getByPlaceholder(/مثال: سيارة كيا سيراتو|Example: Kia Cerato/i)
@@ -69,12 +70,15 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ })).toBeVisible(
       { timeout: 20_000 },
     );
+    await expectListingActionsAtEnd(page);
     await page.locator('input[type="file"][accept*="image"]').setInputFiles({
       name: "rawaj-e2e.png",
       mimeType: "image/png",
       buffer: VALID_PNG,
     });
     await expect(page.locator(".rawaj-studio-media-card")).toHaveCount(1, { timeout: 15_000 });
+    const removePhoto = page.getByRole("button", { name: /^(Remove photo|إزالة الصورة)$/ });
+    expect((await removePhoto.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
     await page
       .locator("main textarea:visible")
@@ -82,6 +86,7 @@ test.describe("authenticated launch-critical journey", () => {
       .fill("إعلان تجريبي محلي للتحقق من المسودة والصورة والإرسال إلى المراجعة.");
     await completeVisibleDetailControls(page);
     await advanceUntilPriceAndLocation(page);
+    await expectListingActionsAtEnd(page);
 
     const priceInput = page.locator('main input[inputmode="numeric"]:visible').first();
     await expect(priceInput).toBeVisible();
@@ -96,12 +101,31 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(
       page.getByRole("heading", { name: /^(Review before submitting|راجع الإعلان قبل الإرسال)$/ }),
     ).toBeVisible({ timeout: 25_000 });
+    await expectListingActionsAtEnd(page);
+    if ((page.viewportSize()?.width ?? 1024) < 768) {
+      for (const label of await page.locator(".rawaj-studio-steps__copy strong").all()) {
+        await expect(label).toHaveCSS("white-space", "normal");
+        expect(
+          await label.evaluate((element) => element.scrollWidth - element.clientWidth),
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+    await expect(page.locator(".rawaj-studio-autosave")).toHaveAttribute("data-state", "saved");
+    const firstSubmissionRequest = authorizedPrivateRequests.length;
     await page.getByRole("button", { name: /^(Submit for review|إرسال للمراجعة)$/ }).click();
 
     const success = page.locator(".rawaj-studio-success[role='status']");
     await expect(success).toContainText(/تم إرسال الإعلان للمراجعة|Listing sent for review/i, {
       timeout: 45_000,
     });
+    const submissionRequests = authorizedPrivateRequests.slice(firstSubmissionRequest);
+    expect(
+      submissionRequests.filter((request) => /^(POST|PATCH|PUT) \/v1\/listings/.test(request)),
+    ).toEqual([
+      expect.stringMatching(/^POST \/v1\/listings\/[^/]+\/images$/),
+      expect.stringMatching(/^PATCH \/v1\/listings\/[^/]+\/images$/),
+      expect.stringMatching(/^PATCH \/v1\/listings\/[^/]+$/),
+    ]);
 
     const shareDialog = page.getByRole("dialog");
     if (await shareDialog.isVisible().catch(() => false)) {
@@ -171,6 +195,12 @@ async function waitForHydration(page: Page): Promise<void> {
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1, {
     timeout: 30_000,
   });
+}
+
+async function expectListingActionsAtEnd(page: Page) {
+  const actionBar = page.locator(".rawaj-studio-action-bar");
+  await expect(actionBar).toHaveCSS("position", "static");
+  await expect(page.locator(".rawaj-studio-trust-strip ~ .rawaj-studio-action-bar")).toHaveCount(1);
 }
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {

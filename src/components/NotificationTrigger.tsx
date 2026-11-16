@@ -14,6 +14,7 @@ import { notificationIsWithinReadCutoff } from "@/lib/notification-integrity";
 import { useUiPreferences, type Language } from "@/lib/ui-preferences";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 import { useAuth } from "@/lib/use-auth";
+import "./notification-preview.css";
 
 export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark" }) {
   const auth = useAuth();
@@ -258,7 +259,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
         <div
           role="dialog"
           aria-label={text("الإشعارات", "Notifications")}
-          className="fixed inset-x-3 top-16 z-40 rounded-[var(--rawaj-radius-surface)] bg-card p-3 text-start text-foreground shadow-[var(--rawaj-shadow-overlay)] hairline sm:absolute sm:inset-x-auto sm:end-0 sm:top-12 sm:z-30 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
+          className="rawaj-notification-preview fixed inset-x-3 top-16 z-40 rounded-[var(--rawaj-radius-surface)] p-3 text-start sm:absolute sm:inset-x-auto sm:end-0 sm:top-12 sm:z-30 sm:w-80 sm:max-w-[calc(100vw-2rem)]"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="text-xs font-extrabold">{text("الإشعارات", "Notifications")}</h2>
@@ -266,7 +267,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
               type="button"
               onClick={() => void markAll()}
               disabled={unreadCount === 0}
-              className="inline-flex min-h-11 items-center gap-1 rounded-[var(--rawaj-radius-button)] bg-muted-surface px-3 text-[10px] font-bold disabled:opacity-50"
+              className="rawaj-notification-preview__control inline-flex min-h-11 items-center gap-1 rounded-[var(--rawaj-radius-button)] px-3 text-[10px] font-bold"
             >
               <CheckCheck className="h-3 w-3" />
               {text("قراءة الكل", "Mark all read")}
@@ -274,15 +275,15 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
           </div>
 
           {loading ? (
-            <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+            <p className="rawaj-notification-preview__empty rounded-xl p-3 text-xs">
               {text("جاري تحميل الإشعارات.", "Loading notifications.")}
             </p>
           ) : error ? (
-            <p className="rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+            <p className="rawaj-notification-preview__error rounded-xl p-3 text-xs font-semibold">
               {error}
             </p>
           ) : notifications.length === 0 ? (
-            <p className="rounded-xl bg-muted-surface p-3 text-xs text-muted-foreground">
+            <p className="rawaj-notification-preview__empty rounded-xl p-3 text-xs">
               {text("لا توجد إشعارات حالياً.", "No notifications yet.")}
             </p>
           ) : (
@@ -296,13 +297,12 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                     onClick={
                       canOpenTarget ? () => void openNotificationTarget(notification) : undefined
                     }
-                    className={`rounded-xl p-3 hairline ${
-                      notification.readAt ? "bg-card" : "bg-muted-surface"
-                    } ${canOpenTarget ? "cursor-pointer" : ""}`}
+                    data-unread={!notification.readAt}
+                    className={`rawaj-notification-preview__item rounded-xl p-3 ${canOpenTarget ? "cursor-pointer" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-xs font-bold">
+                        <h3 className="break-words text-xs font-bold">
                           {language === "en"
                             ? notification.titleEn || notification.titleAr
                             : notification.titleAr}
@@ -310,7 +310,7 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                         {(language === "en"
                           ? notification.bodyEn || notification.bodyAr
                           : notification.bodyAr) && (
-                          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                          <p className="rawaj-notification-preview__detail mt-1 break-words text-[11px] leading-5">
                             {language === "en"
                               ? notification.bodyEn || notification.bodyAr
                               : notification.bodyAr}
@@ -324,13 +324,13 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
                             event.stopPropagation();
                             void markOne(notification.id);
                           }}
-                          className="min-h-11 shrink-0 rounded-[var(--rawaj-radius-button)] bg-card px-2 text-[10px] font-bold hairline"
+                          className="rawaj-notification-preview__control min-h-11 shrink-0 rounded-[var(--rawaj-radius-button)] px-2 text-[10px] font-bold"
                         >
                           {text("تمت القراءة", "Read")}
                         </button>
                       )}
                     </div>
-                    <p className="mt-2 text-[10px] text-muted-foreground">
+                    <p className="rawaj-notification-preview__detail mt-2 text-[10px]">
                       {openingTarget
                         ? text("جارٍ فتح الهدف...", "Opening target...")
                         : formatNotificationDate(notification.createdAt, language)}
@@ -341,11 +341,11 @@ export function NotificationTrigger({ tone = "light" }: { tone?: "light" | "dark
             </div>
           )}
 
-          <div className="mt-3 border-t border-border/70 pt-3">
+          <div className="rawaj-notification-preview__footer mt-3 border-t pt-3">
             <button
               type="button"
               onClick={openNotificationCenter}
-              className="min-h-11 w-full rounded-[var(--rawaj-radius-button)] bg-muted-surface px-3 text-xs font-bold transition-colors hover:bg-muted"
+              className="rawaj-notification-preview__center min-h-11 w-full rounded-[var(--rawaj-radius-button)] px-3 text-xs font-bold"
             >
               {text("فتح مركز الإشعارات", "Open notification center")}
             </button>

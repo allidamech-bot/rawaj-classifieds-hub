@@ -4,11 +4,11 @@
  * for legacy UI primitives that predate data-slot attributes.
  */
 
-body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"]):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
+body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"]):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog):not(.rawaj-notification-preview)) {
   color: var(--rawaj-v17-text, #f7f3ed) !important;
 }
 
-body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"]))) :is([role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
+body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"]))) :is([role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog):not(.rawaj-notification-preview)) {
   border-color: rgba(216, 174, 95, 0.2) !important;
   background:
     radial-gradient(circle at 100% 0%, rgba(216,174,95,.07), transparent 36%),
