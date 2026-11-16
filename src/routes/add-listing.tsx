@@ -133,6 +133,13 @@ function AddListingPage() {
   const [loading, setLoading] = useState(true);
   const [setupError, setSetupError] = useState<ClassifiedsError | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitPhase, setSubmitPhase] = useState<"draft" | "photos" | "review">("draft");
+  const submitProgressLabel =
+    submitPhase === "draft"
+      ? text("جارٍ حفظ الإعلان…", "Saving listing…")
+      : submitPhase === "photos"
+        ? text("جارٍ تجهيز الصور…", "Preparing photos…")
+        : text("جارٍ الإرسال للمراجعة…", "Sending for review…");
   const [stepErrors, setStepErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -183,6 +190,7 @@ function AddListingPage() {
   const autosaveRequestIdRef = useRef(0);
   const autosaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const lastAutosaveSignatureRef = useRef("");
+  const draftReadyForReviewRef = useRef(false);
   const setupRequestIdRef = useRef(0);
   const dynamicSchemaRequestIdRef = useRef(0);
   const localDraftTimerRef = useRef<number | null>(null);
@@ -703,7 +711,7 @@ function AddListingPage() {
   }
 
   async function removeSelectedImage(id: string) {
-    if (imageRemovalInFlightRef.current.has(id)) return;
+    if (submittingRef.current || imageRemovalInFlightRef.current.has(id)) return;
     const entry = selectedImagesRef.current.find((item) => item.id === id);
     if (!entry) return;
     clearImageUploadOperation(id);
@@ -1156,6 +1164,8 @@ function AddListingPage() {
         setAutosaveState("saving");
         const draft = draftListingRef.current;
         if (draft && draft.status !== "draft") return;
+        lastAutosaveSignatureRef.current = "";
+        draftReadyForReviewRef.current = false;
 
         const result = draft
           ? await updateOwnerListing(profileId, draft.id, autosavePayload)
@@ -1169,6 +1179,7 @@ function AddListingPage() {
         }
 
         let persistedDraft = result.data;
+        let readyForReview = true;
         draftListingRef.current = persistedDraft;
         setDraftListing(persistedDraft);
         setCreatedListingId(persistedDraft.id);
@@ -1183,6 +1194,9 @@ function AddListingPage() {
             setAutosaveError(taxonomyResult.error.message);
             return;
           }
+          readyForReview = taxonomyResult.ok;
+        } else if (taxonomyNodeId) {
+          readyForReview = false;
         }
 
         if (dynamicSchemaActive && dynamicSchema && taxonomyNodeIdRef.current === taxonomyNodeId) {
@@ -1201,13 +1215,16 @@ function AddListingPage() {
             ...persistedDraft,
             updatedAt: attributeResult.data.updatedAt,
           };
+          readyForReview &&= attributeResult.data.completeness.complete;
+        } else if (dynamicSchemaActive) {
+          readyForReview = false;
         }
-
-        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
 
         draftListingRef.current = persistedDraft;
         setDraftListing(persistedDraft);
         lastAutosaveSignatureRef.current = signature;
+        draftReadyForReviewRef.current = readyForReview;
+        if (requestId !== autosaveRequestIdRef.current || submittingRef.current) return;
         setLastAutosavedAt(persistedDraft.updatedAt || new Date().toISOString());
         setAutosaveState("saved");
         setAutosaveError(null);
@@ -1288,6 +1305,7 @@ function AddListingPage() {
 
   async function submitListing() {
     if (submittingRef.current) return;
+    if (imageRemovalInFlightRef.current.size > 0 || imageReorderInFlightRef.current) return;
     if (step !== 3 || !validateCurrentStep(3)) {
       submittingRef.current = false;
       setSubmitting(false);
@@ -1301,8 +1319,8 @@ function AddListingPage() {
     }
     submittingRef.current = true;
     setSubmitting(true);
+    setSubmitPhase("draft");
     setAutosaveState("idle");
-    await autosaveQueueRef.current;
     setSubmitMessage(null);
 
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -1312,6 +1330,7 @@ function AddListingPage() {
     window.addEventListener("beforeunload", beforeUnload);
 
     try {
+      await autosaveQueueRef.current;
       const normalizedPhone = normalizeContactValue(phone);
       const normalizedWhatsapp = normalizeContactValue(whatsapp);
       if (contact.phone && !isSafePhoneValue(normalizedPhone)) {
@@ -1351,17 +1370,35 @@ function AddListingPage() {
 
       const payload = buildCurrentListingPayload(details);
       const currentDraft = draftListingRef.current;
-      const result = currentDraft
-        ? await updateOwnerListing(auth.profile?.id ?? null, currentDraft.id, payload)
-        : await createOwnerDraftListing(auth.profile?.id ?? null, payload);
+      const signature = JSON.stringify({
+        listing: payload,
+        attributes: dynamicSchemaActive ? normalizedDynamicAttributes : null,
+      });
+      const alreadySaved =
+        currentDraft?.status === "draft" &&
+        draftReadyForReviewRef.current &&
+        lastAutosaveSignatureRef.current === signature;
+      if (!alreadySaved) {
+        lastAutosaveSignatureRef.current = "";
+        draftReadyForReviewRef.current = false;
+      }
+      const result = alreadySaved
+        ? { ok: true as const, data: currentDraft }
+        : currentDraft
+          ? await updateOwnerListing(auth.profile?.id ?? null, currentDraft.id, payload)
+          : await createOwnerDraftListing(auth.profile?.id ?? null, payload);
 
       if (!result.ok) {
         setSubmitMessage(result.error.message);
         return;
       }
       let listingDraft = result.data;
+      let readyForReview = true;
+      draftListingRef.current = listingDraft;
+      setDraftListing(listingDraft);
+      setCreatedListingId(listingDraft.id);
 
-      if (canonicalTaxonomyNodeId) {
+      if (!alreadySaved && canonicalTaxonomyNodeId) {
         const taxonomyResult = await assignOwnerListingTaxonomy(
           auth.profile?.id ?? null,
           listingDraft.id,
@@ -1371,9 +1408,10 @@ function AddListingPage() {
           setSubmitMessage(taxonomyResult.error.message);
           return;
         }
+        readyForReview = taxonomyResult.ok;
       }
 
-      if (dynamicSchemaActive && dynamicSchema) {
+      if (!alreadySaved && dynamicSchemaActive && dynamicSchema) {
         const attributeResult = await replaceOwnerListingAttributes(
           auth.profile?.id ?? null,
           listingDraft.id,
@@ -1416,7 +1454,9 @@ function AddListingPage() {
 
       draftListingRef.current = listingDraft;
       setDraftListing(listingDraft);
-      setCreatedListingId(listingDraft.id);
+      lastAutosaveSignatureRef.current = signature;
+      draftReadyForReviewRef.current = readyForReview;
+      setSubmitPhase("photos");
 
       const imageErrors: string[] = [];
       const cleanupErrors: string[] = [];
@@ -1562,6 +1602,7 @@ function AddListingPage() {
         return;
       }
 
+      setSubmitPhase("review");
       const submitResult = await submitOwnerListingForReview(
         auth.profile?.id ?? null,
         listingDraft.id,
@@ -1749,7 +1790,7 @@ function AddListingPage() {
         />
         {restorableLocalDraft ? (
           <section
-            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.15rem] border border-brand-orange/20 bg-brand-orange/8 p-4"
+            className="rawaj-create-draft mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.15rem] border p-4"
             aria-labelledby="rawaj-local-draft-title"
           >
             <div className="min-w-0">
@@ -1766,6 +1807,7 @@ function AddListingPage() {
             <div className="flex shrink-0 flex-wrap gap-2">
               <button
                 type="button"
+                disabled={submitting}
                 onClick={restoreLocalDraft}
                 className="rawaj-button-primary min-h-10 px-3 text-xs"
               >
@@ -1773,8 +1815,9 @@ function AddListingPage() {
               </button>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={discardLocalDraft}
-                className="min-h-10 rounded-xl bg-muted-surface px-3 text-xs font-bold"
+                className="rawaj-create-draft__discard min-h-11 rounded-xl border px-3 text-xs font-bold"
               >
                 {text("تجاهل المسودة", "Discard")}
               </button>
@@ -1795,8 +1838,9 @@ function AddListingPage() {
                     : text("تحقق نهائي", "Final verification"),
           }))}
           current={step}
-          maxReachable={furthestStep}
+          maxReachable={submitting ? -1 : furthestStep}
           onStepChange={(nextStep) => {
+            if (submittingRef.current) return;
             if (nextStep > step) {
               const validationStep = nextStep === step + 1 && nextStep < 3 ? step : 3;
               if (!validateCurrentStep(validationStep)) return;
@@ -1926,8 +1970,8 @@ function AddListingPage() {
                   <Card
                     title={text("صور الإعلان", "Listing photos")}
                     description={text(
-                      "الصور اختيارية لكنها تساعد المشتري على فهم الإعلان بسرعة.",
-                      "Photos are optional, but they help buyers understand the listing quickly.",
+                      "أضف صورة واحدة على الأقل. الصورة الأولى ستظهر كغلاف للإعلان.",
+                      "Add at least one photo. The first photo is used as the listing cover.",
                     )}
                   >
                     <label className="rawaj-studio-media-picker">
@@ -1936,7 +1980,7 @@ function AddListingPage() {
                         {text("اختر صور الإعلان", "Choose listing photos")}
                       </span>
                       <span className="mt-1 text-[11px]">
-                        {text("حتى 6 صور · 5MB للصورة", "Up to 6 photos · 5MB each")}
+                        {text("حتى 6 صور · 8MB للصورة", "Up to 6 photos · 8MB each")}
                       </span>
                       <input
                         type="file"
@@ -1967,7 +2011,10 @@ function AddListingPage() {
                             </span>
                           )}
                           {preview.state !== "pending" && (
-                            <div className="absolute inset-x-0 bottom-0 bg-primary/85 px-2 py-1 text-center text-[10px] font-bold text-primary-foreground">
+                            <div
+                              className="rawaj-create-photo-status px-2 py-1 text-center text-xs font-bold"
+                              data-state={preview.state}
+                            >
                               {preview.state === "uploading"
                                 ? text("جارٍ الرفع", "Uploading")
                                 : preview.state === "uploaded"
@@ -1978,7 +2025,9 @@ function AddListingPage() {
                           <button
                             type="button"
                             disabled={
-                              removingImageIds.has(preview.id) || preview.state === "uploading"
+                              submitting ||
+                              removingImageIds.has(preview.id) ||
+                              preview.state === "uploading"
                             }
                             onClick={() => void removeSelectedImage(preview.id)}
                             className="rawaj-icon-button absolute end-2 top-2 h-8 w-8 bg-card/90 text-primary backdrop-blur disabled:opacity-60"
@@ -1987,7 +2036,7 @@ function AddListingPage() {
                             <X className="h-4 w-4" />
                           </button>
                           <div className="p-2">
-                            <div className="mb-2 flex items-center gap-1">
+                            <div className="mb-2 flex flex-wrap items-center gap-1">
                               <button
                                 type="button"
                                 disabled={
@@ -2300,7 +2349,7 @@ function AddListingPage() {
                       value={contactMethodsReviewLabel(contact, text)}
                     />
                   </div>
-                  <ListingStudioMessage tone="success">
+                  <ListingStudioMessage>
                     {text(
                       "سيُرسل الإعلان للمراجعة، ويظهر للعامة بعد الموافقة.",
                       "The listing will be sent for review and become public after approval.",
@@ -2309,10 +2358,13 @@ function AddListingPage() {
                 </Card>
               )}
 
-              <div className="rawaj-studio-action-bar">
+              <p className="sr-only" role="status">
+                {submitting ? submitProgressLabel : ""}
+              </p>
+              <div className="rawaj-studio-action-bar" data-review={step === 3 || undefined}>
                 <button
                   type="button"
-                  disabled={step === 0}
+                  disabled={step === 0 || submitting}
                   onClick={() => setStep((value) => Math.max(0, value - 1))}
                   className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"
                 >
@@ -2330,20 +2382,20 @@ function AddListingPage() {
                 ) : (
                   <button
                     type="button"
-                    disabled={!canSubmit || submitting}
+                    disabled={
+                      !canSubmit || submitting || reorderingImages || removingImageIds.size > 0
+                    }
                     aria-busy={submitting}
                     onClick={() => void submitListing()}
                     className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
                   >
-                    {submitting
-                      ? text("جارٍ الإرسال...", "Submitting...")
-                      : text("إرسال للمراجعة", "Submit for review")}
+                    {submitting ? submitProgressLabel : text("إرسال للمراجعة", "Submit for review")}
                   </button>
                 )}
               </div>
 
               {submitMessage && (
-                <div className="rawaj-studio-success" role="status" aria-live="polite">
+                <div className="rawaj-create-submission-error rounded-xl border p-3" role="alert">
                   <p>{submitMessage}</p>
                   {createdListingId && (
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -2407,7 +2459,9 @@ function AddListingPage() {
                   location={
                     locationLabel ||
                     district ||
-                    (governorate ? governorateName(governorate.id, governorate.nameAr, language) : "")
+                    (governorate
+                      ? governorateName(governorate.id, governorate.nameAr, language)
+                      : "")
                   }
                   imageCount={selectedImages.length}
                   text={text}

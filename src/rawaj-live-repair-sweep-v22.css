@@ -177,5 +177,17 @@
     strong {
     font-size: max(0.6rem, 9.5px) !important;
   }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-steps__copy strong {
+    overflow: visible !important;
+    font-size: 0.75rem !important;
+    overflow-wrap: anywhere;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
 }
 

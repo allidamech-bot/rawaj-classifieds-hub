@@ -75,6 +75,8 @@ test.describe("authenticated launch-critical journey", () => {
       buffer: VALID_PNG,
     });
     await expect(page.locator(".rawaj-studio-media-card")).toHaveCount(1, { timeout: 15_000 });
+    const removePhoto = page.getByRole("button", { name: /^(Remove photo|إزالة الصورة)$/ });
+    expect((await removePhoto.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
     await page
       .locator("main textarea:visible")
@@ -96,12 +98,31 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(
       page.getByRole("heading", { name: /^(Review before submitting|راجع الإعلان قبل الإرسال)$/ }),
     ).toBeVisible({ timeout: 25_000 });
+    if ((page.viewportSize()?.width ?? 1024) < 768) {
+      await expect(page.locator(".rawaj-studio-action-bar")).toHaveCSS("position", "static");
+      for (const label of await page.locator(".rawaj-studio-steps__copy strong").all()) {
+        await expect(label).toHaveCSS("white-space", "normal");
+        expect(
+          await label.evaluate((element) => element.scrollWidth - element.clientWidth),
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+    await expect(page.locator(".rawaj-studio-autosave")).toHaveAttribute("data-state", "saved");
+    const firstSubmissionRequest = authorizedPrivateRequests.length;
     await page.getByRole("button", { name: /^(Submit for review|إرسال للمراجعة)$/ }).click();
 
     const success = page.locator(".rawaj-studio-success[role='status']");
     await expect(success).toContainText(/تم إرسال الإعلان للمراجعة|Listing sent for review/i, {
       timeout: 45_000,
     });
+    const submissionRequests = authorizedPrivateRequests.slice(firstSubmissionRequest);
+    expect(
+      submissionRequests.filter((request) => /^(POST|PATCH|PUT) \/v1\/listings/.test(request)),
+    ).toEqual([
+      expect.stringMatching(/^POST \/v1\/listings\/[^/]+\/images$/),
+      expect.stringMatching(/^PATCH \/v1\/listings\/[^/]+\/images$/),
+      expect.stringMatching(/^PATCH \/v1\/listings\/[^/]+$/),
+    ]);
 
     const shareDialog = page.getByRole("dialog");
     if (await shareDialog.isVisible().catch(() => false)) {
