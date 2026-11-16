@@ -122,7 +122,9 @@ test("iPhone-sized conversation has reachable Send and tools, secondary offers, 
   await expect(send).toBeEnabled();
   await expect(send).toHaveCSS("background-color", "rgb(16, 63, 66)");
   // Deterministic visualViewport shrink approximation; not real iOS keyboard acceptance.
-  await page.evaluate(() => document.documentElement.style.setProperty("--app-viewport-height", "480px"));
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty("--app-viewport-height", "480px"),
+  );
   await input.focus();
   const bounds = await page.evaluate(() => {
     const root = document.querySelector(".rawaj-message-workspace");
@@ -140,14 +142,20 @@ test("iPhone-sized conversation has reachable Send and tools, secondary offers, 
   expect(bounds.send).toBeTruthy();
   expect(bounds.send!.bottom).toBeLessThanOrEqual(bounds.workspace!.bottom + 1);
   expect(bounds.stream!.bottom).toBeLessThanOrEqual(bounds.send!.top + 1);
-  await page.screenshot({ path: testInfo.outputPath("active-conversation-after.png"), animations: "disabled" });
+  await page.screenshot({
+    path: testInfo.outputPath("active-conversation-after.png"),
+    animations: "disabled",
+  });
   await page.getByRole("button", { name: /حظر المستخدم|Block user/i }).click();
   const blockDialog = page.getByRole("dialog", { name: /تأكيد حظر المستخدم|Confirm block user/i });
   await expect(blockDialog).toBeVisible();
   await expect(blockDialog.getByLabel(/سبب الحظر|Block reason/i)).toBeVisible();
   await blockDialog.getByRole("button", { name: /إلغاء|Cancel/i }).click();
   await expect(blockDialog).toHaveCount(0);
-  await page.getByRole("button", { name: /المحادثات|Conversations/i }).first().click();
+  await page
+    .getByRole("button", { name: /المحادثات|Conversations/i })
+    .first()
+    .click();
   await expect(page.locator(".rawaj-message-workspace")).toHaveAttribute("data-view", "list");
   await expect(dock).toBeVisible();
 });
