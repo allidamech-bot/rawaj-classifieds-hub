@@ -994,17 +994,15 @@ function ChatsPage() {
                     {text("عروض السعر وسجل التفاوض", "Price offers and history")}
                   </button>
                 </div>
-                {offersOpen ? (
-                  <div id="rawaj-conversation-offers" className="rawaj-message-offers-region">
-                    <ConversationPriceOffers
-                      conversationId={selectedConversation.id}
-                      enabled={
-                        selectedConversation.status === "active" &&
-                        Boolean(selectedConversation.listingId)
-                      }
-                    />
-                  </div>
-                ) : null}
+                <ConversationPriceOffers
+                  key={selectedConversation.id}
+                  conversationId={selectedConversation.id}
+                  open={offersOpen}
+                  enabled={
+                    selectedConversation.status === "active" &&
+                    Boolean(selectedConversation.listingId)
+                  }
+                />
 
                 <div
                   className="rawaj-message-stream"

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { FilterBottomSheet } from "@/features/search/FilterBottomSheet";
@@ -728,7 +728,8 @@ function ListingsPage() {
   const draftCategorySearchValue = draftCategoryId ?? categorySearchValue;
   const draftSelectedCategory = draftCategorySearchValue
     ? categories.find(
-        (category) => category.id === draftCategorySearchValue || category.slug === draftCategorySearchValue,
+        (category) =>
+          category.id === draftCategorySearchValue || category.slug === draftCategorySearchValue,
       )
     : undefined;
   const taxonomySubcategoryId = taxonomyListingSearch?.taxonomyLegacySubcategoryId;
@@ -893,9 +894,8 @@ function ListingsPage() {
     setDraftCategoryId(search.taxonomy ? undefined : (search.category ?? undefined));
   }
 
-  function openFilters() {
-    filterTriggerRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  function openFilters(event: MouseEvent<HTMLButtonElement>) {
+    filterTriggerRef.current = event.currentTarget;
     setFiltersOpen(true);
   }
 

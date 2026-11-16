@@ -1,5 +1,5 @@
 import { Check, Clock3, HandCoins, RefreshCw, RotateCcw, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   createConversationPriceOffer,
   fetchConversationPriceOffers,
@@ -14,9 +14,14 @@ import { useUiPreferences } from "@/lib/ui-preferences";
 interface ConversationPriceOffersProps {
   conversationId: string;
   enabled: boolean;
+  open: boolean;
 }
 
-export function ConversationPriceOffers({ conversationId, enabled }: ConversationPriceOffersProps) {
+export function ConversationPriceOffers({
+  conversationId,
+  enabled,
+  open,
+}: ConversationPriceOffersProps) {
   const { language, text } = useUiPreferences();
   const [snapshot, setSnapshot] = useState<ConversationPriceOffersSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +30,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
   const [amountInput, setAmountInput] = useState("");
   const [counterInput, setCounterInput] = useState("");
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const mutationInFlightRef = useRef(false);
   const requestGenerationRef = useRef(0);
 
   const offers = snapshot?.items ?? [];
@@ -33,38 +39,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
     [offers],
   );
 
-  useEffect(() => {
-    const generation = ++requestGenerationRef.current;
-    setSnapshot(null);
-    setLoading(true);
-    setError("");
-    setNotice("");
-    setAmountInput("");
-    setCounterInput("");
-    setBusyAction(null);
-    void fetchConversationPriceOffers(conversationId)
-      .then((result) => {
-        if (generation !== requestGenerationRef.current) return;
-        if (result.ok) setSnapshot(result.data);
-        else setError(result.error.message);
-      })
-      .catch((caught) => {
-        if (generation !== requestGenerationRef.current) return;
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : text("تعذر تحميل عروض السعر.", "Could not load price offers."),
-        );
-      })
-      .finally(() => {
-        if (generation === requestGenerationRef.current) setLoading(false);
-      });
-    return () => {
-      requestGenerationRef.current += 1;
-    };
-  }, [conversationId, text]);
-
-  async function reload() {
+  const reload = useCallback(async () => {
     const generation = ++requestGenerationRef.current;
     setLoading(true);
     setError("");
@@ -83,15 +58,27 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
     } finally {
       if (generation === requestGenerationRef.current) setLoading(false);
     }
-  }
+  }, [conversationId, text]);
+
+  useEffect(() => {
+    if (open && !mutationInFlightRef.current) void reload();
+  }, [open, reload]);
+
+  useEffect(() => {
+    return () => {
+      requestGenerationRef.current += 1;
+    };
+  }, []);
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
     const amount = normalizedAmount(amountInput);
-    if (!amount || busyAction) {
+    if (!amount || loading || mutationInFlightRef.current) {
       if (!amount) setError(text("أدخل مبلغ عرض صحيحاً.", "Enter a valid offer amount."));
       return;
     }
+    mutationInFlightRef.current = true;
+    const generation = requestGenerationRef.current;
     setBusyAction("create");
     setError("");
     setNotice("");
@@ -101,6 +88,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
         amount,
         requestId: crypto.randomUUID(),
       });
+      if (generation !== requestGenerationRef.current) return;
       if (!result.ok) {
         setError(result.error.message);
         return;
@@ -109,12 +97,13 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
       setNotice(text("تم إرسال عرض السعر.", "Price offer sent."));
       await reload();
     } finally {
+      mutationInFlightRef.current = false;
       setBusyAction(null);
     }
   }
 
   async function handleTransition(offer: ListingPriceOffer, action: ListingPriceOfferAction) {
-    if (busyAction) return;
+    if (loading || mutationInFlightRef.current) return;
     const amount = action === "counter" ? normalizedAmount(counterInput) : undefined;
     if (action === "counter" && !amount) {
       setError(text("أدخل مبلغ العرض المضاد.", "Enter a valid counteroffer amount."));
@@ -122,6 +111,8 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
     }
     const confirmation = transitionConfirmation(action, text);
     if (!confirm(confirmation)) return;
+    mutationInFlightRef.current = true;
+    const generation = requestGenerationRef.current;
     setBusyAction(`${offer.id}:${action}`);
     setError("");
     setNotice("");
@@ -133,6 +124,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
         expectedUpdatedAt: offer.updatedAt,
         requestId: crypto.randomUUID(),
       });
+      if (generation !== requestGenerationRef.current) return;
       if (!result.ok) {
         setError(result.error.message);
         return;
@@ -141,6 +133,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
       setNotice(transitionSuccess(action, text));
       await reload();
     } finally {
+      mutationInFlightRef.current = false;
       setBusyAction(null);
     }
   }
@@ -148,7 +141,9 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
   const canCreateInitialOffer =
     enabled && snapshot?.listingAvailable === true && snapshot.role === "buyer" && !pendingOffer;
 
-  return (
+  if (!open) return null;
+
+  const panel = (
     <section
       data-price-offer-panel="true"
       aria-label={text("عروض السعر", "Price offers")}
@@ -208,7 +203,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
               key={offer.id}
               offer={offer}
               language={language}
-              busy={Boolean(busyAction)}
+              busy={loading || Boolean(busyAction)}
               busyAction={busyAction}
               enabled={enabled}
               listingAvailable={snapshot?.listingAvailable === true}
@@ -255,7 +250,7 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
           <button
             type="submit"
             data-price-offer-action="create"
-            disabled={Boolean(busyAction)}
+            disabled={loading || Boolean(busyAction)}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-extrabold text-primary-foreground disabled:opacity-60"
           >
             <HandCoins className="h-4 w-4" />
@@ -276,6 +271,12 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
         </p>
       ) : null}
     </section>
+  );
+
+  return (
+    <div id="rawaj-conversation-offers" className="rawaj-message-offers-region">
+      {panel}
+    </div>
   );
 }
 

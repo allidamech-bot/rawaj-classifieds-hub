@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEventHandler } from "react";
 import type { ListingsSort, ListingsView } from "@/features/listings/listings-search-schema";
 
 const RECENT_SEARCHES_KEY = "rawaj_recent_listing_searches_v1";
@@ -63,7 +63,7 @@ interface SearchResultsToolbarProps {
   onSortChange: (sort: ListingsSort) => void;
   view: ListingsView;
   onViewChange: (view: ListingsView) => void;
-  onOpenFilters: () => void;
+  onOpenFilters: MouseEventHandler<HTMLButtonElement>;
   text: (ar: string, en: string) => string;
   savedSearch?: typeof emptySavedSearchParams;
 }

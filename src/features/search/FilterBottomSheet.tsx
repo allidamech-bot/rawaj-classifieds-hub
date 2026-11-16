@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
   BottomSheet,
   BottomSheetContent,
@@ -29,6 +29,8 @@ export function FilterBottomSheet({
   children,
   text,
 }: FilterBottomSheetProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
     return beginFilterDraftSession();
@@ -43,6 +45,10 @@ export function FilterBottomSheet({
       handleOnly
     >
       <BottomSheetContent
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          closeButtonRef.current?.focus();
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           onReturnFocus();
@@ -72,6 +78,7 @@ export function FilterBottomSheet({
           <div className="rawaj-filter-sheet__header-actions">
             <button
               type="button"
+              ref={closeButtonRef}
               onClick={() => onOpenChange(false)}
               aria-label={text("إغلاق الفلاتر", "Close filters")}
             >

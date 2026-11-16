@@ -60,6 +60,66 @@ for (const language of ["ar", "en"] as const) {
   }
 }
 
+test("clearing feedback fields discards the saved draft", async ({ page }) => {
+  await page.route("**/v1/feedback/config", (route) =>
+    route.fulfill({ json: { data: { enabled: true } } }),
+  );
+  await hydrated(page, "/support");
+  const trigger = page.locator("[data-feedback-trigger] button");
+  const subject = page.getByLabel(/العنوان|Subject/);
+  await trigger.click();
+  await subject.fill("Fixture draft to discard");
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("rawaj-feedback-draft-v1")))
+    .toContain("Fixture draft to discard");
+  await subject.clear();
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("rawaj-feedback-draft-v1")), {
+      timeout: 3_000,
+    })
+    .toBeNull();
+  await page.reload();
+  await trigger.click();
+  await expect(subject).toHaveValue("");
+});
+
+test("signed-in feedback sends one authorized submission and clears the draft", async ({
+  page,
+}) => {
+  expect(process.env.RAWAJ_E2E_USE_FIXTURES).toBe("1");
+  await page.addInitScript(() => localStorage.setItem("rawaj:e2e:firebase-user", "{}"));
+  await page.route("**/v1/feedback/config", (route) =>
+    route.fulfill({ json: { data: { enabled: true } } }),
+  );
+  let submissions = 0;
+  await page.route("**/v1/feedback", async (route) => {
+    const request = route.request();
+    submissions += 1;
+    expect(new URL(request.url()).hostname).toBe("127.0.0.1");
+    expect(request.method()).toBe("POST");
+    expect(request.headers().authorization).toBe("Bearer rawaj-e2e-firebase-token");
+    expect(request.postDataJSON()).toMatchObject({
+      subject: "Fixture submission",
+      message: "This submission stays in the fixture.",
+      context: { path: "/" },
+    });
+    await route.fulfill({ status: 201, json: { data: { id: "fixture-feedback" } } });
+  });
+  await hydrated(page, "/");
+  await expect(page.locator(".rawaj-header-account")).toBeVisible();
+  await page.locator("[data-feedback-trigger] button").click();
+  const dialog = page.getByRole("dialog", { name: /اقتراح أو شكوى|suggestion or complaint/i });
+  await dialog.getByLabel(/العنوان|Subject/).fill("Fixture submission");
+  await dialog.locator("textarea").fill("This submission stays in the fixture.");
+  await dialog.getByRole("button", { name: /إرسال للإدارة|Send to management/i }).click();
+  await expect(dialog.getByRole("status")).toContainText(
+    /وصلتنا ملاحظتك|We received your feedback/,
+  );
+  await expect(dialog.getByLabel(/العنوان|Subject/)).toHaveValue("");
+  expect(submissions).toBe(1);
+  expect(await page.evaluate(() => localStorage.getItem("rawaj-feedback-draft-v1"))).toBeNull();
+});
+
 test("mobile Home has one Categories entry in the bottom dock, not a duplicate header hamburger", async ({
   page,
 }) => {
