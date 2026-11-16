@@ -41,7 +41,8 @@ for (const language of ["ar", "en"] as const) {
       await expect(close).toHaveCSS("color", "rgb(16, 63, 66)");
       const selected = dialog.locator('[aria-pressed="true"]');
       await expect(selected).toHaveCSS("background-color", "rgb(234, 241, 238)");
-      const newCategory = dialog.locator('[aria-pressed="false"]').first();
+      const newCategory = dialog.locator(".rawaj-feedback-dialog__category").nth(1);
+      await expect(newCategory).toHaveAttribute("aria-pressed", "false");
       await newCategory.click();
       await expect(newCategory).toHaveAttribute("aria-pressed", "true");
       await dialog.getByRole("button", { name: /إرسال للإدارة|Send to management/i }).click();
