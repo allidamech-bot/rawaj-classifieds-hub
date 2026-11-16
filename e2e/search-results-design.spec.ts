@@ -12,15 +12,15 @@ for (const language of ["ar", "en"]) {
       await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#073836");
       await page.evaluate(() => document.fonts.ready);
       const main = page.locator("main.rawaj-search-results-v1");
-      await expect(main).toHaveCSS("background-color", "rgb(249, 240, 228)");
-      await expect(main.locator("h1")).toHaveCSS("color", "rgb(7, 56, 54)");
+      await expect(main).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect(main.locator("h1")).toHaveCSS("color", "rgb(16, 63, 66)");
       await expect(main.locator(".rawaj-search-toolbar__saved")).toBeInViewport();
       const cards = main.locator(".rawaj-adaptive-card");
       await expect(cards.first()).toBeVisible();
-      await expect(cards.first()).toHaveCSS("background-color", "rgb(255, 250, 243)");
+      await expect(cards.first()).toHaveCSS("background-color", "rgb(255, 255, 255)");
       await expect(cards.first().locator(".rawaj-adaptive-card__title")).toHaveCSS(
         "color",
-        "rgb(19, 39, 36)",
+        "rgb(21, 35, 34)",
       );
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
@@ -34,11 +34,11 @@ for (const language of ["ar", "en"]) {
       await main.getByRole("button", { name: /فتح الفلاتر|Open filters/ }).click();
       const sheet = page.locator(".rawaj-filter-sheet");
       await expect(sheet).toBeVisible();
-      await expect(sheet).toHaveCSS("background-color", "rgb(255, 250, 243)");
+      await expect(sheet).toHaveCSS("background-color", "rgb(255, 255, 255)");
       const apply = sheet.getByRole("button", {
         name: /تطبيق وعرض النتائج|Apply and show results/,
       });
-      await expect(apply).toHaveCSS("background-color", "rgb(7, 56, 54)");
+      await expect(apply).toHaveCSS("background-color", "rgb(16, 63, 66)");
       await expect(apply).toBeInViewport();
       await expect(
         sheet.getByRole("button", { name: /إغلاق الفلاتر|Close filters/ }),
@@ -132,7 +132,7 @@ for (const state of ["empty", "error"] as const) {
       await expect(page.locator(".rawaj-search-empty-state")).toBeVisible();
       await expect(page.locator(".rawaj-search-empty-state")).toHaveCSS(
         "background-color",
-        "rgb(255, 250, 243)",
+        "rgb(255, 255, 255)",
       );
     } else {
       await expect(
