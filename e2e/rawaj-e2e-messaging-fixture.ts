@@ -3,6 +3,7 @@ import type { Plugin } from "vite";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
 const RESET_HEADER = "x-rawaj-e2e-reset";
+const SCOPE_HEADER = "x-rawaj-e2e-messaging-scope";
 const RESET_PATH = "/__rawaj_e2e__/messaging/reset";
 const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
 const LISTING_ID = "00000000-0000-4000-8000-000000000042";
@@ -40,7 +41,7 @@ interface FixtureOffer {
 
 type OfferRole = "buyer" | "seller";
 
-export function createRawajE2eMessagingFixturePlugin(): Plugin {
+export function createRawajE2eMessagingFixturePlugin(scope = ""): Plugin {
   const messages: FixtureMessage[] = [];
   const sentByRequestId = new Map<string, FixtureMessage>();
   const offers: FixtureOffer[] = [];
@@ -67,10 +68,11 @@ export function createRawajE2eMessagingFixturePlugin(): Plugin {
   resetFixture();
 
   return {
-    name: "rawaj-e2e-messaging-fixture",
+    name: `rawaj-e2e-messaging-fixture${scope ? `-${scope}` : ""}`,
     apply: "serve",
     configureServer(server) {
       server.middlewares.use(async (request, response, next) => {
+        if ((request.headers[SCOPE_HEADER] ?? "") !== scope) return next();
         const method = request.method ?? "GET";
         const url = new URL(request.url ?? "/", "http://127.0.0.1");
         const path = url.pathname;

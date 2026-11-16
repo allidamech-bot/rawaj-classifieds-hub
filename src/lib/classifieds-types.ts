@@ -64,6 +64,7 @@ export interface ClassifiedCategory {
   id: string;
   slug: string;
   nameAr: string;
+  nameEn?: string | null;
   hintAr: string | null;
   placeholder: PlaceholderType;
   sortOrder: number;

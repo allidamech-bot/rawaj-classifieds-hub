@@ -46,6 +46,7 @@ export default defineConfig({
           createRawajE2eSavedDiscoveryFixturePlugin(),
           createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
+          createRawajE2eMessagingFixturePlugin("price-offers"),
           createRawajE2eImageOrderFixturePlugin(),
           createRawajE2eOwnerListingLifecycleFixturePlugin(),
           createRawajE2ePrivateFixturePlugin(),

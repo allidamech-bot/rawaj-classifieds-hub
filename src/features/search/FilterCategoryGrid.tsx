@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ClassifiedCategory } from "@/lib/classifieds-types";
-import { categoryName } from "@/lib/i18n";
+import { localizedCategoryName } from "@/lib/i18n";
 
 const categoryIcons: Record<string, LucideIcon> = {
   car: Car,
@@ -73,7 +73,7 @@ export function FilterCategoryGrid({
             <span>
               <Icon aria-hidden="true" />
             </span>
-            <strong>{categoryName(category.id, category.nameAr, language)}</strong>
+            <strong>{localizedCategoryName(category, language)}</strong>
           </button>
         );
       })}

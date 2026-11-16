@@ -34,6 +34,12 @@ for (const language of ["ar", "en"]) {
       await main.getByRole("button", { name: /فتح الفلاتر|Open filters/ }).click();
       const sheet = page.locator(".rawaj-filter-sheet");
       await expect(sheet).toBeVisible();
+      await expect(
+        sheet.getByRole("button", {
+          name:
+            language === "ar" ? /^(السيارات|سيارات ومركبات)$/ : /^(Vehicles|Cars and Vehicles)$/,
+        }),
+      ).toBeVisible();
       await expect(sheet).toHaveCSS("background-color", "rgb(255, 255, 255)");
       const apply = sheet.getByRole("button", {
         name: /تطبيق وعرض النتائج|Apply and show results/,

@@ -2,9 +2,19 @@ import { expect, test, type Page, type Request } from "@playwright/test";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
 const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
+const FIXTURE_SCOPE = { "x-rawaj-e2e-messaging-scope": "price-offers" };
 
 test.describe.serial("authenticated structured price-offer journey", () => {
   test.setTimeout(90_000);
+
+  test.beforeEach(async ({ page }) => {
+    expect(process.env.RAWAJ_E2E_USE_FIXTURES).toBe("1");
+    // Browser Smoke shards also run chat journeys. Their resets must not share offer state.
+    await page.route(
+      /^http:\/\/127\.0\.0\.1:4173\/v1\/(conversations|offers|account\/(conversations|messages))(?:\/|\?|$)/,
+      (route) => route.fallback({ headers: { ...route.request().headers(), ...FIXTURE_SCOPE } }),
+    );
+  });
 
   test("seller reviews and accepts an incoming buyer offer", async ({ page }) => {
     const observed = observeOfferRequests(page);
@@ -78,7 +88,7 @@ test.describe.serial("authenticated structured price-offer journey", () => {
     });
     await page.route(`**/v1/conversations/${CONVERSATION_ID}/offers`, async (route) => {
       if (route.request().method() === "POST") await createGate;
-      await route.continue();
+      await route.fallback();
     });
     try {
       await create.click();
@@ -117,7 +127,7 @@ test.describe.serial("authenticated structured price-offer journey", () => {
 async function resetOffers(page: Page, role: "buyer" | "seller") {
   const response = await page.request.post(
     `/__rawaj_e2e__/messaging/reset?offerRole=${encodeURIComponent(role)}`,
-    { headers: { "x-rawaj-e2e-reset": "1" } },
+    { headers: { "x-rawaj-e2e-reset": "1", ...FIXTURE_SCOPE } },
   );
   expect(response.ok()).toBe(true);
 }

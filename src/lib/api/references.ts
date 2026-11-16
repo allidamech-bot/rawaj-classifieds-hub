@@ -20,6 +20,7 @@ export function mapCategory(row: Record<string, unknown>): ClassifiedCategory {
     id: rowString(row, "id"),
     slug: rowString(row, "slug"),
     nameAr: rowString(row, "name_ar"),
+    nameEn: rowNullableString(row, "name_en"),
     hintAr: rowNullableString(row, "hint_ar"),
     placeholder: normalizePlaceholder(rowString(row, "placeholder", "misc")),
     sortOrder: rowNumber(row, "sort_order"),

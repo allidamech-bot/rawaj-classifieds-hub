@@ -18,7 +18,7 @@ import {
   resolveCategoryFieldKind,
   type CategoryFieldKind,
 } from "@/lib/category-fields";
-import { categoryName, governorateName } from "@/lib/i18n";
+import { governorateName, localizedCategoryName } from "@/lib/i18n";
 import { fetchLocationPath, type CanonicalLocationNode } from "@/lib/api/location-taxonomy";
 import { createSeo } from "@/lib/seo";
 import {
@@ -538,7 +538,7 @@ function ListingsPage() {
     : selectedSubcategory
       ? subcategoryName(selectedSubcategory, language)
       : selectedCategory
-        ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+        ? localizedCategoryName(selectedCategory, language)
         : text("كل الإعلانات", "All listings");
   const fuelTypeLabels: Record<string, string> = {
     gasoline: text("بنزين", "Gasoline"),
@@ -1052,7 +1052,7 @@ function ListingsPage() {
           priceActive={Boolean(priceMin.trim() || priceMax.trim())}
           categoryLabel={
             selectedCategory
-              ? categoryName(selectedCategory.id, selectedCategory.nameAr, language)
+              ? localizedCategoryName(selectedCategory, language)
               : text("القسم", "Category")
           }
           categoryActive={Boolean(selectedCategory)}
@@ -1124,7 +1124,7 @@ function ListingsPage() {
                         : "bg-muted-surface text-foreground hover:bg-secondary"
                     }`}
                   >
-                    {categoryName(category.id, category.nameAr, language)}
+                    {localizedCategoryName(category, language)}
                   </Link>
                 ))}
               </div>
