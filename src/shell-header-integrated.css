@@ -107,7 +107,26 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
-  :is(.rawaj-shell-header__brand, .rawaj-shell-header__actions > a, .rawaj-shell-header__actions > button, .rawaj-shell-header__actions > .relative > button, .rawaj-shell-header__back):focus-visible {
+  :is(.rawaj-header-nav, .rawaj-header-nav-item, .rawaj-header-location, .rawaj-header-search) {
+  border-color: var(--rawaj-header-line) !important;
+  color: var(--rawaj-header-ink) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+  :is(.rawaj-header-nav-item, .rawaj-header-location, .rawaj-header-search):is([data-active="true"], :hover, :focus-visible) {
+  color: var(--rawaj-header-ink) !important;
+  background: var(--rawaj-header-hover) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+  :is(.rawaj-header-location, .rawaj-header-search) > svg {
+  color: var(--rawaj-header-ink) !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname] .rawaj-app-header.rawaj-shell-header[data-header-variant]
+  :is(.rawaj-header-nav-item, .rawaj-header-location, .rawaj-header-search, .rawaj-shell-header__brand, .rawaj-shell-header__actions > a, .rawaj-shell-header__actions > button, .rawaj-shell-header__actions > .relative > button, .rawaj-shell-header__back):focus-visible {
   outline: 2px solid var(--rawaj-header-ink) !important;
   outline-offset: 2px;
 }

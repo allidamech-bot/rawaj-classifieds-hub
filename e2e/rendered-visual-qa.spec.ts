@@ -107,10 +107,10 @@ for (const viewport of viewports) {
         });
 
         if (route.name === "categories") {
-          await expect(page.locator(".rawaj-shell-header--context")).toHaveCSS(
-            "background-color",
-            "rgb(16, 63, 66)",
-          );
+          const header = page.locator(".rawaj-shell-header--context");
+          await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+          await expect(header).toHaveCSS("background-image", "none");
+          await expect(header).toHaveCSS("border-bottom-width", "0px");
         }
         if (route.name === "add-listing") {
           const step = page.locator(
