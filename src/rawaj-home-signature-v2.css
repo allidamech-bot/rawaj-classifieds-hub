@@ -43,27 +43,6 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__name {
-  color: #fff0d7 !important;
-  font-size: clamp(1.4rem, 5vw, 2.3rem);
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
-  color: #fff0d7 !important;
-  font-size: 0.63rem;
-  letter-spacing: 0.24em;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup > span:nth-child(2) {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-divider {
-  display: none;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   :is(.rawaj-home-menu-action, .rawaj-header-account, .rawaj-header-admin, div > button[aria-haspopup="dialog"]),
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
@@ -142,14 +121,6 @@ html[lang="en"] .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header
 .rawaj-signature-home a {
   color: inherit;
   text-decoration: none;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta::before {
-  display: none;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta {
-  min-width: 44px !important;
 }
 
 .rawaj-signature-home :is(h2, h3) {
@@ -854,34 +825,6 @@ html[lang="en"] .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header
   .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-shell-header__actions {
     gap: 0.16rem;
   }
-
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup {
-    gap: 0.25rem;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-mark {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__name {
-    font-size: 1.2rem;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-brand-lockup__latin {
-    font-size: 0.52rem;
-    letter-spacing: 0.12em;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/"]
-    .rawaj-floating-header-shell:has(.rawaj-header-admin)
-    .rawaj-brand-lockup__latin {
-    display: none;
-  }
-
-  .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
-    display: none;
-  }
 }
 
 @media (max-width: 360px) {
@@ -923,11 +866,6 @@ html[lang="en"] .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header
   .rawaj-signature-categories__rail {
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
-}
-
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
-  /* Visible login text sits on a dark header action: preserve AA contrast. */
-  color: #fff6e7 !important;
 }
 
 /* The approved home composition remains unchanged. Ensure the bright

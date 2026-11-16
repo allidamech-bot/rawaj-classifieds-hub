@@ -224,8 +224,24 @@
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > :is(a, button) > svg {
   color: color-mix(in srgb, var(--account-ink) 68%, white) !important;
 }
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections button:has(.text-destructive) .text-destructive {
-  color: #a32e31 !important;
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button[data-tone="destructive"] {
+  border: 1px solid #edc1c6 !important;
+  border-radius: 0.75rem !important;
+  background: #fff1f1 !important;
+  color: #a32635 !important;
+}
+
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button[data-tone="destructive"]:is(:hover, :focus-visible) {
+  background: #ffe2e4 !important;
+}
+
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button[data-tone="destructive"] > span:first-child > span:first-child {
+  background: #a32635 !important;
+  color: #ffffff !important;
+}
+
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__sections > .rawaj-account-section > div > button[data-tone="destructive"] > span:first-child > span:last-child > span.text-destructive {
+  color: #a32635 !important;
 }
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] :is(a, button):focus-visible {
   outline: 3px solid var(--account-teal) !important;
@@ -264,7 +280,6 @@
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header :is(
   .rawaj-brand-lockup__name,
   .rawaj-brand-lockup__latin,
-  .rawaj-header-login-cta__label,
   .rawaj-shell-header__title
 ),
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-site-footer :is(

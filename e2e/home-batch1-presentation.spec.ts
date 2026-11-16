@@ -87,3 +87,65 @@ test("B1 narrow guest home search stays usable at 320px", async ({ page }) => {
   expect(widths.document).toBeLessThanOrEqual(widths.window + 2);
   expect(widths.search).toBeGreaterThan(200);
 });
+
+for (const language of ["ar", "en"] as const) {
+  test(`B1 guest header keeps the logo, wordmark and login legible in ${language}`, async ({
+    page,
+  }) => {
+    await page.addInitScript((locale) => localStorage.setItem("rawaj-language", locale), language);
+
+    for (const path of ["/", "/more"]) {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+
+      const header = page.locator(".rawaj-app-header");
+      const loginLabel = language === "ar" ? "تسجيل الدخول" : "Log in";
+      const login = header.getByRole("link", { name: loginLabel });
+      const label = login.locator(".rawaj-header-login-cta__label");
+      await expect(login).toHaveCSS("background-color", "rgb(255, 247, 231)");
+      await expect(label).toHaveCSS("color", "rgb(16, 63, 66)");
+
+      for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await expect(label).toBeVisible();
+        const metrics = await header.evaluate((node) => {
+          const mark = node.querySelector(".rawaj-brand-mark img")!.getBoundingClientRect();
+          const name = node.querySelector(".rawaj-brand-lockup__name")!.getBoundingClientRect();
+          const action = node.querySelector(".rawaj-header-login-cta")!.getBoundingClientRect();
+          return {
+            markWidth: mark.width,
+            nameOnLeft: name.right <= mark.left + 1,
+            hitHeight: action.height,
+            fits: [mark, name, action].every((rect) => rect.left >= 0 && rect.right <= innerWidth),
+            clear: action.right <= name.left || action.left >= mark.right,
+          };
+        });
+        expect(metrics.markWidth).toBeGreaterThanOrEqual(44);
+        expect(metrics.nameOnLeft).toBe(true);
+        expect(metrics.hitHeight).toBeGreaterThanOrEqual(44);
+        expect(metrics.fits).toBe(true);
+        expect(metrics.clear).toBe(true);
+      }
+    }
+  });
+
+  test(`B1 signed-in account distinguishes logout in ${language}`, async ({ page }) => {
+    test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local Firebase fixtures");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript((locale) => {
+      localStorage.setItem("rawaj-language", locale);
+      localStorage.setItem("rawaj:e2e:firebase-user", "{}");
+    }, language);
+
+    for (const path of ["/more", "/profile"]) {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
+      const logout = page.getByRole("button", {
+        name: language === "ar" ? /تسجيل الخروج/ : /Log out/,
+      });
+      await expect(logout).toBeVisible();
+      await expect(logout).toHaveCSS("background-color", "rgb(255, 241, 241)");
+      const title = path === "/more" ? logout.locator(".text-destructive").last() : logout;
+      await expect(title).toHaveCSS("color", "rgb(163, 38, 53)");
+    }
+  });
+}

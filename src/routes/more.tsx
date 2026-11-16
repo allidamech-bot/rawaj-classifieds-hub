@@ -417,7 +417,13 @@ function AccountItem({
   }
 
   return (
-    <button type="button" onClick={row.onClick} disabled={row.disabled} className={rowClass}>
+    <button
+      type="button"
+      onClick={row.onClick}
+      disabled={row.disabled}
+      data-tone={row.destructive ? "destructive" : undefined}
+      className={rowClass}
+    >
       {content}
     </button>
   );
