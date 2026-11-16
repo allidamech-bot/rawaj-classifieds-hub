@@ -1,4 +1,5 @@
 import type { Language } from "@/lib/ui-preferences";
+import type { ClassifiedCategory } from "@/lib/classifieds-types";
 import type { PriceType } from "@/types";
 
 export const categoryLabels: Record<string, { ar: string; en: string; hintEn?: string }> = {
@@ -63,6 +64,14 @@ export function categoryName(
   const label = categoryLabels[id];
   if (!label) return fallback ?? localized(language, "إعلان", "Listing");
   return language === "ar" ? label.ar : label.en;
+}
+
+export function localizedCategoryName(category: ClassifiedCategory, language: Language) {
+  return categoryName(
+    category.id,
+    language === "en" ? category.nameEn || category.nameAr : category.nameAr,
+    language,
+  );
 }
 
 export function categoryHint(id: string, fallbackAr: string, language: Language) {

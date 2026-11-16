@@ -1,4 +1,5 @@
 import { Camera, MapPin, Shapes, Sparkles, Tag, X } from "lucide-react";
+import type { MouseEventHandler } from "react";
 import type { CategoryFieldKind } from "@/lib/category-fields";
 
 interface QuickFilterRailProps {
@@ -11,7 +12,7 @@ interface QuickFilterRailProps {
   withPhotos: boolean;
   newestActive: boolean;
   hasActiveFilters: boolean;
-  onOpenFilters: () => void;
+  onOpenFilters: MouseEventHandler<HTMLButtonElement>;
   onNewest: () => void;
   onTogglePhotos: () => void;
   onReset: () => void;

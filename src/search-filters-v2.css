@@ -104,6 +104,12 @@
   display: none !important;
 }
 
+@media (width < 768px) {
+  .rawaj-filter-sheet[data-scroll-mode="content"] {
+    max-width: none;
+  }
+}
+
 .rawaj-filter-sheet[data-scroll-mode="content"] .rawaj-filter-sheet__header {
   position: relative;
   z-index: 3;

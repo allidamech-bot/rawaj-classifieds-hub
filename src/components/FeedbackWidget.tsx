@@ -102,6 +102,8 @@ export function FeedbackWidget({
     try {
       if (draft.subject.trim() || draft.message.trim()) {
         window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      } else {
+        window.localStorage.removeItem(DRAFT_KEY);
       }
     } catch {
       // Draft persistence is best-effort only.

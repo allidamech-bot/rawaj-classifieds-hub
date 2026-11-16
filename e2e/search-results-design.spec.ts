@@ -34,18 +34,31 @@ for (const language of ["ar", "en"]) {
       await main.getByRole("button", { name: /فتح الفلاتر|Open filters/ }).click();
       const sheet = page.locator(".rawaj-filter-sheet");
       await expect(sheet).toBeVisible();
+      await expect(
+        sheet.getByRole("button", {
+          name:
+            language === "ar" ? /^(السيارات|سيارات ومركبات)$/ : /^(Vehicles|Cars and Vehicles)$/,
+        }),
+      ).toBeVisible();
       await expect(sheet).toHaveCSS("background-color", "rgb(255, 255, 255)");
       const apply = sheet.getByRole("button", {
         name: /تطبيق وعرض النتائج|Apply and show results/,
       });
       await expect(apply).toHaveCSS("background-color", "rgb(16, 63, 66)");
       await expect(apply).toBeInViewport();
-      await expect(
-        sheet.getByRole("button", { name: /إغلاق الفلاتر|Close filters/ }),
-      ).toBeInViewport();
+      const close = sheet.getByRole("button", { name: /إغلاق الفلاتر|Close filters/ });
+      await expect(close).toBeInViewport();
       await sheet.evaluate(async (element) => {
         await Promise.all(element.getAnimations().map((a) => a.finished.catch(() => undefined)));
       });
+      const position = await sheet.evaluate((element) => {
+        const { left, right } = element.getBoundingClientRect();
+        return { left, rightInset: innerWidth - right };
+      });
+      expect.soft(position.left).toBeGreaterThanOrEqual(-1);
+      expect.soft(position.rightInset).toBeGreaterThanOrEqual(-1);
+      expect.soft(Math.abs(position.left - position.rightInset)).toBeLessThanOrEqual(1);
+      await expect.soft(close).toBeFocused({ timeout: 2_000 });
       const filtersPath = testInfo.outputPath(`filters-${language}-${width}.png`);
       await page.screenshot({ path: filtersPath });
       await testInfo.attach(`filters-${language}-${width}`, {
@@ -82,6 +95,14 @@ test("mobile price drafts apply to the URL and can be reset", async ({ page }) =
   await sheet.getByLabel(/السعر من|Price from/).fill("100");
   await sheet.getByLabel(/السعر إلى|Price to/).fill("500");
   await expect(page).not.toHaveURL(/price_min/);
+  await page.keyboard.press("Escape");
+  await expect(sheet).not.toBeVisible();
+  const open = page.getByRole("button", { name: /فتح الفلاتر|Open filters/ });
+  await expect(open).toBeFocused();
+  await open.press("Enter");
+  await expect(sheet.getByLabel(/السعر من|Price from/)).toHaveValue("");
+  await sheet.getByLabel(/السعر من|Price from/).fill("100");
+  await sheet.getByLabel(/السعر إلى|Price to/).fill("500");
   await sheet.getByRole("button", { name: /تطبيق وعرض النتائج|Apply and show results/ }).click();
   await expect(page).toHaveURL(/price_min=100/);
   await expect(page).toHaveURL(/price_max=500/);

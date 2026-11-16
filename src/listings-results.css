@@ -25,7 +25,6 @@ main.rawaj-search-results-v1[data-design-palette="ivory"],
   --rawaj-card-background: #ffffff;
   --muted-surface: var(--rawaj-muted-surface);
   --card-warm: #ffffff;
-  --rawaj-card-background: #ffffff;
   --rawaj-focus-ring: var(--rawaj-identity-teal);
   --rawaj-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-identity-teal) 18%, transparent);
   --color-background: var(--rawaj-page-background);

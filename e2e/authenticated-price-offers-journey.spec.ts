@@ -2,9 +2,22 @@ import { expect, test, type Page, type Request } from "@playwright/test";
 
 const FIXTURE_TOKEN = "rawaj-e2e-firebase-token";
 const CONVERSATION_ID = "00000000-0000-4000-8000-000000000041";
+function fixtureScope() {
+  return { "x-rawaj-e2e-messaging-scope": `price-offers-${test.info().project.name}` };
+}
 
 test.describe.serial("authenticated structured price-offer journey", () => {
   test.setTimeout(90_000);
+
+  test.beforeEach(async ({ page }) => {
+    expect(process.env.RAWAJ_E2E_USE_FIXTURES).toBe("1");
+    const scope = fixtureScope();
+    // Parallel chat journeys and browser projects each need independent fixture state.
+    await page.route(
+      /^http:\/\/127\.0\.0\.1:4173\/v1\/(conversations|offers|account\/(conversations|messages))(?:\/|\?|$)/,
+      (route) => route.fallback({ headers: { ...route.request().headers(), ...scope } }),
+    );
+  });
 
   test("seller reviews and accepts an incoming buyer offer", async ({ page }) => {
     const observed = observeOfferRequests(page);
@@ -32,6 +45,35 @@ test.describe.serial("authenticated structured price-offer journey", () => {
     );
   });
 
+  for (const action of ["reject", "counter"] as const) {
+    test(`seller can ${action} an incoming offer`, async ({ page }) => {
+      const observed = observeOfferRequests(page);
+      await resetOffers(page, "seller");
+      await openFixtureConversation(page, { signedIn: true });
+      const panel = page.locator('[data-price-offer-panel="true"]');
+      const pending = panel.locator('[data-price-offer-card="pending"]');
+      await expect(pending).toHaveCount(1);
+      await expect(panel.locator('[data-price-offer-action="create"]')).toHaveCount(0);
+      await expect(pending.locator('[data-price-offer-action="withdraw"]')).toHaveCount(0);
+      if (action === "counter") {
+        await pending.locator('[data-price-offer-input="counter"]').fill("420000000");
+      }
+      page.once("dialog", (dialog) => void dialog.accept());
+      await pending.locator(`[data-price-offer-action="${action}"]`).click();
+      await expect(
+        panel.locator(
+          `[data-price-offer-card="${action === "counter" ? "countered" : "rejected"}"]`,
+        ),
+      ).toHaveCount(1);
+      await expect(pending).toHaveCount(action === "counter" ? 1 : 0);
+      if (action === "counter") {
+        await expect(pending.locator('[data-price-offer-action="withdraw"]')).toBeEnabled();
+      }
+      expect(observed.patchCount()).toBe(1);
+      expect(observed.remoteWrites()).toEqual([]);
+    });
+  }
+
   test("buyer creates and withdraws a price offer exactly once", async ({ page }) => {
     const observed = observeOfferRequests(page);
     await resetOffers(page, "buyer");
@@ -42,7 +84,26 @@ test.describe.serial("authenticated structured price-offer journey", () => {
     const amountInput = panel.locator('[data-price-offer-input="initial"]');
     await expect(amountInput).toBeVisible();
     await amountInput.fill("410000000");
-    await panel.locator('[data-price-offer-action="create"]').click();
+    const create = panel.locator('[data-price-offer-action="create"]');
+    let releaseCreate!: () => void;
+    const createGate = new Promise<void>((resolve) => {
+      releaseCreate = resolve;
+    });
+    await page.route(`**/v1/conversations/${CONVERSATION_ID}/offers`, async (route) => {
+      if (route.request().method() === "POST") await createGate;
+      await route.fallback();
+    });
+    try {
+      await create.click();
+      await expect.poll(observed.postCount).toBe(1);
+      const toggle = page.locator(".rawaj-message-offers-toggle");
+      await toggle.click();
+      await expect(panel).toHaveCount(0);
+      await toggle.click();
+      await expect(create).toBeDisabled({ timeout: 3_000 });
+    } finally {
+      releaseCreate();
+    }
 
     await expect(panel.locator('[data-price-offer-card="pending"]')).toHaveCount(1, {
       timeout: 20_000,
@@ -69,28 +130,33 @@ test.describe.serial("authenticated structured price-offer journey", () => {
 async function resetOffers(page: Page, role: "buyer" | "seller") {
   const response = await page.request.post(
     `/__rawaj_e2e__/messaging/reset?offerRole=${encodeURIComponent(role)}`,
-    { headers: { "x-rawaj-e2e-reset": "1" } },
+    { headers: { "x-rawaj-e2e-reset": "1", ...fixtureScope() } },
   );
   expect(response.ok()).toBe(true);
 }
 
-async function openFixtureConversation(page: Page) {
-  await page.addInitScript(() => {
+async function openFixtureConversation(page: Page, { signedIn = false } = {}) {
+  await page.addInitScript((existingSession) => {
     const marker = "rawaj:e2e:price-offers-storage-cleared";
     if (window.sessionStorage.getItem(marker) === "1") return;
     window.localStorage.clear();
     window.sessionStorage.clear();
+    if (existingSession) window.localStorage.setItem("rawaj:e2e:firebase-user", "{}");
     window.sessionStorage.setItem(marker, "1");
+  }, signedIn);
+  await page.goto(signedIn ? "/chats" : "/login?returnTo=/chats", {
+    waitUntil: "domcontentloaded",
   });
-  await page.goto("/login?returnTo=/chats", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
 
-  await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
-  await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
-  await page
-    .locator("form")
-    .getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ })
-    .click();
+  if (!signedIn) {
+    await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
+    await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
+    await page
+      .locator("form")
+      .getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ })
+      .click();
+  }
 
   await expect(page).toHaveURL(/\/chats(?:[/?#]|$)/, { timeout: 20_000 });
   const conversation = page

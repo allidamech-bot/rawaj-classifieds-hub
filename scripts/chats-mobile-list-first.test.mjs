@@ -52,7 +52,10 @@ test("invalid conversation id is not replaced by the first conversation", () => 
 });
 
 test("mobile list mode removes the blank message panel through route state and explicit hidden state", () => {
-  assert.match(chats, /data-view=\{missingConversationTarget \|\| \(selectedConversation && isConversationPanelVisible\) \? "conversation" : "list"\}/);
+  assert.match(
+    chats,
+    /data-view=\{\s*missingConversationTarget \|\| \(selectedConversation && isConversationPanelVisible\)\s*\? "conversation"\s*:\s*"list"\s*\}/,
+  );
   assert.match(baseCss, /\.rawaj-message-panel \{\s*display: flex;/);
   assert.match(mobileCss, /@import "\.\/communication-center-v2\.css";/);
   assert.match(

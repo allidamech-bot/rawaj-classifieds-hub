@@ -34,7 +34,7 @@ import type {
   ListingFilters,
   TaxonomyNode,
 } from "@/lib/classifieds-types";
-import { categoryHint, categoryName } from "@/lib/i18n";
+import { categoryHint, localizedCategoryName } from "@/lib/i18n";
 import { createSeo } from "@/lib/seo";
 import {
   buildTaxonomyIndex,
@@ -330,7 +330,10 @@ function TaxonomyDirectory({
   const visibleNodes = currentNode
     ? getTaxonomyChildren(index, currentNode.id)
     : [...getTaxonomyRootNodes(index)].sort((a, b) =>
-        compareDiscoveryCategoryPriority(a.legacyCategoryId ?? a.slug, b.legacyCategoryId ?? b.slug),
+        compareDiscoveryCategoryPriority(
+          a.legacyCategoryId ?? a.slug,
+          b.legacyCategoryId ?? b.slug,
+        ),
       );
   const searchMatches = term ? searchTaxonomyNodes(index, term, currentNode) : [];
 
@@ -502,7 +505,13 @@ function LegacyCategoryDirectory({
     const children = childrenByCategory.get(category.id) ?? [];
     return !term
       ? true
-      : [category.nameAr, category.slug, category.hintAr ?? "", ...children.map(subcategoryName)]
+      : [
+          category.nameAr,
+          category.nameEn,
+          category.slug,
+          category.hintAr,
+          ...children.map(subcategoryName),
+        ]
           .join(" ")
           .toLowerCase()
           .includes(term);
@@ -535,7 +544,7 @@ function LegacyCategoryDirectory({
             <div className="min-w-0 flex-1 py-0.5">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="truncate text-sm font-extrabold text-foreground sm:text-base">
-                  {categoryName(category.id, category.nameAr, language)}
+                  {localizedCategoryName(category, language)}
                 </h2>
                 <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-foreground" />
               </div>

@@ -38,9 +38,10 @@ test("global shell mounts a keyboard-safe non-admin feedback trigger", () => {
   const shell = read("src/components/shell/AppShell.tsx");
   const widget = read("src/components/FeedbackWidget.tsx");
   assert.match(shell, /<FeedbackWidget/);
-  assert.match(shell, /triggerHidden=\{keyboardOpen/);
+  assert.match(shell, /triggerHidden=\{\s*keyboardOpen\s*\|\|/);
   assert.match(shell, /pathname\.startsWith\("\/admin"\)/);
-  assert.match(widget, /fixed top-\[58%\]/);
+  assert.match(widget, /rawaj-feedback-trigger fixed/);
+  assert.match(widget, /bottom: "calc\(var\(--rawaj-mobile-obstruction, 0px\) \+ 5\.5rem\)"/);
   assert.match(widget, /left-2 sm:left-3/);
   assert.match(widget, /right-2 sm:right-3/);
   assert.match(widget, /role="dialog"/);
