@@ -82,28 +82,29 @@ for (const language of ["ar", "en"] as const) {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
     const label = language === "ar" ? "الإشعارات" : "Notifications";
-    const bell = page.locator(".rawaj-app-header").getByRole("button", { name: label, exact: true });
+    const bell = page
+      .locator(".rawaj-app-header")
+      .getByRole("button", { name: label, exact: true });
     await bell.click();
 
     const panel = page.getByRole("dialog", { name: label, exact: true });
-    await expect(panel.getByRole("heading", { name: label, exact: true })).toHaveCSS(
-      "color",
-      "rgb(21, 35, 34)",
-    );
-    await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
-    await expect(panel).toHaveCSS("background-image", "none");
+    await expect(panel).toBeVisible();
+    await expect.soft(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect.soft(panel).toHaveCSS("background-image", "none");
+    await expect
+      .soft(panel.getByRole("heading", { name: label, exact: true }))
+      .toHaveCSS("color", "rgb(21, 35, 34)");
     const unread = panel.locator('article[data-unread="true"]');
-    await expect(unread).toHaveCSS("background-color", "rgb(237, 244, 242)");
-    await expect(panel.locator('article[data-unread="false"]')).toHaveCSS(
-      "background-color",
-      "rgb(255, 255, 255)",
-    );
-    await expect(unread.getByText(/يمكنك مراجعة|You can review/)).toHaveCSS(
-      "color",
-      "rgb(83, 97, 94)",
-    );
-    await expect(
-      panel.getByRole("button", { name: /فتح مركز الإشعارات|Open notification center/ }),
-    ).toHaveCSS("background-color", "rgb(16, 63, 66)");
+    await expect.soft(unread).toHaveCSS("background-color", "rgb(237, 244, 242)");
+    await expect
+      .soft(panel.locator('article[data-unread="false"]'))
+      .toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect.soft(unread.getByRole("heading")).toHaveCSS("color", "rgb(21, 35, 34)");
+    await expect
+      .soft(unread.getByText(/يمكنك مراجعة|You can review/))
+      .toHaveCSS("color", "rgb(83, 97, 94)");
+    await expect
+      .soft(panel.getByRole("button", { name: /فتح مركز الإشعارات|Open notification center/ }))
+      .toHaveCSS("background-color", "rgb(16, 63, 66)");
   });
 }

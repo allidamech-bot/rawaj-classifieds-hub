@@ -1,8 +1,9 @@
 .rawaj-notification-preview {
+  --rawaj-text-primary: #152322;
   color-scheme: light;
   border: 1px solid #e3e7e4;
   background: #ffffff;
-  color: #152322;
+  color: var(--rawaj-text-primary);
   box-shadow: 0 12px 32px rgb(21 35 34 / 16%);
 }
 
