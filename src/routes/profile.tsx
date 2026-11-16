@@ -626,12 +626,15 @@ function ProfilePage() {
                 </Link>
                 <button
                   type="button"
+                  className="rawaj-account-signout"
                   onClick={handleLogout}
                   disabled={loggingOut}
                   aria-busy={loggingOut}
                 >
                   <LogOut className="h-4 w-4" />
-                  {loggingOut ? text("جارٍ الخروج", "Logging out") : text("خروج", "Log out")}
+                  {loggingOut
+                    ? text("جارٍ تسجيل الخروج", "Logging out")
+                    : text("تسجيل الخروج", "Log out")}
                 </button>
               </>
             ) : (

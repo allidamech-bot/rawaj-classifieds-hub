@@ -37,52 +37,6 @@ img.aspect-\[16\/7\] {
   object-fit: contain !important;
 }
 
-/* Keep a full touch target while making the signed-out login pill visually
- * compact enough to sit naturally beside the RAWAJ brand on mobile. */
-.rawaj-header-login-cta {
-  position: relative !important;
-  isolation: isolate;
-  width: auto !important;
-  height: var(--rawaj-touch-target) !important;
-  min-width: max-content !important;
-  min-height: var(--rawaj-touch-target) !important;
-  gap: 0.25rem !important;
-  border: 0 !important;
-  padding-inline: 0.5rem !important;
-  color: var(--rawaj-identity-petrol) !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
-}
-
-.rawaj-header-login-cta::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset-block: 5px;
-  inset-inline: 0;
-  border: 1px solid color-mix(in srgb, var(--rawaj-identity-petrol) 20%, transparent);
-  border-radius: 0.78rem;
-  background: var(--rawaj-identity-champagne);
-  box-shadow: 0 4px 10px rgba(7, 56, 54, 0.14);
-}
-
-.rawaj-header-login-cta:hover::before {
-  filter: brightness(1.05);
-}
-
-.rawaj-header-login-cta svg {
-  width: 0.85rem !important;
-  height: 0.85rem !important;
-}
-
-.rawaj-header-login-cta__label {
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-}
-
 /* Real listing photos must be flush with their media frame. The legacy visual
  * system added inset spacing/shadows that make actual photos look like a 3D
  * tile. Keep those decorative treatments for placeholders only. */

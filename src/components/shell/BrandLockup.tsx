@@ -25,7 +25,7 @@ export function BrandLockup({ compact = false, inverse = false, className }: Bra
         />
       </span>
 
-      <span className="flex items-center gap-2 leading-none">
+      <span className="rawaj-brand-lockup__wordmark flex items-center gap-2 leading-none">
         <span
           className={cn(
             "rawaj-brand-lockup__name font-display text-[18px] font-bold",

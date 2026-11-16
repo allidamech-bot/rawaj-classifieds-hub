@@ -2,7 +2,6 @@
 
 :where(.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"])) .rawaj-app-header :is(
   .rawaj-header-search,
-  .rawaj-header-login-cta,
   .rawaj-header-admin,
   .rawaj-header-store
 ) {
@@ -20,7 +19,6 @@
 
 :where(.rawaj-app-shell:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/seller/"]):not([data-resolved-pathname="/profile/listings"])) .rawaj-app-header :is(
   .rawaj-header-search,
-  .rawaj-header-login-cta,
   .rawaj-header-admin,
   .rawaj-header-store
 ):is(:hover, :focus-visible) {

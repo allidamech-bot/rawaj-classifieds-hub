@@ -65,7 +65,7 @@ test.describe("live launch-critical customer journey", () => {
       await page.goto("/profile", { waitUntil: "domcontentloaded" });
 
       const logoutButton = page.getByRole("button", {
-        name: /^(Log out|خروج)$/,
+        name: /^(Log out|تسجيل الخروج)$/,
       });
       await expect(logoutButton).toBeVisible({ timeout: 20_000 });
       await logoutButton.click();

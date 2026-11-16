@@ -516,10 +516,14 @@
   font-weight: 800 !important;
 }
 
-.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__actions button:last-child {
-  color: #922f33 !important;
-  border-color: rgba(146, 47, 51, 0.3) !important;
-  background: rgba(146, 47, 51, 0.08) !important;
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__actions .rawaj-account-signout {
+  color: #a32635 !important;
+  border-color: #edc1c6 !important;
+  background: #fff1f1 !important;
+}
+
+.rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-identity__actions .rawaj-account-signout:is(:hover, :focus-visible) {
+  background: #ffe2e4 !important;
 }
 
 .rawaj-app-shell.rawaj-route-profile[data-resolved-pathname="/profile"] .rawaj-account-quick-links {

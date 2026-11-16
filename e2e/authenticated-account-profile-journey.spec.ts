@@ -99,7 +99,7 @@ test.describe("authenticated launch-critical account profile journey", () => {
     await assertUpdatedProfile(page);
     await expect(page.getByText(UPDATED_PROFILE.displayName).first()).toBeVisible();
 
-    const logoutButton = page.getByRole("button", { name: /^(خروج|Log out)$/i });
+    const logoutButton = page.getByRole("button", { name: /^(تسجيل الخروج|Log out)$/i });
     await clickTwiceInSameTick(logoutButton);
     await expect(page.getByRole("link", { name: /تسجيل الدخول|Log in/i }).first()).toBeVisible({
       timeout: 30_000,
