@@ -245,7 +245,7 @@ for (const language of ["ar", "en"] as const) {
         );
         await expect(page.locator(".rawaj-site-footer")).toHaveCSS(
           "background-color",
-          "rgb(7, 56, 54)",
+          "rgb(16, 63, 66)",
         );
       }
     });
