@@ -61,6 +61,7 @@ import ownerStoreDarkRepairCss from "../owner-store-dark-repair.css?url";
 import stabilityAccessibilityFixesCss from "../stability-accessibility-fixes.css?url";
 import uiConvergenceV25Css from "../rawaj-ui-convergence-v25.css?url";
 import seoLandingIdentityCss from "../seo-landing-identity.css?url";
+import shellHeaderIntegratedCss from "../shell-header-integrated.css?url";
 
 export const routeStyleHrefs = {
   homeSignature: homeSignatureCss,
@@ -120,6 +121,7 @@ export const auditedOverrideStyleHrefs = [
   stabilityAccessibilityFixesCss,
   uiConvergenceV25Css,
   seoLandingIdentityCss,
+  shellHeaderIntegratedCss,
 ] as const;
 
 export interface RouteStyleScope {

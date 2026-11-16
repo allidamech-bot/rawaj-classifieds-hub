@@ -91,7 +91,7 @@ test.describe("authenticated rendered visual QA", () => {
         ).toHaveCSS("color", "rgb(255, 227, 176)");
         await expect(
           page.locator(".rawaj-app-header .rawaj-shell-header__actions > .relative > button > svg"),
-        ).toHaveCSS("color", "rgb(249, 240, 228)");
+        ).toHaveCSS("color", "rgb(16, 63, 66)");
       }
 
       await page.screenshot({

@@ -33,10 +33,13 @@ for (const language of ["ar", "en"] as const) {
         const shell = page.locator(".rawaj-app-shell");
         await expect(shell).toHaveAttribute("data-design-palette", "ivory");
         await expect(shell).toHaveCSS("color-scheme", "light");
+        const header = shell.locator(".rawaj-app-header[data-header-variant]");
+        await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(header).toHaveCSS("background-image", "none");
         if (route.pathname !== "/more") {
           await expect(page.locator(".rawaj-shell-header__title :is(h1, p)")).toHaveCSS(
             "color",
-            /rgb\((249, 240, 228|255, 250, 243)\)/,
+            "rgb(21, 35, 34)",
           );
         }
         await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute(

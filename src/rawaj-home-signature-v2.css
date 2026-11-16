@@ -24,16 +24,6 @@
   background: transparent !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header {
-  position: relative;
-  top: auto;
-  border: 0 !important;
-  background: var(--home-petrol) url("/brand/home/damascus.webp") center top / max(100%, 32rem) auto no-repeat !important;
-  box-shadow: none !important;
-  backdrop-filter: none;
-  color: #fff7ea;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-floating-header-shell {
   width: min(100%, var(--home-width));
   min-height: 5rem;

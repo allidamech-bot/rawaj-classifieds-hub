@@ -14,19 +14,6 @@
   color: var(--account-ink);
   background: var(--account-canvas) !important;
 }
-/* /more uses the brand FloatingHeader, not the context PageHeader. The
- * NotificationTrigger's "light" Tailwind variant inherited dark ink from
- * the migrated ivory route against the petrol header, making its bell 1.93:1.
- * Own its inverse pairing at the actual /more header source. */
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header .rawaj-shell-header__actions > .relative > button {
-  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 22%, transparent) !important;
-  color: var(--rawaj-identity-ivory) !important;
-  background: var(--rawaj-identity-petrol) !important;
-}
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header .rawaj-shell-header__actions > .relative > button > svg {
-  color: var(--rawaj-identity-ivory) !important;
-}
-
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2 {
   color: var(--account-ink);
   background: transparent;
@@ -53,8 +40,7 @@
   background: var(--rawaj-card-background) !important;
   box-shadow: none !important;
 }
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity > div:last-child > :is(p, strong, small),
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
+.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity > div:last-child > :is(p, small) {
   color: var(--rawaj-text-secondary) !important;
 }
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity h1 {
@@ -65,9 +51,6 @@
   border: 1px solid var(--rawaj-border);
   color: var(--rawaj-identity-champagne);
   background: var(--account-petrol) !important;
-}
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
-  border-inline-start-color: var(--rawaj-identity-gold) !important;
 }
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
   border-color: var(--rawaj-border) !important;
@@ -249,13 +232,48 @@
 }
 @media (max-width: 639px) {
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
-    padding-inline: max(0.9rem, env(safe-area-inset-left)) !important;
+    align-content: start;
+    gap: 0.75rem !important;
+    padding-block-start: 0.4rem !important;
+    padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+    padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
-    padding: 1.05rem;
+    display: flex !important;
+    flex-direction: column;
+    align-self: start;
+    gap: 0.35rem !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    padding: 0.75rem !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar {
+    width: 3rem !important;
+    height: 3rem !important;
+    flex-basis: 3rem;
+    box-shadow: none !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__identity h1 {
+    overflow: visible;
+    white-space: normal;
+    font-size: 1.2rem !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges {
+    display: flex !important;
+    flex-wrap: wrap;
+    margin-top: 0 !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
+    min-height: 1.75rem !important;
+    padding-block: 0.2rem !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card {
+    min-height: 4.3rem !important;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > a.rawaj-color-card {
-    min-height: 5.2rem !important;
+    min-height: 4.25rem !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -265,11 +283,8 @@
   }
 }
 
-/* B3.1 shell surfaces: the approved ivory page needs opaque petrol chrome.
-   Fix contrast at the account route itself, without changing the shared header
-   or footer on any protected route. */
+/* Account footer surfaces. */
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] :is(
-  .rawaj-app-header,
   .rawaj-site-footer,
   .rawaj-site-footer__mobile
 ) {
@@ -277,11 +292,6 @@
   background: var(--rawaj-identity-petrol) !important;
   border-color: color-mix(in srgb, var(--rawaj-identity-gold) 25%, transparent) !important;
 }
-.rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-app-header :is(
-  .rawaj-brand-lockup__name,
-  .rawaj-brand-lockup__latin,
-  .rawaj-shell-header__title
-),
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-site-footer :is(
   .rawaj-brand-lockup__name,
   .rawaj-brand-lockup__latin,
