@@ -43,12 +43,13 @@ test("categories route loads its designed atlas instead of utility-only rows", a
   });
 
   expect(visualContract).not.toBeNull();
-  expect(visualContract?.heroBackground).toContain("linear-gradient");
+  // The approved solid petrol hero replaces the legacy decorative gradient.
+  expect(visualContract?.heroBackground).toBe("none");
   expect(visualContract?.heroRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.gridDisplay).toBe("grid");
   expect(visualContract?.gridColumns).not.toBe("none");
   // The approved ivory directory uses a real, opaque card surface instead of a legacy gradient.
-  expect(visualContract?.cardSurfaceColor).toBe("rgb(255, 250, 243)");
+  expect(visualContract?.cardSurfaceColor).toBe("rgb(255, 255, 255)");
   expect(visualContract?.cardRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.cardBorderStyle).toBe("solid");
   expect(visualContract?.iconBackground).not.toBe("rgba(0, 0, 0, 0)");
