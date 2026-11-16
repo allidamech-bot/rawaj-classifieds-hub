@@ -144,7 +144,10 @@ function PromotionPage() {
       if (requestId !== ordersRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
       setOrdersError(
-        unknownError(error, text("تعذر تحميل طلبات تعزيز الظهور.", "Could not load Boost requests.")),
+        unknownError(
+          error,
+          text("تعذر تحميل طلبات تعزيز الظهور.", "Could not load Boost requests."),
+        ),
       );
     } finally {
       if (requestId === ordersRequestIdRef.current) setOrdersLoading(false);
@@ -286,7 +289,9 @@ function PromotionPage() {
               <Rocket className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h1 className="text-xl font-black sm:text-2xl">{text("تعزيز ظهور إعلانك", "Search Boost")}</h1>
+              <h1 className="text-xl font-black sm:text-2xl">
+                {text("تعزيز ظهور إعلانك", "Search Boost")}
+              </h1>
               <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50/80">
                 {text(
                   "ارفع إعلانك في النتائج العادية ذات الصلة فقط. التعزيز لا يتجاوز البحث أو القسم أو الفلاتر.",
