@@ -83,6 +83,8 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action {
+  width: max(44px, 4.75rem) !important;
+  min-width: max(44px, 4.75rem) !important;
   grid-template-rows: 20px 16px !important;
   border-color: #bd984b !important;
 }
