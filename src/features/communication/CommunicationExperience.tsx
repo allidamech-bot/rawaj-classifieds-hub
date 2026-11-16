@@ -83,24 +83,26 @@ export function CommunicationCenterHero({
           />
         ) : null}
       </div>
-      <nav
-        className="rawaj-communication-hero__actions"
-        aria-label={text("روابط مركز التواصل", "Communication links")}
-      >
-        <Link to="/activity" search={{ tab: "notifications" }} data-active={mode === "activity"}>
-          <Sparkles aria-hidden="true" />
-          {text("النشاط", "Activity")}
-        </Link>
-        <Link to="/chats" search={{}} data-active={mode === "messages"}>
-          <MessageCircle aria-hidden="true" />
-          {text("الرسائل", "Messages")}
-        </Link>
-        <Link to="/notifications" data-active={mode === "notifications"}>
-          <Bell aria-hidden="true" />
-          {text("التنبيهات", "Notifications")}
-        </Link>
-        {actions}
-      </nav>
+      {mode !== "activity" ? (
+        <nav
+          className="rawaj-communication-hero__actions"
+          aria-label={text("روابط مركز التواصل", "Communication links")}
+        >
+          <Link to="/activity" search={{ tab: "notifications" }}>
+            <Sparkles aria-hidden="true" />
+            {text("النشاط", "Activity")}
+          </Link>
+          <Link to="/chats" search={{}} data-active={mode === "messages"}>
+            <MessageCircle aria-hidden="true" />
+            {text("الرسائل", "Messages")}
+          </Link>
+          <Link to="/notifications" data-active={mode === "notifications"}>
+            <Bell aria-hidden="true" />
+            {text("التنبيهات", "Notifications")}
+          </Link>
+          {actions}
+        </nav>
+      ) : null}
     </section>
   );
 }

@@ -32,9 +32,9 @@ export function ExistingConversationBanner({ listingId }: { listingId: string })
   if (!conversation) return null;
 
   return (
-    <div className="container-wide pt-3">
-      <section className="flex flex-wrap items-center gap-3 rounded-[1.15rem] border border-primary/15 bg-card p-4 shadow-soft">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+    <div className="rawaj-detail-conversation">
+      <section className="flex flex-wrap items-center gap-3 rounded-[1.15rem] border border-[#e3e7e4] bg-white p-3 text-[#152322]">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#ecf3f1] text-[#103f42]">
           <MessageCircle className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
@@ -51,7 +51,7 @@ export function ExistingConversationBanner({ listingId }: { listingId: string })
         <Link
           to="/chats"
           search={{ conversation: conversation.id }}
-          className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+          className="inline-flex min-h-11 items-center rounded-xl border border-[#e3e7e4] px-3 text-xs font-bold text-[#103f42]"
         >
           {conversation.status === "active"
             ? text("متابعة المحادثة", "Continue conversation")

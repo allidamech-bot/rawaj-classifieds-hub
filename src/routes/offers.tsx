@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { ArrowUpLeft, BadgePercent, Clock3, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpLeft, BadgePercent, Clock3, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingCardImage } from "@/features/listings/cards/ListingCardImage";
 import { fetchActivePriceDropOffers, type ListingPriceDropOffer } from "@/lib/classifieds-api";
@@ -49,7 +49,7 @@ function OffersPage() {
       <main className="rawaj-pulse-page rawaj-offers-premium-v3 min-h-dvh">
         <div className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
           <section className="rawaj-offers-stage">
-            <div className="relative z-10 grid min-h-[15rem] gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.45fr)] lg:items-end lg:p-9">
+            <div className="relative z-10 p-5 sm:p-7">
               <div className="self-end">
                 <span className="rawaj-signature-kicker text-gold">
                   {text("تخفيضات موثقة", "Recorded price drops")}
@@ -59,34 +59,12 @@ function OffersPage() {
                 </h1>
                 <p className="mt-3 max-w-xl text-xs leading-6 text-[#fffaf0]/72 sm:text-sm sm:leading-7">
                   {text(
-                    "نعرض فقط الإعلانات التي خفّض صاحبها السعر فعلياً. السعر السابق والجديد ونسبة التخفيض محفوظة في البيانات، ولا علاقة للإعلان المميز بهذه الصفحة.",
-                    "Only listings with a real owner-recorded price reduction appear here. Old price, new price and discount percentage come from recorded data; featured promotion is separate.",
+                    "تظهر هنا الإعلانات المتاحة التي خفّض أصحابها أسعارها مؤخراً.",
+                    "Browse available listings whose sellers recently lowered their prices.",
                   )}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
-                <OfferSignal
-                  icon={BadgePercent}
-                  label={text("الخصم", "Discount")}
-                  value={text("محسوب من السعرين", "Calculated from prices")}
-                />
-                <OfferSignal
-                  icon={Clock3}
-                  label={text("الحداثة", "Recency")}
-                  value={text("آخر 30 يوماً", "Last 30 days")}
-                />
-                <OfferSignal
-                  icon={ShieldCheck}
-                  label={text("التحقق", "Verification")}
-                  value={text("السعر الحالي يطابق التخفيض", "Current price must match")}
-                />
-                <OfferSignal
-                  icon={Sparkles}
-                  label={text("الوضوح", "Clarity")}
-                  value={text("لا Featured مزيف", "No fake featured offers")}
-                />
-              </div>
             </div>
           </section>
 
@@ -146,24 +124,6 @@ function OffersPage() {
         </div>
       </main>
     </>
-  );
-}
-
-function OfferSignal({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof BadgePercent;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rawaj-id-stat rounded-[1rem] p-3">
-      <Icon className="h-4 w-4 text-gold" />
-      <span className="mt-2 block text-xs font-semibold text-[#fffaf0]/80">{label}</span>
-      <strong className="mt-1 block text-xs leading-4 text-[#fffaf0]">{value}</strong>
-    </div>
   );
 }
 

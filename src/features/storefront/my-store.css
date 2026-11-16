@@ -750,22 +750,29 @@
     padding-inline: 14px;
   }
   .ms-approved-filters {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: minmax(12rem, 1fr) minmax(9rem, 14rem) minmax(10rem, 14rem);
     margin: 18px 0 28px;
-    gap: 28px;
+    gap: 12px;
   }
   .my-store-search,
   .my-store-search[data-open="true"] {
     display: flex;
-    order: 0;
-    flex: 0 1 290px;
-    margin-inline-start: auto;
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .ms-approved-filters > select {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: none;
+    width: 100%;
   }
   .my-store-search-toggle {
     display: none;
   }
   .my-store-sort {
-    width: 215px;
+    width: 100%;
     border: 0;
     display: flex;
     gap: 10px;
@@ -1763,7 +1770,7 @@
   min-width: 0;
 }
 
-.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+.rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button:not(.my-store-public-follow) {
   grid-column: 2 !important;
   grid-row: 1 !important;
   width: 44px !important;
@@ -1773,8 +1780,9 @@
 .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > .my-store-public-follow {
   grid-column: 1 / -1 !important;
   grid-row: 2 !important;
-  width: 100%;
-  min-height: 44px;
+  width: 100% !important;
+  min-height: 44px !important;
+  white-space: nowrap;
   justify-self: stretch;
 }
 
@@ -1782,7 +1790,7 @@
   .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions {
     grid-template-columns: minmax(0, 1fr) 48px !important;
   }
-  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button {
+  .rawaj-app-shell[data-resolved-pathname^="/seller/"] main.my-store-public .my-store-actions > button:not(.my-store-public-follow) {
     width: 48px !important;
   }
 }

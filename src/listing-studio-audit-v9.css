@@ -150,7 +150,7 @@
   border-color: var(--rawaj-identity-teal) !important;
   color: var(--rawaj-identity-ivory) !important;
   background: var(--rawaj-identity-teal) !important;
-  box-shadow: 0 8px 18px rgba(7, 56, 54, 0.14) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell:is([data-resolved-pathname="/add-listing"], [data-resolved-pathname^="/profile/listings/"]) .rawaj-studio-steps li[data-state="done"] button {

@@ -11,6 +11,7 @@ import { beginFilterDraftSession } from "@/features/search/filter-draft-session"
 interface FilterBottomSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onReturnFocus: () => void;
   activeCount: number;
   onReset: () => void;
   onApply: () => void;
@@ -21,6 +22,7 @@ interface FilterBottomSheetProps {
 export function FilterBottomSheet({
   open,
   onOpenChange,
+  onReturnFocus,
   activeCount,
   onReset,
   onApply,
@@ -41,6 +43,10 @@ export function FilterBottomSheet({
       handleOnly
     >
       <BottomSheetContent
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          onReturnFocus();
+        }}
         onEscapeKeyDown={(event) => {
           event.preventDefault();
           onOpenChange(false);

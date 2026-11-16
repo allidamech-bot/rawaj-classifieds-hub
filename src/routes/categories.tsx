@@ -42,6 +42,7 @@ import {
   getTaxonomyChildren,
   getTaxonomyPath,
   getTaxonomyRootNodes,
+  compareDiscoveryCategoryPriority,
   resolveTaxonomyFilterScope,
   resolveTaxonomyListingSearch,
   searchTaxonomyNodes,
@@ -328,7 +329,9 @@ function TaxonomyDirectory({
   const canOpenCurrentLevel = currentListingSearch !== null;
   const visibleNodes = currentNode
     ? getTaxonomyChildren(index, currentNode.id)
-    : getTaxonomyRootNodes(index);
+    : [...getTaxonomyRootNodes(index)].sort((a, b) =>
+        compareDiscoveryCategoryPriority(a.legacyCategoryId ?? a.slug, b.legacyCategoryId ?? b.slug),
+      );
   const searchMatches = term ? searchTaxonomyNodes(index, term, currentNode) : [];
 
   if (term) {

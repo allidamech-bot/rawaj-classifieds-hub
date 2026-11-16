@@ -647,18 +647,6 @@ function MyListingsPage() {
 
             {activeTab !== "reviews" && activeTab !== "about" ? (
               <div className="ms-approved-filters">
-                <select
-                  aria-label={text("فئة الإعلانات", "Listing category")}
-                  value={listingCategory}
-                  onChange={(event) => setListingCategory(event.target.value)}
-                >
-                  <option value="">{text("كل الفئات", "All Categories")}</option>
-                  {categories.map(([id, label]) => (
-                    <option key={id} value={id}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
                 <label className="my-store-search" data-open={searchOpen}>
                   <Search aria-hidden="true" />
                   <input
@@ -677,6 +665,18 @@ function MyListingsPage() {
                 >
                   <Search />
                 </button>
+                <select
+                  aria-label={text("فئة الإعلانات", "Listing category")}
+                  value={listingCategory}
+                  onChange={(event) => setListingCategory(event.target.value)}
+                >
+                  <option value="">{text("كل الفئات", "All Categories")}</option>
+                  {categories.map(([id, label]) => (
+                    <option key={id} value={id}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
                 <label className="my-store-sort">
                   <ArrowDownUp aria-hidden="true" />
                   <select

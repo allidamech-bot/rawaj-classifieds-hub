@@ -53,16 +53,7 @@ const LazyDraftRecoveryBanner = lazy(() =>
     default: module.DraftRecoveryBanner,
   })),
 );
-const LazyViewedBeforeBanner = lazy(() =>
-  import("@/features/listing-detail/ViewedBeforeBanner").then((module) => ({
-    default: module.ViewedBeforeBanner,
-  })),
-);
-const LazyExistingConversationBanner = lazy(() =>
-  import("@/features/listing-detail/ExistingConversationBanner").then((module) => ({
-    default: module.ExistingConversationBanner,
-  })),
-);
+
 const LazySavedSearchAlertBackgroundScanner = lazy(() =>
   import("@/features/saved-searches/SavedSearchAlertBackgroundScanner").then((module) => ({
     default: module.SavedSearchAlertBackgroundScanner,
@@ -277,19 +268,11 @@ function DeferredAccountBackgroundServices() {
   );
 }
 
-function DeferredRouteAnnouncements({
-  showDraftRecovery,
-  listingDetailId,
-}: {
-  showDraftRecovery: boolean;
-  listingDetailId: string | null;
-}) {
-  if (!showDraftRecovery && !listingDetailId) return null;
+function DeferredRouteAnnouncements({ showDraftRecovery }: { showDraftRecovery: boolean }) {
+  if (!showDraftRecovery) return null;
   return (
     <Suspense fallback={null}>
-      {showDraftRecovery ? <LazyDraftRecoveryBanner /> : null}
-      {listingDetailId ? <LazyViewedBeforeBanner listingId={listingDetailId} /> : null}
-      {listingDetailId ? <LazyExistingConversationBanner listingId={listingDetailId} /> : null}
+      <LazyDraftRecoveryBanner />
     </Suspense>
   );
 }
@@ -333,10 +316,6 @@ function RootComponent() {
   const { resolvedPathname, pendingPathname, isRouteNavigating } = routeNavigation;
   const showDraftRecovery = resolvedPathname === "/add-listing";
   const routeScopeClass = personalSpaceRouteClass(resolvedPathname);
-  const listingDetailMatch = resolvedPathname.match(/^\/listings\/([^/]+)$/);
-  const listingDetailId = listingDetailMatch?.[1]
-    ? decodeURIComponent(listingDetailMatch[1])
-    : null;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -357,7 +336,6 @@ function RootComponent() {
                 announcements={
                   <DeferredRouteAnnouncements
                     showDraftRecovery={showDraftRecovery}
-                    listingDetailId={listingDetailId}
                   />
                 }
               >

@@ -1034,3 +1034,21 @@ main.rawaj-detail-recovery .rawaj-detail-recovery__action:focus-visible {
   background: var(--rawaj-badge-warning-surface);
   color: var(--rawaj-badge-warning-ink);
 }
+
+
+@media (min-width: 1024px) {
+  .rawaj-detail-summary .rawaj-contact-dock {
+    margin-block-start: 1rem;
+    padding: 0;
+  }
+
+  .rawaj-detail-summary .rawaj-contact-dock__inner {
+    width: 100%;
+    border-radius: 0.95rem;
+  }
+}
+
+
+.rawaj-detail-conversation {
+  margin-block-start: 0.75rem;
+}

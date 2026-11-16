@@ -2,6 +2,7 @@ import type { ClassifiedCategory, TaxonomyNode } from "@/lib/classifieds-types";
 import {
   buildTaxonomyIndex,
   getTaxonomyRootNodes,
+  compareDiscoveryCategoryPriority,
   resolveTaxonomyDiscoveryTarget,
   type TaxonomyDiscoveryTarget,
 } from "@/lib/taxonomy";
@@ -26,7 +27,10 @@ export function buildCanonicalHomeCategoryWorlds(
   limit = 6,
 ): HomeCategoryWorld[] {
   const index = buildTaxonomyIndex(taxonomyNodes);
-  return getTaxonomyRootNodes(index)
+  return [...getTaxonomyRootNodes(index)]
+    .sort((a, b) =>
+      compareDiscoveryCategoryPriority(a.legacyCategoryId ?? a.slug, b.legacyCategoryId ?? b.slug),
+    )
     .map((node) => {
       const target = resolveTaxonomyDiscoveryTarget(index, node);
       return target
@@ -54,7 +58,7 @@ export function buildLegacyHomeCategoryWorlds(
     .filter((category) => category.isActive)
     .sort(
       (a, b) =>
-        a.sortOrder - b.sortOrder || a.nameAr.localeCompare(b.nameAr) || a.id.localeCompare(b.id),
+        compareDiscoveryCategoryPriority(a.slug, b.slug) || a.sortOrder - b.sortOrder || a.nameAr.localeCompare(b.nameAr) || a.id.localeCompare(b.id),
     )
     .slice(0, Math.max(0, limit))
     .map((category) => ({
