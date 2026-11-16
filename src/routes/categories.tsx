@@ -296,7 +296,7 @@ function Breadcrumbs({
           <Link
             to="/categories"
             search={{ node: node.id }}
-            className="rounded-full bg-muted-surface px-2.5 py-1.5 transition hover:text-foreground"
+            className="rounded-full bg-white px-2.5 py-1.5 text-[#103f42] transition hover:bg-[#e3e7e4]"
           >
             {taxonomyNodeName(node, language)}
           </Link>
@@ -357,7 +357,7 @@ function TaxonomyDirectory({
   return (
     <>
       {currentNode && canOpenCurrentLevel && currentListingSearch && (
-        <div className="rawaj-surface mt-4 rounded-[1.25rem] p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="mt-4 rounded-2xl border border-[#e3e7e4] bg-white p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="text-sm font-extrabold text-foreground">
               {text("تريد رؤية الإعلانات مباشرة؟", "Want to see listings now?")}
@@ -372,7 +372,7 @@ function TaxonomyDirectory({
           <Link
             to="/listings"
             search={taxonomyListingUrlSearch(currentListingSearch)}
-            className="rawaj-button-primary mt-3 w-full px-4 py-2.5 sm:mt-0 sm:w-auto"
+            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#103f42] px-4 py-2.5 text-sm font-bold text-white sm:mt-0 sm:w-auto"
           >
             {text("عرض الإعلانات", "View listings")}
           </Link>
