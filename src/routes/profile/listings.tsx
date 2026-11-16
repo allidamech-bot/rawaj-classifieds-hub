@@ -1843,7 +1843,10 @@ function StoreListingCard({
                           "تعزيز الظهور — احصل على عملاء أكثر",
                           "Boost — get more customers",
                         )}
-                        title={text("تعزيز الظهور — احصل على عملاء أكثر", "Boost — get more customers")}
+                        title={text(
+                          "تعزيز الظهور — احصل على عملاء أكثر",
+                          "Boost — get more customers",
+                        )}
                       >
                         <Rocket aria-hidden="true" />
                         <span>{text("تعزيز الظهور", "Boost")}</span>
