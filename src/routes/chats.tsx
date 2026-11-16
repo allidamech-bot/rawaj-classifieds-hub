@@ -1,5 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, HandCoins, ImagePlus, MapPin, MessageCircle, Send, TriangleAlert, X } from "lucide-react";
+import {
+  Ban,
+  Flag,
+  HandCoins,
+  ImagePlus,
+  MapPin,
+  MessageCircle,
+  Send,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -171,7 +181,12 @@ function ChatsPage() {
     if (!selectedConversation || !isConversationPanelVisible) return;
     const stream = messageStreamRef.current;
     if (stream) stream.scrollTop = stream.scrollHeight;
-  }, [selectedConversation?.id, isConversationPanelVisible, visibleMessages.length, loadingMessages]);
+  }, [
+    selectedConversation?.id,
+    isConversationPanelVisible,
+    visibleMessages.length,
+    loadingMessages,
+  ]);
 
   useEffect(() => {
     if (!blockDialogOpen) return;
@@ -784,7 +799,11 @@ function ChatsPage() {
 
         <div
           className="rawaj-message-workspace"
-          data-view={missingConversationTarget || (selectedConversation && isConversationPanelVisible) ? "conversation" : "list"}
+          data-view={
+            missingConversationTarget || (selectedConversation && isConversationPanelVisible)
+              ? "conversation"
+              : "list"
+          }
         >
           <aside
             className={`rawaj-conversation-sidebar ${
@@ -887,7 +906,9 @@ function ChatsPage() {
               </div>
             ) : !selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
-                <p className="text-sm text-[#53615e]">{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</p>
+                <p className="text-sm text-[#53615e]">
+                  {text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}
+                </p>
               </div>
             ) : (
               <>
@@ -984,7 +1005,11 @@ function ChatsPage() {
                   </div>
                 ) : null}
 
-                <div className="rawaj-message-stream" ref={messageStreamRef} aria-label={text("سجل الرسائل", "Message history")}>
+                <div
+                  className="rawaj-message-stream"
+                  ref={messageStreamRef}
+                  aria-label={text("سجل الرسائل", "Message history")}
+                >
                   {loadingMessages ? (
                     <PanelText>{text("جاري تحميل الرسائل.", "Loading messages.")}</PanelText>
                   ) : messageError ? (
@@ -1253,22 +1278,32 @@ function ChatsPage() {
           </section>
         </div>
         {blockDialogOpen && selectedConversation ? (
-          <div className="rawaj-block-confirm-overlay fixed inset-0 z-[100] flex items-center justify-center bg-[#152322]/50 p-4"
+          <div
+            className="rawaj-block-confirm-overlay fixed inset-0 z-[100] flex items-center justify-center bg-[#152322]/50 p-4"
             onMouseDown={(event) => {
               if (event.target === event.currentTarget && !blocking) setBlockDialogOpen(false);
-            }}>
-            <form role="dialog" aria-modal="true" aria-labelledby="rawaj-block-confirm-title"
+            }}
+          >
+            <form
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rawaj-block-confirm-title"
               className="rawaj-block-confirm-dialog w-full max-w-md rounded-2xl border border-[#E3E7E4] bg-white p-5 text-[#152322] shadow-xl"
-              onSubmit={(event) => { event.preventDefault(); void handleBlock(); }}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleBlock();
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Escape" && !blocking) {
                   event.preventDefault();
                   setBlockDialogOpen(false);
                 }
                 if (event.key !== "Tab") return;
-                const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
-                  "input:not(:disabled), button:not(:disabled)",
-                ));
+                const controls = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    "input:not(:disabled), button:not(:disabled)",
+                  ),
+                );
                 const first = controls[0];
                 const last = controls[controls.length - 1];
                 if (first && last && event.shiftKey && document.activeElement === first) {
@@ -1279,25 +1314,46 @@ function ChatsPage() {
                   first.focus();
                 }
               }}
-              style={{ maxHeight: "calc(var(--app-viewport-height, 100dvh) - 1rem)", overflowY: "auto" }}>
+              style={{
+                maxHeight: "calc(var(--app-viewport-height, 100dvh) - 1rem)",
+                overflowY: "auto",
+              }}
+            >
               <h2 id="rawaj-block-confirm-title" className="text-base font-extrabold">
                 {text("تأكيد حظر المستخدم", "Confirm block user")}
               </h2>
               <p className="mt-2 text-sm text-[#53615E]">
-                {text("لن تتمكن من تبادل رسائل جديدة مع هذا المستخدم في هذه المحادثة.", "You will no longer be able to exchange messages in this conversation.")}
+                {text(
+                  "لن تتمكن من تبادل رسائل جديدة مع هذا المستخدم في هذه المحادثة.",
+                  "You will no longer be able to exchange messages in this conversation.",
+                )}
               </p>
               <label className="mt-4 block text-sm font-bold" htmlFor="rawaj-block-reason">
                 {text("سبب الحظر (اختياري)", "Block reason (optional)")}
               </label>
-              <input ref={blockDialogRef} id="rawaj-block-reason" value={blockReason}
-                onChange={(event) => setBlockReason(event.target.value)} maxLength={300} disabled={blocking}
-                className="mt-2 min-h-11 w-full rounded-xl border border-[#E3E7E4] bg-white px-3 text-[#152322] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#103F42]" />
+              <input
+                ref={blockDialogRef}
+                id="rawaj-block-reason"
+                value={blockReason}
+                onChange={(event) => setBlockReason(event.target.value)}
+                maxLength={300}
+                disabled={blocking}
+                className="mt-2 min-h-11 w-full rounded-xl border border-[#E3E7E4] bg-white px-3 text-[#152322] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#103F42]"
+              />
               <div className="mt-5 flex justify-end gap-2">
-                <button type="button" disabled={blocking} onClick={() => setBlockDialogOpen(false)}
-                  className="min-h-11 rounded-xl border border-[#E3E7E4] bg-white px-4 text-sm font-bold text-[#152322]">
+                <button
+                  type="button"
+                  disabled={blocking}
+                  onClick={() => setBlockDialogOpen(false)}
+                  className="min-h-11 rounded-xl border border-[#E3E7E4] bg-white px-4 text-sm font-bold text-[#152322]"
+                >
                   {text("إلغاء", "Cancel")}
                 </button>
-                <button type="submit" disabled={blocking} className="min-h-11 rounded-xl bg-[#103F42] px-4 text-sm font-bold text-white disabled:opacity-60">
+                <button
+                  type="submit"
+                  disabled={blocking}
+                  className="min-h-11 rounded-xl bg-[#103F42] px-4 text-sm font-bold text-white disabled:opacity-60"
+                >
                   {blocking ? text("جارٍ الحظر", "Blocking") : text("تأكيد الحظر", "Block user")}
                 </button>
               </div>
