@@ -58,16 +58,25 @@ for (const language of ["ar", "en"] as const) {
   }
 }
 
-test("mobile Home has one Categories entry in the bottom dock, not a duplicate header hamburger", async ({ page }) => {
+test("mobile Home has one Categories entry in the bottom dock, not a duplicate header hamburger", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await hydrated(page, "/");
   await expect(page.locator(".rawaj-home-menu-action")).toHaveCount(0);
   await expect(page.locator('.rawaj-mobile-dock [data-section="categories"]')).toBeVisible();
 });
 
-test("iPhone-sized conversation has reachable Send and tools, secondary offers, and restores dock on exit", async ({ page }, testInfo) => {
-  test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local-only messaging/Firebase fixtures");
-  await page.request.post("/__rawaj_e2e__/messaging/reset", { headers: { "x-rawaj-e2e-reset": "1" } });
+test("iPhone-sized conversation has reachable Send and tools, secondary offers, and restores dock on exit", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    process.env.RAWAJ_E2E_USE_FIXTURES !== "1",
+    "Requires local-only messaging/Firebase fixtures",
+  );
+  await page.request.post("/__rawaj_e2e__/messaging/reset", {
+    headers: { "x-rawaj-e2e-reset": "1" },
+  });
   await page.addInitScript(() => {
     const marker = "rawaj:e2e:customer-reset";
     if (sessionStorage.getItem(marker) === "1") return;
