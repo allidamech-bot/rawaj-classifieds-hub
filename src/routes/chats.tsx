@@ -799,6 +799,7 @@ function ChatsPage() {
 
         <div
           className="rawaj-message-workspace"
+          data-active-thread={Boolean(selectedConversation && isConversationPanelVisible)}
           data-view={
             missingConversationTarget || (selectedConversation && isConversationPanelVisible)
               ? "conversation"
