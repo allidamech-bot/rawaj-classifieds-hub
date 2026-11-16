@@ -108,6 +108,14 @@
   background: var(--rawaj-identity-teal) !important;
 }
 
+/* Notification icons must not inherit dark-on-dark text-primary from the
+ * component's light variant while sitting inside the petrol context header. */
+.rawaj-shell-header--context .rawaj-shell-header__actions > .relative > button {
+  color: var(--rawaj-identity-ivory) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 22%, transparent) !important;
+  background: var(--rawaj-identity-petrol) !important;
+}
+
 .rawaj-shell-header__back:hover,
 .rawaj-header-admin:hover,
 .rawaj-shell-header__actions > .relative > button:hover {

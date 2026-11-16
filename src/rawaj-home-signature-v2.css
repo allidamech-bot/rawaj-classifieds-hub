@@ -283,6 +283,7 @@
 
 .rawaj-signature-section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
@@ -294,7 +295,8 @@
   position: relative;
   display: flex;
   min-width: 0;
-  flex: 1;
+  max-width: 100%;
+  flex: 1 0 max-content;
   align-items: center;
   gap: 0.45rem;
   margin-inline: calc(-1 * var(--home-gutter)) 0;
@@ -328,6 +330,8 @@
 }
 
 .rawaj-signature-section-header h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: clamp(1.01rem, 4vw, 1.65rem);
   font-weight: 850;

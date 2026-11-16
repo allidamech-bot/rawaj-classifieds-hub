@@ -255,9 +255,23 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         .flatMap((element) => {
           const foreground = parseColor(window.getComputedStyle(element).color);
           if (!foreground) return [];
-          const background = effectiveBackground(element);
-          const ratio = contrastRatio(foreground, background);
           const action = element.closest("button, a[href], [role='button']");
+          const background = effectiveBackground(element);
+          // Computed background-color is transparent for CSS-gradient buttons.
+          // Read every opaque gradient stop and use the WORST contrast, rather
+          // than erroneously treating the underlying ivory card as the paint.
+          const image =
+            action instanceof HTMLElement ? getComputedStyle(action).backgroundImage : "none";
+          const paintedStops = image.includes("gradient(")
+            ? Array.from(image.matchAll(/rgba?\([^)]*\)/g)).flatMap((match) => {
+                const parsed = parseColor(match[0]);
+                return parsed && parsed.a >= 0.99 ? [parsed] : [];
+              })
+            : [];
+          const ratio =
+            paintedStops.length >= 2
+              ? Math.min(...paintedStops.map((paint) => contrastRatio(foreground, paint)))
+              : contrastRatio(foreground, background);
           const label = action ? describe(action) : describe(element);
           return ratio + 0.01 < 3
             ? [
