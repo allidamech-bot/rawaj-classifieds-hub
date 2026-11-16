@@ -75,10 +75,7 @@
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
-  grid-template-areas:
-    "identity badges"
-    "description badges"
-    "actions actions";
+  grid-template-areas: "identity badges";
   gap: 0.55rem 1rem !important;
   min-height: auto !important;
   padding: clamp(0.95rem, 2.5vw, 1.25rem) !important;
@@ -146,15 +143,6 @@
   font-weight: 600 !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__description {
-  grid-area: description;
-  max-width: 66ch !important;
-  margin: 0 !important;
-  color: var(--rawaj-text-secondary) !important;
-  font-size: 0.72rem !important;
-  line-height: 1.65 !important;
-}
-
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__badges {
   grid-area: badges;
   display: grid !important;
@@ -181,28 +169,6 @@
   color: #f3c98e !important;
   border-color: rgba(227, 160, 75, 0.18) !important;
   background: rgba(227, 160, 75, 0.055) !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__actions {
-  grid-area: actions;
-  display: flex !important;
-  flex-wrap: wrap;
-  gap: 0.45rem !important;
-  margin: 0.15rem 0 0 !important;
-}
-
-.rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero__actions a {
-  display: inline-flex;
-  min-height: 2.55rem !important;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid var(--rawaj-border) !important;
-  border-radius: 0.8rem !important;
-  padding: 0.45rem 0.7rem !important;
-  color: var(--rawaj-text-secondary) !important;
-  background: rgba(255, 255, 255, 0.025) !important;
-  font-size: 0.69rem !important;
-  font-weight: 800 !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command {
@@ -719,12 +685,8 @@
 
 @media (max-width: 47.99rem) {
   .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
-    grid-template-columns: 1fr !important;
-    grid-template-areas:
-      "identity"
-      "description"
-      "badges"
-      "actions";
+    display: flex !important;
+    flex-direction: column;
     padding: 0.9rem !important;
   }
 
