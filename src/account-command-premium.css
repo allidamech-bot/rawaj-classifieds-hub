@@ -135,6 +135,16 @@
   margin: 0 !important;
   color: var(--account-teal) !important;
 }
+@media (min-width: 640px) {
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__secondary {
   gap: 0.75rem;
 }
@@ -156,6 +166,9 @@
   line-height: 1.45 !important;
 }
 .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 50% !important;
   display: grid;
   place-items: center;
   color: var(--rawaj-identity-champagne) !important;

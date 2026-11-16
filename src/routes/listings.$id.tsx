@@ -1,3 +1,5 @@
+import { ExistingConversationBanner } from "@/features/listing-detail/ExistingConversationBanner";
+import { ViewedBeforeBanner } from "@/features/listing-detail/ViewedBeforeBanner";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { Clock, MapPin, ShieldAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -512,9 +514,10 @@ function ListingDetailsPage() {
                 />
                 <div className="rawaj-detail-summary__badges">
                   {listing.isFeatured ? <Badge>{text("مميز", "Featured")}</Badge> : null}
-                  <span>{text("متاح", "Available")}</span>
+                  <span>{listing.reservedAt ? text("محجوز", "Reserved") : text("متاح", "Available")}</span>
                 </div>
                 <h1>{listing.title}</h1>
+                <PriceDisplay listing={listing} language={language} text={text} />
                 <div className="rawaj-detail-summary__essentials">
                   <div className="rawaj-detail-summary__location">
                     <span aria-hidden="true">
@@ -535,7 +538,25 @@ function ListingDetailsPage() {
                     {formatDate(listing.createdAt, language)}
                   </span>
                 </div>
-                <PriceDisplay listing={listing} language={language} text={text} />
+                {actionMessage ? (
+                  <p className="rawaj-detail-v2__message" role="status">
+                    {actionMessage}
+                  </p>
+                ) : null}
+
+                <ListingContactDock
+                  listingId={listing.id}
+                  isOwner={isOwner}
+                  canCall={canCall}
+                  canWhatsapp={canWhatsapp}
+                  callHref={callHref}
+                  whatsappUrl={whatsappUrl}
+                  messageBusy={messageBusy}
+                  onMessage={() => void messageSeller()}
+                  onOffer={() => void messageSeller()}
+                  text={text}
+                />
+                <ExistingConversationBanner key={listing.id} listingId={listing.id} />
               </section>
 
               {categoryRows.length > 0 ? (
@@ -608,25 +629,7 @@ function ListingDetailsPage() {
             </aside>
           </div>
 
-          {actionMessage ? (
-            <p className="rawaj-detail-v2__message" role="status">
-              {actionMessage}
-            </p>
-          ) : null}
-
-          <ListingContactDock
-            listingId={listing.id}
-            isOwner={isOwner}
-            canCall={canCall}
-            canWhatsapp={canWhatsapp}
-            callHref={callHref}
-            whatsappUrl={whatsappUrl}
-            messageBusy={messageBusy}
-            onMessage={() => void messageSeller()}
-            onOffer={() => void messageSeller()}
-            text={text}
-          />
-
+          <ViewedBeforeBanner key={listing.id} listingId={listing.id} />
           <SimilarListingsRail
             listings={similarListings}
             categoryId={listing.categoryId}

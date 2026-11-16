@@ -46,6 +46,16 @@ export function getTaxonomyRootNodes(index: TaxonomyIndex) {
   return index.childrenByParent.get(rootParentKey) ?? [];
 }
 
+// Browsing starts with the categories that cover the broadest marketplace needs.
+const discoveryCategoryOrder = ["cars", "realestate", "mobiles", "electronics", "furniture", "jobs", "services"];
+
+export function compareDiscoveryCategoryPriority(left: string, right: string) {
+  const leftIndex = discoveryCategoryOrder.indexOf(left);
+  const rightIndex = discoveryCategoryOrder.indexOf(right);
+  return (leftIndex < 0 ? discoveryCategoryOrder.length : leftIndex)
+    - (rightIndex < 0 ? discoveryCategoryOrder.length : rightIndex);
+}
+
 export function getTaxonomyChildren(index: TaxonomyIndex, nodeId: string) {
   return index.childrenByParent.get(nodeId) ?? [];
 }

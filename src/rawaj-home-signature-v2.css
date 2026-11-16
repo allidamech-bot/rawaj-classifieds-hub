@@ -64,42 +64,37 @@
   display: none;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"]
-  :is(
-    .rawaj-home-menu-action,
-    .rawaj-header-account,
-    .rawaj-header-store,
-    .rawaj-header-admin,
-    .rawaj-header-login-cta,
-    .rawaj-shell-header__actions > div > button[aria-haspopup="dialog"]
-  ) {
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 999px !important;
-  color: #102c29 !important;
-  background: linear-gradient(155deg, #fffaf0, #f1dec1), #f1dec1 !important;
-  box-shadow: 0 4px 10px #001b1c44;
-}
-
-/* The store action must be readable on the light home header, not gold on cream. */
-.rawaj-app-shell[data-resolved-pathname="/"]
-  .rawaj-app-header
-  .rawaj-shell-header__actions
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
+  :is(.rawaj-home-menu-action, .rawaj-header-account, .rawaj-header-admin, div > button[aria-haspopup="dialog"]),
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action {
-  min-width: 3.75rem !important;
-  min-height: 3.1rem !important;
-  height: 3.1rem !important;
-  border: 1px solid #d4aa67 !important;
-  background: linear-gradient(155deg, #fffaf0, #f1dec1) !important;
-  box-shadow: 0 3px 9px #001b1c35 !important;
+  box-sizing: border-box;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 1px solid #e3e7e4 !important;
+  border-radius: 12px !important;
+  color: #103f42 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
 }
 
-.rawaj-app-shell[data-resolved-pathname="/"]
-  .rawaj-app-header
-  .rawaj-shell-header__actions
-  .rawaj-header-store.rawaj-header-action
-  :is(svg, .rawaj-header-store__label) {
-  color: #123e3a !important;
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
+  .rawaj-header-store.rawaj-header-action {
+  grid-template-rows: 1fr !important;
+  border-color: #bd984b !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
+  .rawaj-header-store.rawaj-header-action svg {
+  color: #103f42 !important;
+}
+
+.rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
+  .rawaj-header-store.rawaj-header-action .rawaj-header-store__label {
+  display: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"]
@@ -634,7 +629,7 @@
 
 .rawaj-signature-latest-card__media {
   position: relative;
-  aspect-ratio: 2.35 / 1;
+  aspect-ratio: 16 / 9;
   background: #ead9c2;
 }
 
@@ -657,11 +652,11 @@
 
 .rawaj-signature-latest-card__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
-  gap: 0.15rem 0.35rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.3rem;
   align-items: center;
   min-height: 2.7rem;
-  padding: 0.29rem 0.4rem;
+  padding: 0.6rem;
 }
 
 .rawaj-signature-latest-card__body strong {
@@ -670,16 +665,12 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   font-size: clamp(0.7rem, 3vw, 1rem);
-  line-height: 1.2;
-  overflow-wrap: anywhere;
+  line-height: 1.4;
+  min-block-size: 2.8em;
+  overflow-wrap: break-word;
 }
 
 .rawaj-signature-latest-card__body b {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  max-width: 6rem;
-  border-inline-start: 1px solid #d7c2a8;
-  padding-inline-start: 0.35rem;
   color: #07534d;
   font-size: clamp(0.68rem, 2.95vw, 1rem);
   line-height: 1.15;
@@ -957,4 +948,11 @@
 .rawaj-app-shell[data-resolved-pathname="/"] :is(.rawaj-signature-trust-row, .rawaj-signature-safety)
   :is(span, strong, small, a) {
   color: var(--rawaj-identity-ink) !important;
+}
+
+
+@media (min-width: 1024px) {
+  .rawaj-signature-hero [data-mobile-listing-action] {
+    display: none;
+  }
 }

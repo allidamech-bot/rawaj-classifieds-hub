@@ -147,8 +147,8 @@ function HomePage() {
               />
             ) : (
               <>
-                <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <HomeLatestListings listings={latestListings} language={language} text={text} />
+                <HomeFeaturedListings listings={featuredListings} language={language} text={text} />
                 <div className="rawaj-signature-ad-placement">
                   <PublicAdPlacementSlot placementPage="home" />
                 </div>
@@ -191,7 +191,7 @@ function HomeHero({ searchValue, onSearchValueChange, onSubmit, text }: HomeHero
             <ChevronLeft aria-hidden="true" />
           </Link>
 
-          <Link to="/add-listing" className="rawaj-signature-hero__primary-action">
+          <Link to="/add-listing" className="rawaj-signature-hero__primary-action" data-mobile-listing-action>
             <Plus aria-hidden="true" />
             {text("أضف إعلانًا", "Post a listing")}
           </Link>

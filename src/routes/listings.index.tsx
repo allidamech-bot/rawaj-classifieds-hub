@@ -91,6 +91,7 @@ function ListingsPage() {
   const [globalCondition, setGlobalCondition] = useState<
     "" | "new" | "used" | "refurbished" | "not_applicable"
   >(search.condition ?? "");
+  const filterTriggerRef = useRef<HTMLElement | null>(null);
   const [draftCategoryId, setDraftCategoryId] = useState<string | undefined>(undefined);
   const [priceMax, setPriceMax] = useState(search.price_max?.toString() ?? "");
   const [carMake, setCarMake] = useState(search.car_make ?? "");
@@ -892,6 +893,12 @@ function ListingsPage() {
     setDraftCategoryId(search.taxonomy ? undefined : (search.category ?? undefined));
   }
 
+  function openFilters() {
+    filterTriggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setFiltersOpen(true);
+  }
+
   function handleFilterSheetOpenChange(nextOpen: boolean) {
     if (!nextOpen) restoreFilterDraftFromSearch();
     setFiltersOpen(nextOpen);
@@ -1004,7 +1011,7 @@ function ListingsPage() {
           onSortChange={setSort}
           view={view}
           onViewChange={setView}
-          onOpenFilters={() => setFiltersOpen(true)}
+          onOpenFilters={openFilters}
           text={text}
           savedSearch={{
             taxonomy: selectedTaxonomyNode?.id ?? "",
@@ -1034,18 +1041,6 @@ function ListingsPage() {
           }}
         />
 
-        <NearbyDiscoveryControl
-          active={nearby.active}
-          loading={nearby.loading}
-          error={nearby.error}
-          radiusKm={nearby.radiusKm}
-          resultCount={nearby.items.length}
-          onActivate={() => void nearby.activate()}
-          onRadiusChange={nearby.setRadiusKm}
-          onClear={nearby.clear}
-          text={text}
-        />
-
         <QuickFilterRail
           locationLabel={
             canonicalLocationNodeId
@@ -1066,11 +1061,23 @@ function ListingsPage() {
           withPhotos={withPhotos}
           newestActive={sort === "latest"}
           hasActiveFilters={hasActiveFilters}
-          onOpenFilters={() => setFiltersOpen(true)}
+          onOpenFilters={openFilters}
           onNewest={() => setSort("latest")}
           onTogglePhotos={() => setWithPhotos((value) => !value)}
           onReset={resetFilters}
           fieldKind={categoryFieldKind}
+          text={text}
+        />
+
+        <NearbyDiscoveryControl
+          active={nearby.active}
+          loading={nearby.loading}
+          error={nearby.error}
+          radiusKm={nearby.radiusKm}
+          resultCount={nearby.items.length}
+          onActivate={() => void nearby.activate()}
+          onRadiusChange={nearby.setRadiusKm}
+          onClear={nearby.clear}
           text={text}
         />
 
@@ -1317,6 +1324,7 @@ function ListingsPage() {
 
         <FilterBottomSheet
           open={filtersOpen}
+          onReturnFocus={() => filterTriggerRef.current?.focus()}
           onOpenChange={handleFilterSheetOpenChange}
           activeCount={activeFilterCount}
           onReset={resetFilters}

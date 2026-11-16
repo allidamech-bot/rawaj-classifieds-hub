@@ -1820,7 +1820,6 @@ function AddListingPage() {
           }
           text={text}
         />
-        <ListingStudioTrustStrip text={text} />
 
         {loading ? (
           <Card title={text("جارٍ تحميل بيانات النشر", "Loading posting data")}>
@@ -2391,27 +2390,29 @@ function AddListingPage() {
                 }
                 text={text}
               />
-              <ListingStudioPreview
-                imageUrl={selectedImagePreviews[0]?.url}
-                title={title}
-                category={category ? categoryName(category.id, category.nameAr, language) : ""}
-                price={
-                  priceType === "free"
-                    ? text("مجاني", "Free")
-                    : priceType === "contact"
-                      ? text("عند التواصل", "On contact")
-                      : price
-                        ? `${price} SYP`
-                        : ""
-                }
-                location={
-                  locationLabel ||
-                  district ||
-                  (governorate ? governorateName(governorate.id, governorate.nameAr, language) : "")
-                }
-                imageCount={selectedImages.length}
-                text={text}
-              />
+              {title.trim() || selectedImages.length > 0 ? (
+                <ListingStudioPreview
+                  imageUrl={selectedImagePreviews[0]?.url}
+                  title={title}
+                  category={category ? categoryName(category.id, category.nameAr, language) : ""}
+                  price={
+                    priceType === "free"
+                      ? text("مجاني", "Free")
+                      : priceType === "contact"
+                        ? text("عند التواصل", "On contact")
+                        : price
+                          ? `${price} SYP`
+                          : ""
+                  }
+                  location={
+                    locationLabel ||
+                    district ||
+                    (governorate ? governorateName(governorate.id, governorate.nameAr, language) : "")
+                  }
+                  imageCount={selectedImages.length}
+                  text={text}
+                />
+              ) : null}
               <ListingStudioQualityPanel
                 score={score}
                 checks={quality.checks.map((check) => ({
@@ -2432,6 +2433,7 @@ function AddListingPage() {
             </aside>
           </div>
         )}
+        <ListingStudioTrustStrip text={text} />
       </main>
     </>
   );

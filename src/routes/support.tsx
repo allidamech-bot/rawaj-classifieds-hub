@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { PageHeader } from "@/components/PageHeader";
 import {
   SupportRequestTimeline,
-  TrustHubHero,
   TrustSectionHeader,
 } from "@/features/trust/TrustSupportExperience";
 import { createMySupportRequest, fetchMySupportRequests } from "@/lib/classifieds-api";
@@ -236,14 +235,19 @@ function SupportPage() {
     <>
       <PageHeader title={text("الدعم والمساعدة", "Support and help")} titleIsPageHeading={false} />
       <main className="rawaj-trust-v2 rawaj-support-v2 container-wide mobile-page-bottom space-y-5 pb-8 pt-4">
-        <TrustHubHero
-          mode="support"
-          signedIn={auth.status === "signedIn"}
-          displayName={auth.profile?.displayName ?? undefined}
-          location={auth.profile?.cityArea || auth.profile?.governorate || undefined}
-          avatarUrl={auth.profile?.avatarUrl}
-          verified={auth.profile?.verificationStatus === "verified"}
-        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold text-[#152322]">
+            {text("الدعم والمساعدة", "Support and help")}
+          </h1>
+          <nav className="flex flex-wrap gap-2" aria-label={text("موارد المساعدة", "Help resources")}>
+            <Link to="/safety" className="inline-flex min-h-11 items-center rounded-xl border px-3 text-sm text-[#103f42]">
+              {text("إرشادات الأمان", "Safety guidance")}
+            </Link>
+            <Link to="/privacy" className="inline-flex min-h-11 items-center rounded-xl border px-3 text-sm text-[#103f42]">
+              {text("الخصوصية", "Privacy")}
+            </Link>
+          </nav>
+        </div>
         <div className="rawaj-support-v2__layout">
           <div className="rawaj-support-v2__main">
             <section className="rawaj-support-panel">

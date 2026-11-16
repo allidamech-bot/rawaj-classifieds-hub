@@ -229,7 +229,6 @@ function MorePage() {
         </nav>
 
         {user ? <AccountRecentlyViewed userId={profile?.id ?? user.id} /> : null}
-        {user ? <ReferralGrowthPanel /> : null}
 
         <div className="rawaj-more-v2__sections">
           {logoutError && (
@@ -277,6 +276,7 @@ function MorePage() {
             </AccountSection>
           )}
         </div>
+        {user ? <ReferralGrowthPanel /> : null}
       </main>
     </div>
   );
@@ -349,7 +349,7 @@ function SecondaryShortcut({
       to={row.to ?? "/more"}
       data-boost-shortcut={isBoost ? "true" : undefined}
       aria-label={
-        isBoost ? text("Boost — احصل على عملاء أكثر", "Boost — Get more buyers") : undefined
+        isBoost ? text("تعزيز الظهور — احصل على عملاء أكثر", "Boost — Get more buyers") : undefined
       }
       className={`rawaj-color-card ${row.world} flex min-h-20 flex-col items-center justify-center gap-2 rounded-[1.15rem] p-2 text-center transition hover:-translate-y-0.5`}
     >

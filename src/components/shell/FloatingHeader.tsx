@@ -176,22 +176,6 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
 
           {signedIn ? <NotificationTrigger tone="light" /> : null}
 
-          {auth.canAccessAdmin ? (
-            <Link
-              to="/admin"
-              aria-label={text("لوحة الإدارة", "Admin dashboard")}
-              title={text("لوحة الإدارة", "Admin dashboard")}
-              className="rawaj-header-admin rawaj-touch-target relative grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
-            >
-              <UserCog className="h-4 w-4" />
-              {adminUnread > 0 ? (
-                <span className="absolute -top-0.5 -left-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-extrabold leading-5 text-white">
-                  {adminUnread > 99 ? "99+" : adminUnread}
-                </span>
-              ) : null}
-            </Link>
-          ) : null}
-
           {signedIn ? (
             <Link
               to="/more"
@@ -227,6 +211,22 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
               <span className="rawaj-header-store__label" aria-hidden="true">
                 {text("متجري", "My store")}
               </span>
+            </Link>
+          ) : null}
+
+          {auth.canAccessAdmin ? (
+            <Link
+              to="/admin"
+              aria-label={text("لوحة الإدارة", "Admin dashboard")}
+              title={text("لوحة الإدارة", "Admin dashboard")}
+              className="rawaj-header-admin rawaj-touch-target relative grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)]"
+            >
+              <UserCog className="h-4 w-4" />
+              {adminUnread > 0 ? (
+                <span className="absolute -top-0.5 -left-0.5 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-extrabold leading-5 text-white">
+                  {adminUnread > 99 ? "99+" : adminUnread}
+                </span>
+              ) : null}
             </Link>
           ) : null}
         </div>

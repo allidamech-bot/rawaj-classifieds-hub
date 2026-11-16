@@ -863,7 +863,7 @@ function ChatsPage() {
               </div>
             ) : !selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
-                <PanelText>{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</PanelText>
+                <p className="text-sm text-[#53615e]">{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</p>
               </div>
             ) : (
               <>

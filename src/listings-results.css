@@ -212,9 +212,29 @@ main.rawaj-search-results-v1,
   color: var(--rawaj-action-primary-foreground);
   box-shadow: none;
 }
+/* A list result keeps identity and price together, including when media is missing. */
+.rawaj-search-results-v1 .rawaj-results-grid[data-view="list"] .rawaj-adaptive-card__heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.rawaj-search-results-v1 .rawaj-results-grid[data-view="list"] .rawaj-adaptive-card__title {
+  order: -1;
+}
+
 @media (min-width: 64rem) {
   .rawaj-search-results-v1 .rawaj-results-grid[data-view="list"] {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rawaj-search-results-v1 .rawaj-results-grid[data-view="list"] .rawaj-adaptive-card__link {
+    grid-template-columns: minmax(10rem, 23%) minmax(0, 1fr);
+  }
+
+  .rawaj-search-results-v1 .rawaj-results-grid[data-view="list"] .rawaj-adaptive-card__media {
+    min-height: 8.5rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
