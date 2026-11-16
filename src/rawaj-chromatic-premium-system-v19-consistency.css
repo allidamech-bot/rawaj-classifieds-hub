@@ -210,9 +210,14 @@
   background: #10151d !important;
 }
 
-/* Public footer paint is stable across routes while the broader palette
- * migration still uses route-local --rawaj-identity-petrol values. Preserve
- * the independently styled owner and public storefront footer overrides. */
+/* Public footer paint stays stable across mixed-palette routes. Some legacy
+ * route selectors use var(--rawaj-identity-petrol) with higher specificity than
+ * this shared rule, so pin the token on the footer itself. Preserve the
+ * independently approved light owner and public storefront footers. */
+.rawaj-app-shell:not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/seller/"])
+  footer.rawaj-site-footer {
+  --rawaj-identity-petrol: #103f42;
+}
 .rawaj-app-shell footer.rawaj-site-footer,
 .rawaj-app-shell footer.rawaj-site-footer .rawaj-site-footer__mobile {
   border-color: rgba(234, 195, 143, 0.24) !important;
