@@ -250,7 +250,7 @@
 }
 
 /* Portal content is outside the route shell in older Radix primitives. */
-body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
+body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog):not(.rawaj-notification-preview)) {
   border-color: rgba(216, 174, 95, 0.13) !important;
   color: #f7f3ed !important;
   background:

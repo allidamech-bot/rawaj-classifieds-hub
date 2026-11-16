@@ -45,3 +45,65 @@ test.describe("home notification overlay boundary", () => {
     ).toBe(true);
   });
 });
+
+for (const language of ["ar", "en"] as const) {
+  test(`signed-in bell preview uses readable light colors in ${language}`, async ({ page }) => {
+    test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local Firebase fixtures");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript((locale) => {
+      localStorage.setItem("rawaj-language", locale);
+      localStorage.setItem("rawaj:e2e:firebase-user", "{}");
+    }, language);
+    const item = {
+      type: "account.updated",
+      titleAr: "تحديث الحساب",
+      titleEn: "Account update",
+      bodyAr: "يمكنك مراجعة إعدادات حسابك.",
+      bodyEn: "You can review your account settings.",
+      targetType: null,
+      targetId: null,
+      createdAt: "2026-07-30T13:00:00.000Z",
+    };
+    await page.route(/\/v1\/account\/notifications(?:\?|$)/, (route) =>
+      route.fulfill({
+        json: {
+          data: {
+            items: [
+              { ...item, id: "00000000-0000-4000-8000-000000000055", readAt: null },
+              { ...item, id: "00000000-0000-4000-8000-000000000056", readAt: item.createdAt },
+            ],
+            nextCursor: null,
+            hasMore: false,
+          },
+        },
+      }),
+    );
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("dir", language === "ar" ? "rtl" : "ltr");
+    const label = language === "ar" ? "الإشعارات" : "Notifications";
+    const bell = page.locator(".rawaj-app-header").getByRole("button", { name: label, exact: true });
+    await bell.click();
+
+    const panel = page.getByRole("dialog", { name: label, exact: true });
+    await expect(panel.getByRole("heading", { name: label, exact: true })).toHaveCSS(
+      "color",
+      "rgb(21, 35, 34)",
+    );
+    await expect(panel).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(panel).toHaveCSS("background-image", "none");
+    const unread = panel.locator('article[data-unread="true"]');
+    await expect(unread).toHaveCSS("background-color", "rgb(237, 244, 242)");
+    await expect(panel.locator('article[data-unread="false"]')).toHaveCSS(
+      "background-color",
+      "rgb(255, 255, 255)",
+    );
+    await expect(unread.getByText(/يمكنك مراجعة|You can review/)).toHaveCSS(
+      "color",
+      "rgb(83, 97, 94)",
+    );
+    await expect(
+      panel.getByRole("button", { name: /فتح مركز الإشعارات|Open notification center/ }),
+    ).toHaveCSS("background-color", "rgb(16, 63, 66)");
+  });
+}

@@ -60,6 +60,7 @@ test.describe("authenticated launch-critical journey", () => {
       timeout: 30_000,
     });
 
+    await expectListingActionsAtEnd(page);
     await chooseFirstFinalCategory(page);
     await page
       .getByPlaceholder(/مثال: سيارة كيا سيراتو|Example: Kia Cerato/i)
@@ -69,6 +70,7 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(page.getByRole("heading", { name: /^(Listing photos|صور الإعلان)$/ })).toBeVisible(
       { timeout: 20_000 },
     );
+    await expectListingActionsAtEnd(page);
     await page.locator('input[type="file"][accept*="image"]').setInputFiles({
       name: "rawaj-e2e.png",
       mimeType: "image/png",
@@ -84,6 +86,7 @@ test.describe("authenticated launch-critical journey", () => {
       .fill("إعلان تجريبي محلي للتحقق من المسودة والصورة والإرسال إلى المراجعة.");
     await completeVisibleDetailControls(page);
     await advanceUntilPriceAndLocation(page);
+    await expectListingActionsAtEnd(page);
 
     const priceInput = page.locator('main input[inputmode="numeric"]:visible').first();
     await expect(priceInput).toBeVisible();
@@ -98,8 +101,8 @@ test.describe("authenticated launch-critical journey", () => {
     await expect(
       page.getByRole("heading", { name: /^(Review before submitting|راجع الإعلان قبل الإرسال)$/ }),
     ).toBeVisible({ timeout: 25_000 });
+    await expectListingActionsAtEnd(page);
     if ((page.viewportSize()?.width ?? 1024) < 768) {
-      await expect(page.locator(".rawaj-studio-action-bar")).toHaveCSS("position", "static");
       for (const label of await page.locator(".rawaj-studio-steps__copy strong").all()) {
         await expect(label).toHaveCSS("white-space", "normal");
         expect(
@@ -192,6 +195,12 @@ async function waitForHydration(page: Page): Promise<void> {
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1, {
     timeout: 30_000,
   });
+}
+
+async function expectListingActionsAtEnd(page: Page) {
+  const actionBar = page.locator(".rawaj-studio-action-bar");
+  await expect(actionBar).toHaveCSS("position", "static");
+  await expect(page.locator(".rawaj-studio-trust-strip ~ .rawaj-studio-action-bar")).toHaveCount(1);
 }
 
 async function chooseFirstFinalCategory(page: Page): Promise<void> {

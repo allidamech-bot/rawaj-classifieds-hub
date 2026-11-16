@@ -126,6 +126,7 @@ function AddListingPage() {
   const { language, text } = useUiPreferences();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const stepContentRef = useRef<HTMLDivElement>(null);
   const [furthestStep, setFurthestStep] = useState(0);
   const [categories, setCategories] = useState<ClassifiedCategory[]>([]);
   const [taxonomyNodes, setTaxonomyNodes] = useState<TaxonomyNode[]>([]);
@@ -964,16 +965,22 @@ function AddListingPage() {
     return errors.summary.length === 0;
   }
 
+  function moveToStep(nextStep: number) {
+    if (nextStep === step) return;
+    setStep(nextStep);
+    window.requestAnimationFrame(() => {
+      stepContentRef.current?.focus({ preventScroll: true });
+      stepContentRef.current?.scrollIntoView({ block: "start" });
+    });
+  }
+
   function goNext() {
     const nextStep = Math.min(steps.length - 1, step + 1);
     if (!validateCurrentStep(nextStep === 3 ? 3 : step)) return;
     setStepErrors([]);
     setFieldErrors({});
-    setStep((value) => {
-      const next = Math.min(steps.length - 1, value + 1);
-      setFurthestStep((current) => Math.max(current, next));
-      return next;
-    });
+    setFurthestStep((current) => Math.max(current, nextStep));
+    moveToStep(nextStep);
   }
 
   function handleTaxonomySelection(node: TaxonomyNode, path: TaxonomyNode[]) {
@@ -1845,7 +1852,7 @@ function AddListingPage() {
               const validationStep = nextStep === step + 1 && nextStep < 3 ? step : 3;
               if (!validateCurrentStep(validationStep)) return;
             }
-            setStep(nextStep);
+            moveToStep(nextStep);
             setStepErrors([]);
             setFieldErrors({});
           }}
@@ -1887,7 +1894,7 @@ function AddListingPage() {
           </Card>
         ) : (
           <div className="rawaj-studio-shell">
-            <div className="rawaj-studio-shell__content">
+            <div ref={stepContentRef} className="rawaj-studio-shell__content" tabIndex={-1}>
               {stepErrors.length > 0 && (
                 <div
                   data-error-summary="true"
@@ -2358,42 +2365,6 @@ function AddListingPage() {
                 </Card>
               )}
 
-              <p className="sr-only" role="status">
-                {submitting ? submitProgressLabel : ""}
-              </p>
-              <div className="rawaj-studio-action-bar" data-review={step === 3 || undefined}>
-                <button
-                  type="button"
-                  disabled={step === 0 || submitting}
-                  onClick={() => setStep((value) => Math.max(0, value - 1))}
-                  className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"
-                >
-                  {text("السابق", "Back")}
-                </button>
-                {step < steps.length - 1 ? (
-                  <button
-                    type="button"
-                    disabled={!canContinue}
-                    onClick={goNext}
-                    className="rawaj-button-primary min-h-11 rounded-[1rem] px-6 py-2.5 disabled:opacity-50"
-                  >
-                    {text("متابعة", "Continue")}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={
-                      !canSubmit || submitting || reorderingImages || removingImageIds.size > 0
-                    }
-                    aria-busy={submitting}
-                    onClick={() => void submitListing()}
-                    className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
-                  >
-                    {submitting ? submitProgressLabel : text("إرسال للمراجعة", "Submit for review")}
-                  </button>
-                )}
-              </div>
-
               {submitMessage && (
                 <div className="rawaj-create-submission-error rounded-xl border p-3" role="alert">
                   <p>{submitMessage}</p>
@@ -2488,6 +2459,45 @@ function AddListingPage() {
           </div>
         )}
         <ListingStudioTrustStrip text={text} />
+        {!loading && !setupError && (
+          <>
+            <p className="sr-only" role="status">
+              {submitting ? submitProgressLabel : ""}
+            </p>
+            <div className="rawaj-studio-action-bar">
+              <button
+                type="button"
+                disabled={step === 0 || submitting}
+                onClick={() => moveToStep(step - 1)}
+                className="min-h-11 rounded-[1rem] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-primary transition hover:border-gold/40 disabled:opacity-40"
+              >
+                {text("السابق", "Back")}
+              </button>
+              {step < steps.length - 1 ? (
+                <button
+                  type="button"
+                  disabled={!canContinue}
+                  onClick={goNext}
+                  className="rawaj-button-primary min-h-11 rounded-[1rem] px-6 py-2.5 disabled:opacity-50"
+                >
+                  {text("متابعة", "Continue")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={
+                    !canSubmit || submitting || reorderingImages || removingImageIds.size > 0
+                  }
+                  aria-busy={submitting}
+                  onClick={() => void submitListing()}
+                  className="min-h-11 rounded-[1rem] bg-emerald-trust px-6 py-2.5 text-sm font-semibold text-emerald-trust-foreground shadow-soft transition hover:brightness-[0.98] disabled:opacity-50"
+                >
+                  {submitting ? submitProgressLabel : text("إرسال للمراجعة", "Submit for review")}
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </main>
     </>
   );

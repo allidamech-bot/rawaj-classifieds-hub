@@ -932,13 +932,18 @@
     max-width: 8.5rem;
   }
 
-  .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-action-bar[data-review="true"] {
-    position: static !important;
-  }
-
   .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-completion {
     display: none !important;
   }
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-shell__content {
+  scroll-margin-block-start: calc(5rem + env(safe-area-inset-top));
+}
+
+.rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-studio-action-bar {
+  position: static !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/add-listing"] .rawaj-create-draft {

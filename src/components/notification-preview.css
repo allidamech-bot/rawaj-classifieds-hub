@@ -1,0 +1,52 @@
+.rawaj-notification-preview {
+  color-scheme: light;
+  border: 1px solid #e3e7e4;
+  background: #ffffff;
+  color: #152322;
+  box-shadow: 0 12px 32px rgb(21 35 34 / 16%);
+}
+
+.rawaj-notification-preview__item {
+  border: 1px solid #e3e7e4;
+  background: #ffffff;
+}
+
+.rawaj-notification-preview__item[data-unread="true"],
+.rawaj-notification-preview__empty {
+  background: #edf4f2;
+}
+
+.rawaj-notification-preview__detail,
+.rawaj-notification-preview__empty {
+  color: #53615e;
+}
+
+.rawaj-notification-preview__error {
+  background: #fff1f0;
+  color: #8f2033;
+}
+
+.rawaj-notification-preview__footer {
+  border-color: #e3e7e4;
+}
+
+.rawaj-notification-preview__control {
+  border: 1px solid #e3e7e4;
+  background: #ffffff;
+  color: #103f42;
+}
+
+.rawaj-notification-preview__control:disabled {
+  background: #f4f6f5;
+  color: #53615e;
+}
+
+.rawaj-notification-preview__center {
+  background: #103f42;
+  color: #ffffff;
+}
+
+.rawaj-notification-preview :is(button, [href]):focus-visible {
+  outline: 2px solid #103f42;
+  outline-offset: 2px;
+}
