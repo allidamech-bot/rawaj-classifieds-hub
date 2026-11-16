@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Languages, LogIn, MapPin, Menu, Plus, Search, Store, User, UserCog } from "lucide-react";
+import { Languages, LogIn, MapPin, Plus, Search, Store, User, UserCog } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { NotificationTrigger } from "@/components/NotificationTrigger";
@@ -162,17 +162,6 @@ export function FloatingHeader({ compact = false, title }: FloatingHeaderProps) 
             <Languages className="h-4 w-4" strokeWidth={1.9} />
             <span>{language === "ar" ? "English" : "العربية"}</span>
           </button>
-
-          {pathname === "/" ? (
-            <Link
-              to="/categories"
-              aria-label={text("فتح الأقسام", "Open categories")}
-              title={text("الأقسام", "Categories")}
-              className="rawaj-home-menu-action rawaj-touch-target grid shrink-0 place-items-center rounded-[var(--rawaj-radius-button)] lg:hidden"
-            >
-              <Menu className="h-4 w-4" strokeWidth={1.9} />
-            </Link>
-          ) : null}
 
           {signedIn ? <NotificationTrigger tone="light" /> : null}
 
