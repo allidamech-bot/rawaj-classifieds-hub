@@ -178,10 +178,10 @@ html[dir="ltr"] .rawaj-app-header::before {
 }
 
 .rawaj-header-cta {
-  color: var(--rawaj-action-primary-foreground) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  background: var(--rawaj-gradient-action-short) !important;
-  box-shadow: 0 11px 26px rgba(155, 40, 111, 0.28) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  border: 1px solid color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent) !important;
+  background: var(--rawaj-identity-teal) !important;
+  box-shadow: 0 6px 15px rgba(7, 56, 54, 0.13) !important;
 }
 
 /* Explicit shared surfaces */

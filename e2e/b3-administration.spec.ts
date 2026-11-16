@@ -147,9 +147,13 @@ test("B3.4 owners can open every documented workspace with isolated service erro
       path,
     ).toBeLessThanOrEqual(391);
     if (
-      ["/admin", "/admin/listings", "/admin/users", "/admin/ad-placements", "/admin/owner-controls"].includes(
-        path,
-      )
+      [
+        "/admin",
+        "/admin/listings",
+        "/admin/users",
+        "/admin/ad-placements",
+        "/admin/owner-controls",
+      ].includes(path)
     ) {
       await page.screenshot({
         path: testInfo.outputPath(`owner-admin-${path.slice(1).replaceAll("/", "-")}.png`),

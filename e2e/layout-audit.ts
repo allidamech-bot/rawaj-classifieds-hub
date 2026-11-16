@@ -257,7 +257,13 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
           if (!foreground) return [];
           const background = effectiveBackground(element);
           const ratio = contrastRatio(foreground, background);
-          return ratio + 0.01 < 3 ? [`${describe(element)} [${ratio.toFixed(2)}:1 < 3:1]`] : [];
+          const action = element.closest("button, a[href], [role='button']");
+          const label = action ? describe(action) : describe(element);
+          return ratio + 0.01 < 3
+            ? [
+                `${label} > svg [${ratio.toFixed(2)}:1 < 3:1; ink=${getComputedStyle(element).color}; back=${Math.round(background.r)},${Math.round(background.g)},${Math.round(background.b)}]`,
+              ]
+            : [];
         })
         .slice(0, 20);
 
@@ -304,9 +310,7 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         }
       }
 
-      const clippedHeadings = Array.from(
-        document.querySelectorAll<HTMLElement>("main h1, main h2"),
-      )
+      const clippedHeadings = Array.from(document.querySelectorAll<HTMLElement>("main h1, main h2"))
         .filter(visible)
         .filter((element) => {
           if (element.classList.contains("sr-only")) return false;

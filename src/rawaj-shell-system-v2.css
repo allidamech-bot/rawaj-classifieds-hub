@@ -94,6 +94,20 @@
     0 8px 20px rgba(0, 0, 0, 0.15)) !important;
 }
 
+/* The contextual header is petrol. The old neutral token could resolve to
+ * dark ink and render a nearly invisible back arrow on its dark surface. */
+.rawaj-shell-header--context .rawaj-shell-header__back {
+  color: var(--rawaj-identity-ivory) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 22%, transparent) !important;
+  background: var(--rawaj-identity-petrol) !important;
+}
+
+.rawaj-shell-header--context .rawaj-shell-header__back:is(:hover, :focus-visible) {
+  color: var(--rawaj-identity-ivory) !important;
+  border-color: var(--rawaj-identity-champagne) !important;
+  background: var(--rawaj-identity-teal) !important;
+}
+
 .rawaj-shell-header__back:hover,
 .rawaj-header-admin:hover,
 .rawaj-shell-header__actions > .relative > button:hover {

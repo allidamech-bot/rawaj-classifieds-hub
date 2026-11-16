@@ -271,8 +271,15 @@ body {
   box-shadow: 0 10px 24px rgba(182, 39, 104, 0.22), inset 0 1px 0 rgba(255,255,255,.12) !important;
 }
 
-/* Buttons and actions. */
-.rawaj-header-cta,
+/* Buttons and actions. Shared header CTAs use their canonical petrol/teal
+ * owner; the V17 gradient remains limited to unmigrated in-page actions. */
+.rawaj-header-cta {
+  border-color: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent) !important;
+  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-identity-teal) !important;
+  box-shadow: 0 6px 15px rgba(7, 56, 54, 0.13) !important;
+}
+
 .rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(.rawaj-primary-action, .rawaj-cta, [data-ui="button"][data-variant="primary"]),
 .rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(button, a)[class*="bg-primary"] {
   border-color: rgba(255, 218, 154, 0.18) !important;
