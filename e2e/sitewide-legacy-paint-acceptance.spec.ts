@@ -42,6 +42,19 @@ for (const pathname of ivoryRoutes) {
       await expect(page.locator("html")).toHaveCSS("background-color", "rgb(249, 240, 228)");
       await expect(page.locator("main")).toBeVisible();
 
+      if (pathname === "/categories" || pathname === "/more" || pathname === "/chats") {
+        const header = page.locator(".rawaj-app-header[data-header-variant]");
+        await expect(header).toBeVisible();
+        await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(header).toHaveCSS("background-image", "none");
+        await expect(header).toHaveCSS("border-bottom-width", "0px");
+        await expect(header).toHaveCSS("box-shadow", "none");
+        await expect(header.locator(".rawaj-brand-lockup__name")).toHaveCSS(
+          "color",
+          "rgb(21, 35, 34)",
+        );
+      }
+
       if (pathname === "/categories") {
         await expect(page.locator(".rawaj-categories-v2__hero-search input")).toHaveCSS(
           "color",

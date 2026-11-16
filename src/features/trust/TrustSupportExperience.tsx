@@ -9,7 +9,7 @@ import {
   MessageSquareText,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -43,25 +43,19 @@ export function TrustHubHero({
       ? text("دعم واضح يمكن متابعته", "Support you can track")
       : mode === "safety"
         ? text("تعامل بوعي قبل أي اتفاق", "Deal carefully before any agreement")
-        : signedIn
-          ? text("مساحتك والخدمات المساندة", "Your space and supporting services")
-          : text("اكتشف خدمات رواج المساندة", "Explore RAWAJ support services");
+        : text("حسابي", "My account");
   const description =
     mode === "support"
       ? text(
           "أرسل طلباً محفوظاً، اربطه بإعلان عند الحاجة، وتابع حالته من الحساب نفسه دون وعود برد فوري.",
           "Submit a stored request, link it to a listing when relevant, and track its status without promises of an instant reply.",
         )
-      : mode === "safety"
-        ? text(
-            "رواج يربط المستخدمين ولا يدير الدفع أو الضمان أو الإسكرو. المعاينة والتحقق مسؤولية الطرفين.",
-            "RAWAJ connects users and does not handle payments, guarantees, or escrow. Inspection and verification remain the parties’ responsibility.",
-          )
-        : text(
-            "إدارة الحساب والخدمات المساندة من نقطة وصول واحدة، بدون تكرار للاختصارات الموجودة في الترويسة.",
-            "Manage your account and supporting services from one place without duplicating header shortcuts.",
-          );
-  const Icon = mode === "support" ? LifeBuoy : mode === "safety" ? ShieldAlert : Sparkles;
+      : text(
+          "رواج يربط المستخدمين ولا يدير الدفع أو الضمان أو الإسكرو. المعاينة والتحقق مسؤولية الطرفين.",
+          "RAWAJ connects users and does not handle payments, guarantees, or escrow. Inspection and verification remain the parties’ responsibility.",
+        );
+  const Icon = mode === "support" ? LifeBuoy : mode === "safety" ? ShieldAlert : UserRound;
+  const accountName = mode === "more" && signedIn ? displayName : undefined;
 
   return (
     <section className="rawaj-trust-hero" data-mode={mode}>
@@ -80,38 +74,40 @@ export function TrustHubHero({
           </span>
         )}
         <div>
-          <p>
-            {mode === "more"
-              ? text("مركز المزيد", "More hub")
-              : text("الثقة والمساعدة", "Trust and help")}
-          </p>
-          <h1>{mode === "more" && displayName ? displayName : title}</h1>
-          {mode === "more" && displayName ? <strong>{title}</strong> : null}
+          {mode !== "more" ? <p>{text("الثقة والمساعدة", "Trust and help")}</p> : null}
+          {accountName ? <p>{title}</p> : null}
+          <h1>{accountName ?? title}</h1>
           {location ? <small>{location}</small> : null}
         </div>
       </div>
-      <p className="rawaj-trust-hero__description">{description}</p>
-      <div className="rawaj-trust-hero__badges">
-        <span>
-          <ShieldCheck aria-hidden="true" />
-          {text("إرشادات أمان واضحة", "Clear safety guidance")}
-        </span>
-        <span>
-          <MessageSquareText aria-hidden="true" />
-          {text("طلبات دعم محفوظة", "Stored support requests")}
-        </span>
-        {verified ? (
-          <span>
-            <BadgeCheck aria-hidden="true" />
-            {text("حساب موثّق", "Verified account")}
-          </span>
-        ) : null}
-        {unreadActivity > 0 ? (
-          <b>
-            {unreadActivity} {text("بحاجة لانتباه", "need attention")}
-          </b>
-        ) : null}
-      </div>
+      {mode !== "more" ? <p className="rawaj-trust-hero__description">{description}</p> : null}
+      {mode !== "more" || verified || unreadActivity > 0 ? (
+        <div className="rawaj-trust-hero__badges">
+          {mode !== "more" ? (
+            <>
+              <span>
+                <ShieldCheck aria-hidden="true" />
+                {text("إرشادات أمان واضحة", "Clear safety guidance")}
+              </span>
+              <span>
+                <MessageSquareText aria-hidden="true" />
+                {text("طلبات دعم محفوظة", "Stored support requests")}
+              </span>
+            </>
+          ) : null}
+          {verified ? (
+            <span>
+              <BadgeCheck aria-hidden="true" />
+              {text("حساب موثّق", "Verified account")}
+            </span>
+          ) : null}
+          {unreadActivity > 0 ? (
+            <b>
+              {unreadActivity} {text("بحاجة لانتباه", "need attention")}
+            </b>
+          ) : null}
+        </div>
+      ) : null}
       {mode !== "more" ? (
         <nav className="rawaj-trust-hero__actions">
           <Link to="/support">

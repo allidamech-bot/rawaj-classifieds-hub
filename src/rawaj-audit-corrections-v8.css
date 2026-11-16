@@ -159,9 +159,9 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
   background: var(--rawaj-identity-ivory) !important;
 }
 
-/* Real opaque foundation beneath navigation and header artwork. */
+/* Shared navigation and footer retain the categories accent. */
 .rawaj-app-shell[data-resolved-pathname="/categories"]
-  :is(.rawaj-app-header, .rawaj-shell-header, .rawaj-site-footer, .rawaj-bottom-nav-shell) {
+  :is(.rawaj-site-footer, .rawaj-bottom-nav-shell) {
   background-color: var(--rawaj-identity-petrol) !important;
   color: var(--rawaj-shell-chrome-ink, var(--rawaj-identity-ivory)) !important;
 }

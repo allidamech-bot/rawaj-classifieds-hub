@@ -22,7 +22,7 @@ export function ShellHeaderFrame({
   return (
     <header
       className={cn(
-        "rawaj-app-header rawaj-shell-header sticky top-0 z-30 text-foreground",
+        "rawaj-app-header rawaj-shell-header relative z-30 text-foreground",
         `rawaj-shell-header--${variant}`,
         className,
       )}

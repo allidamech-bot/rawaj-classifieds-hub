@@ -14,23 +14,6 @@
   background: var(--rawaj-shell-canvas) !important;
 }
 
-.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
-  .rawaj-app-header {
-  --rawaj-text-primary: var(--rawaj-shell-chrome-ink);
-}
-
-/* Header text and background must be explicitly opaque in Chromium and WebKit.
- * Inheriting a light account token otherwise places ivory copy on ivory chrome. */
-.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
-  .rawaj-shell-header--workspace {
-  background-color: var(--rawaj-identity-petrol) !important;
-  background-image: none !important;
-}
-.rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
-  .rawaj-shell-header--workspace .rawaj-shell-header__title :is(h1, p) {
-  color: var(--rawaj-identity-ivory) !important;
-}
-
 .rawaj-admin-v3 {
   color: var(--rawaj-identity-ink);
 }

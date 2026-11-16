@@ -99,6 +99,9 @@ for (const language of ["ar", "en"] as const) {
       await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
 
       const header = page.locator(".rawaj-app-header");
+      await expect(header).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await expect(header).toHaveCSS("background-image", "none");
+      await expect(header).toHaveCSS("border-bottom-width", "0px");
       const loginLabel = language === "ar" ? "تسجيل الدخول" : "Log in";
       const login = header.getByRole("link", { name: loginLabel });
       const label = login.locator(".rawaj-header-login-cta__label");
@@ -149,3 +152,39 @@ for (const language of ["ar", "en"] as const) {
     }
   });
 }
+
+test("B1 compact mobile account fits a signed-in header and its shortcuts", async ({ page }) => {
+  test.skip(process.env.RAWAJ_E2E_USE_FIXTURES !== "1", "Requires local Firebase fixtures");
+  await page.addInitScript(() => localStorage.setItem("rawaj:e2e:firebase-user", "{}"));
+  await page.goto("/more", { waitUntil: "domcontentloaded" });
+  const header = page.locator(".rawaj-app-header");
+  const store = header.locator(".rawaj-header-store");
+  const hero = page.locator('.rawaj-trust-hero[data-mode="more"]');
+  await expect(store).toBeVisible();
+  await expect(hero).toBeVisible();
+
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    const layout = await page.evaluate(() => {
+      const hero = document.querySelector(".rawaj-trust-hero")!.getBoundingClientRect();
+      const brand = document.querySelector(".rawaj-shell-header__brand")!.getBoundingClientRect();
+      const actions = document
+        .querySelector(".rawaj-shell-header__actions")!
+        .getBoundingClientRect();
+      return {
+        accountHeight: hero.height,
+        documentWidth: document.documentElement.scrollWidth,
+        actionsInViewport: actions.left >= 0 && actions.right <= innerWidth,
+        headerOverlap:
+          brand.left < actions.right &&
+          brand.right > actions.left &&
+          brand.top < actions.bottom &&
+          brand.bottom > actions.top,
+      };
+    });
+    expect(layout.accountHeight).toBeLessThanOrEqual(155);
+    expect(layout.documentWidth).toBeLessThanOrEqual(width + 1);
+    expect(layout.actionsInViewport).toBe(true);
+    expect(layout.headerOverlap).toBe(false);
+  }
+});
