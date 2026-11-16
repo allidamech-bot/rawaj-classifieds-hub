@@ -83,7 +83,7 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action {
-  grid-template-rows: 1fr !important;
+  grid-template-rows: 20px 16px !important;
   border-color: #bd984b !important;
 }
 
@@ -94,7 +94,12 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action .rawaj-header-store__label {
-  display: none !important;
+  display: block !important;
+  color: #103f42 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+  white-space: nowrap;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"]
