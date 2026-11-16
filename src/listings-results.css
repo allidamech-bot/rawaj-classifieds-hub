@@ -24,7 +24,8 @@ main.rawaj-search-results-v1,
    * The shared ivory palette still applies to other pages. */
   --rawaj-card-background: #ffffff;
   --muted-surface: var(--rawaj-muted-surface);
-  --card-warm: var(--rawaj-card-background);
+  --card-warm: #ffffff;
+  --rawaj-card-background: #ffffff;
   --rawaj-focus-ring: var(--rawaj-identity-teal);
   --rawaj-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-identity-teal) 18%, transparent);
   --color-background: var(--rawaj-page-background);
