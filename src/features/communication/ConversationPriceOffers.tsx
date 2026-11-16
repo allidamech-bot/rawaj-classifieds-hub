@@ -219,7 +219,10 @@ export function ConversationPriceOffers({ conversationId, enabled }: Conversatio
           ))}
         </div>
       ) : snapshot ? (
-        <p data-price-offer-empty="true" className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground">
+        <p
+          data-price-offer-empty="true"
+          className="mt-3 rounded-xl bg-muted-surface p-3 text-[11px] text-muted-foreground"
+        >
           {snapshot.role === "buyer"
             ? text(
                 "لم يتم تقديم عرض سعر بعد. يمكنك إرسال أول عرض من هنا.",
