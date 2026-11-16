@@ -36,7 +36,7 @@ for (const path of adminRoutes) {
       "rgb(255, 255, 255)",
     );
     const gate = main.locator(".rawaj-admin-gate");
-    await expect(gate).toHaveCSS("background-color", "rgb(255, 250, 243)");
+    await expect(gate).toHaveCSS("background-color", "rgb(255, 255, 255)");
     await expect(gate).toHaveCSS("background-image", "none");
     const action = gate.getByRole("link", { name: "Log in" });
     await expect(action).toHaveCSS("background-color", "rgb(16, 63, 66)");
