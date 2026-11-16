@@ -359,24 +359,21 @@ function PromotionPage() {
                       role="radio"
                       aria-checked={selected}
                       onClick={() => setSelectedPackageCode(boostPackage.code)}
-                      className={`relative min-w-0 rounded-2xl p-4 text-start transition hairline ${
-                        selected
-                          ? "bg-amber-500/12 ring-2 ring-amber-600"
-                          : "bg-muted-surface hover:bg-amber-500/7"
-                      }`}
+                      data-boost-option="true"
+                      className="rawaj-boost-option relative min-w-0 rounded-2xl p-4 text-start transition"
                     >
                       {boostPackage.recommended ? (
                         <span className="absolute end-2 top-2 rounded-full bg-amber-600 px-2 py-1 text-[9px] font-extrabold text-white">
                           {text("الأكثر اختياراً", "Popular")}
                         </span>
                       ) : null}
-                      <span className="block pe-14 text-sm font-black">
+                      <span className={`rawaj-boost-option__title block text-sm font-black ${boostPackage.recommended ? "pt-7" : ""}`}>
                         {searchBoostName(boostPackage.code, text)}
                       </span>
                       <span className="mt-2 block text-xs text-muted-foreground">
                         {searchBoostDurationLabel(boostPackage.code, text)}
                       </span>
-                      <span className="mt-3 block text-base font-black text-amber-800 dark:text-amber-300">
+                      <span className="rawaj-boost-option__price mt-3 block text-base font-black">
                         {formatSearchBoostPrice(boostPackage.priceMinor, language)}
                       </span>
                       {selected ? (
