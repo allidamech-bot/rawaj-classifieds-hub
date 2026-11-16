@@ -215,7 +215,7 @@
 .rawaj-app-shell footer.rawaj-site-footer,
 .rawaj-app-shell footer.rawaj-site-footer .rawaj-site-footer__mobile {
   border-color: rgba(234, 195, 143, 0.24) !important;
-  background: var(--rawaj-identity-petrol, #073836) !important;
+  background: var(--rawaj-identity-petrol, #103f42) !important;
 }
 
 /* B2 mobile footer prose must not inherit the earlier dark-shell muted ink.
