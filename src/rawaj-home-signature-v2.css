@@ -916,7 +916,8 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
-  color: #102c29 !important;
+  /* Visible login text sits on a dark header action: preserve AA contrast. */
+  color: #fff6e7 !important;
 }
 
 /* The approved home composition remains unchanged. Ensure the bright
