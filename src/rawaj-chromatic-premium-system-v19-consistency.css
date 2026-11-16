@@ -210,12 +210,13 @@
   background: #10151d !important;
 }
 
-/* The retired v17 global `.rawaj-app-shell footer` selector is more specific than
- * a standalone footer class. Override that exact legacy rule at its shared boundary. */
+/* Public footer paint is stable across routes while the broader palette
+ * migration still uses route-local --rawaj-identity-petrol values. Preserve
+ * the independently styled owner and public storefront footer overrides. */
 .rawaj-app-shell footer.rawaj-site-footer,
 .rawaj-app-shell footer.rawaj-site-footer .rawaj-site-footer__mobile {
   border-color: rgba(234, 195, 143, 0.24) !important;
-  background: var(--rawaj-identity-petrol, #103f42) !important;
+  background: #103f42 !important;
 }
 
 /* B2 mobile footer prose must not inherit the earlier dark-shell muted ink.
