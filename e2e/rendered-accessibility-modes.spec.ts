@@ -12,7 +12,9 @@ for (const route of [
   { name: "account", path: "/more" },
   { name: "login", path: "/login" },
 ] as const) {
-  test(`${route.name} tolerates 200% text scaling with reduced motion`, async ({ page }, testInfo) => {
+  test(`${route.name} tolerates 200% text scaling with reduced motion`, async ({
+    page,
+  }, testInfo) => {
     await page.goto(route.path, { waitUntil: "domcontentloaded" });
     await expect(page.locator('html[data-rawaj-a11y-ready="true"]')).toHaveCount(1);
     await page.addStyleTag({
@@ -28,8 +30,9 @@ for (const route of [
     });
 
     if (route.name === "home") {
-      const overlappingHeadings = await page.locator(".rawaj-signature-section-header").evaluateAll(
-        (headers) =>
+      const overlappingHeadings = await page
+        .locator(".rawaj-signature-section-header")
+        .evaluateAll((headers) =>
           headers.flatMap((header, i) => {
             const heading = header.querySelector("h2");
             const action = header.querySelector("a");
@@ -40,10 +43,11 @@ for (const route of [
             const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
             return width > 4 && height > 4 ? [i] : [];
           }),
-      );
-      expect(overlappingHeadings, "200%-scaled section titles must not cover their actions").toEqual(
-        [],
-      );
+        );
+      expect(
+        overlappingHeadings,
+        "200%-scaled section titles must not cover their actions",
+      ).toEqual([]);
     }
 
     await page.screenshot({

@@ -90,7 +90,9 @@ test.describe("authenticated rendered visual QA", () => {
           page.locator('a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon > svg'),
         ).toHaveCSS("color", "rgb(255, 227, 176)");
         await expect(
-          page.locator(".rawaj-shell-header--context .rawaj-shell-header__actions > .relative > button"),
+          page.locator(
+            ".rawaj-shell-header--context .rawaj-shell-header__actions > .relative > button",
+          ),
         ).toHaveCSS("color", "rgb(249, 240, 228)");
       }
 
