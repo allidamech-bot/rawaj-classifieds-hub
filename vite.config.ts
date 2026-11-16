@@ -46,7 +46,9 @@ export default defineConfig({
           createRawajE2eSavedDiscoveryFixturePlugin(),
           createRawajE2eNotificationsFixturePlugin(),
           createRawajE2eMessagingFixturePlugin(),
-          createRawajE2eMessagingFixturePlugin("price-offers"),
+          ...["mobile-chromium", "desktop-chromium", "desktop-firefox", "mobile-webkit"].map(
+            (project) => createRawajE2eMessagingFixturePlugin(`price-offers-${project}`),
+          ),
           createRawajE2eImageOrderFixturePlugin(),
           createRawajE2eOwnerListingLifecycleFixturePlugin(),
           createRawajE2ePrivateFixturePlugin(),
