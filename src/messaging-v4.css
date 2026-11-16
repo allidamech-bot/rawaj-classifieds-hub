@@ -539,3 +539,70 @@
   background: var(--message-muted) !important;
   background-image: none !important;
 }
+
+/* Source-owned conversation secondary controls and primary Send state. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-secondary-actions {
+  display: flex;
+  gap: .5rem;
+  padding: .4rem .75rem;
+  border-bottom: 1px solid #e3e7e4;
+  background: #ffffff;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-offers-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid #e3e7e4;
+  border-radius: 12px;
+  padding: .55rem .75rem;
+  color: #103f42;
+  background: #ffffff;
+  font-size: .8rem;
+  font-weight: 700;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-offers-toggle[aria-expanded="true"] {
+  border-color: #103f42;
+  background: #edf4f2;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-offers-region {
+  flex: 0 1 auto;
+  max-height: 42%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  button.rawaj-message-composer__send {
+  border: 1px solid #103f42 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  button.rawaj-message-composer__send:disabled {
+  border-color: #e3e7e4 !important;
+  color: #53615e !important;
+  background: #e3e7e4 !important;
+  opacity: 1 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-composer :is(button, textarea):focus-visible,
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-message-offers-toggle:focus-visible {
+  outline: 3px solid #103f42 !important;
+  outline-offset: 2px;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-block-confirm-dialog {
+  color: #152322 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-block-confirm-dialog input {
+  color: #152322 !important;
+  background: #ffffff !important;
+}
