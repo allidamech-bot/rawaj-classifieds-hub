@@ -101,18 +101,6 @@ function AdminOverview() {
     );
   }
 
-  if (loading && !hasLoaded) {
-    return (
-      <AdminLoadState
-        title={text("جارٍ تحميل مركز القيادة", "Loading command center")}
-        body={text(
-          "يتم الآن جلب المؤشرات التشغيلية الحقيقية.",
-          "Real operational metrics are being loaded.",
-        )}
-      />
-    );
-  }
-
   if (error && !hasLoaded) {
     return (
       <AdminLoadState
@@ -120,6 +108,18 @@ function AdminOverview() {
         body={error}
         actionLabel={text("إعادة المحاولة", "Try again")}
         onAction={() => void loadMetrics()}
+      />
+    );
+  }
+
+  if (!hasLoaded) {
+    return (
+      <AdminLoadState
+        title={text("جارٍ تحميل مركز القيادة", "Loading command center")}
+        body={text(
+          "يتم الآن جلب المؤشرات التشغيلية الحقيقية.",
+          "Real operational metrics are being loaded.",
+        )}
       />
     );
   }

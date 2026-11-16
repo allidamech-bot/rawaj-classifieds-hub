@@ -226,7 +226,8 @@ main.rawaj-search-results-v1,
 .rawaj-filter-sheet[data-design-palette="ivory"] .rawaj-filter-category-grid strong {
   font-size: 0.75rem;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .rawaj-filter-sheet[data-design-palette="ivory"] .rawaj-filter-category-grid button {
   min-height: 4rem;

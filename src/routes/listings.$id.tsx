@@ -614,6 +614,19 @@ function ListingDetailsPage() {
             </p>
           ) : null}
 
+          <ListingContactDock
+            listingId={listing.id}
+            isOwner={isOwner}
+            canCall={canCall}
+            canWhatsapp={canWhatsapp}
+            callHref={callHref}
+            whatsappUrl={whatsappUrl}
+            messageBusy={messageBusy}
+            onMessage={() => void messageSeller()}
+            onOffer={() => void messageSeller()}
+            text={text}
+          />
+
           <SimilarListingsRail
             listings={similarListings}
             categoryId={listing.categoryId}
@@ -632,19 +645,6 @@ function ListingDetailsPage() {
         />
         <script {...jsonLdScript(listingBreadcrumbs)} />
       </main>
-
-      <ListingContactDock
-        listingId={listing.id}
-        isOwner={isOwner}
-        canCall={canCall}
-        canWhatsapp={canWhatsapp}
-        callHref={callHref}
-        whatsappUrl={whatsappUrl}
-        messageBusy={messageBusy}
-        onMessage={() => void messageSeller()}
-        onOffer={() => void messageSeller()}
-        text={text}
-      />
     </>
   );
 }

@@ -1904,6 +1904,7 @@ function AddListingPage() {
                       error={fieldErrors.title}
                     >
                       <input
+                        aria-describedby="listing-title-minimum"
                         value={title}
                         onChange={(event) => setTitle(event.target.value)}
                         className="input"
@@ -1914,6 +1915,9 @@ function AddListingPage() {
                         data-first-invalid={Boolean(fieldErrors.title)}
                       />
                     </Field>
+                    <p id="listing-title-minimum" className="text-xs text-muted-foreground">
+                      {text("الحد الأدنى 10 أحرف.", "Minimum: 10 characters.")}
+                    </p>
                   </Card>
                 </>
               )}

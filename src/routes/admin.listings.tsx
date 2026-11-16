@@ -41,6 +41,14 @@ const STATUS_FILTERS = [
 
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
+const listingStatusLabels: Record<string, [string, string]> = {
+  pending_review: ["بانتظار المراجعة", "Pending review"],
+  approved: ["معتمد", "Approved"],
+  rejected: ["مرفوض", "Rejected"],
+  archived: ["مؤرشف", "Archived"],
+  expired: ["منتهي", "Expired"],
+};
+
 function AdminListingModerationConsole() {
   const auth = useAuth();
   const { language, text } = useUiPreferences();
@@ -274,7 +282,7 @@ function AdminListingModerationConsole() {
         >
           {STATUS_FILTERS.map((status) => (
             <option key={status} value={status}>
-              {status === "all" ? text("كل الحالات", "All statuses") : uiLabel(status, language)}
+              {status === "all" ? text("كل الحالات", "All statuses") : text(...listingStatusLabels[status])}
             </option>
           ))}
         </select>
@@ -392,7 +400,9 @@ function ListingDecisionCard({
           </p>
         </div>
         <span className="rounded-lg bg-muted-surface px-2.5 py-1 text-[11px] font-bold hairline">
-          {uiLabel(listing.status, language)}
+          {listingStatusLabels[listing.status]
+            ? text(...listingStatusLabels[listing.status])
+            : uiLabel(listing.status, language)}
         </span>
       </div>
 
