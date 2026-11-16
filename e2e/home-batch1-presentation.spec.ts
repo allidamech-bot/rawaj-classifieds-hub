@@ -166,13 +166,21 @@ test("B1 compact mobile account fits a signed-in header and its shortcuts", asyn
   for (const width of [320, 360, 390, 430]) {
     await page.setViewportSize({ width, height: 844 });
     const layout = await page.evaluate(() => {
-      const hero = document.querySelector(".rawaj-trust-hero")!.getBoundingClientRect();
+      const card = document.querySelector(".rawaj-trust-hero")!;
+      const hero = card.getBoundingClientRect();
+      const cardStyle = getComputedStyle(card);
       const brand = document.querySelector(".rawaj-shell-header__brand")!.getBoundingClientRect();
       const actions = document
         .querySelector(".rawaj-shell-header__actions")!
         .getBoundingClientRect();
       return {
         accountHeight: hero.height,
+        accountLayout: {
+          display: cardStyle.display,
+          padding: cardStyle.padding,
+          gap: cardStyle.gap,
+          children: Array.from(card.children, (child) => child.getBoundingClientRect().height),
+        },
         documentWidth: document.documentElement.scrollWidth,
         actionsInViewport: actions.left >= 0 && actions.right <= innerWidth,
         headerOverlap:
@@ -182,7 +190,8 @@ test("B1 compact mobile account fits a signed-in header and its shortcuts", asyn
           brand.bottom > actions.top,
       };
     });
-    expect(layout.accountHeight).toBeLessThanOrEqual(155);
+    const accountLayout = JSON.stringify(layout.accountLayout);
+    expect(layout.accountHeight, accountLayout).toBeLessThanOrEqual(155);
     expect(layout.documentWidth).toBeLessThanOrEqual(width + 1);
     expect(layout.actionsInViewport).toBe(true);
     expect(layout.headerOverlap).toBe(false);

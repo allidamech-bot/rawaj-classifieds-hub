@@ -75,7 +75,6 @@ export function TrustHubHero({
         )}
         <div>
           {mode !== "more" ? <p>{text("الثقة والمساعدة", "Trust and help")}</p> : null}
-          {accountName ? <p>{title}</p> : null}
           <h1>{accountName ?? title}</h1>
           {location ? <small>{location}</small> : null}
         </div>

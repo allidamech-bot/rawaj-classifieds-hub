@@ -232,13 +232,20 @@
 }
 @media (max-width: 639px) {
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-account-command-v3 {
+    align-content: start;
     gap: 0.75rem !important;
     padding-block-start: 0.4rem !important;
     padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
     padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero[data-mode="more"] {
-    padding: 0.85rem !important;
+    display: flex !important;
+    flex-direction: column;
+    align-self: start;
+    gap: 0.35rem !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    padding: 0.75rem !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__avatar {
     width: 3rem !important;
@@ -252,7 +259,13 @@
     font-size: 1.2rem !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges {
-    margin-top: 0;
+    display: flex !important;
+    flex-wrap: wrap;
+    margin-top: 0 !important;
+  }
+  .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-trust-hero__badges :is(span, b) {
+    min-height: 1.75rem !important;
+    padding-block: 0.2rem !important;
   }
   .rawaj-app-shell.rawaj-route-more[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-more-v2__command > a.rawaj-color-card {
     min-height: 4.3rem !important;
