@@ -33,7 +33,7 @@
 .rawaj-app-shell[data-design-palette="ivory"]:is(
   [data-resolved-pathname^="/category/"],
   [data-resolved-pathname^="/syria/"]
-) .rawaj-shell-header :is(.rawaj-brand-lockup__name, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
+) .rawaj-shell-header :is(.rawaj-brand-lockup__name, .rawaj-brand-lockup__latin, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
   color: var(--rawaj-shell-chrome-ink) !important;
 }
 
