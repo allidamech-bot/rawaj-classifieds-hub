@@ -87,12 +87,18 @@ test("iPhone-sized conversation has reachable Send and tools, secondary offers, 
   await hydrated(page, "/login?returnTo=/chats");
   await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
   await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
-  await page.locator("form").getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ }).click();
+  await page
+    .locator("form")
+    .getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ })
+    .click();
   await expect(page).toHaveURL(/\/chats/);
   await expect(page.locator(".rawaj-message-workspace")).toHaveAttribute("data-view", "list");
   await page.locator(".rawaj-conversation-summary").first().click();
   await expect(page).toHaveURL(new RegExp(`conversation=${CONVERSATION_ID}`));
-  await expect(page.locator(".rawaj-message-workspace")).toHaveAttribute("data-view", "conversation");
+  await expect(page.locator(".rawaj-message-workspace")).toHaveAttribute(
+    "data-view",
+    "conversation",
+  );
   const dock = page.locator(".rawaj-mobile-dock");
   await expect(dock).toBeHidden();
   await expect(page.locator("[data-feedback-trigger]")).toBeHidden();
@@ -103,7 +109,9 @@ test("iPhone-sized conversation has reachable Send and tools, secondary offers, 
   await expect(send).toBeVisible();
   await expect(send).toBeDisabled();
   await expect(page.getByRole("button", { name: /إرفاق صورة|Attach image/i })).toBeVisible();
-  await expect(page.getByRole("button", { name: /تسجيل رسالة صوتية|Record voice message/i })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /تسجيل رسالة صوتية|Record voice message/i }),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: /مشاركة الموقع|Share location/i })).toBeVisible();
   await expect(page.locator(".rawaj-message-composer__block-reason")).toHaveCount(0);
   await page.locator(".rawaj-message-offers-toggle").click();
