@@ -471,3 +471,28 @@
     transition: none !important;
   }
 }
+
+/* Listing decisions: the previous dark hero inherited dark h2 ink from the
+ * workspace and made its title invisible. One neutral semantic module card. */
+.rawaj-app-shell[data-resolved-pathname="/admin/listings"] .rawaj-admin-v3 .rawaj-admin-module-intro {
+  border: 1px solid var(--rawaj-border) !important;
+  border-radius: var(--rawaj-radius-surface) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-card-background) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/admin/listings"] .rawaj-admin-module-intro
+  :is(.rawaj-admin-module-intro__title, .rawaj-admin-module-intro__description) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/admin/listings"] .rawaj-admin-module-intro__eyebrow {
+  color: var(--rawaj-identity-teal) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/admin/listings"] .rawaj-admin-module-intro__refresh {
+  border: 1px solid var(--rawaj-border-strong) !important;
+  color: var(--rawaj-identity-petrol) !important;
+  background: var(--rawaj-surface-selected) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
