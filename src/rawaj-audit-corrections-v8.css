@@ -446,29 +446,16 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 .rawaj-admin-nav-controls {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(44px, auto) minmax(0, 1fr) minmax(44px, auto);
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .rawaj-admin-nav-controls::before,
 .rawaj-admin-nav-controls::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  inset-block: 0;
-  width: 1.6rem;
-  pointer-events: none;
-}
-
-.rawaj-admin-nav-controls::before {
-  inset-inline-start: 2.85rem;
-  background: none;
-}
-
-.rawaj-admin-nav-controls::after {
-  inset-inline-end: 2.85rem;
-  background: none;
+  content: none;
+  display: none;
 }
 
 .rawaj-admin-nav-scroll-button {
@@ -479,7 +466,14 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-admin-nav-rail {
-  scroll-padding-inline: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
+  scroll-padding-inline: 0.5rem;
+}
+.rawaj-admin-nav-scroll-button {
+  flex: 0 0 44px;
+  inline-size: 44px;
+  max-inline-size: 44px;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section {
