@@ -1035,3 +1035,48 @@
     color: var(--rawaj-badge-warning-ink);
   }
 }
+
+/* Promotion package options use the same accessible light surface in every
+ * selection state. This intentionally overrides old dark bg-muted utilities. */
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card .rawaj-boost-option {
+  display: flex;
+  min-height: 10.25rem;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.35rem;
+  border: 1px solid var(--rawaj-border-strong) !important;
+  border-radius: var(--rawaj-radius-card) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-card-background) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option[aria-checked="true"] {
+  border: 2px solid var(--rawaj-identity-gold) !important;
+  background: var(--rawaj-badge-gold-surface) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option:is(:hover, :focus-visible) {
+  border-color: var(--rawaj-identity-teal) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option:focus-visible {
+  outline: 3px solid var(--rawaj-identity-teal);
+  outline-offset: 2px;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option :is(.rawaj-boost-option__title, .rawaj-boost-option__price) {
+  color: var(--rawaj-identity-ink) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option__price {
+  color: #714900 !important;
+  margin-top: auto;
+  padding-top: 0.65rem;
+}
+.rawaj-app-shell[data-resolved-pathname="/promotion"] .rawaj-promotion-card
+  .rawaj-boost-option span.text-muted-foreground {
+  color: var(--rawaj-text-secondary) !important;
+}
