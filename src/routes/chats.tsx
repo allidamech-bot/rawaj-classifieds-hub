@@ -1068,10 +1068,10 @@ function ChatsPage() {
                   className="rawaj-message-composer"
                 >
                   {selectedConversation.status === "active" ? (
-                    <div className="mb-2">
-                      <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">
+                    <details className="rawaj-message-quick-replies mb-2">
+                      <summary className="cursor-pointer text-xs font-bold text-[#103F42]">
                         {text("ردود سريعة", "Quick replies")}
-                      </p>
+                      </summary>
                       <div className="rawaj-quick-replies">
                         {quickReplies.map((reply) => (
                           <button
@@ -1085,7 +1085,7 @@ function ChatsPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </details>
                   ) : null}
                   {messageSafety.level !== "safe" ? (
                     <aside
