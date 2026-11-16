@@ -7,9 +7,9 @@
 ) {
   --rawaj-shell-ambient-opacity: 0;
   --rawaj-shell-canvas: var(--rawaj-identity-ivory);
-  --rawaj-shell-chrome-surface: var(--rawaj-identity-petrol);
-  --rawaj-shell-chrome-ink: var(--rawaj-identity-ivory);
-  --rawaj-shell-chrome-line: color-mix(in srgb, var(--rawaj-identity-ivory) 20%, transparent);
+  --rawaj-shell-chrome-surface: var(--rawaj-card-background);
+  --rawaj-shell-chrome-ink: var(--rawaj-identity-ink);
+  --rawaj-shell-chrome-line: var(--rawaj-border);
   background: var(--rawaj-identity-ivory) !important;
   color: var(--rawaj-identity-ink) !important;
 }
@@ -25,8 +25,8 @@
   [data-resolved-pathname^="/category/"],
   [data-resolved-pathname^="/syria/"]
 ) .rawaj-shell-header {
-  background: var(--rawaj-identity-petrol) !important;
-  color: var(--rawaj-identity-ivory) !important;
+  background: var(--rawaj-shell-chrome-surface) !important;
+  color: var(--rawaj-shell-chrome-ink) !important;
   box-shadow: none !important;
 }
 
@@ -34,7 +34,7 @@
   [data-resolved-pathname^="/category/"],
   [data-resolved-pathname^="/syria/"]
 ) .rawaj-shell-header :is(.rawaj-brand-lockup__name, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
-  color: var(--rawaj-identity-ivory) !important;
+  color: var(--rawaj-shell-chrome-ink) !important;
 }
 
 .rawaj-app-shell[data-design-palette="ivory"]:is(
