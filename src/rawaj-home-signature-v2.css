@@ -87,6 +87,14 @@
   border-color: #bd984b !important;
 }
 
+/* English "My store" needs more inline space than the Arabic label.
+ * Keep the same 44px tap height and do not reduce the legible 11px font. */
+html[lang="en"] .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header
+  .rawaj-shell-header__actions .rawaj-header-store.rawaj-header-action {
+  width: 56px !important;
+  min-width: 56px !important;
+}
+
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action svg {
   color: #103f42 !important;
