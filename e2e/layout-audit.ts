@@ -20,6 +20,9 @@ interface LayoutAuditReport {
   graphicalContrastFailures: string[];
   footerDockOverlap: boolean;
   activeNavigationIssues: string[];
+  overlappingActions: string[];
+  clippedHeadings: string[];
+  unexpectedDarkSurfaces: string[];
 }
 
 export async function expectRenderedLayout(page: Page, options: LayoutAuditOptions) {
@@ -31,14 +34,14 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       const body = document.body;
       const viewportWidth = window.innerWidth;
 
-      function visible(element: Element): element is HTMLElement {
-        if (!(element instanceof HTMLElement)) return false;
+      function visible(element: Element): element is HTMLElement | SVGElement {
+        if (!(element instanceof HTMLElement || element instanceof SVGElement)) return false;
         const style = window.getComputedStyle(element);
         if (
           style.display === "none" ||
           style.visibility === "hidden" ||
           Number(style.opacity) === 0 ||
-          element.hidden
+          element.hasAttribute("hidden")
         ) {
           return false;
         }
@@ -243,14 +246,125 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
       )
         .filter(visible)
         .filter((element) => !isDisabled(element))
+        // A glyph accompanied by visible text can be decorative; an icon-only
+        // action must have an independently discernible symbol.
+        .filter((element) => {
+          const action = element.closest("button, a[href], [role='button']");
+          return action instanceof HTMLElement && !/[\p{L}]/u.test(action.innerText);
+        })
         .flatMap((element) => {
           const foreground = parseColor(window.getComputedStyle(element).color);
           if (!foreground) return [];
+          const action = element.closest("button, a[href], [role='button']");
           const background = effectiveBackground(element);
-          const ratio = contrastRatio(foreground, background);
-          return ratio + 0.01 < 3 ? [`${describe(element)} [${ratio.toFixed(2)}:1 < 3:1]`] : [];
+          // Computed background-color is transparent for CSS-gradient buttons.
+          // Read every opaque gradient stop and use the WORST contrast, rather
+          // than erroneously treating the underlying ivory card as the paint.
+          const image =
+            action instanceof HTMLElement ? getComputedStyle(action).backgroundImage : "none";
+          const paintedStops = image.includes("gradient(")
+            ? Array.from(image.matchAll(/rgba?\([^)]*\)/g)).flatMap((match) => {
+                const parsed = parseColor(match[0]);
+                return parsed && parsed.a >= 0.99 ? [parsed] : [];
+              })
+            : [];
+          const ratio =
+            paintedStops.length >= 2
+              ? Math.min(...paintedStops.map((paint) => contrastRatio(foreground, paint)))
+              : contrastRatio(foreground, background);
+          const label = action ? describe(action) : describe(element);
+          return ratio + 0.01 < 3
+            ? [
+                `${label} > svg [${ratio.toFixed(2)}:1 < 3:1; ink=${getComputedStyle(element).color}; back=${Math.round(background.r)},${Math.round(background.g)},${Math.round(background.b)}]`,
+              ]
+            : [];
         })
         .slice(0, 20);
+
+      // Detect actual geometry failures rather than matching obsolete CSS literals.
+      // Only compare sibling actions to avoid intentional nested clickable cards.
+      const siblingActions = Array.from(
+        document.querySelectorAll<HTMLElement>("main button, main a[href], main [role='button']"),
+      )
+        .filter(visible)
+        .filter((element) => !isDisabled(element));
+      const overlappingActions: string[] = [];
+      for (let i = 0; i < siblingActions.length && overlappingActions.length < 12; i++) {
+        const first = siblingActions[i];
+        for (let j = i + 1; j < siblingActions.length; j++) {
+          const second = siblingActions[j];
+          if (first.parentElement !== second.parentElement) continue;
+          // Favorite overlays are separate, keyboard-accessible controls above
+          // their own listing-card link, not two accidentally colliding actions.
+          const card = first.closest(".rawaj-signature-latest-card");
+          if (
+            card &&
+            card === second.closest(".rawaj-signature-latest-card") &&
+            (first.matches(".rawaj-signature-latest-card__favorite") ||
+              second.matches(".rawaj-signature-latest-card__favorite"))
+          ) {
+            continue;
+          }
+          // Inline links can wrap onto separate lines: boundingClientRect
+          // encloses all fragments and produces false intersections.
+          const fragmentsA = Array.from(first.getClientRects());
+          const fragmentsB = Array.from(second.getClientRects());
+          const overlapping = fragmentsA.some((a) =>
+            fragmentsB.some((b) => {
+              const width = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+              const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+              const area = Math.min(a.width * a.height, b.width * b.height);
+              return width >= 8 && height >= 8 && width * height > area * 0.15;
+            }),
+          );
+          if (overlapping) {
+            overlappingActions.push(`${describe(first)} overlaps ${describe(second)}`);
+            if (overlappingActions.length >= 12) break;
+          }
+        }
+      }
+
+      const clippedHeadings = Array.from(document.querySelectorAll<HTMLElement>("main h1, main h2"))
+        .filter(visible)
+        .filter((element) => {
+          if (element.classList.contains("sr-only")) return false;
+          const style = getComputedStyle(element);
+          if (
+            style.overflowY === "visible" ||
+            style.webkitLineClamp !== "none" ||
+            element.scrollHeight <= element.clientHeight + 6
+          ) {
+            return false;
+          }
+          // scrollHeight includes font line-box metrics and can exceed the
+          // element without clipping any painted glyphs. Measure the actual
+          // rendered text fragments against the element's visible box.
+          const bounds = element.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return Array.from(range.getClientRects()).some(
+            (rect) => rect.top < bounds.top - 8 || rect.bottom > bounds.bottom + 8,
+          );
+        })
+        .map(describe)
+        .slice(0, 12);
+
+      // These are explicitly neutral semantic surfaces. Petrol headers, brand
+      // blocks, seller imagery and dialogs are intentionally excluded.
+      const neutralSelectors = [
+        ".rawaj-more-v2__secondary > a.rawaj-color-card",
+        ".rawaj-account-collection-v3 > section:first-child",
+        ".rawaj-account-collection-v3 > div.text-center",
+        ".rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface)",
+        ".rawaj-admin-module-intro",
+        ".rawaj-promotion-card .rawaj-boost-option",
+        "[data-price-offer-panel='true']",
+      ].join(", ");
+      const unexpectedDarkSurfaces = Array.from(document.querySelectorAll(neutralSelectors))
+        .filter(visible)
+        .filter((element) => luminance(effectiveBackground(element)) < 0.13)
+        .map((element) => `${describe(element)} has unexpectedly dark neutral surface`)
+        .slice(0, 12);
 
       const footer = document.querySelector(".rawaj-site-footer");
       const dock = document.querySelector(".rawaj-mobile-dock");
@@ -350,6 +464,9 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
         graphicalContrastFailures,
         footerDockOverlap,
         activeNavigationIssues,
+        overlappingActions,
+        clippedHeadings,
+        unexpectedDarkSurfaces,
       };
     },
     { mobile: options.mobile },
@@ -386,5 +503,16 @@ export async function expectRenderedLayout(page: Page, options: LayoutAuditOptio
   expect(
     report.activeNavigationIssues,
     `${options.label}: visible primary navigation needs one active state`,
+  ).toEqual([]);
+  expect(
+    report.overlappingActions,
+    `${options.label}: independent buttons must not overlap`,
+  ).toEqual([]);
+  expect(report.clippedHeadings, `${options.label}: primary headings must not be clipped`).toEqual(
+    [],
+  );
+  expect(
+    report.unexpectedDarkSurfaces,
+    `${options.label}: designated light semantic surfaces must not inherit dark paints`,
   ).toEqual([]);
 }

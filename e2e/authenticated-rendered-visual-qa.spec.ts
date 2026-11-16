@@ -73,6 +73,27 @@ test.describe("authenticated rendered visual QA", () => {
         );
       }
 
+      if (route.name === "saved-searches" || route.name === "favorites") {
+        const intro = page.locator("main.rawaj-account-collection-v3 > section:first-child");
+        await expect(intro).toBeVisible();
+        const accent = await intro.evaluate(
+          (element) => getComputedStyle(element, "::after").backgroundImage,
+        );
+        expect(accent, `${route.name}: retired chromatic accent must be removed`).toBe("none");
+        const emptyState = page.locator("main.rawaj-account-collection-v3 > div.text-center");
+        if (await emptyState.isVisible()) {
+          await expect(emptyState).toHaveCSS("background-image", "none");
+        }
+      }
+      if (route.name === "more") {
+        await expect(
+          page.locator('a[data-boost-shortcut="true"] .rawaj-boost-shortcut__icon > svg'),
+        ).toHaveCSS("color", "rgb(255, 227, 176)");
+        await expect(
+          page.locator(".rawaj-app-header .rawaj-shell-header__actions > .relative > button > svg"),
+        ).toHaveCSS("color", "rgb(249, 240, 228)");
+      }
+
       await page.screenshot({
         path: testInfo.outputPath(`authenticated-${route.name}.png`),
         fullPage: true,

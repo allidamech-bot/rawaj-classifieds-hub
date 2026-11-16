@@ -431,67 +431,62 @@
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child {
   overflow: hidden;
-  border: 1px solid var(--personal-line) !important;
+  border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.15rem !important;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.08), transparent 32%),
-    radial-gradient(circle at 0% 100%, rgba(223, 73, 181, 0.055), transparent 34%),
-    linear-gradient(155deg, rgba(49, 50, 57, 0.985), rgba(40, 41, 47, 0.985)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.025),
-    0 14px 32px rgba(0, 0, 0, 0.15) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: 0 10px 24px rgba(7, 56, 54, 0.06) !important;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child::after {
   width: 3px !important;
-  background: linear-gradient(180deg, #ff7559, #df49b5 58%, #68adff) !important;
+  background: var(--rawaj-identity-gold) !important;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child h2 {
-  color: var(--personal-text) !important;
+  color: var(--rawaj-identity-ink) !important;
 }
 
 :is(.rawaj-account-collection-v3, .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3) > section:first-child p {
-  color: var(--personal-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-account-collection-v3 :is(article, li, form, .rawaj-surface),
 .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3 :is(.rawaj-activity-panel, .rawaj-notification-panel, .rawaj-notification-preferences, .rawaj-communication-follow-up) {
-  border-color: var(--personal-line) !important;
-  background: linear-gradient(155deg, rgba(48, 49, 55, 0.98), rgba(39, 40, 46, 0.98)) !important;
-  color: var(--personal-text-soft) !important;
+  border-color: var(--rawaj-border) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-text-secondary) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
 }
 
 .rawaj-account-collection-v3 :is(article, li):hover {
-  border-color: rgba(104, 173, 255, 0.19) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 25%, var(--rawaj-border)) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
 .rawaj-account-collection-v3 :is(h2, h3, strong),
 .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3 :is(h2, h3, strong) {
-  color: var(--personal-text) !important;
+  color: var(--rawaj-identity-ink) !important;
 }
 
 .rawaj-account-collection-v3 :is(p, small, time, .text-muted-foreground),
 .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3 :is(p, small, time, .text-muted-foreground) {
-  color: var(--personal-muted) !important;
+  color: var(--rawaj-text-secondary) !important;
 }
 
 .rawaj-account-collection-v3 :is(button, a).bg-primary,
 .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3 :is(button, a).bg-primary {
   border: 1px solid rgba(255, 255, 255, 0.13) !important;
-  background: linear-gradient(135deg, #f16f56, #d947aa 58%, #5e9fff) !important;
+  background: var(--rawaj-identity-petrol) !important;
   color: #fff !important;
   box-shadow: 0 10px 22px rgba(218, 67, 160, 0.15) !important;
 }
 
 .rawaj-account-collection-v3 :is(input, textarea, select),
 .rawaj-app-shell:not(:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])) .rawaj-account-activity-v3 :is(input, textarea, select) {
-  border-color: var(--personal-line) !important;
-  background: rgba(24, 25, 30, 0.7) !important;
-  color: var(--personal-text) !important;
-  color-scheme: dark;
+  border-color: var(--rawaj-border) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-identity-ink) !important;
+  color-scheme: light;
 }
 
 /* --------------------------------------------------------------------------

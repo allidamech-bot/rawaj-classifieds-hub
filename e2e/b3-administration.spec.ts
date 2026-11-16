@@ -122,7 +122,7 @@ test("B3.4 RTL administration navigation fits narrow and wide viewports", async 
 
 test("B3.4 owners can open every documented workspace with isolated service errors", async ({
   page,
-}) => {
+}, testInfo) => {
   test.setTimeout(120_000);
   await setFixtureRole(page, "owner");
   await page.setViewportSize({ width: 390, height: 844 });
@@ -146,6 +146,21 @@ test("B3.4 owners can open every documented workspace with isolated service erro
       await page.evaluate(() => document.documentElement.scrollWidth),
       path,
     ).toBeLessThanOrEqual(391);
+    if (
+      [
+        "/admin",
+        "/admin/listings",
+        "/admin/users",
+        "/admin/ad-placements",
+        "/admin/owner-controls",
+      ].includes(path)
+    ) {
+      await page.screenshot({
+        path: testInfo.outputPath(`owner-admin-${path.slice(1).replaceAll("/", "-")}.png`),
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
   }
 });
 

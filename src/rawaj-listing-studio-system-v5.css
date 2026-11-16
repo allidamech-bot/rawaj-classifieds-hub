@@ -274,7 +274,7 @@
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] > button {
-  border-color: rgba(104, 173, 255, 0.17) !important;
+  border-color: color-mix(in srgb, var(--rawaj-identity-teal) 20%, transparent) !important;
   background: var(--rawaj-surface-selected) !important;
   color: var(--studio-v5-text) !important;
 }
@@ -297,10 +297,9 @@
 
 .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="active"] .rawaj-studio-steps__index {
   border-color: rgba(255, 255, 255, 0.15) !important;
-  background: linear-gradient(135deg, var(--rawaj-identity-petrol), var(--rawaj-identity-teal)) !important;
-  background-color: var(--rawaj-identity-petrol) !important;
+  background: var(--rawaj-identity-petrol) !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px rgba(218, 67, 160, 0.2) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--rawaj-identity-petrol) 14%, transparent) !important;
 }
 
 .rawaj-listing-studio-v4 .rawaj-studio-steps li[data-state="done"] .rawaj-studio-steps__index {

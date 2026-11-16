@@ -133,6 +133,11 @@
   border-radius: 0.68rem !important;
   color: var(--rawaj-identity-ink) !important;
   font-size: 0.82rem !important;
+  min-width: 0;
+  padding: 0.5rem 0.35rem !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.35 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/login"] .rawaj-auth-tabs button[data-active="true"] {
   color: var(--rawaj-identity-ivory) !important;

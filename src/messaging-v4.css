@@ -503,3 +503,39 @@
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer__send:disabled {
   opacity: 0.55;
 }
+
+/* Authenticated conversation offer panels must not inherit retired charcoal
+ * alerts from generic activity CSS. Keep messages/controls/data unchanged. */
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  [data-price-offer-panel="true"] {
+  border-color: var(--message-border) !important;
+  color: var(--message-ink) !important;
+  background: var(--message-surface) !important;
+  background-image: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  [data-price-offer-panel="true"] :is(.text-foreground, p.text-foreground) {
+  color: var(--message-ink) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  [data-price-offer-panel="true"] .text-muted-foreground {
+  color: var(--message-subtle) !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  [data-price-offer-panel="true"] :is([data-price-offer-empty], button[class*="bg-muted-surface"]) {
+  color: var(--message-ink) !important;
+  background: var(--message-muted) !important;
+  background-image: none !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  [data-price-offer-panel="true"] input {
+  color: var(--message-ink) !important;
+  border: 1px solid var(--message-border) !important;
+  background: #fffdf9 !important;
+}
+.rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
+  .rawaj-messaging-panel-state {
+  color: var(--message-ink) !important;
+  background: var(--message-muted) !important;
+  background-image: none !important;
+}

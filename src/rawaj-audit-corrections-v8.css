@@ -291,33 +291,30 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__command > .rawaj-color-card,
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-more-v2__secondary > .rawaj-color-card {
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  color: var(--rawaj-text-primary) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid var(--rawaj-border) !important;
+  color: var(--rawaj-identity-ink) !important;
+  background: var(--rawaj-card-background) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-orange {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255, 117, 89, 0.18), transparent 46%),
-    linear-gradient(150deg, #373036, #2e2d33) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-indigo {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(104, 173, 255, 0.18), transparent 46%),
-    linear-gradient(150deg, #30333b, #2a2c32) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-plum {
-  background: linear-gradient(150deg, #382f39, #2d2b31) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-gold {
-  background: linear-gradient(150deg, #38342d, #2e2d2b) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card.rawaj-world-emerald {
-  background: linear-gradient(150deg, #2d3734, #292f2f) !important;
+  background: var(--rawaj-card-background) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-color-card :is(.text-primary, .text-foreground) {
@@ -331,14 +328,14 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section {
   border: 1px solid var(--rawaj-border) !important;
   border-radius: 1.1rem !important;
-  background: linear-gradient(150deg, #303137, #292a30) !important;
-  color: var(--rawaj-text-secondary) !important;
+  background: var(--rawaj-card-background) !important;
+  color: var(--rawaj-identity-ink) !important;
   padding: 0.45rem !important;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section[data-tone="muted"] {
-  background: linear-gradient(150deg, #2d2e33, #28292e) !important;
+  background: var(--rawaj-muted-surface) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/more"] .rawaj-account-section :is(.truncate, [class*="truncate"]) {
@@ -446,29 +443,16 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 .rawaj-admin-nav-controls {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(44px, auto) minmax(0, 1fr) minmax(44px, auto);
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .rawaj-admin-nav-controls::before,
 .rawaj-admin-nav-controls::after {
-  content: "";
-  position: absolute;
-  z-index: 2;
-  inset-block: 0;
-  width: 1.6rem;
-  pointer-events: none;
-}
-
-.rawaj-admin-nav-controls::before {
-  inset-inline-start: 2.85rem;
-  background: none;
-}
-
-.rawaj-admin-nav-controls::after {
-  inset-inline-end: 2.85rem;
-  background: none;
+  content: none;
+  display: none;
 }
 
 .rawaj-admin-nav-scroll-button {
@@ -479,7 +463,14 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-admin-nav-rail {
-  scroll-padding-inline: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
+  scroll-padding-inline: 0.5rem;
+}
+.rawaj-admin-nav-scroll-button {
+  flex: 0 0 44px;
+  inline-size: 44px;
+  max-inline-size: 44px;
 }
 
 .rawaj-app-shell[data-resolved-pathname^="/admin"] .rawaj-admin-dashboard-v3 > section {
