@@ -176,10 +176,7 @@ function AdminListingModerationConsole() {
   if (!canModerateListings) {
     return (
       <StatePanel
-        title={text(
-          "غير مخوّل لاتخاذ قرارات على الإعلانات",
-          "Not authorized for listing decisions",
-        )}
+        title={text("غير مخوّل لاتخاذ قرارات على الإعلانات", "Not authorized for listing decisions")}
       />
     );
   }
