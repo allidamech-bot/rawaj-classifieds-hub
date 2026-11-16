@@ -344,14 +344,14 @@ body {
   box-shadow: inset 0 0 0 1px rgba(216,174,95,.17), 0 7px 18px rgba(0,0,0,.18) !important;
 }
 
-.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(.badge, [data-ui="badge"], [data-slot="badge"], [class*="rounded-full"][class*="border"]) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is(.badge, [data-ui="badge"], [data-slot="badge"], [class*="rounded-full"][class*="border"]):where(:not(.rawaj-feedback-dialog__close)) {
   border-color: rgba(216,174,95,.18) !important;
   color: #e9dfd4 !important;
   background: rgba(216,174,95,.045) !important;
 }
 
 /* Popovers, menus, dialogs, sheets and tooltips. */
-.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]) {
+.rawaj-app-shell:where(:not([data-design-palette="ivory"]):not([data-resolved-pathname^="/admin"]):not([data-resolved-pathname="/listings"]):not([data-resolved-pathname^="/listings/"]):not([data-resolved-pathname="/add-listing"]):not([data-resolved-pathname^="/profile/listings/"])) :is([data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="sheet-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [role="dialog"], [role="menu"], [role="listbox"]):where(:not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
   border-color: rgba(216,174,95,.2) !important;
   color: var(--rawaj-v17-text) !important;
   background:

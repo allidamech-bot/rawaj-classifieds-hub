@@ -3,12 +3,12 @@
  * safety, media, and list-first mobile behavior remain unchanged.
  */
 .rawaj-app-shell[data-resolved-pathname="/chats"] {
-  --chat-petrol: #083d38;
-  --chat-teal: #075d52;
-  --chat-ivory: #fffaf3;
-  --chat-ink: #173d38;
-  --chat-muted: #435650;
-  --chat-line: #d2ddd5;
+  --chat-petrol: #103f42;
+  --chat-teal: #103f42;
+  --chat-ivory: #ffffff;
+  --chat-ink: #152322;
+  --chat-muted: #53615e;
+  --chat-line: #e3e7e4;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-communication-v2--messages {
@@ -160,7 +160,7 @@
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer {
   border-color: var(--chat-line) !important;
   color: var(--chat-ink) !important;
-  background: #fffaf3 !important;
+  background: #ffffff !important;
   background-image: none !important;
   box-shadow: none !important;
 }
@@ -169,7 +169,7 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-stream {
-  background: #f1eee6 !important;
+  background: #f3f6f4 !important;
   background-image: none !important;
 }
 
@@ -243,6 +243,10 @@
   }
   .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] {
     display: block !important;
+    height: max(12rem, calc(var(--app-viewport-height, 100dvh) - 8.5rem - env(safe-area-inset-top))) !important;
+    max-height: max(12rem, calc(var(--app-viewport-height, 100dvh) - 8.5rem - env(safe-area-inset-top))) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
   .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] .rawaj-message-panel {
     display: flex !important;
@@ -252,6 +256,26 @@
     border: 1px solid var(--chat-line) !important;
     border-radius: 1.1rem !important;
     overflow: hidden !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    flex-direction: column;
+  }
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] .rawaj-message-stream {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] .rawaj-message-composer {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 52% !important;
+    bottom: auto !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom)) !important;
   }
   .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace[data-view="conversation"] .rawaj-conversation-sidebar {
     display: none !important;

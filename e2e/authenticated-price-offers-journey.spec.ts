@@ -100,6 +100,14 @@ async function openFixtureConversation(page: Page) {
   await expect(conversation).toBeVisible({ timeout: 30_000 });
   await conversation.click();
   await expect(page).toHaveURL(new RegExp(`conversation=${CONVERSATION_ID}`));
+  // The compact chat workspace now keeps offers collapsed until requested.
+  // Exercise the real disclosure instead of assuming the panel is always mounted.
+  const offersToggle = page.locator(".rawaj-message-offers-toggle");
+  await expect(offersToggle).toBeVisible();
+  await expect(offersToggle).toHaveAttribute("aria-expanded", "false");
+  await offersToggle.click();
+  await expect(offersToggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('[data-price-offer-panel="true"]')).toBeVisible();
 }
 
 function observeOfferRequests(page: Page) {

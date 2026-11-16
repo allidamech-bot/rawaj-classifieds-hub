@@ -357,3 +357,12 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
     transition: none;
   }
 }
+
+/* An open thread owns the lower viewport. Keep global chrome out of its
+   attachment / microphone / Send controls; restore it in list view. */
+@media (max-width: 1023px) {
+  .rawaj-app-shell:has(.rawaj-message-workspace[data-active-thread="true"])
+    :is(.rawaj-mobile-dock, .rawaj-feedback-trigger) {
+    display: none !important;
+  }
+}

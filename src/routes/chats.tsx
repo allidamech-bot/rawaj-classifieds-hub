@@ -1,5 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Ban, Flag, ImagePlus, MapPin, MessageCircle, Send, TriangleAlert, X } from "lucide-react";
+import {
+  Ban,
+  Flag,
+  HandCoins,
+  ImagePlus,
+  MapPin,
+  MessageCircle,
+  Send,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
@@ -104,6 +114,8 @@ function ChatsPage() {
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [blocking, setBlocking] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [offersOpen, setOffersOpen] = useState(false);
   const [viewingConversationOnMobile, setViewingConversationOnMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const messagesRequestIdRef = useRef(0);
@@ -116,6 +128,9 @@ function ChatsPage() {
   const reportInFlightRef = useRef<Set<string>>(new Set());
   const blockInFlightRef = useRef<Set<string>>(new Set());
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const messageStreamRef = useRef<HTMLDivElement | null>(null);
+  const blockDialogRef = useRef<HTMLInputElement | null>(null);
+  const blockTriggerRef = useRef<HTMLButtonElement | null>(null);
   const liveProfileId = auth.profile?.id ?? null;
   const accountStateMatches = profileIdRef.current === liveProfileId;
   const accountConversations = accountStateMatches ? conversations : EMPTY_CONVERSATIONS;
@@ -162,6 +177,26 @@ function ChatsPage() {
   const liveConversationId =
     selectedConversation && isConversationPanelVisible ? selectedConversation.id : null;
 
+  useEffect(() => {
+    if (!selectedConversation || !isConversationPanelVisible) return;
+    const stream = messageStreamRef.current;
+    if (stream) stream.scrollTop = stream.scrollHeight;
+  }, [
+    selectedConversation?.id,
+    isConversationPanelVisible,
+    visibleMessages.length,
+    loadingMessages,
+  ]);
+
+  useEffect(() => {
+    if (!blockDialogOpen) return;
+    const frame = window.requestAnimationFrame(() => blockDialogRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(frame);
+      blockTriggerRef.current?.focus();
+    };
+  }, [blockDialogOpen]);
+
   useLiveChatWorkspace({
     signedIn: auth.status === "signedIn",
     profileId: auth.profile?.id ?? null,
@@ -192,6 +227,8 @@ function ChatsPage() {
     setReportingMessageId(null);
     setBlockReason("");
     setBlocking(false);
+    setBlockDialogOpen(false);
+    setOffersOpen(false);
     setNotice("");
     sendInFlightScopesRef.current.clear();
     reportInFlightRef.current.clear();
@@ -215,6 +252,8 @@ function ChatsPage() {
     setConfirmedRisk(null);
     setBlockReason("");
     setBlocking(false);
+    setBlockDialogOpen(false);
+    setOffersOpen(false);
     setNotice("");
     setMessageError(null);
     setReportingMessageId(null);
@@ -665,13 +704,9 @@ function ChatsPage() {
     const profileId = auth.profile?.id ?? null;
     const conversationId = selectedConversation?.id ?? null;
     const accountGeneration = accountGenerationRef.current;
-    const reason = blockReason || null;
+    const reason = blockReason.trim() || null;
     const blockScope = [profileId, conversationId].join(":");
     if (!profileId || !conversationId || blockInFlightRef.current.has(blockScope)) return;
-    if (
-      !confirm(text("حظر هذا المستخدم في هذه المحادثة؟", "Block this user in this conversation?"))
-    )
-      return;
     blockInFlightRef.current.add(blockScope);
     setBlocking(true);
     setNotice("");
@@ -694,7 +729,11 @@ function ChatsPage() {
             : result.error.message,
         );
       }
-      if (result.ok && profileIdRef.current === profileId) await loadConversations();
+      if (result.ok && profileIdRef.current === profileId) {
+        setBlockDialogOpen(false);
+        setBlockReason("");
+        await loadConversations();
+      }
     } catch (caught) {
       if (
         accountGenerationRef.current === accountGeneration &&
@@ -760,7 +799,12 @@ function ChatsPage() {
 
         <div
           className="rawaj-message-workspace"
-          data-view={selectedConversation ? "conversation" : "list"}
+          data-active-thread={Boolean(selectedConversation && isConversationPanelVisible)}
+          data-view={
+            missingConversationTarget || (selectedConversation && isConversationPanelVisible)
+              ? "conversation"
+              : "list"
+          }
         >
           <aside
             className={`rawaj-conversation-sidebar ${
@@ -863,7 +907,9 @@ function ChatsPage() {
               </div>
             ) : !selectedConversation ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
-                <p className="text-sm text-[#53615e]">{text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}</p>
+                <p className="text-sm text-[#53615e]">
+                  {text("اختر محادثة لعرض الرسائل.", "Choose a conversation.")}
+                </p>
               </div>
             ) : (
               <>
@@ -872,7 +918,10 @@ function ChatsPage() {
                     {!isDesktop && viewingConversationOnMobile && (
                       <button
                         type="button"
-                        onClick={() => setViewingConversationOnMobile(false)}
+                        onClick={() => {
+                          setViewingConversationOnMobile(false);
+                          void navigate({ to: "/chats", search: {}, replace: true });
+                        }}
                         className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
                         aria-label={text("المحادثات", "Conversations")}
                       >
@@ -904,7 +953,8 @@ function ChatsPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => void handleBlock()}
+                      ref={blockTriggerRef}
+                      onClick={() => setBlockDialogOpen(true)}
                       disabled={blocking}
                       aria-busy={blocking}
                       aria-label={text("حظر المستخدم", "Block user")}
@@ -932,15 +982,35 @@ function ChatsPage() {
                   )}
                 </header>
 
-                <ConversationPriceOffers
-                  conversationId={selectedConversation.id}
-                  enabled={
-                    selectedConversation.status === "active" &&
-                    Boolean(selectedConversation.listingId)
-                  }
-                />
+                <div className="rawaj-message-secondary-actions">
+                  <button
+                    type="button"
+                    aria-expanded={offersOpen}
+                    aria-controls="rawaj-conversation-offers"
+                    onClick={() => setOffersOpen((current) => !current)}
+                    className="rawaj-message-offers-toggle"
+                  >
+                    <HandCoins className="h-4 w-4" aria-hidden="true" />
+                    {text("عروض السعر وسجل التفاوض", "Price offers and history")}
+                  </button>
+                </div>
+                {offersOpen ? (
+                  <div id="rawaj-conversation-offers" className="rawaj-message-offers-region">
+                    <ConversationPriceOffers
+                      conversationId={selectedConversation.id}
+                      enabled={
+                        selectedConversation.status === "active" &&
+                        Boolean(selectedConversation.listingId)
+                      }
+                    />
+                  </div>
+                ) : null}
 
-                <div className="rawaj-message-stream">
+                <div
+                  className="rawaj-message-stream"
+                  ref={messageStreamRef}
+                  aria-label={text("سجل الرسائل", "Message history")}
+                >
                   {loadingMessages ? (
                     <PanelText>{text("جاري تحميل الرسائل.", "Loading messages.")}</PanelText>
                   ) : messageError ? (
@@ -1030,19 +1100,11 @@ function ChatsPage() {
                   aria-busy={sending}
                   className="rawaj-message-composer"
                 >
-                  <input
-                    value={blockReason}
-                    onChange={(event) => setBlockReason(event.target.value)}
-                    disabled={blocking}
-                    maxLength={300}
-                    placeholder={text("سبب الحظر اختياري", "Optional block reason")}
-                    className="rawaj-message-composer__block-reason mb-2"
-                  />
                   {selectedConversation.status === "active" ? (
-                    <div className="mb-2">
-                      <p className="mb-1.5 text-[10px] font-bold text-muted-foreground">
+                    <details className="rawaj-message-quick-replies mb-2">
+                      <summary className="cursor-pointer text-xs font-bold text-[#103F42]">
                         {text("ردود سريعة", "Quick replies")}
-                      </p>
+                      </summary>
                       <div className="rawaj-quick-replies">
                         {quickReplies.map((reply) => (
                           <button
@@ -1056,7 +1118,7 @@ function ChatsPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </details>
                   ) : null}
                   {messageSafety.level !== "safe" ? (
                     <aside
@@ -1216,6 +1278,89 @@ function ChatsPage() {
             )}
           </section>
         </div>
+        {blockDialogOpen && selectedConversation ? (
+          <div
+            className="rawaj-block-confirm-overlay fixed inset-0 z-[100] flex items-center justify-center bg-[#152322]/50 p-4"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !blocking) setBlockDialogOpen(false);
+            }}
+          >
+            <form
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="rawaj-block-confirm-title"
+              className="rawaj-block-confirm-dialog w-full max-w-md rounded-2xl border border-[#E3E7E4] bg-white p-5 text-[#152322] shadow-xl"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleBlock();
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !blocking) {
+                  event.preventDefault();
+                  setBlockDialogOpen(false);
+                }
+                if (event.key !== "Tab") return;
+                const controls = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    "input:not(:disabled), button:not(:disabled)",
+                  ),
+                );
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (first && last && event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last.focus();
+                } else if (first && last && !event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first.focus();
+                }
+              }}
+              style={{
+                maxHeight: "calc(var(--app-viewport-height, 100dvh) - 1rem)",
+                overflowY: "auto",
+              }}
+            >
+              <h2 id="rawaj-block-confirm-title" className="text-base font-extrabold">
+                {text("تأكيد حظر المستخدم", "Confirm block user")}
+              </h2>
+              <p className="mt-2 text-sm text-[#53615E]">
+                {text(
+                  "لن تتمكن من تبادل رسائل جديدة مع هذا المستخدم في هذه المحادثة.",
+                  "You will no longer be able to exchange messages in this conversation.",
+                )}
+              </p>
+              <label className="mt-4 block text-sm font-bold" htmlFor="rawaj-block-reason">
+                {text("سبب الحظر (اختياري)", "Block reason (optional)")}
+              </label>
+              <input
+                ref={blockDialogRef}
+                id="rawaj-block-reason"
+                value={blockReason}
+                onChange={(event) => setBlockReason(event.target.value)}
+                maxLength={300}
+                disabled={blocking}
+                className="mt-2 min-h-11 w-full rounded-xl border border-[#E3E7E4] bg-white px-3 text-[#152322] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#103F42]"
+              />
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={blocking}
+                  onClick={() => setBlockDialogOpen(false)}
+                  className="min-h-11 rounded-xl border border-[#E3E7E4] bg-white px-4 text-sm font-bold text-[#152322]"
+                >
+                  {text("إلغاء", "Cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={blocking}
+                  className="min-h-11 rounded-xl bg-[#103F42] px-4 text-sm font-bold text-white disabled:opacity-60"
+                >
+                  {blocking ? text("جارٍ الحظر", "Blocking") : text("تأكيد الحظر", "Block user")}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
       </main>
     </>
   );

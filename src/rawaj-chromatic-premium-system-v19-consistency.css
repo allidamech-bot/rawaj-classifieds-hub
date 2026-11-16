@@ -210,12 +210,18 @@
   background: #10151d !important;
 }
 
-/* The retired v17 global `.rawaj-app-shell footer` selector is more specific than
- * a standalone footer class. Override that exact legacy rule at its shared boundary. */
+/* Public footer paint stays stable across mixed-palette routes. Some legacy
+ * route selectors use var(--rawaj-identity-petrol) with higher specificity than
+ * this shared rule, so pin the token on the footer itself. Preserve the
+ * independently approved light owner and public storefront footers. */
+.rawaj-app-shell:not([data-resolved-pathname="/profile/listings"]):not([data-resolved-pathname^="/seller/"])
+  footer.rawaj-site-footer {
+  --rawaj-identity-petrol: #103f42;
+}
 .rawaj-app-shell footer.rawaj-site-footer,
 .rawaj-app-shell footer.rawaj-site-footer .rawaj-site-footer__mobile {
   border-color: rgba(234, 195, 143, 0.24) !important;
-  background: var(--rawaj-identity-petrol, #073836) !important;
+  background: #103f42 !important;
 }
 
 /* B2 mobile footer prose must not inherit the earlier dark-shell muted ink.
@@ -244,7 +250,7 @@
 }
 
 /* Portal content is outside the route shell in older Radix primitives. */
-body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *):where(:not(.rawaj-filter-sheet)) {
+body:where(:not(:has(.rawaj-app-shell[data-design-palette="ivory"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/seller/"])):not(:has(.rawaj-app-shell[data-resolved-pathname="/profile/listings"])):not(:has(.rawaj-app-shell[data-resolved-pathname^="/admin"]))) :is([role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper] > *):where(:not(.rawaj-filter-sheet):not(.rawaj-feedback-dialog):not(.rawaj-block-confirm-dialog)) {
   border-color: rgba(216, 174, 95, 0.13) !important;
   color: #f7f3ed !important;
   background:

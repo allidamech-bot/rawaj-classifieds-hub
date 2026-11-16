@@ -521,3 +521,27 @@ textarea,
   --rawaj-border: #e3e7e4;
   scrollbar-color: #53615e #ffffff;
 }
+
+/* The search filter sheet is portaled under <body>, outside the /listings shell.
+ * Give this one overlay the approved light discovery tokens at its own root;
+ * the parent route's palette cannot be inherited across that portal boundary. */
+.rawaj-filter-sheet[data-design-palette="ivory"][data-filter-state="draft"] {
+  --rawaj-identity-ivory: #ffffff;
+  --rawaj-identity-petrol: #103f42;
+  --rawaj-identity-ink: #152322;
+  --rawaj-page-background: #ffffff;
+  --rawaj-card-background: #ffffff;
+  --rawaj-elevated-background: #ffffff;
+  --rawaj-surface-card: #ffffff;
+  --rawaj-text-primary: #152322;
+  --rawaj-text-secondary: #53615e;
+  --rawaj-border: #e3e7e4;
+  --rawaj-action-primary: #103f42;
+  --rawaj-action-primary-foreground: #ffffff;
+  --color-card: #ffffff;
+  --color-primary: #103f42;
+  --color-primary-foreground: #ffffff;
+  --card: #ffffff;
+  background: #ffffff !important;
+  color: #152322;
+}

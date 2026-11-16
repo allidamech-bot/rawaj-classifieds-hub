@@ -1840,13 +1840,16 @@ function StoreListingCard({
                         onClick={() => queueSearchBoostIntent(listing.id)}
                         data-tone="boost"
                         aria-label={text(
-                          "Boost — احصل على عملاء أكثر",
+                          "تعزيز الظهور — احصل على عملاء أكثر",
                           "Boost — get more customers",
                         )}
-                        title={text("Boost — احصل على عملاء أكثر", "Boost — get more customers")}
+                        title={text(
+                          "تعزيز الظهور — احصل على عملاء أكثر",
+                          "Boost — get more customers",
+                        )}
                       >
                         <Rocket aria-hidden="true" />
-                        <span>Boost</span>
+                        <span>{text("تعزيز الظهور", "Boost")}</span>
                       </button>
                     ) : null}
                     <button

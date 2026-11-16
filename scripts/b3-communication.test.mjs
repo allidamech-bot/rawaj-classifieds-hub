@@ -41,7 +41,8 @@ test("B3.2 messenger keeps list-first mobile state, safety and distinct sender b
   assert.match(mobile, /data-view="conversation"/);
   assert.match(mobile, /\.rawaj-message-panel\.hidden/);
   assert.match(messaging, /rawaj-message-bubble\[data-mine="true"\]/);
-  assert.match(messaging, /rawaj-message-composer__block-reason/);
+  assert.doesNotMatch(messaging, /rawaj-message-composer__block-reason/);
+  assert.match(messaging, /rawaj-message-offers-toggle/);
   assert.match(messaging, /rawaj-message-bubble__report/);
   assert.match(messaging, /rawaj-message-composer__send/);
   assert.match(messaging, /prefers-reduced-motion/);

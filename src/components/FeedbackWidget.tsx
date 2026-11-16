@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { fetchFeedbackConfig, submitFeedback, type FeedbackType } from "@/lib/api/feedback";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
+import "./feedback/feedback-dialog.css";
 
 const DRAFT_KEY = "rawaj-feedback-draft-v1";
 const TEASER_SESSION_KEY = "rawaj-feedback-teaser-shown";
@@ -34,6 +35,7 @@ export function FeedbackWidget({
   const [needsSignIn, setNeedsSignIn] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,8 +118,41 @@ export function FeedbackWidget({
 
   useEffect(() => {
     if (!open) return;
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = window.requestAnimationFrame(() => dialogRef.current?.focus());
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      returnFocusRef.current?.focus();
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !submitting) setOpen(false);
+      if (event.key === "Escape" && !submitting) {
+        event.preventDefault();
+        setOpen(false);
+      }
+      if (event.key !== "Tab") return;
+      const controls = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]",
+        ) ?? [],
+      );
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (
+        event.shiftKey &&
+        (document.activeElement === first || document.activeElement === dialogRef.current)
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -287,7 +322,7 @@ export function FeedbackWidget({
 
       {open ? (
         <div
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+          className="rawaj-feedback-overlay fixed inset-0 z-[90] flex items-end justify-center bg-[#152322]/45 p-0 sm:items-center sm:p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !submitting) setOpen(false);
           }}
@@ -295,10 +330,12 @@ export function FeedbackWidget({
         >
           <div
             ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="rawaj-feedback-title"
-            className="max-h-[min(88dvh,720px)] w-full overflow-y-auto rounded-t-3xl bg-card p-4 shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-5"
+            className="rawaj-feedback-dialog w-full overflow-y-auto rounded-t-3xl border border-[#E3E7E4] bg-white p-4 text-[#152322] shadow-2xl sm:max-w-lg sm:rounded-3xl sm:p-5"
+            style={{ maxHeight: "min(calc(var(--app-viewport-height, 100dvh) - 1rem), 720px)" }}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -318,7 +355,7 @@ export function FeedbackWidget({
               <button
                 type="button"
                 onClick={() => !submitting && setOpen(false)}
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted-surface"
+                className="rawaj-feedback-dialog__close grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#E3E7E4] bg-[#F1F5F3] text-[#103F42]"
                 aria-label={text("إغلاق", "Close")}
               >
                 <X className="h-4 w-4" />
@@ -343,7 +380,7 @@ export function FeedbackWidget({
                         key={option.value}
                         type="button"
                         onClick={() => updateDraft("type", option.value)}
-                        className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${selected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background"}`}
+                        className={`rawaj-feedback-dialog__category flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${selected ? "border-[#103F42] bg-[#EAF1EE] text-[#103F42]" : "border-[#E3E7E4] bg-white text-[#152322]"}`}
                         aria-pressed={selected}
                       >
                         <Icon className="h-4 w-4" />

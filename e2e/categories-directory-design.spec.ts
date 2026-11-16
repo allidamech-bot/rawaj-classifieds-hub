@@ -43,7 +43,8 @@ test("categories route loads its designed atlas instead of utility-only rows", a
   });
 
   expect(visualContract).not.toBeNull();
-  expect(visualContract?.heroBackground).toContain("linear-gradient");
+  // The approved solid petrol hero replaces the legacy decorative gradient.
+  expect(visualContract?.heroBackground).toBe("none");
   expect(visualContract?.heroRadius ?? 0).toBeGreaterThan(16);
   expect(visualContract?.gridDisplay).toBe("grid");
   expect(visualContract?.gridColumns).not.toBe("none");

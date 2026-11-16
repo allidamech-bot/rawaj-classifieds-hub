@@ -109,7 +109,7 @@ for (const viewport of viewports) {
         if (route.name === "categories") {
           await expect(page.locator(".rawaj-shell-header--context")).toHaveCSS(
             "background-color",
-            "rgb(7, 56, 54)",
+            "rgb(16, 63, 66)",
           );
         }
         if (route.name === "add-listing") {

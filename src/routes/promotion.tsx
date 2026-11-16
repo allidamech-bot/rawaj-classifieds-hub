@@ -144,7 +144,10 @@ function PromotionPage() {
       if (requestId !== ordersRequestIdRef.current || currentProfileId !== profileIdRef.current)
         return;
       setOrdersError(
-        unknownError(error, text("تعذر تحميل طلبات Boost.", "Could not load Boost requests.")),
+        unknownError(
+          error,
+          text("تعذر تحميل طلبات تعزيز الظهور.", "Could not load Boost requests."),
+        ),
       );
     } finally {
       if (requestId === ordersRequestIdRef.current) setOrdersLoading(false);
@@ -179,7 +182,7 @@ function PromotionPage() {
       return;
     }
     if (!eligibleListings.some((listing) => listing.id === selectedListingId)) {
-      setNotice(text("اختر إعلاناً مؤهلاً لـ Boost.", "Choose a listing eligible for Boost."));
+      setNotice(text("اختر إعلاناً مؤهلاً لتعزيز الظهور.", "Choose a listing eligible for Boost."));
       return;
     }
     if (!paymentMethod.trim()) {
@@ -228,7 +231,7 @@ function PromotionPage() {
       }
       setNotice(
         text(
-          "تم إرسال طلب Search Boost. يبدأ الوقت فقط بعد مراجعة الدفع وموافقة الإدارة.",
+          "تم إرسال طلب تعزيز الظهور. يبدأ الوقت فقط بعد مراجعة الدفع وموافقة الإدارة.",
           "Search Boost submitted. Time starts only after payment review and admin approval.",
         ),
       );
@@ -251,13 +254,13 @@ function PromotionPage() {
   if (auth.status !== "signedIn") {
     return (
       <>
-        <PageHeader title="Boost" to="/more" backMode="history" />
+        <PageHeader title={text("تعزيز الظهور", "Boost")} to="/more" backMode="history" />
         <main className="container-wide mobile-page-bottom pt-4">
           <Panel
             icon={<Rocket className="h-7 w-7 text-amber-700" />}
-            title={text("سجّل الدخول لتفعيل Boost", "Log in to use Boost")}
+            title={text("سجّل الدخول لتعزيز الظهور", "Log in to use Boost")}
             body={text(
-              "Search Boost متاح للإعلانات المعتمدة التي تملكها.",
+              "تعزيز الظهور متاح للإعلانات المعتمدة التي تملكها.",
               "Search Boost is available for approved listings you own.",
             )}
           >
@@ -275,7 +278,7 @@ function PromotionPage() {
 
   return (
     <>
-      <PageHeader title="Boost" to="/more" backMode="history" />
+      <PageHeader title={text("تعزيز الظهور", "Boost")} to="/more" backMode="history" />
       <main
         className="container-wide mobile-page-bottom space-y-5 pt-4"
         dir={language === "ar" ? "rtl" : "ltr"}
@@ -286,10 +289,12 @@ function PromotionPage() {
               <Rocket className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h1 className="text-xl font-black sm:text-2xl">Search Boost</h1>
+              <h1 className="text-xl font-black sm:text-2xl">
+                {text("تعزيز ظهور إعلانك", "Search Boost")}
+              </h1>
               <p className="mt-1 max-w-2xl text-sm leading-7 text-amber-50/80">
                 {text(
-                  "ارفع إعلانك في النتائج العادية ذات الصلة فقط. Boost لا يتجاوز البحث أو القسم أو الفلاتر.",
+                  "ارفع إعلانك في النتائج العادية ذات الصلة فقط. التعزيز لا يتجاوز البحث أو القسم أو الفلاتر.",
                   "Move your listing up in relevant normal results. Boost never bypasses search, category, or filters.",
                 )}
               </p>
@@ -316,7 +321,7 @@ function PromotionPage() {
             <RetryButton loading={ordersLoading} onClick={() => void loadOrders()} text={text} />
           </Panel>
         ) : listingsLoading || ordersLoading || !hasLoadedListings || !hasLoadedOrders ? (
-          <Panel title={text("جارٍ تجهيز Search Boost", "Preparing Search Boost")} />
+          <Panel title={text("جارٍ تجهيز تعزيز الظهور", "Preparing Search Boost")} />
         ) : (
           <form onSubmit={(event) => void submit(event)} aria-busy={saving} className="space-y-5">
             <section className="rawaj-promotion-card p-4 sm:p-5">
@@ -340,7 +345,7 @@ function PromotionPage() {
               ) : (
                 <div className="mt-3 rounded-xl bg-muted-surface p-4 text-sm leading-6 text-muted-foreground">
                   {text(
-                    "لا يوجد إعلان معتمد ومتاح من دون Boost نشط أو طلب مفتوح حالياً.",
+                    "لا يوجد إعلان معتمد ومتاح من دون تعزيز نشط أو طلب مفتوح حالياً.",
                     "No approved available listing without an active Boost or open request is currently eligible.",
                   )}
                 </div>
@@ -348,7 +353,7 @@ function PromotionPage() {
             </section>
 
             <section className="rawaj-promotion-card p-4 sm:p-5">
-              <StepTitle number="2" title={text("اختر مدة Boost", "Choose a Boost duration")} />
+              <StepTitle number="2" title={text("اختر مدة التعزيز", "Choose a Boost duration")} />
               <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {SEARCH_BOOST_PACKAGES.map((boostPackage) => {
                   const selected = boostPackage.code === selectedPackageCode;
@@ -394,7 +399,7 @@ function PromotionPage() {
                   <ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-amber-700" />
                   <p>
                     {text(
-                      `القيمة ${formatSearchBoostPrice(selectedPackage.priceMinor, language)}. استخدم طريقة الدفع التي أكدها لك فريق رواج، ثم اكتب اسم الطريقة والمرجع وارفع الإيصال. لن تبدأ مدة Boost قبل التحقق والموافقة.`,
+                      `القيمة ${formatSearchBoostPrice(selectedPackage.priceMinor, language)}. استخدم طريقة الدفع التي أكدها لك فريق رواج، ثم اكتب اسم الطريقة والمرجع وارفع الإيصال. لن تبدأ مدة التعزيز قبل التحقق والموافقة.`,
                       `Amount: ${formatSearchBoostPrice(selectedPackage.priceMinor, language)}. Use the payment method confirmed by the RAWAJ team, then enter the method and reference and upload the receipt. Boost time starts only after verification and approval.`,
                     )}
                   </p>
@@ -449,7 +454,7 @@ function PromotionPage() {
                 <Rocket className="h-4 w-4" />
                 {saving
                   ? text("جارٍ إرسال الطلب", "Submitting request")
-                  : text("إرسال طلب Search Boost", "Submit Search Boost")}
+                  : text("إرسال طلب تعزيز الظهور", "Submit Search Boost")}
               </button>
               {notice ? (
                 <p
@@ -466,7 +471,7 @@ function PromotionPage() {
         <section className="rawaj-promotion-card p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-black">
-              {text("طلبات Search Boost", "Search Boost requests")}
+              {text("طلبات تعزيز الظهور", "Search Boost requests")}
             </h2>
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground">
               {orders.length}
@@ -532,7 +537,7 @@ function PromotionPage() {
             </div>
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">
-              {text("لا توجد طلبات Boost بعد.", "No Boost requests yet.")}
+              {text("لا توجد طلبات تعزيز ظهور بعد.", "No Boost requests yet.")}
             </p>
           )}
         </section>

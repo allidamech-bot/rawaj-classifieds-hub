@@ -83,7 +83,7 @@ export function NotificationTimelineCard({
             className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-amber-500/12 px-3 py-2 text-xs font-black text-amber-900 hairline dark:text-amber-100"
           >
             <Rocket className="h-3.5 w-3.5" aria-hidden="true" />
-            {text("Boost · عملاء أكثر", "Boost · more customers")}
+            {text("تعزيز الظهور · عملاء أكثر", "Boost · more customers")}
           </button>
         </div>
       ) : null}

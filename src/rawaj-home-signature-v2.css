@@ -83,8 +83,18 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action {
-  grid-template-rows: 1fr !important;
+  width: max(44px, 4.75rem) !important;
+  min-width: max(44px, 4.75rem) !important;
+  grid-template-rows: 20px 16px !important;
   border-color: #bd984b !important;
+}
+
+/* English "My store" needs more inline space than the Arabic label.
+ * Keep the same 44px tap height and do not reduce the legible 11px font. */
+html[lang="en"] .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header
+  .rawaj-shell-header__actions .rawaj-header-store.rawaj-header-action {
+  width: 56px !important;
+  min-width: 56px !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
@@ -94,7 +104,12 @@
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-app-header .rawaj-shell-header__actions
   .rawaj-header-store.rawaj-header-action .rawaj-header-store__label {
-  display: none !important;
+  display: block !important;
+  color: #103f42 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+  white-space: nowrap;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"]
@@ -911,7 +926,8 @@
 }
 
 .rawaj-app-shell[data-resolved-pathname="/"] .rawaj-header-login-cta__label {
-  color: #102c29 !important;
+  /* Visible login text sits on a dark header action: preserve AA contrast. */
+  color: #fff6e7 !important;
 }
 
 /* The approved home composition remains unchanged. Ensure the bright

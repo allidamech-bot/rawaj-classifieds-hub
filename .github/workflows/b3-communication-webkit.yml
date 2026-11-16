@@ -7,6 +7,13 @@ on:
       - "src/activity-command-premium.css"
       - "src/personal-activity-system-v10.css"
       - "src/messaging-v4.css"
+      - "src/routes/chats.tsx"
+      - "src/components/FeedbackWidget.tsx"
+      - "src/components/feedback/feedback-dialog.css"
+      - "src/components/shell/FloatingHeader.tsx"
+      - "src/spatial-app-shell.css"
+      - "src/rawaj-chromatic-premium-system-v18-chats.css"
+      - "e2e/customer-interface-fixes.spec.ts"
       - "src/communication-center-v3.css"
       - "src/communication-center-v2.css"
       - "e2e/b3-communication-family.spec.ts"
@@ -37,7 +44,7 @@ jobs:
           RAWAJ_E2E_USE_FIXTURES: "1"
           VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
-        run: npx playwright test e2e/b3-communication-family.spec.ts --project=mobile-webkit
+        run: npx playwright test e2e/b3-communication-family.spec.ts e2e/customer-interface-fixes.spec.ts --project=mobile-webkit
       - name: Preserve WebKit screenshots and failures
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,54 @@
+/* Shared suggestion / complaint dialog: scoped to its own source component.
+   Legacy portal dark paint is excluded at its owner; these values remain stable
+   from Home, Support, and other routes in both Arabic and English. */
+.rawaj-feedback-dialog {
+  color-scheme: light;
+  color: #152322 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  overscroll-behavior: contain;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  scrollbar-color: #bd984b transparent;
+}
+.rawaj-feedback-dialog :is(h2, legend, label, label > span) {
+  color: #152322 !important;
+}
+.rawaj-feedback-dialog :is(.text-muted-foreground, p.text-muted-foreground) {
+  color: #53615e !important;
+}
+.rawaj-feedback-dialog .input {
+  width: 100%;
+  border: 1px solid #e3e7e4 !important;
+  border-radius: 12px;
+  color: #152322 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+.rawaj-feedback-dialog .input::placeholder { color: #53615e !important; opacity: 1; }
+.rawaj-feedback-dialog .input:focus-visible,
+.rawaj-feedback-dialog :is(button, a):focus-visible {
+  outline: 3px solid #103f42 !important;
+  outline-offset: 2px;
+}
+.rawaj-feedback-dialog__close {
+  color: #103f42 !important;
+  background: #f1f5f3 !important;
+}
+.rawaj-feedback-dialog__category[aria-pressed="true"] {
+  border-color: #103f42 !important;
+  color: #103f42 !important;
+  background: #eaf1ee !important;
+  background-image: none !important;
+}
+.rawaj-feedback-dialog__category[aria-pressed="false"] {
+  border-color: #e3e7e4 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+.rawaj-feedback-dialog :is(button[type="submit"], a[href*="/login"]) {
+  color: #ffffff !important;
+  background: #103f42 !important;
+  background-image: none !important;
+}
+.rawaj-feedback-dialog :is(button, a):disabled { opacity: 0.55; cursor: not-allowed; }

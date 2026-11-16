@@ -18,10 +18,14 @@
 
 /* Search route ownership. The approved identity is inherited from the foundation;
  * retired route-specific palettes are removed at their original sources. */
-main.rawaj-search-results-v1,
-.rawaj-filter-sheet[data-design-palette="ivory"] {
+main.rawaj-search-results-v1[data-design-palette="ivory"],
+.rawaj-filter-sheet[data-design-palette="ivory"][data-filter-state="draft"] {
+  /* The light discovery route owns true-white cards, empty states and filter surfaces.
+   * The shared ivory palette still applies to other pages. */
+  --rawaj-card-background: #ffffff;
   --muted-surface: var(--rawaj-muted-surface);
-  --card-warm: var(--rawaj-card-background);
+  --card-warm: #ffffff;
+  --rawaj-card-background: #ffffff;
   --rawaj-focus-ring: var(--rawaj-identity-teal);
   --rawaj-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--rawaj-identity-teal) 18%, transparent);
   --color-background: var(--rawaj-page-background);
