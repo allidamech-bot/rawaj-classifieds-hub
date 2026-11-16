@@ -52,7 +52,7 @@ test("invalid conversation id is not replaced by the first conversation", () => 
 });
 
 test("mobile list mode removes the blank message panel through route state and explicit hidden state", () => {
-  assert.match(chats, /data-view=\{selectedConversation \? "conversation" : "list"\}/);
+  assert.match(chats, /data-view=\{missingConversationTarget \|\| \(selectedConversation && isConversationPanelVisible\) \? "conversation" : "list"\}/);
   assert.match(baseCss, /\.rawaj-message-panel \{\s*display: flex;/);
   assert.match(mobileCss, /@import "\.\/communication-center-v2\.css";/);
   assert.match(
@@ -109,5 +109,5 @@ test("conversation mode hides the sidebar and keeps a computed mobile message he
 });
 
 test("mobile back button returns to the conversation list", () => {
-  assert.match(chats, /onClick=\{\(\) => setViewingConversationOnMobile\(false\)\}/);
+  assert.match(chats, /setViewingConversationOnMobile\(false\);[\s\S]*navigate\(\{ to: "\/chats", search: \{\}, replace: true \}\)/);
 });
