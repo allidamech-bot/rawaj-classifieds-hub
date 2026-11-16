@@ -103,7 +103,7 @@ function ProhibitedPage() {
 
   return (
     <>
-      <PageHeader title={text("المحتوى المحظور", "Prohibited content")} />
+      <PageHeader titleIsPageHeading={false} title={text("المحتوى المحظور", "Prohibited content")} />
       <main className="rawaj-prohibited-v3 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <section className="rounded-2xl bg-destructive/10 p-4 hairline">
           <div className="flex items-start gap-3">

@@ -179,9 +179,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero {
   border: 1px solid rgba(255, 227, 176, 0.56) !important;
-  background:
-    radial-gradient(ellipse at 10% 110%, rgba(35, 118, 106, 0.6), transparent 63%),
-    linear-gradient(145deg, var(--rawaj-identity-petrol), #0c534e) !important;
+  background: var(--rawaj-identity-petrol) !important;
   color: var(--rawaj-identity-ivory) !important;
   box-shadow: 0 14px 38px rgba(7, 56, 54, 0.14) !important;
   background-color: var(--rawaj-identity-petrol) !important;
@@ -203,7 +201,7 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label {
   border-color: #e4d5bb !important;
-  background: #fffaf3 !important;
+  background: var(--rawaj-identity-ivory) !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input,

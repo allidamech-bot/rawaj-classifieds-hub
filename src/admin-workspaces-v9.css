@@ -332,7 +332,7 @@
 .rawaj-app-shell:is([data-resolved-pathname="/admin"], [data-resolved-pathname^="/admin/"])
   main.rawaj-admin-v3 section.rawaj-admin-gate {
   border: 1px solid var(--rawaj-border) !important;
-  background-color: #fffaf3 !important;
+  background-color: var(--rawaj-card-background) !important;
   background-image: none !important;
   color: var(--rawaj-identity-ink) !important;
   box-shadow: none !important;

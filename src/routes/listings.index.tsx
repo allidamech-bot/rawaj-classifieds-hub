@@ -342,13 +342,14 @@ function ListingsPage() {
 
   useEffect(() => {
     if (
+      !filtersOpen &&
       subcategoryId &&
       selectedCategory &&
       !availableSubcategories.some((subcategory) => subcategory.id === subcategoryId)
     ) {
       setSubcategoryId("");
     }
-  }, [availableSubcategories, selectedCategory, subcategoryId]);
+  }, [availableSubcategories, filtersOpen, selectedCategory, subcategoryId]);
 
   useEffect(() => {
     if (
@@ -723,11 +724,42 @@ function ListingsPage() {
   const allActiveFilters = [...activeFilters, ...dynamicActiveFilters];
   const activeFilterCount = allActiveFilters.length;
 
-  const draftSelectedCategory = draftCategoryId
+  const draftCategorySearchValue = draftCategoryId ?? categorySearchValue;
+  const draftSelectedCategory = draftCategorySearchValue
     ? categories.find(
-        (category) => category.id === draftCategoryId || category.slug === draftCategoryId,
+        (category) => category.id === draftCategorySearchValue || category.slug === draftCategorySearchValue,
       )
     : undefined;
+  const taxonomySubcategoryId = taxonomyListingSearch?.taxonomyLegacySubcategoryId;
+  const activeSidebarSubcategoryId = search.taxonomy ? taxonomySubcategoryId : subcategoryId;
+  const activeDraftSubcategoryId =
+    search.taxonomy && draftCategoryId === undefined ? taxonomySubcategoryId : subcategoryId;
+
+  function selectSidebarSubcategory(id: string) {
+    if (search.taxonomy) {
+      if (id === (taxonomySubcategoryId ?? "")) return;
+      setSubcategoryId(id);
+      void navigate({
+        to: "/listings",
+        search: {
+          ...search,
+          taxonomy: undefined,
+          category: selectedCategory?.id,
+          subcategory: id || undefined,
+        },
+        replace: true,
+      });
+    } else {
+      setSubcategoryId(id);
+    }
+  }
+
+  function selectDraftSubcategory(id: string) {
+    if (id === (activeDraftSubcategoryId ?? "")) return;
+    setDraftCategoryId(draftSelectedCategory?.id);
+    setSubcategoryId(id);
+  }
+
   const mobileAvailableSubcategories = useMemo(
     () =>
       draftSelectedCategory
@@ -1097,9 +1129,9 @@ function ListingsPage() {
                   <div className="grid gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setSubcategoryId("")}
+                      onClick={() => selectSidebarSubcategory("")}
                       className={`rounded-lg px-3 py-2 text-start text-xs font-bold transition ${
-                        !subcategoryId
+                        !activeSidebarSubcategoryId
                           ? "bg-gold text-gold-foreground"
                           : "bg-muted-surface text-foreground hover:bg-secondary"
                       }`}
@@ -1110,9 +1142,9 @@ function ListingsPage() {
                       <button
                         key={subcategory.id}
                         type="button"
-                        onClick={() => setSubcategoryId(subcategory.id)}
+                        onClick={() => selectSidebarSubcategory(subcategory.id)}
                         className={`rounded-lg px-3 py-2 text-start text-xs font-bold transition ${
-                          subcategoryId === subcategory.id
+                          activeSidebarSubcategoryId === subcategory.id
                             ? "bg-gold text-gold-foreground"
                             : "bg-muted-surface text-foreground hover:bg-secondary"
                         }`}
@@ -1315,10 +1347,10 @@ function ListingsPage() {
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 <button
                   type="button"
-                  onClick={() => setSubcategoryId("")}
-                  aria-pressed={!subcategoryId}
+                  onClick={() => selectDraftSubcategory("")}
+                  aria-pressed={!activeDraftSubcategoryId}
                   className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                    !subcategoryId
+                    !activeDraftSubcategoryId
                       ? "bg-gold text-gold-foreground"
                       : "bg-muted-surface text-foreground"
                   }`}
@@ -1329,10 +1361,10 @@ function ListingsPage() {
                   <button
                     key={subcategory.id}
                     type="button"
-                    onClick={() => setSubcategoryId(subcategory.id)}
-                    aria-pressed={subcategoryId === subcategory.id}
+                    onClick={() => selectDraftSubcategory(subcategory.id)}
+                    aria-pressed={activeDraftSubcategoryId === subcategory.id}
                     className={`rounded-xl px-3 py-2 text-start text-xs font-bold ${
-                      subcategoryId === subcategory.id
+                      activeDraftSubcategoryId === subcategory.id
                         ? "bg-gold text-gold-foreground"
                         : "bg-muted-surface text-foreground"
                     }`}

@@ -62,18 +62,17 @@
 
   .rawaj-shell-header__inner--context .rawaj-shell-header__title,
   .rawaj-shell-header__inner--workspace .rawaj-shell-header__title {
-    position: absolute !important;
-    inset-inline-start: 50% !important;
-    width: min(45vw, 11rem) !important;
-    max-width: calc(100% - 9.4rem) !important;
-    transform: translateX(-50%) !important;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
     text-align: center !important;
-    pointer-events: none !important;
   }
 
-  [dir="rtl"] .rawaj-shell-header__inner--context .rawaj-shell-header__title,
-  [dir="rtl"] .rawaj-shell-header__inner--workspace .rawaj-shell-header__title {
-    transform: translateX(50%) !important;
+  .rawaj-shell-header__inner--context .rawaj-shell-header__actions,
+  .rawaj-shell-header__inner--workspace .rawaj-shell-header__actions {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
   }
 
   .rawaj-shell-header__title h1,
@@ -92,10 +91,10 @@
   .rawaj-shell-header__back,
   .rawaj-shell-header__actions > .relative > button,
   .rawaj-header-admin {
-    width: 2.45rem !important;
-    height: 2.45rem !important;
-    min-width: 2.45rem !important;
-    min-height: 2.45rem !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 0.72rem !important;
   }
 }

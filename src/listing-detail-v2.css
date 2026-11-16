@@ -996,8 +996,7 @@
     top: 1rem;
   }
   .rawaj-contact-dock {
-    position: sticky;
-    bottom: 0;
+    position: static;
     margin-top: 1.25rem;
     padding-inline: clamp(1rem, 3vw, 2rem);
   }

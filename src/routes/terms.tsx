@@ -168,7 +168,7 @@ function TermsPage() {
   const { text } = useUiPreferences();
   return (
     <>
-      <PageHeader title={text("شروط وسياسة الاستخدام", "Terms of Use")} />
+      <PageHeader titleIsPageHeading={false} title={text("شروط وسياسة الاستخدام", "Terms of Use")} />
       <main className="rawaj-legal-v3 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <section className="rawaj-trust-intro">
           <div className="flex items-start gap-3">

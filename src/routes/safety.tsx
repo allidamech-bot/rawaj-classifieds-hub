@@ -126,7 +126,7 @@ function SafetyPage() {
 
   return (
     <>
-      <PageHeader title={text("إرشادات الأمان", "Safety guidance")} />
+      <PageHeader titleIsPageHeading={false} title={text("إرشادات الأمان", "Safety guidance")} />
       <main className="rawaj-trust-v2 rawaj-safety-v2 container-wide mobile-page-bottom space-y-4 pb-8 pt-4">
         <TrustHubHero mode="safety" />
 

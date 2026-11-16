@@ -158,7 +158,7 @@
   --rawaj-card-interactive-shadow: var(--shadow-raised);
   --rawaj-control-hover-border: var(--rawaj-border-active);
   --rawaj-control-focus-border: var(--ring);
-  --rawaj-dialog-overlay-background: color-mix(in srgb, var(--primary) 45%, transparent);
+  --rawaj-dialog-overlay-background: rgb(21 35 34 / 45%);
   --shadow-card: var(--shadow-soft);
 
   --motion-fast: 150ms;
@@ -501,4 +501,23 @@ textarea,
   .rawaj-app-header
   :is(.rawaj-brand-lockup__name, .rawaj-brand-lockup__latin, .rawaj-shell-header__title h1, .rawaj-shell-header__title p) {
   color: var(--rawaj-identity-ivory) !important;
+}
+
+
+/* Approved light palette for discovery and administration. */
+.rawaj-app-shell:is(
+  [data-resolved-pathname="/categories"],
+  [data-resolved-pathname="/listings"],
+  [data-resolved-pathname="/admin"],
+  [data-resolved-pathname^="/admin/"]
+) {
+  --rawaj-identity-ivory: #ffffff;
+  --rawaj-identity-petrol: #103f42;
+  --rawaj-identity-ink: #152322;
+  --rawaj-identity-gold: #bd984b;
+  --rawaj-card-background: #ffffff;
+  --rawaj-text-primary: #152322;
+  --rawaj-text-secondary: #53615e;
+  --rawaj-border: #e3e7e4;
+  scrollbar-color: #53615e #ffffff;
 }

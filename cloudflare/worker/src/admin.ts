@@ -87,6 +87,8 @@ function requireAdminRole(
   return actorLevel >= requiredLevel;
 }
 
+const PENDING_LISTING_STATUS = "pending_review";
+
 async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
   const auth = await authenticate(request, asAuthEnv(env));
   if (!auth) return unauthorized(cors);
@@ -107,8 +109,8 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
     `SELECT count(*) AS count FROM public_profiles WHERE account_status = 'disabled'`,
   ).first<{ count: number }>();
   const pendingListings = await env.DB.prepare(
-    "SELECT count(*) AS count FROM listings WHERE status = 'pending_review'",
-  ).first<{ count: number }>();
+    "SELECT count(*) AS count FROM listings WHERE status = ?",
+  ).bind(PENDING_LISTING_STATUS).first<{ count: number }>();
   const pendingPromotions = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_promotion_requests WHERE status = 'pending_review'",
   ).first<{ count: number }>();
@@ -249,10 +251,10 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
               WHERE a.listing_id = l.id
               ORDER BY a.created_at DESC, a.id DESC LIMIT 1) AS reviewed_at
        FROM listings l
-      WHERE l.status IN ('pending_review', 'approved', 'rejected', 'archived', 'expired')
+      WHERE l.status = ?
       ORDER BY l.updated_at DESC
       LIMIT 250`,
-  ).all<Row>();
+  ).bind(PENDING_LISTING_STATUS).all<Row>();
 
   if (!result.success) return databaseError(cors);
 

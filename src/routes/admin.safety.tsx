@@ -55,6 +55,27 @@ const emptyForm: CaseFormState = {
   assignedTo: "",
 };
 
+const sourceLabels = {
+  manual: ["يدوي", "Manual"],
+  listing_report: ["بلاغ عن إعلان", "Listing report"],
+  message_report: ["بلاغ عن رسالة", "Message report"],
+  account: ["حساب", "Account"],
+} satisfies Record<SafetyCaseSource, [string, string]>;
+
+const severityLabels = {
+  low: ["منخفضة", "Low"],
+  medium: ["متوسطة", "Medium"],
+  high: ["مرتفعة", "High"],
+  critical: ["حرجة", "Critical"],
+} satisfies Record<SafetyCaseSeverity, [string, string]>;
+
+const statusLabels = {
+  open: ["مفتوحة", "Open"],
+  investigating: ["قيد التحقيق", "Investigating"],
+  mitigated: ["تم الحد من الخطر", "Mitigated"],
+  closed: ["مغلقة", "Closed"],
+} satisfies Record<SafetyCaseStatus, [string, string]>;
+
 const statusOptions: SafetyCaseStatus[] = ["open", "investigating", "mitigated", "closed"];
 const severityOptions: SafetyCaseSeverity[] = ["low", "medium", "high", "critical"];
 
@@ -328,10 +349,10 @@ function AdminSafetyPage() {
                 }
                 className="input"
               >
-                <option value="manual">manual</option>
-                <option value="listing_report">listing_report</option>
-                <option value="message_report">message_report</option>
-                <option value="account">account</option>
+                <option value="manual">{text(...sourceLabels.manual)}</option>
+                <option value="listing_report">{text(...sourceLabels.listing_report)}</option>
+                <option value="message_report">{text(...sourceLabels.message_report)}</option>
+                <option value="account">{text(...sourceLabels.account)}</option>
               </select>
             </Field>
             <Field label={text("الخطورة", "Severity")}>
@@ -347,7 +368,7 @@ function AdminSafetyPage() {
               >
                 {severityOptions.map((severity) => (
                   <option key={severity} value={severity}>
-                    {severity}
+                    {text(...severityLabels[severity])}
                   </option>
                 ))}
               </select>
@@ -428,7 +449,7 @@ function AdminSafetyPage() {
               <option value="all">{text("كل الحالات", "All statuses")}</option>
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
-                  {status}
+                  {text(...statusLabels[status])}
                 </option>
               ))}
             </select>
@@ -536,7 +557,7 @@ function CaseCard({
             )}
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            {item.sourceType} · {item.severity} · {item.status} · v{item.version}
+            {text(...sourceLabels[item.sourceType])} · {text(...severityLabels[item.severity])} · {text(...statusLabels[item.status])} · v{item.version}
           </p>
           {item.summary && (
             <p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
@@ -564,7 +585,7 @@ function CaseCard({
               onClick={() => onStatus(status)}
               className="rawaj-chip px-3 py-2 text-[11px] font-bold"
             >
-              {status}
+              {text(...statusLabels[status])}
             </button>
           ))}
         {!item.escalatedToOwner && (

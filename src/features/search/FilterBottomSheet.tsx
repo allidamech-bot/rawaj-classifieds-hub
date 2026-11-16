@@ -41,6 +41,10 @@ export function FilterBottomSheet({
       handleOnly
     >
       <BottomSheetContent
+        onEscapeKeyDown={(event) => {
+          event.preventDefault();
+          onOpenChange(false);
+        }}
         className="rawaj-filter-sheet"
         data-design-palette="ivory"
         data-filter-state="draft"

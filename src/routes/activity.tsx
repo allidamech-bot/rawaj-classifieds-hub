@@ -197,7 +197,7 @@ function ActivityCenterPage() {
 
   return (
     <>
-      <PageHeader title={text("مركز النشاط", "Activity center")} to="/more" backMode="history" />
+      <PageHeader titleIsPageHeading={false} title={text("مركز النشاط", "Activity center")} to="/more" backMode="history" />
       <main className="rawaj-communication-v2 rawaj-communication-v2--activity rawaj-account-activity-v3 container-wide rawaj-content-stack mobile-page-bottom pt-4">
         <CommunicationCenterHero
           mode="activity"

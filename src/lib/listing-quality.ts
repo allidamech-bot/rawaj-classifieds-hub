@@ -85,7 +85,7 @@ export function listingQualityCheckLabel(
 ) {
   const labels: Record<ListingQualityCheckKey, [string, string]> = {
     category: ["القسم الدقيق محدد", "Precise category selected"],
-    title: ["عنوان واضح من 12 حرفاً", "Clear title of at least 12 characters"],
+    title: ["يُفضّل عنوان واضح من 12 حرفاً فأكثر", "Recommended: a clear title of 12 characters or more"],
     description: ["وصف مفيد من 60 حرفاً", "Useful description of at least 60 characters"],
     primary_photo: ["صورة رئيسية مضافة", "Primary photo added"],
     photo_depth: ["ثلاث صور أو أكثر", "Three or more photos"],

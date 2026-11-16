@@ -498,8 +498,8 @@
 
 .rawaj-filter-category-grid button > span {
   display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 1.75rem;
+  height: 1.75rem;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 0.75rem;
@@ -621,12 +621,6 @@
   margin-top: 1rem;
 }
 
-@media (min-width: 390px) {
-  .rawaj-filter-category-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (min-width: 640px) {
   .rawaj-category-directory-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -652,10 +646,6 @@
 
   [dir="rtl"] .rawaj-filter-sheet {
     transform: translateX(50%);
-  }
-
-  .rawaj-filter-category-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .rawaj-category-directory-grid {

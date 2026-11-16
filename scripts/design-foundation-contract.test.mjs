@@ -292,7 +292,7 @@ test("shared Card and form controls consume canonical interaction roles", () => 
   assert.ok(dialog.includes("bg-[var(--rawaj-dialog-overlay-background)]"));
   assert.ok(
     foundation.includes(
-      "--rawaj-dialog-overlay-background: color-mix(in srgb, var(--primary) 45%, transparent);",
+      "--rawaj-dialog-overlay-background: rgb(21 35 34 / 45%);",
     ),
     "Legacy dialog overlay must retain 45% primary opacity",
   );

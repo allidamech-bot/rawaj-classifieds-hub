@@ -45,7 +45,7 @@ function OffersPage() {
 
   return (
     <>
-      <PageHeader title={text("العروض", "Offers")} />
+      <PageHeader titleIsPageHeading={false} title={text("العروض", "Offers")} />
       <main className="rawaj-pulse-page rawaj-offers-premium-v3 min-h-dvh">
         <div className="container-wide mobile-page-bottom pb-8 pt-3 sm:pt-5">
           <section className="rawaj-offers-stage">
