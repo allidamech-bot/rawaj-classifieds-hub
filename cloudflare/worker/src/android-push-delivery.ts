@@ -203,6 +203,7 @@ export async function deliverAndroidPush(
   env: AndroidPushEnv,
   timestamp: string,
   request: Fetcher = fetch,
+  messageId?: string,
 ): Promise<void> {
   const account = credentials(env);
   if (!account) return;
@@ -210,7 +211,8 @@ export async function deliverAndroidPush(
   if (!Number.isFinite(now)) throw new Error("invalid_push_delivery_time");
   const cutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const retention = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
-  await env.DB.prepare("DELETE FROM push_delivery_jobs WHERE created_at < ?").bind(retention).run();
+  if (!messageId) {
+    await env.DB.prepare("DELETE FROM push_delivery_jobs WHERE created_at < ?").bind(retention).run();
   await env.DB.prepare(
     `UPDATE push_delivery_jobs SET status = 'cancelled', lease_id = NULL, last_error = 'expired'
       WHERE status IN ('pending', 'sending') AND (created_at < ? OR attempts >= ?)
@@ -218,15 +220,19 @@ export async function deliverAndroidPush(
   )
     .bind(cutoff, MAX_ATTEMPTS, timestamp)
     .run();
+  }
 
+  // Request-triggered delivery is scoped to the new message and one device;
+  // the scheduled job drains all remaining devices and retries.
   const due = await env.DB.prepare(
     `SELECT device_id, user_id, token_hash, event_kind, event_id, attempts
       FROM push_delivery_jobs
       WHERE status IN ('pending', 'sending') AND next_attempt_at <= ?
         AND created_at >= ? AND attempts < ?
+        ${messageId ? "AND event_kind = 'message' AND event_id = ?" : ""}
       ORDER BY next_attempt_at, created_at, device_id, event_id LIMIT ?`,
   )
-    .bind(timestamp, cutoff, MAX_ATTEMPTS, MAX_JOBS)
+    .bind(timestamp, cutoff, MAX_ATTEMPTS, ...(messageId ? [messageId, 1] : [MAX_JOBS]))
     .all<Job>();
   if (!due.success) throw new Error("push_delivery_read_failed");
   if (!due.results?.length) return;

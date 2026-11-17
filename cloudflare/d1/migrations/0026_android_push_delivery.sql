@@ -22,6 +22,8 @@ CREATE INDEX idx_push_delivery_due
   ON push_delivery_jobs (status, next_attempt_at, created_at);
 CREATE INDEX idx_push_delivery_created
   ON push_delivery_jobs (created_at);
+CREATE INDEX idx_push_delivery_event
+  ON push_delivery_jobs (event_kind, event_id, status, next_attempt_at);
 
 -- Existing in-app notifications are the source of truth for these events.
 CREATE TRIGGER trg_enqueue_android_notification

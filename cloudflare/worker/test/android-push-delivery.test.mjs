@@ -201,3 +201,21 @@ test("unconfigured production does not contact an external provider", async () =
   assert.equal(db.prepare("SELECT attempts FROM push_delivery_jobs").get().attempts, 0);
   db.close();
 });
+
+test("message fast path sends only the committed message; cron drains other jobs", async () => {
+  const { db, env, message, notification } = fixture();
+  message("older");
+  message("new");
+  notification();
+  const { request, sent } = transport();
+  await deliverAndroidPush(env, stamp, request, "new");
+  assert.equal(sent.length, 1);
+  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='new'").get().status, "sent");
+  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='older'").get().status, "pending");
+  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='notice'").get().status, "pending");
+  await deliverAndroidPush(env, stamp, request, "new");
+  assert.equal(sent.length, 1);
+  await deliverAndroidPush(env, stamp, request);
+  assert.equal(sent.length, 3);
+  db.close();
+});

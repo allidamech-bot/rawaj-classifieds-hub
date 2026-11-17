@@ -64,7 +64,11 @@ type EntryEnv = PublicCoreEnv &
   };
 
 export default {
-  async fetch(request: Request, env: EntryEnv): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: EntryEnv,
+    ctx?: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<Response> {
     const origin = request.headers.get("Origin");
     const cors = corsHeadersForOrigin(origin, env);
     const requestId = crypto.randomUUID();
@@ -84,6 +88,21 @@ export default {
 
       const securedRequest = securityResult instanceof Request ? securityResult : request;
       const response = await routeRequest(securedRequest, env);
+      // The message and its outbox row are committed before this fast path.
+      // A delivery failure must never turn a successful message into an error.
+      if (ctx && response.status === 201 && securedRequest.method === "POST" &&
+          /^\/v1\/conversations\/[^/]+\/messages$/.test(new URL(securedRequest.url).pathname)) {
+        const copy = response.clone();
+        ctx.waitUntil((async () => {
+          const payload = (await copy.json()) as { data?: { id?: unknown } };
+          const messageId = payload.data?.id;
+          if (typeof messageId === "string" && messageId.length <= 120 && messageId.length > 0) {
+            await deliverAndroidPush(env, new Date().toISOString(), fetch, messageId);
+          }
+        })().catch(() => {
+          console.warn(JSON.stringify({ event: "android_push_fast_path_failed" }));
+        }));
+      }
       return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
