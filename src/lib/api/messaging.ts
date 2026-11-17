@@ -303,6 +303,15 @@ export async function startListingConversation(
   return result.ok ? { ok: true, data: result.data.id } : apiFailure(result, "conversation_start");
 }
 
+export async function fetchUnreadMessagesCount(): Promise<ClassifiedsResult<number>> {
+  const result = await cloudflareApiRequest<{ count: number }>(
+    "/v1/account/messages/unread-count",
+  );
+  return result.ok
+    ? { ok: true, data: Math.max(0, Math.floor(Number(result.data.count) || 0)) }
+    : apiFailure(result, "conversation_unread_count");
+}
+
 export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
   const result = await cloudflareApiRequest<{ items: Record<string, unknown>[] }>(
     "/v1/account/conversations?pageSize=50",
