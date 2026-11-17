@@ -751,10 +751,7 @@ test("owner can activate and undo system maintenance and read-only safely", asyn
       {
         ...other,
         method: key === "freeze_new_listings" ? "POST" : "PATCH",
-        body:
-          key === "freeze_new_listings"
-            ? {}
-            : { key: "messagesEnabled", enabled: false },
+        body: key === "freeze_new_listings" ? {} : { key: "messagesEnabled", enabled: false },
       },
     );
     assert.equal(blocked.response.status, 503, key);
