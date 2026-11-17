@@ -56,7 +56,8 @@ function credentials(env: AndroidPushEnv): Credentials | null {
       typeof parsed.private_key !== "string" ||
       !parsed.private_key.includes("BEGIN PRIVATE KEY") ||
       env.PUSH_TOKEN_ENCRYPTION_KEY.length < 32
-    ) return null;
+    )
+      return null;
     return parsed as Credentials;
   } catch {
     return null;
@@ -64,10 +65,13 @@ function credentials(env: AndroidPushEnv): Credentials | null {
 }
 
 function encode64(bytes: Uint8Array): string {
-  return btoa(String.fromCharCode(...bytes)).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
 }
-function decode64(text: string): Uint8Array {
-  const normal = text.replace(/-/g, "+").replace(/_/g, "/");
+function decode64(text: string): Uint8Array<ArrayBuffer> {
+  const normal = text.replaceAll("-", "+").replaceAll("_", "/");
   return Uint8Array.from(atob(normal), (letter) => letter.charCodeAt(0));
 }
 function encodedJson(value: unknown): string {
@@ -76,7 +80,7 @@ function encodedJson(value: unknown): string {
 
 async function getAccessToken(account: Credentials, request: Fetcher): Promise<string> {
   const privateKeyBytes = decode64(
-    account.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, ""),
+    account.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, ""),
   );
   const key = await crypto.subtle.importKey(
     "pkcs8",
@@ -137,8 +141,9 @@ function jobKey(job: Job): Value[] {
 // Recheck ownership, token rotation, permission, notification category and
 // unread state immediately before contacting FCM. Never send notification text.
 async function destination(db: DeliveryDb, job: Job): Promise<Destination | null> {
-  return db.prepare(
-    `SELECT d.encrypted_token, d.locale, m.conversation_id
+  return db
+    .prepare(
+      `SELECT d.encrypted_token, d.locale, m.conversation_id
       FROM push_devices d
       JOIN public_profiles u ON u.id = d.user_id AND u.account_status = 'active'
       JOIN notification_preferences p ON p.user_id = d.user_id
@@ -161,20 +166,34 @@ async function destination(db: DeliveryDb, job: Job): Promise<Destination | null
               WHEN n.type GLOB 'promotion.*' THEN p.promotions_enabled
               ELSE 0 END = 1)
         )`,
-  ).bind(
-    job.event_id, job.event_id, job.device_id, job.user_id, job.token_hash,
-    job.event_kind, job.event_kind,
-  ).first<Destination>();
+    )
+    .bind(
+      job.event_id,
+      job.event_id,
+      job.device_id,
+      job.user_id,
+      job.token_hash,
+      job.event_kind,
+      job.event_kind,
+    )
+    .first<Destination>();
 }
 
 async function finish(
-  db: DeliveryDb, job: Job, lease: string,
-  status: "sent" | "pending" | "cancelled" | "failed", next: string, error: string | null,
+  db: DeliveryDb,
+  job: Job,
+  lease: string,
+  status: "sent" | "pending" | "cancelled" | "failed",
+  next: string,
+  error: string | null,
 ): Promise<void> {
-  const result = await db.prepare(
-    `UPDATE push_delivery_jobs SET status = ?, next_attempt_at = ?, last_error = ?, lease_id = NULL
+  const result = await db
+    .prepare(
+      `UPDATE push_delivery_jobs SET status = ?, next_attempt_at = ?, last_error = ?, lease_id = NULL
       WHERE device_id = ? AND event_kind = ? AND event_id = ? AND lease_id = ?`,
-  ).bind(status, next, error, ...jobKey(job), lease).run();
+    )
+    .bind(status, next, error, ...jobKey(job), lease)
+    .run();
   if (!result.success) throw new Error("push_delivery_state_write_failed");
 }
 
@@ -191,14 +210,16 @@ export async function deliverAndroidPush(
   if (!Number.isFinite(now)) throw new Error("invalid_push_delivery_time");
   const cutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const retention = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
-  await env.DB.prepare(
-    "DELETE FROM push_delivery_jobs WHERE created_at < ?",
-  ).bind(retention).run();
+  await env.DB.prepare("DELETE FROM push_delivery_jobs WHERE created_at < ?")
+    .bind(retention)
+    .run();
   await env.DB.prepare(
     `UPDATE push_delivery_jobs SET status = 'cancelled', lease_id = NULL, last_error = 'expired'
       WHERE status IN ('pending', 'sending') AND (created_at < ? OR attempts >= ?)
         AND next_attempt_at <= ?`,
-  ).bind(cutoff, MAX_ATTEMPTS, timestamp).run();
+  )
+    .bind(cutoff, MAX_ATTEMPTS, timestamp)
+    .run();
 
   const due = await env.DB.prepare(
     `SELECT device_id, user_id, token_hash, event_kind, event_id, attempts
@@ -206,7 +227,9 @@ export async function deliverAndroidPush(
       WHERE status IN ('pending', 'sending') AND next_attempt_at <= ?
         AND created_at >= ? AND attempts < ?
       ORDER BY next_attempt_at, created_at, device_id, event_id LIMIT ?`,
-  ).bind(timestamp, cutoff, MAX_ATTEMPTS, MAX_JOBS).all<Job>();
+  )
+    .bind(timestamp, cutoff, MAX_ATTEMPTS, MAX_JOBS)
+    .all<Job>();
   if (!due.success) throw new Error("push_delivery_read_failed");
   if (!due.results?.length) return;
   const accessToken = await getAccessToken(account, request);
@@ -219,7 +242,9 @@ export async function deliverAndroidPush(
         next_attempt_at = ?, attempts = attempts + 1
         WHERE device_id = ? AND event_kind = ? AND event_id = ?
           AND status IN ('pending', 'sending') AND next_attempt_at <= ? AND attempts = ?`,
-    ).bind(lease, leaseUntil, ...jobKey(job), timestamp, job.attempts).run();
+    )
+      .bind(lease, leaseUntil, ...jobKey(job), timestamp, job.attempts)
+      .run();
     if (!claimed.success || claimed.meta?.changes !== 1) continue;
     const retry = new Date(now + Math.min(60, 2 ** (job.attempts + 1)) * 60 * 1000).toISOString();
     try {
@@ -230,9 +255,10 @@ export async function deliverAndroidPush(
       }
       const token = await decryptToken(target.encrypted_token, env.PUSH_TOKEN_ENCRYPTION_KEY!);
       const english = target.locale?.toLowerCase().startsWith("en");
-      const data = job.event_kind === "message" && target.conversation_id
-        ? { conversation_id: target.conversation_id }
-        : { notification_id: job.event_id };
+      const data =
+        job.event_kind === "message" && target.conversation_id
+          ? { conversation_id: target.conversation_id }
+          : { notification_id: job.event_id };
       const response = await request(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -263,22 +289,34 @@ export async function deliverAndroidPush(
       const payload = (await response.json().catch(() => null)) as {
         error?: { details?: Array<{ errorCode?: string }> };
       } | null;
-      const unregistered = payload?.error?.details?.some((detail) => detail.errorCode === "UNREGISTERED");
+      const unregistered = payload?.error?.details?.some(
+        (detail) => detail.errorCode === "UNREGISTERED",
+      );
       if (unregistered) {
         await env.DB.prepare(
           "UPDATE push_devices SET active = 0 WHERE id = ? AND user_id = ? AND token_hash = ?",
-        ).bind(job.device_id, job.user_id, job.token_hash).run();
+        )
+          .bind(job.device_id, job.user_id, job.token_hash)
+          .run();
         await finish(env.DB, job, lease, "cancelled", timestamp, "token_unregistered");
       } else {
         await finish(
-          env.DB, job, lease, job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "pending",
-          retry, `fcm_http_${response.status}`,
+          env.DB,
+          job,
+          lease,
+          job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "pending",
+          retry,
+          `fcm_http_${response.status}`,
         );
       }
     } catch {
       await finish(
-        env.DB, job, lease, job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "pending",
-        retry, "push_delivery_retryable_error",
+        env.DB,
+        job,
+        lease,
+        job.attempts + 1 >= MAX_ATTEMPTS ? "failed" : "pending",
+        retry,
+        "push_delivery_retryable_error",
       );
     }
   }
