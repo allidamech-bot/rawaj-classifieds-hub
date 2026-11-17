@@ -210,9 +210,18 @@ test("message fast path sends only the committed message; cron drains other jobs
   const { request, sent } = transport();
   await deliverAndroidPush(env, stamp, request, "new");
   assert.equal(sent.length, 1);
-  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='new'").get().status, "sent");
-  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='older'").get().status, "pending");
-  assert.equal(db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='notice'").get().status, "pending");
+  assert.equal(
+    db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='new'").get().status,
+    "sent",
+  );
+  assert.equal(
+    db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='older'").get().status,
+    "pending",
+  );
+  assert.equal(
+    db.prepare("SELECT status FROM push_delivery_jobs WHERE event_id='notice'").get().status,
+    "pending",
+  );
   await deliverAndroidPush(env, stamp, request, "new");
   assert.equal(sent.length, 1);
   await deliverAndroidPush(env, stamp, request);

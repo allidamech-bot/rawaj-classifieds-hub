@@ -212,14 +212,16 @@ export async function deliverAndroidPush(
   const cutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const retention = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
   if (!messageId) {
-    await env.DB.prepare("DELETE FROM push_delivery_jobs WHERE created_at < ?").bind(retention).run();
-  await env.DB.prepare(
-    `UPDATE push_delivery_jobs SET status = 'cancelled', lease_id = NULL, last_error = 'expired'
+    await env.DB.prepare("DELETE FROM push_delivery_jobs WHERE created_at < ?")
+      .bind(retention)
+      .run();
+    await env.DB.prepare(
+      `UPDATE push_delivery_jobs SET status = 'cancelled', lease_id = NULL, last_error = 'expired'
       WHERE status IN ('pending', 'sending') AND (created_at < ? OR attempts >= ?)
         AND next_attempt_at <= ?`,
-  )
-    .bind(cutoff, MAX_ATTEMPTS, timestamp)
-    .run();
+    )
+      .bind(cutoff, MAX_ATTEMPTS, timestamp)
+      .run();
   }
 
   // Request-triggered delivery is scoped to the new message and one device;
