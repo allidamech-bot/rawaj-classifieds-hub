@@ -24,7 +24,10 @@ import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
 import { handleReferrals, isReferralPath, type ReferralsEnv } from "./referrals";
 import { expireTimedPromotions } from "./promotion-expiry";
-import { deliverDueSavedSearchAlerts, type SavedSearchAlertsEnv } from "./saved-search-alert-delivery";
+import {
+  deliverDueSavedSearchAlerts,
+  type SavedSearchAlertsEnv,
+} from "./saved-search-alert-delivery";
 import { corsHeadersForOrigin } from "./cors";
 import { enforceRequestSecurity, type SecurityEnv } from "./security";
 
