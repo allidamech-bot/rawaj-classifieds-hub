@@ -140,7 +140,7 @@ async function blockedAccountMutation(
   if (
     method === "POST" &&
     (path === "/v1/conversations" ||
-      /^\\/v1\\/conversations\\/[^/]+\\/(?:messages|attachments)$/.test(path))
+      /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path))
   ) {
     restrictionTypes.push("messaging");
   }
@@ -148,16 +148,16 @@ async function blockedAccountMutation(
     restrictionTypes.push("promotions");
   }
   if (
-    (method === "POST" && /^\\/v1\\/sellers\\/[^/]+\\/reviews$/.test(path)) ||
-    (method === "PATCH" && /^\\/v1\\/reviews\\/[^/]+\\/response$/.test(path))
+    (method === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path)) ||
+    (method === "PATCH" && /^\/v1\/reviews\/[^/]+\/response$/.test(path))
   ) {
     restrictionTypes.push("reviews");
   }
   if (
     method === "POST" &&
     (path === "/v1/profile/media" ||
-      /^\\/v1\\/listings\\/[^/]+\\/images$/.test(path) ||
-      /^\\/v1\\/conversations\\/[^/]+\\/attachments$/.test(path))
+      /^\/v1\/listings\/[^/]+\/images$/.test(path) ||
+      /^\/v1\/conversations\/[^/]+\/attachments$/.test(path))
   ) {
     restrictionTypes.push("uploads");
   }
