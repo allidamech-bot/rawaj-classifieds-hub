@@ -236,7 +236,12 @@ export async function deliverAndroidPush(
         ${messageId ? "AND event_kind = 'message' AND event_id = ?" : ""}
       ORDER BY next_attempt_at, created_at, device_id, event_id LIMIT ?`,
   )
-    .bind(timestamp, cutoff, MAX_ATTEMPTS, ...(messageId ? [messageId, MAX_IMMEDIATE_DEVICES] : [MAX_JOBS]))
+    .bind(
+      timestamp,
+      cutoff,
+      MAX_ATTEMPTS,
+      ...(messageId ? [messageId, MAX_IMMEDIATE_DEVICES] : [MAX_JOBS]),
+    )
     .all<Job>();
   if (!due.success) throw new Error("push_delivery_read_failed");
   if (!due.results?.length) return;

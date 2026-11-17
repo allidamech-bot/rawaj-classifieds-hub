@@ -64,9 +64,7 @@ export async function getNativePushCapability(): Promise<NativePushCapability> {
     const { Capacitor } = await import("@capacitor/core");
     const platform = Capacitor.getPlatform();
     return {
-      available: Capacitor.isNativePlatform()
-        ? platform === "android"
-        : webPushAvailable(),
+      available: Capacitor.isNativePlatform() ? platform === "android" : webPushAvailable(),
       platform: platform === "android" || platform === "ios" ? platform : "web",
     };
   } catch {
@@ -193,7 +191,12 @@ async function enableWebPush(
     }
     const token = await getWebPushToken();
     if (!stillCurrent()) return stalePushAccountError();
-    const result = await syncRegistrationToken(token, { userId, locale, platform: "web", generation });
+    const result = await syncRegistrationToken(token, {
+      userId,
+      locale,
+      platform: "web",
+      generation,
+    });
     if (!result.ok) return result;
     if (!stillCurrent()) return stalePushAccountError();
     return { ok: true, data: { deviceKey, permissionStatus, registered: true } };
