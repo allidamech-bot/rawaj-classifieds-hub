@@ -131,9 +131,10 @@ async function deliverSearch(env: SavedSearchAlertsEnv, search: DueSearch, times
     );
   }
   statements.push(
-    env.DB.prepare(
-      `UPDATE saved_searches SET last_alert_checked_at = ? WHERE ${scope}`,
-    ).bind(timestamp, ...scopeValues),
+    env.DB.prepare(`UPDATE saved_searches SET last_alert_checked_at = ? WHERE ${scope}`).bind(
+      timestamp,
+      ...scopeValues,
+    ),
   );
   const results = await env.DB.batch(statements);
   if (results.some((result) => !result.success)) throw new Error("saved_search_alert_batch_failed");
