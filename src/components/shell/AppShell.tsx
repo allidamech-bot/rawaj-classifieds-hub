@@ -6,6 +6,7 @@ import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
 import { resolveBrowserChrome } from "@/lib/browser-chrome";
+import { registerInstalledOfflineWorker } from "@/lib/pwa-offline";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
 import { auditedOverrideStyleHrefs, resolveRouteStyleScope } from "@/lib/route-styles";
 import { useUiPreferences } from "@/lib/ui-preferences";
@@ -233,6 +234,9 @@ export function AppShell({
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
     config.mode,
   );
+  useEffect(() => {
+    void registerInstalledOfflineWorker();
+  }, []);
   useRouteBrowserChrome(pathname);
   useAccessibleFieldNameFallbacks(pathname);
 

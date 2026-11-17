@@ -8,6 +8,7 @@ on:
       - "src/lib/browser-chrome.ts"
       - "src/rawaj-page-by-page-recovery-v7.css"
       - "e2e/b4-personal-shell-identity.spec.ts"
+      - "e2e/final-mobile-viewport-closure.spec.ts"
       - ".github/workflows/b4-personal-shell-webkit.yml"
 
 concurrency:
@@ -35,7 +36,7 @@ jobs:
           RAWAJ_E2E_USE_FIXTURES: "1"
           VITE_PUBLIC_DATA_API_BASE_URL: "http://127.0.0.1:4173"
           VITE_RAWAJ_E2E_DISABLE_REMOTE_MEDIA: "1"
-        run: npx playwright test e2e/b4-personal-shell-identity.spec.ts --project=mobile-webkit
+        run: npx playwright test e2e/b4-personal-shell-identity.spec.ts e2e/final-mobile-viewport-closure.spec.ts --project=mobile-webkit
       - name: Save diagnostics
         if: always()
         uses: actions/upload-artifact@v4
