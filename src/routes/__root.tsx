@@ -23,6 +23,7 @@ import { AuthProvider } from "@/lib/auth";
 import { resolveBrowserChrome } from "@/lib/browser-chrome";
 import { rawajBuildInfo } from "@/lib/build-info";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { registerRawajOfflineWorker } from "@/lib/pwa-offline";
 import { resolveRouteStyleScope, routeStyleHrefs } from "@/lib/route-styles";
 import { buildSiteStructuredData, createSeo, jsonLdScript } from "@/lib/seo";
 import { UiPreferencesProvider, useUiPreferences } from "@/lib/ui-preferences";
@@ -249,6 +250,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function HtmlAttributes() {
   const { language } = useUiPreferences();
+  useEffect(() => {
+    void registerRawajOfflineWorker();
+  }, []);
   useEffect(() => {
     const root = document.documentElement;
     root.lang = language === "en" ? "en" : "ar";
