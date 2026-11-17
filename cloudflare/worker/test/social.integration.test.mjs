@@ -361,8 +361,14 @@ test("public seller totals are independent of listing and review display limits"
   assert.equal(result.payload.data.listings.length, 24);
   const summary = result.payload.data.ratingSummary;
   assert.equal(summary.count, initial.payload.data.ratingSummary.count + 501);
-  assert.equal(summary.distribution["5"], initial.payload.data.ratingSummary.distribution["5"] + 251);
-  assert.equal(summary.distribution["1"], initial.payload.data.ratingSummary.distribution["1"] + 250);
+  assert.equal(
+    summary.distribution["5"],
+    initial.payload.data.ratingSummary.distribution["5"] + 251,
+  );
+  assert.equal(
+    summary.distribution["1"],
+    initial.payload.data.ratingSummary.distribution["1"] + 250,
+  );
   assert.equal(result.payload.data.approvedReviewCount, summary.count);
   assert.equal(result.payload.data.reviews.length, 6);
 });
