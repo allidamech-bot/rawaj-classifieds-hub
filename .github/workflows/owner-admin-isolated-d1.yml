@@ -1,0 +1,31 @@
+name: Owner Admin D1 Acceptance
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "cloudflare/worker/src/admin-user-actions.ts"
+      - "cloudflare/worker/src/admin.ts"
+      - "cloudflare/worker/src/auth.ts"
+      - "cloudflare/worker/src/system-controls.ts"
+      - "cloudflare/worker/test/marketplace.integration.test.mjs"
+      - "src/routes/admin.owner-controls.tsx"
+      - "src/routes/admin.users.tsx"
+      - "src/lib/auth-types.ts"
+      - ".github/workflows/owner-admin-isolated-d1.yml"
+permissions:
+  contents: read
+jobs:
+  isolated-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix cloudflare/worker --ignore-scripts
+      - name: Run all local D1 integration tests
+        run: npm test --prefix cloudflare/worker

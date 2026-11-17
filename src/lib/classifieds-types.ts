@@ -8,6 +8,7 @@ export type ClassifiedsErrorCode =
   | "permission_denied"
   | "not_found"
   | "stale_account"
+  | "stale_write"
   | "stale_review"
   | "status_mismatch"
   | "invalid_transition"

@@ -108,9 +108,75 @@ export async function requireMutationAuth(
   const path = normalizeApiPath(new URL(request.url).pathname);
   if (path === "/v1/admin/system-controls") return auth;
 
+  const accountRestriction = await blockedAccountMutation(request, env, auth.userId);
+  if (accountRestriction) return json({ error: accountRestriction }, 403, cors);
+
   const blocked = await blockedMutationControl(request, env);
   if (blocked) return systemControlResponse(blocked, cors);
   return auth;
+}
+
+type AccountMutationError = { code: string; message: string };
+
+async function blockedAccountMutation(
+  request: Request,
+  env: AuthEnv,
+  userId: string,
+): Promise<AccountMutationError | null> {
+  const profile = await env.DB.prepare("SELECT account_status FROM public_profiles WHERE id = ?")
+    .bind(userId)
+    .first<{ account_status: string }>();
+  if (!profile || profile.account_status === "frozen" || profile.account_status === "disabled") {
+    return {
+      code: "account_restricted",
+      message: "تم تعليق صلاحية تنفيذ العمليات على هذا الحساب.",
+    };
+  }
+
+  const path = normalizeApiPath(new URL(request.url).pathname);
+  const method = request.method.toUpperCase();
+  const restrictionTypes: string[] = [];
+  if (method === "POST" && path === "/v1/listings") restrictionTypes.push("posting");
+  if (
+    method === "POST" &&
+    (path === "/v1/conversations" ||
+      /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path))
+  ) {
+    restrictionTypes.push("messaging");
+  }
+  if (method === "POST" && path === "/v1/account/promotions") {
+    restrictionTypes.push("promotions");
+  }
+  if (
+    (method === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path)) ||
+    (method === "PATCH" && /^\/v1\/reviews\/[^/]+\/response$/.test(path))
+  ) {
+    restrictionTypes.push("reviews");
+  }
+  if (
+    method === "POST" &&
+    (path === "/v1/profile/media" ||
+      /^\/v1\/listings\/[^/]+\/images$/.test(path) ||
+      /^\/v1\/conversations\/[^/]+\/attachments$/.test(path))
+  ) {
+    restrictionTypes.push("uploads");
+  }
+  if (restrictionTypes.length === 0) return null;
+
+  const timestamp = new Date().toISOString();
+  const placeholders = restrictionTypes.map(() => "?").join(", ");
+  const restriction = await env.DB.prepare(
+    `SELECT reason FROM user_restrictions
+      WHERE user_id = ? AND restriction_type IN (${placeholders})
+        AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1`,
+  )
+    .bind(userId, ...restrictionTypes, timestamp, timestamp)
+    .first<{ reason: string }>();
+  if (!restriction) return null;
+  return {
+    code: "account_restricted",
+    message: restriction.reason || "هذا الإجراء غير متاح لحسابك حالياً.",
+  };
 }
 
 type MutationControlKey =

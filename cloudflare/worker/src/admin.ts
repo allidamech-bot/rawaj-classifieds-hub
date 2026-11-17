@@ -1,3 +1,4 @@
+import { handleAdminUserActions } from "./admin-user-actions";
 import {
   authenticate,
   corsHeaders,
@@ -48,6 +49,13 @@ export async function handleAdmin(request: Request, env: AdminEnv): Promise<Resp
   }
   if (path === "/v1/admin/users" && request.method === "GET") {
     return adminUsers(request, env, cors);
+  }
+  if (
+    path === "/v1/admin/users/status" ||
+    path === "/v1/admin/users/restrictions" ||
+    path === "/v1/admin/users/roles"
+  ) {
+    return handleAdminUserActions(request, asAuthEnv(env));
   }
   if (path === "/v1/admin/audit" && request.method === "GET") {
     return adminAuditLogs(request, env, cors);
@@ -110,7 +118,9 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
   ).first<{ count: number }>();
   const pendingListings = await env.DB.prepare(
     "SELECT count(*) AS count FROM listings WHERE status = ?",
-  ).bind(PENDING_LISTING_STATUS).first<{ count: number }>();
+  )
+    .bind(PENDING_LISTING_STATUS)
+    .first<{ count: number }>();
   const pendingPromotions = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_promotion_requests WHERE status = 'pending_review'",
   ).first<{ count: number }>();
@@ -156,9 +166,12 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
 
   const limit = integerParam(request, 100, 1, 200);
   const result = await env.DB.prepare(
-    `SELECT u.id, u.email, p.account_status, p.verification_status,
+    `SELECT u.id, u.email, u.created_at, p.account_status, p.verification_status,
             p.display_name, p.business_name,
             group_concat(DISTINCT ur.role) AS roles,
+            (SELECT group_concat(DISTINCT rr.restriction_type) FROM user_restrictions rr
+              WHERE rr.user_id = u.id AND rr.starts_at <= ?
+                AND (rr.ends_at IS NULL OR rr.ends_at > ?)) AS active_restrictions,
             (SELECT count(*) FROM listings WHERE owner_id = u.id) AS listing_count,
             (SELECT count(*) FROM listing_reports WHERE reporter_id = u.id) AS reports_submitted,
             0 AS reports_received
@@ -169,7 +182,7 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
       ORDER BY u.created_at DESC
       LIMIT ?`,
   )
-    .bind(limit)
+    .bind(now(), now(), limit)
     .all<Row>();
 
   if (!result.success) return databaseError(cors);
@@ -185,7 +198,8 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
     listingCount: numberValue(row.listing_count),
     reportsSubmitted: numberValue(row.reports_submitted),
     reportsReceived: numberValue(row.reports_received),
-    activeRestrictions: [],
+    activeRestrictions:
+      (row.active_restrictions as string | null)?.split(",").filter(Boolean) ?? [],
   }));
 
   return json({ data: users }, 200, cors);
@@ -254,7 +268,9 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
       WHERE l.status = ?
       ORDER BY l.updated_at DESC
       LIMIT 250`,
-  ).bind(PENDING_LISTING_STATUS).all<Row>();
+  )
+    .bind(PENDING_LISTING_STATUS)
+    .all<Row>();
 
   if (!result.success) return databaseError(cors);
 

@@ -43,7 +43,9 @@ const EMPTY_METRICS: AdminCommandCenterMetrics = {
 function AdminOverview() {
   const auth = useAuth();
   const { text } = useUiPreferences();
-  const canViewCommandCenterMetrics = auth.hasPermission("canManageUsers");
+  const canViewCommandCenterMetrics =
+    auth.hasPermission("canViewAdminDashboard") &&
+    Boolean(auth.profile?.roles.some((role) => role === "owner" || role === "admin"));
   const [metrics, setMetrics] = useState<AdminCommandCenterMetrics>(EMPTY_METRICS);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -90,7 +92,9 @@ function AdminOverview() {
     return (
       <section className="rawaj-admin-dashboard-state" data-tone="permission">
         <ShieldCheck aria-hidden="true" />
-        <h2>{text("مساحات الإدارة متاحة حسب الصلاحيات", "Admin workspaces follow your permissions")}</h2>
+        <h2>
+          {text("مساحات الإدارة متاحة حسب الصلاحيات", "Admin workspaces follow your permissions")}
+        </h2>
         <p>
           {text(
             "المؤشرات التشغيلية التفصيلية متاحة للمالك والإدارة، بينما تبقى طوابير المراجعة المصرح بها متاحة من شريط التنقل.",
@@ -191,7 +195,10 @@ function AdminOverview() {
       </section>
 
       <section className="rawaj-admin-dashboard-section" data-section="queues">
-        <SectionTitle icon={ShieldCheck} title={text("السلامة والمراجعة", "Safety and moderation")} />
+        <SectionTitle
+          icon={ShieldCheck}
+          title={text("السلامة والمراجعة", "Safety and moderation")}
+        />
         <div className="rawaj-admin-queue-grid">
           <QueueCard
             icon={FileCheck}

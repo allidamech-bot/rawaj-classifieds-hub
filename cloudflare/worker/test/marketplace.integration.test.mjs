@@ -321,7 +321,12 @@ test("Search Boost receipt stays private and approval activates the exact purcha
   receipt.set(
     "file",
     new File(
-      [new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0])],
+      [
+        new Uint8Array([
+          137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8,
+          2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+        ]),
+      ],
       "boost-receipt.png",
       { type: "image/png" },
     ),
@@ -339,9 +344,7 @@ test("Search Boost receipt stays private and approval activates the exact purcha
   assert.equal(pendingRequest.proofContentType, "image/png");
   assert.ok(pendingRequest.proofPath);
   assert.equal(
-    (
-      await api(`/v1/admin/promotion-receipts/${pendingRequest.proofPath}`, other)
-    ).response.status,
+    (await api(`/v1/admin/promotion-receipts/${pendingRequest.proofPath}`, other)).response.status,
     403,
   );
   const adminReceipt = await fetch(
@@ -424,7 +427,10 @@ test("Search Boost rejection requires a reason and never activates the listing",
 });
 
 test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
-  const png = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]);
+  const png = new Uint8Array([
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+  ]);
   assert.equal((await upload(other, png, "image/png")).response.status, 403);
   assert.equal(
     (await upload(owner, new TextEncoder().encode("bad"), "text/plain")).response.status,
@@ -468,7 +474,9 @@ test("R2 upload constraints, ownership, deletion, and cleanup", async () => {
 
   const uploadedImages = [];
   for (let index = 0; index < 12; index += 1) {
-    const variant = new Uint8Array(png); variant[19] = index + 2; const result = await upload(owner, variant, "image/png");
+    const variant = new Uint8Array(png);
+    variant[19] = index + 2;
+    const result = await upload(owner, variant, "image/png");
     assert.equal(result.response.status, 201);
     uploadedImages.push(result.payload.data);
   }
@@ -687,6 +695,266 @@ test("owner can read admin users", async () => {
 test("admin cannot read admin users", async () => {
   const result = await api("/v1/admin/users", admin);
   assert.equal(result.response.status, 403);
+});
+
+test("owner can activate and undo system maintenance and read-only safely", async () => {
+  const denied = await api("/v1/admin/system-controls", admin);
+  assert.equal(denied.response.status, 403);
+
+  for (const key of ["maintenance_mode", "emergency_read_only", "freeze_new_listings"]) {
+    const loaded = await api("/v1/admin/system-controls", owner);
+    assert.equal(loaded.response.status, 200);
+    const entry = loaded.payload.data.find((control) => control.key === key);
+    assert.ok(entry, key);
+    assert.equal(entry.enabled, false, key + " starts disabled");
+
+    const badReason = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: { key, enabled: true, reason: "", expectedVersion: entry.version },
+    });
+    assert.equal(badReason.response.status, 400);
+
+    const enable = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: true,
+        reason: "Isolated local D1 control test",
+        expectedVersion: entry.version,
+      },
+    });
+    assert.equal(enable.response.status, 200);
+    assert.equal(enable.payload.data.enabled, true);
+
+    const stale = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: false,
+        reason: "Stale write must be rejected",
+        expectedVersion: entry.version,
+      },
+    });
+    assert.equal(stale.response.status, 409);
+
+    if (key !== "freeze_new_listings") {
+      const status = await api("/v1/system-status");
+      assert.equal(status.response.status, 200);
+      const field = key === "maintenance_mode" ? "maintenanceMode" : "emergencyReadOnly";
+      assert.equal(status.payload.data[field], true);
+    }
+    const blocked = await api(
+      key === "freeze_new_listings" ? "/v1/listings" : "/v1/account/notification-preferences",
+      {
+        ...other,
+        method: key === "freeze_new_listings" ? "POST" : "PATCH",
+        body: key === "freeze_new_listings" ? {} : { key: "messagesEnabled", enabled: false },
+      },
+    );
+    assert.equal(blocked.response.status, 503, key);
+    assert.equal(blocked.payload.error.code, "system_control_active");
+
+    const disable = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: false,
+        reason: "Restore isolated test service",
+        expectedVersion: enable.payload.data.version,
+      },
+    });
+    assert.equal(disable.response.status, 200);
+    const after = await api("/v1/admin/system-controls", owner);
+    assert.equal(after.payload.data.find((control) => control.key === key).enabled, false);
+  }
+});
+
+test("owner user-management actions enforce authority, persistence and audit", async () => {
+  const denied = await api("/v1/admin/users/status", {
+    ...admin,
+    method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "Owner-only account moderation" },
+  });
+  assert.equal(denied.response.status, 403);
+
+  const protectedOwner = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: { userId: owner.userId, status: "frozen", reason: "Protect owner accounts" },
+  });
+  assert.equal(protectedOwner.response.status, 403);
+
+  const missingReason = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "" },
+  });
+  assert.equal(missingReason.response.status, 400);
+
+  const frozen = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "Investigate account activity" },
+  });
+  assert.equal(frozen.response.status, 200);
+  assert.equal(frozen.payload.data, null);
+  const afterFreeze = await api("/v1/admin/users", owner);
+  assert.equal(
+    afterFreeze.payload.data.find((user) => user.id === other.userId).accountStatus,
+    "frozen",
+  );
+
+  const blockedWrite = await api("/v1/account/notification-preferences", {
+    ...other,
+    method: "PATCH",
+    body: { key: "messagesEnabled", enabled: false },
+  });
+  assert.equal(blockedWrite.response.status, 403);
+  assert.equal(blockedWrite.payload.error.code, "account_restricted");
+
+  const restored = await api("/v1/admin/users/status", {
+    ...owner,
+    method: "POST",
+    body: { userId: other.userId, status: "active", reason: "Account review finished" },
+  });
+  assert.equal(restored.response.status, 200);
+  const afterRestore = await api("/v1/admin/users", owner);
+  assert.equal(
+    afterRestore.payload.data.find((user) => user.id === other.userId).accountStatus,
+    "active",
+  );
+
+  const audit = await api("/v1/admin/audit?limit=100", owner);
+  assert.equal(audit.response.status, 200);
+  assert.ok(
+    audit.payload.data.some(
+      (row) => row.action === "user.status_changed" && row.targetId === other.userId,
+    ),
+  );
+});
+
+test("owner restrictions and staff roles are writable, reversible and enforced", async () => {
+  const set = await api("/v1/admin/users/restrictions", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: other.userId,
+      restrictionType: "posting",
+      action: "set",
+      reason: "Posting moderation test",
+    },
+  });
+  assert.equal(set.response.status, 200);
+  assert.ok(typeof set.payload.data === "string");
+  const restrictedUsers = await api("/v1/admin/users", owner);
+  assert.ok(
+    restrictedUsers.payload.data
+      .find((user) => user.id === other.userId)
+      .activeRestrictions.includes("posting"),
+  );
+  const blocked = await api("/v1/listings", { ...other, method: "POST", body: {} });
+  assert.equal(blocked.response.status, 403);
+  assert.equal(blocked.payload.error.code, "account_restricted");
+
+  const duplicate = await api("/v1/admin/users/restrictions", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: other.userId,
+      restrictionType: "posting",
+      action: "set",
+      reason: "Duplicate restriction",
+    },
+  });
+  assert.equal(duplicate.response.status, 409);
+
+  const lifted = await api("/v1/admin/users/restrictions", {
+    ...owner,
+    method: "POST",
+    body: {
+      userId: other.userId,
+      restrictionType: "posting",
+      action: "lift",
+      reason: "Restriction lifted",
+    },
+  });
+  assert.equal(lifted.response.status, 200);
+  const restoredUsers = await api("/v1/admin/users", owner);
+  assert.ok(
+    !restoredUsers.payload.data
+      .find((user) => user.id === other.userId)
+      .activeRestrictions.includes("posting"),
+  );
+
+  const assigned = await api("/v1/admin/users/roles", {
+    ...owner,
+    method: "POST",
+    body: { userId: other.userId, role: "moderator", action: "assign", note: "Staff role test" },
+  });
+  assert.equal(assigned.response.status, 200);
+  const staffUsers = await api("/v1/admin/users", owner);
+  assert.ok(
+    staffUsers.payload.data.find((user) => user.id === other.userId).roles.includes("moderator"),
+  );
+
+  const removed = await api("/v1/admin/users/roles", {
+    ...owner,
+    method: "POST",
+    body: { userId: other.userId, role: "moderator", action: "remove", reason: "Remove test role" },
+  });
+  assert.equal(removed.response.status, 200);
+  const finalUsers = await api("/v1/admin/users", owner);
+  assert.ok(
+    !finalUsers.payload.data.find((user) => user.id === other.userId).roles.includes("moderator"),
+  );
+});
+
+test("owner restrictions cover every scoped operation including image and chat uploads", async () => {
+  const scopes = [
+    { type: "messaging", path: "/v1/conversations" },
+    { type: "promotions", path: "/v1/account/promotions" },
+    { type: "reviews", path: "/v1/sellers/example-seller/reviews" },
+    { type: "uploads", path: "/v1/listings/example-listing/images" },
+  ];
+  for (const scope of scopes) {
+    const set = await api("/v1/admin/users/restrictions", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        restrictionType: scope.type,
+        action: "set",
+        reason: "Scoped permission acceptance",
+      },
+    });
+    assert.equal(set.response.status, 200, scope.type);
+
+    const paths =
+      scope.type === "uploads"
+        ? [scope.path, "/v1/profile/media", "/v1/conversations/example-chat/attachments"]
+        : [scope.path];
+    for (const path of paths) {
+      const blocked = await api(path, { ...other, method: "POST", body: {} });
+      assert.equal(blocked.response.status, 403, path);
+      assert.equal(blocked.payload.error.code, "account_restricted", path);
+    }
+
+    const lift = await api("/v1/admin/users/restrictions", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        restrictionType: scope.type,
+        action: "lift",
+        reason: "Scoped permission acceptance complete",
+      },
+    });
+    assert.equal(lift.response.status, 200, scope.type);
+  }
 });
 
 test("owner can read admin audit logs", async () => {
@@ -1229,11 +1497,11 @@ test("zero-row UPDATE due to trigger returns 409 stale_review", async () => {
   assert.equal(moderate.payload.error?.code, "stale_review", "Expected stale_review error code");
 
   const allListings = await api("/v1/admin/listings", moderator);
-assert.equal(allListings.response.status, 200);
-const checkListing = allListings.payload.data.find((item) => item.id === listingId);
-assert.ok(checkListing, "Listing should still exist");
-assert.equal(checkListing.status, originalStatus, "Listing status should not change");
-assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
+  assert.equal(allListings.response.status, 200);
+  const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+  assert.ok(checkListing, "Listing should still exist");
+  assert.equal(checkListing.status, originalStatus, "Listing status should not change");
+  assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should not change");
 
   const audit = await api("/v1/admin/audit", owner);
   const modLog = audit.payload.data.find(
@@ -1269,11 +1537,15 @@ test("audit INSERT failure rolls back transaction", async () => {
   );
 
   const allListings = await api("/v1/admin/listings", moderator);
-assert.equal(allListings.response.status, 200);
-const checkListing = allListings.payload.data.find((item) => item.id === listingId);
-assert.ok(checkListing, "Listing should still exist after rollback");
-assert.equal(checkListing.status, originalStatus, "Listing status should be rolled back");
-assert.equal(checkListing.updatedAt, originalUpdatedAt, "Listing updatedAt should be rolled back");
+  assert.equal(allListings.response.status, 200);
+  const checkListing = allListings.payload.data.find((item) => item.id === listingId);
+  assert.ok(checkListing, "Listing should still exist after rollback");
+  assert.equal(checkListing.status, originalStatus, "Listing status should be rolled back");
+  assert.equal(
+    checkListing.updatedAt,
+    originalUpdatedAt,
+    "Listing updatedAt should be rolled back",
+  );
 
   const audit = await api("/v1/admin/audit", owner);
   const auditFailLog = audit.payload.data.find(
@@ -1380,7 +1652,10 @@ async function createListing(session, overrides = {}) {
   assert.equal(taxonomy.response.status, 200);
   const image = await upload(
     session,
-    new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,2,0,0,0,0,0,0,0,0,0,0,0,73,69,78,68,0,0,0,0]),
+    new Uint8Array([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68, 0, 0, 0, 0,
+    ]),
     "image/png",
     createdListingId,
   );
@@ -1395,4 +1670,3 @@ async function createListing(session, overrides = {}) {
     },
   });
 }
-
