@@ -1665,7 +1665,7 @@ test("nearby search returns actual closest listing even when 600 farther listing
   );
   assert.ok(three.payload.data[0].distanceKm <= three.payload.data[1].distanceKm);
 
-  const restricted = await api(`${url}&radiusKm=1&limit=10`);
+  const restricted = await api(`${url.replace("radiusKm=50", "radiusKm=1")}&limit=10`);
   assert.equal(restricted.response.status, 200);
   assert.deepEqual(
     restricted.payload.data.map((row) => row.listing.id),
