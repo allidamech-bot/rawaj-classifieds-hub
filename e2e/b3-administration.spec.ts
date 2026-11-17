@@ -299,8 +299,8 @@ test("B3.4 destructive placement actions require a labelled confirmation and rea
   await expect(remove).toBeVisible();
 });
 
-test("B3.4 account restrictions submit exactly one audited change", async ({ page }) => {
-  await setFixtureRole(page, "admin");
+test("B3.4 owner account restrictions submit exactly one audited change", async ({ page }) => {
+  await setFixtureRole(page, "owner");
   const user = {
     id: "fixture-restricted-user",
     email: "restricted@example.invalid",
