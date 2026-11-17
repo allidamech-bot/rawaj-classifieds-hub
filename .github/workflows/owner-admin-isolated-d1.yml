@@ -10,6 +10,7 @@ on:
       - "cloudflare/worker/src/account-social.ts"
       - "cloudflare/worker/src/public-sellers.ts"
       - "cloudflare/worker/src/public-listings.ts"
+      - "cloudflare/worker/src/discovery.ts"
       - "cloudflare/worker/src/saved-search-alert-delivery.ts"
       - "cloudflare/worker/src/entry.ts"
       - "cloudflare/worker/wrangler.base.jsonc"
