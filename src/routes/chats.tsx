@@ -31,7 +31,7 @@ import { useLiveChatWorkspace } from "@/features/communication/useLiveChatWorksp
 import {
   blockConversationParticipant,
   createMessageReport,
-  fetchConversationMessages,
+  fetchConversationMessagesPage,
   fetchMyConversations,
   markConversationRead,
   removeChatAudio,
@@ -92,6 +92,9 @@ function ChatsPage() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [olderMessagesPage, setOlderMessagesPage] = useState(1);
   const [conversationError, setConversationError] = useState<ClassifiedsError | null>(null);
   const [messageError, setMessageError] = useState<ClassifiedsError | null>(null);
   const [composerDrafts, setComposerDrafts] = useState<Record<string, string>>({});
@@ -129,6 +132,12 @@ function ChatsPage() {
   const blockInFlightRef = useRef<Set<string>>(new Set());
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const messageStreamRef = useRef<HTMLDivElement | null>(null);
+  const olderLoadInFlightRef = useRef<string | null>(null);
+  const prependScrollRef = useRef<{
+    conversationId: string;
+    scrollTop: number;
+    scrollHeight: number;
+  } | null>(null);
   const blockDialogRef = useRef<HTMLInputElement | null>(null);
   const blockTriggerRef = useRef<HTMLButtonElement | null>(null);
   const liveProfileId = auth.profile?.id ?? null;
@@ -180,7 +189,14 @@ function ChatsPage() {
   useEffect(() => {
     if (!selectedConversation || !isConversationPanelVisible) return;
     const stream = messageStreamRef.current;
-    if (stream) stream.scrollTop = stream.scrollHeight;
+    if (!stream) return;
+    const saved = prependScrollRef.current;
+    if (saved?.conversationId === selectedConversation.id) {
+      stream.scrollTop = saved.scrollTop + stream.scrollHeight - saved.scrollHeight;
+      prependScrollRef.current = null;
+      return;
+    }
+    stream.scrollTop = stream.scrollHeight;
   }, [
     selectedConversation?.id,
     isConversationPanelVisible,
@@ -338,8 +354,11 @@ function ChatsPage() {
     const requestId = ++messagesRequestIdRef.current;
     setLoadingMessages(true);
     setMessageError(null);
+    setHasOlderMessages(false);
+    setOlderMessagesPage(1);
+    prependScrollRef.current = null;
     try {
-      const result = await fetchConversationMessages(conversationId);
+      const result = await fetchConversationMessagesPage(conversationId, 1);
       if (
         requestId !== messagesRequestIdRef.current ||
         profileId !== profileIdRef.current ||
@@ -351,7 +370,8 @@ function ChatsPage() {
         setMessageError(result.error);
         return;
       }
-      setMessages(sortAndDedupeMessages(result.data, conversationId));
+      setMessages(sortAndDedupeMessages(result.data.items, conversationId));
+      setHasOlderMessages(result.data.hasMore);
       const markResult = await markConversationRead(conversationId);
       if (
         requestId !== messagesRequestIdRef.current ||
@@ -388,6 +408,46 @@ function ChatsPage() {
     }
   }
 
+  async function loadOlderMessages() {
+    const profileId = auth.profile?.id ?? null;
+    const conversationId = selectedConversation?.id ?? null;
+    if (!profileId || !conversationId || !hasOlderMessages || olderLoadInFlightRef.current) return;
+    const requestId = messagesRequestIdRef.current;
+    const nextPage = olderMessagesPage + 1;
+    olderLoadInFlightRef.current = conversationId;
+    setLoadingOlderMessages(true);
+    try {
+      const result = await fetchConversationMessagesPage(conversationId, nextPage);
+      if (
+        requestId !== messagesRequestIdRef.current ||
+        profileId !== profileIdRef.current ||
+        conversationId !== selectedConversationIdRef.current
+      ) return;
+      if (!result.ok) {
+        setNotice(result.error.message);
+        return;
+      }
+      const stream = messageStreamRef.current;
+      if (stream && result.data.items.length > 0) {
+        prependScrollRef.current = {
+          conversationId,
+          scrollTop: stream.scrollTop,
+          scrollHeight: stream.scrollHeight,
+        };
+      }
+      setMessages((current) => mergeConversationMessages(current, result.data.items, conversationId));
+      setOlderMessagesPage(nextPage);
+      setHasOlderMessages(result.data.hasMore);
+    } catch {
+      if (conversationId === selectedConversationIdRef.current) {
+        setNotice(text("تعذر تحميل الرسائل الأقدم. حاول مجددًا.", "Older messages could not load. Retry."));
+      }
+    } finally {
+      if (olderLoadInFlightRef.current === conversationId) olderLoadInFlightRef.current = null;
+      if (conversationId === selectedConversationIdRef.current) setLoadingOlderMessages(false);
+    }
+  }
+
   useEffect(() => {
     if (auth.status !== "signedIn") {
       conversationsRequestIdRef.current += 1;
@@ -396,6 +456,10 @@ function ChatsPage() {
       setMessages([]);
       setLoadingConversations(false);
       setLoadingMessages(false);
+      setLoadingOlderMessages(false);
+      setHasOlderMessages(false);
+      setOlderMessagesPage(1);
+      prependScrollRef.current = null;
       return;
     }
     void loadConversations();
@@ -407,6 +471,10 @@ function ChatsPage() {
       setMessages([]);
       setMessageError(null);
       setLoadingMessages(false);
+      setLoadingOlderMessages(false);
+      setHasOlderMessages(false);
+      setOlderMessagesPage(1);
+      prependScrollRef.current = null;
       return;
     }
     void loadMessages(selectedConversation.id);
@@ -1021,7 +1089,20 @@ function ChatsPage() {
                       )}
                     </PanelText>
                   ) : (
-                    visibleMessages.map((message) => {
+                    <>
+                      {hasOlderMessages ? (
+                        <button
+                          type="button"
+                          className="mx-auto mb-3 block rounded-xl border px-4 py-2 text-sm font-semibold"
+                          onClick={() => void loadOlderMessages()}
+                          disabled={loadingOlderMessages}
+                        >
+                          {loadingOlderMessages
+                            ? text("جارٍ تحميل الرسائل الأقدم...", "Loading earlier messages...")
+                            : text("عرض الرسائل الأقدم", "Show earlier messages")}
+                        </button>
+                      ) : null}
+                      {visibleMessages.map((message) => {
                       const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
@@ -1089,7 +1170,8 @@ function ChatsPage() {
                           )}
                         </article>
                       );
-                    })
+                    })}
+                    </>
                   )}
                 </div>
 
