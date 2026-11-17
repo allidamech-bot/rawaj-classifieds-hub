@@ -1,3 +1,4 @@
+import { SITE_BRAND_AR, SITE_BRAND_EN } from "@/lib/site-brand";
 import { cn } from "@/lib/utils";
 
 interface BrandLockupProps {
@@ -25,24 +26,31 @@ export function BrandLockup({ compact = false, inverse = false, className }: Bra
         />
       </span>
 
-      <span className="rawaj-brand-lockup__wordmark flex items-center gap-2 leading-none">
+      <span
+        className="rawaj-brand-lockup__wordmark flex items-baseline leading-none whitespace-nowrap"
+        dir="rtl"
+      >
         <span
           className={cn(
             "rawaj-brand-lockup__name font-display text-[18px] font-bold",
             inverse ? "text-primary-foreground" : "text-foreground",
           )}
         >
-          رواج
+          {SITE_BRAND_AR}
         </span>
-        <span className="rawaj-brand-divider h-5 w-px" aria-hidden="true" />
-        <span
+        <span className="rawaj-brand-lockup__separator whitespace-pre" aria-hidden="true">
+          {" | "}
+        </span>
+        <bdi
+          lang="en"
+          dir="ltr"
           className={cn(
-            "rawaj-brand-lockup__latin text-[11px] font-bold tracking-[0.16em]",
+            "rawaj-brand-lockup__latin text-sm font-bold",
             inverse ? "text-gold" : "text-brand-orange",
           )}
         >
-          RAWAJ
-        </span>
+          {SITE_BRAND_EN}
+        </bdi>
       </span>
     </span>
   );

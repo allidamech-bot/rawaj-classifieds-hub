@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 
 import { BrandLockup } from "@/components/shell/BrandLockup";
+import { SITE_BRAND_NAME } from "@/lib/site-brand";
 import { useUiPreferences } from "@/lib/ui-preferences";
 
 interface SiteFooterProps {
@@ -72,7 +73,7 @@ export function SiteFooter(_props: SiteFooterProps) {
         </nav>
 
         <p className="rawaj-site-footer__mobile-copy">
-          © {year} {text("رواج", "RAWAJ")}
+          © {year} <bdi dir="rtl">{SITE_BRAND_NAME}</bdi>
         </p>
       </div>
 
@@ -116,11 +117,8 @@ export function SiteFooter(_props: SiteFooterProps) {
         <div className="border-t border-primary-foreground/10">
           <div className="container-wide flex flex-wrap items-center justify-between gap-3 py-5">
             <p className="text-xs text-primary-foreground/55">
-              © {year}{" "}
-              {text(
-                "رَوَاج · سوق سوريا المجاني للإعلانات",
-                "RAWAJ · Syria classifieds marketplace",
-              )}
+              © {year} <bdi dir="rtl">{SITE_BRAND_NAME}</bdi> ·{" "}
+              {text("سوق سوريا المجاني للإعلانات", "Syria classifieds marketplace")}
             </p>
             <span className="text-xs font-semibold text-primary-foreground/65">
               {text("سوريا فقط · تصفح آمن", "Syria only · Safe browsing")}

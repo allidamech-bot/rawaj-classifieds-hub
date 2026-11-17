@@ -1,11 +1,13 @@
+import { SITE_BRAND_NAME } from "./site-brand";
+
 export const SITE_URL_ENV_NAME = "VITE_SITE_URL";
 
 const fallbackSiteUrl = "https://rawa-j.com";
-const defaultTitle = "RAWAJ / رواج | سوق إعلانات مبوبة في سوريا";
+const defaultTitle = `${SITE_BRAND_NAME} | سوق إعلانات مبوبة في سوريا`;
 const defaultDescription =
   "سوق إعلانات مبوبة في سوريا لبيع وشراء العقارات والسيارات والمنتجات والخدمات بطريقة آمنة ومنظمة.";
 const defaultSocialImage = "/brand/rawaj-mark-transparent-512.png";
-const siteName = "RAWAJ / رواج";
+const siteName = SITE_BRAND_NAME;
 
 type OgType = "website" | "article" | "profile";
 
@@ -45,7 +47,10 @@ export function plainText(value: string | null | undefined, maxLength = 160) {
 }
 
 export function createSeo(options: SeoOptions = {}) {
-  const title = options.title?.trim() || defaultTitle;
+  const title = (options.title?.trim() || defaultTitle).replace(
+    /(^| \| )RAWAJ \/ رواج(?= \| |$)/g,
+    `$1${SITE_BRAND_NAME}`,
+  );
   const description = plainText(options.description || defaultDescription);
   const url = absoluteUrl(options.path ?? "/");
   const image = absoluteUrl(options.image || defaultSocialImage);
