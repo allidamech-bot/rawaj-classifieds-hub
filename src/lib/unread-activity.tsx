@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { fetchMyConversations } from "@/lib/api/messaging";
+import { fetchUnreadMessagesCount } from "@/lib/api/messaging";
 import {
   fetchUnreadNotificationsCount,
   getRecentUnreadNotificationsCount,
