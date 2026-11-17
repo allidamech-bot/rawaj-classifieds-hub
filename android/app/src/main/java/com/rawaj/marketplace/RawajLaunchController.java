@@ -46,12 +46,14 @@ final class RawajLaunchController {
     private boolean loading;
     private int previousAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO;
 
-    private final Runnable startupTimeout = () -> {
+    private final Runnable startupTimeout = this::handleStartupTimeout;
+
+    private void handleStartupTimeout() {
         if (!loading || overlay == null) return;
         bridge.getWebView().stopLoading();
         showFailure(networkAvailable() ? R.string.connection_failed_title : R.string.connection_offline_title,
             networkAvailable() ? R.string.connection_failed_message : R.string.connection_offline_message, true);
-    };
+    }
 
     RawajLaunchController(Activity activity, Bridge bridge) {
         this.activity = activity;
