@@ -213,7 +213,9 @@ function buildListingFilterQuery(filters: ListingFilters) {
     values.push(filters.priceMax);
   }
   if (filters.withPhotos) {
-    where.push("EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)");
+    where.push(
+      "EXISTS (SELECT 1 FROM listing_images li JOIN media_assets ma ON ma.id = li.media_asset_id AND ma.status = 'ready' WHERE li.listing_id = l.id)",
+    );
   }
 
   addJsonTextFilter(where, values, ["car_make", "make"], filters.carMake);
@@ -486,7 +488,8 @@ function addJsonTextFilter(
 ): void {
   if (!value) return;
   const expressions = keys.map((key) => `json_extract(l.details, '$.${key}')`);
-  where.push(`COALESCE(${expressions.join(", ")}) = ?`);
+  const expression = expressions.length === 1 ? expressions[0] : `COALESCE(${expressions.join(", ")})`;
+  where.push(`${expression} = ?`);
   values.push(value);
 }
 
