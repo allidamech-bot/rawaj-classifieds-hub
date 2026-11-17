@@ -96,6 +96,8 @@ export {
   downloadChatAudioObjectUrl,
   createMessageReport,
   fetchMyConversations,
+  fetchMyConversationsPage,
+  fetchConversationById,
   fetchConversationMessagesPage,
   fromDbMessageReportStatus,
   markConversationRead,
