@@ -90,6 +90,73 @@ export async function handlePublicListingsRequest(
   const sort = readSort(url.searchParams.get("sort"));
   const cursor = decodeCursor(url.searchParams.get("cursor"));
 
+  const { where, values, joins, withClause } = buildListingFilterQuery(filters);
+
+  const cursorClause = buildCursorClause(sort, cursor, values);
+  if (cursorClause) where.push(cursorClause);
+
+  const sql = `${withClause}
+    SELECT
+      l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
+      l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
+      l.listing_condition, l.status, l.district_ar, l.contact_name,
+      l.contact_options, l.details, l.is_featured, l.featured_until,
+      ${ACTIVE_FEATURE_SQL} AS active_feature_rank,
+      l.published_at, l.archived_at, l.reserved_at, l.expires_at,
+      l.renewed_at, l.expiry_days, l.created_at, l.updated_at,
+      c.name_ar AS category_name_ar, c.placeholder AS category_placeholder,
+      g.name_ar AS governorate_name_ar,
+      (
+        SELECT li.media_asset_id
+          FROM listing_images li
+         WHERE li.listing_id = l.id
+         ORDER BY li.sort_order ASC, li.id ASC
+         LIMIT 1
+      ) AS primary_media_asset_id
+    FROM listings l
+    JOIN categories c ON c.id = l.category_id
+    JOIN governorates g ON g.id = l.governorate_id
+    ${joins.join("\n")}
+    WHERE ${where.join("\n      AND ")}
+    ORDER BY ${listingOrder(sort)}
+    LIMIT ?`;
+
+  values.push(pageSize + 1);
+  const result = await env.DB.prepare(sql)
+    .bind(...values)
+    .all<JsonRecord>();
+  if (!result.success) {
+    if (result.error) console.error("rawaj_public_listings_database_error", result.error);
+    return json(
+      { error: { code: "database_unavailable", message: "Data service unavailable." } },
+      503,
+      cors,
+    );
+  }
+
+  const rows = result.results ?? [];
+  const hasMore = rows.length > pageSize;
+  const visibleRows = hasMore ? rows.slice(0, pageSize) : rows;
+  const nextCursor =
+    hasMore && visibleRows.length > 0
+      ? encodeCursor(cursorFromRow(sort, visibleRows[visibleRows.length - 1]))
+      : null;
+
+  return json(
+    {
+      data: {
+        items: visibleRows.map((row) => mapListing(row, url)),
+        nextCursor,
+        pageSize,
+      },
+    },
+    200,
+    cors,
+    cacheHeaders(env),
+  );
+}
+
+function buildListingFilterQuery(filters: ListingFilters) {
   const where: string[] = [
     "l.status = 'approved'",
     "l.archived_at IS NULL",
@@ -175,68 +242,51 @@ export async function handlePublicListingsRequest(
     values.push(toFtsQuery(filters.query));
   }
 
-  const cursorClause = buildCursorClause(sort, cursor, values);
-  if (cursorClause) where.push(cursorClause);
+  return { where, values, joins, withClause };
+}
 
-  const sql = `${withClause}
-    SELECT
-      l.id, l.owner_id, l.category_id, l.subcategory_id, l.governorate_id,
-      l.location_node_id, l.title, l.description, l.price, l.currency, l.price_type,
-      l.listing_condition, l.status, l.district_ar, l.contact_name,
-      l.contact_options, l.details, l.is_featured, l.featured_until,
-      ${ACTIVE_FEATURE_SQL} AS active_feature_rank,
-      l.published_at, l.archived_at, l.reserved_at, l.expires_at,
-      l.renewed_at, l.expiry_days, l.created_at, l.updated_at,
-      c.name_ar AS category_name_ar, c.placeholder AS category_placeholder,
-      g.name_ar AS governorate_name_ar,
-      (
-        SELECT li.media_asset_id
-          FROM listing_images li
-         WHERE li.listing_id = l.id
-         ORDER BY li.sort_order ASC, li.id ASC
-         LIMIT 1
-      ) AS primary_media_asset_id
-    FROM listings l
-    JOIN categories c ON c.id = l.category_id
-    JOIN governorates g ON g.id = l.governorate_id
-    ${joins.join("\n")}
-    WHERE ${where.join("\n      AND ")}
-    ORDER BY ${listingOrder(sort)}
-    LIMIT ?`;
-
-  values.push(pageSize + 1);
-  const result = await env.DB.prepare(sql)
-    .bind(...values)
-    .all<JsonRecord>();
-  if (!result.success) {
-    if (result.error) console.error("rawaj_public_listings_database_error", result.error);
-    return json(
-      { error: { code: "database_unavailable", message: "Data service unavailable." } },
-      503,
-      cors,
-    );
+/** Internal scheduled-search query; never exposed as a public endpoint. */
+export async function countNewSavedSearchMatches(
+  env: PublicListingsEnv,
+  savedFilters: JsonRecord,
+  userId: string,
+  since: string,
+  until: string,
+): Promise<number> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(savedFilters)) {
+    if (key === "taxonomyNodeIds" || key === "taxonomyNodeId") {
+      const ids = Array.isArray(value) ? value : [value];
+      for (const id of ids) {
+        if (typeof id === "string") params.append("taxonomyNodeId", id);
+      }
+    } else if (key === "taxonomyLegacyScopes" && Array.isArray(value)) {
+      for (const scope of value) params.append("legacyScope", base64UrlEncode(JSON.stringify(scope)));
+    } else if (key === "attributeFilters" && value && typeof value === "object") {
+      params.set("attrs", base64UrlEncode(JSON.stringify(value)));
+    } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      params.set(key === "query" ? "q" : key, String(value));
+    }
   }
-
-  const rows = result.results ?? [];
-  const hasMore = rows.length > pageSize;
-  const visibleRows = hasMore ? rows.slice(0, pageSize) : rows;
-  const nextCursor =
-    hasMore && visibleRows.length > 0
-      ? encodeCursor(cursorFromRow(sort, visibleRows[visibleRows.length - 1]))
-      : null;
-
-  return json(
-    {
-      data: {
-        items: visibleRows.map((row) => mapListing(row, url)),
-        nextCursor,
-        pageSize,
-      },
-    },
-    200,
-    cors,
-    cacheHeaders(env),
+  const { where, values, joins, withClause } = buildListingFilterQuery(readListingFilters(params));
+  where.push(
+    "l.owner_id <> ?",
+    "COALESCE(l.published_at, l.created_at) > ?",
+    "COALESCE(l.published_at, l.created_at) <= ?",
   );
+  values.push(userId, since, until);
+  const result = await env.DB.prepare(
+    `${withClause}
+      SELECT COUNT(DISTINCT l.id) AS count FROM listings l
+      JOIN categories c ON c.id = l.category_id
+      JOIN governorates g ON g.id = l.governorate_id
+      ${joins.join("\n")}
+      WHERE ${where.join(" AND ")}`,
+  )
+    .bind(...values)
+    .all<{ count: number }>();
+  if (!result.success) throw new Error("saved_search_match_query_failed");
+  return Math.max(0, Number(result.results?.[0]?.count ?? 0));
 }
 
 function applyTaxonomyScope(where: string[], values: D1Value[], filters: ListingFilters): void {
