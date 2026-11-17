@@ -30,7 +30,10 @@ for (const width of widths) {
       await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
       await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
       await expect(page.locator(".rawaj-app-shell")).toHaveAttribute("data-route-state", "idle");
-      await expect(page.locator(".rawaj-app-shell")).toHaveAttribute("data-resolved-pathname", path);
+      await expect(page.locator(".rawaj-app-shell")).toHaveAttribute(
+        "data-resolved-pathname",
+        path,
+      );
       await page.evaluate(() => document.fonts.ready);
 
       const layout = await page.evaluate(() => ({
