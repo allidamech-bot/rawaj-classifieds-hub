@@ -1,9 +1,17 @@
-name: Owner Admin Isolated D1 Acceptance
+name: Owner Admin D1 Acceptance
 on:
   pull_request:
     branches:
       - main
     paths:
+      - "cloudflare/worker/src/admin-user-actions.ts"
+      - "cloudflare/worker/src/admin.ts"
+      - "cloudflare/worker/src/auth.ts"
+      - "cloudflare/worker/src/system-controls.ts"
+      - "cloudflare/worker/test/marketplace.integration.test.mjs"
+      - "src/routes/admin.owner-controls.tsx"
+      - "src/routes/admin.users.tsx"
+      - "src/lib/auth-types.ts"
       - ".github/workflows/owner-admin-isolated-d1.yml"
 permissions:
   contents: read
