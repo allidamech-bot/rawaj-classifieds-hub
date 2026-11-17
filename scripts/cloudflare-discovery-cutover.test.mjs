@@ -45,6 +45,12 @@ test("nearby search applies a bounding box and exact haversine distance", () => 
   assert.match(worker, /n\.longitude BETWEEN \? AND \?/);
   assert.match(worker, /haversine/);
   assert.match(worker, /distanceKm <= radius/);
+  assert.match(worker, /ORDER BY exact_distance_km ASC, l\.id ASC/);
+  assert.match(worker, /asin\(min\(1, sqrt\(/);
+  assert.match(worker, /\.bind\(latitude, latitude, longitude, \.\.\.values, limit\)/);
+  assert.doesNotMatch(worker, /Math\.min\(500, limit \* 8\)/);
+  assert.match(worker, /west < -180/);
+  assert.match(worker, /east > 180/);
 });
 
 test("sitemap only exposes approved non-archived non-expired listings", () => {
