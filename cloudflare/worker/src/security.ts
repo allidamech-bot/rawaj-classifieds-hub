@@ -353,7 +353,7 @@ async function actorKey(request: Request): Promise<string> {
   // Never use an unverified bearer token as a rate-limit identity: callers can
   // rotate arbitrary tokens to bypass a per-token quota before authentication.
   // Cloudflare supplies CF-Connecting-IP at the edge, independently of caller
-  // Authorization input. Keep unauthenticated/missing-IP traffic bounded too.
+  // supplied credentials. Keep unauthenticated/missing-IP traffic bounded too.
   const ip = request.headers.get("CF-Connecting-IP")?.trim();
   if (ip) return `ip:${ip.slice(0, 64)}`;
   return "anonymous";
