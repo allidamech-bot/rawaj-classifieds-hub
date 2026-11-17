@@ -385,9 +385,7 @@ function ChatsPage() {
         setNotice(result.error.message);
         return;
       }
-      setConversations((current) =>
-        sortAndDedupeConversations([...current, ...result.data.items]),
-      );
+      setConversations((current) => sortAndDedupeConversations([...current, ...result.data.items]));
       setLoadedConversationPage(nextPage);
       setHasMoreConversations(result.data.hasMore);
     } catch {
@@ -410,27 +408,29 @@ function ChatsPage() {
       !missingConversationTarget ||
       loadingConversations ||
       !accountStateMatches
-    ) return;
+    ) {
+      return;
+    }
     const lookupKey = `${profileId}:${requestedId}`;
     if (lookedUpTargetIdsRef.current.has(lookupKey)) return;
     lookedUpTargetIdsRef.current.add(lookupKey);
     setLoadingLinkedConversation(true);
-    void fetchConversationById(requestedId).then((result) => {
-      if (
-        profileId !== profileIdRef.current ||
-        requestedConversationRef.current !== requestedId
-      ) return;
-      if (result.ok) {
-        setConversations((current) => sortAndDedupeConversations([...current, result.data]));
-      } else if (result.error.code !== "not_found") {
-        setNotice(result.error.message);
-      }
-    }).finally(() => {
-      if (
-        profileId === profileIdRef.current &&
-        requestedConversationRef.current === requestedId
-      ) setLoadingLinkedConversation(false);
-    });
+    void fetchConversationById(requestedId)
+      .then((result) => {
+        const isCurrentRequest =
+          profileId === profileIdRef.current && requestedConversationRef.current === requestedId;
+        if (!isCurrentRequest) return;
+        if (result.ok) {
+          setConversations((current) => sortAndDedupeConversations([...current, result.data]));
+        } else if (result.error.code !== "not_found") {
+          setNotice(result.error.message);
+        }
+      })
+      .finally(() => {
+        const isCurrentRequest =
+          profileId === profileIdRef.current && requestedConversationRef.current === requestedId;
+        if (isCurrentRequest) setLoadingLinkedConversation(false);
+      });
   }, [
     auth.status,
     auth.profile?.id,
@@ -1050,7 +1050,9 @@ function ChatsPage() {
             }`}
           >
             {missingConversationTarget && loadingLinkedConversation ? (
-              <PanelText>{text("جارٍ فتح المحادثة المطلوبة...", "Opening the requested conversation...")}</PanelText>
+              <PanelText>
+                {text("جارٍ فتح المحادثة المطلوبة...", "Opening the requested conversation...")}
+              </PanelText>
             ) : missingConversationTarget ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
                 <div className="max-w-md">
