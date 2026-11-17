@@ -24,7 +24,6 @@ export interface PublicSellersEnv {
 
 const LISTING_LIMIT = 24;
 const REVIEW_DISPLAY_LIMIT = 6;
-const REVIEW_SUMMARY_LIMIT = 500;
 const SELLER_SEARCH_LIMIT = 20;
 
 export async function handlePublicSellers(
@@ -53,7 +52,7 @@ export async function handlePublicSellers(
     return json({ error: { code: "validation_error", message: "Invalid seller id." } }, 400);
   }
 
-  const [profile, inventory, reviewsResult] = await Promise.all([
+  const [profile, inventory, reviewsResult, listingCount, ratingCounts] = await Promise.all([
     env.DB.prepare(
       `SELECT p.id, p.display_name, p.business_name, p.bio, p.governorate,
         p.verification_status, p.account_status, p.avatar_asset_id, p.cover_asset_id,
@@ -91,12 +90,30 @@ export async function handlePublicSellers(
        ORDER BY created_at DESC, id DESC
        LIMIT ?`,
     )
-      .bind(sellerId, REVIEW_SUMMARY_LIMIT)
+      .bind(sellerId, REVIEW_DISPLAY_LIMIT)
+      .all<Row>(),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS count FROM listings l
+       JOIN categories c ON c.id = l.category_id
+       JOIN governorates g ON g.id = l.governorate_id
+       WHERE l.owner_id = ? AND l.status = 'approved' AND l.archived_at IS NULL
+         AND (l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`,
+    )
+      .bind(sellerId)
+      .first<{ count: number }>(),
+    env.DB.prepare(
+      `SELECT rating, COUNT(*) AS count FROM seller_reviews
+       WHERE seller_id = ? AND status = 'approved' GROUP BY rating`,
+    )
+      .bind(sellerId)
       .all<Row>(),
   ]);
 
-  if (!inventory.success || !reviewsResult.success) {
-    console.error("rawaj_public_seller_database_error", inventory.error ?? reviewsResult.error);
+  if (!inventory.success || !reviewsResult.success || !ratingCounts.success || !listingCount) {
+    console.error(
+      "rawaj_public_seller_database_error",
+      inventory.error ?? reviewsResult.error ?? ratingCounts.error,
+    );
     return json(
       { error: { code: "database_unavailable", message: "Data service unavailable." } },
       503,
@@ -110,7 +127,7 @@ export async function handlePublicSellers(
 
   const requestOrigin = url.origin;
   const reviews = (reviewsResult.results ?? []).map(mapReview);
-  const summary = ratingSummary(reviews);
+  const summary = ratingSummary(ratingCounts.results ?? []);
   const firstListing = listingRows[0];
 
   return json(
@@ -130,7 +147,7 @@ export async function handlePublicSellers(
         businessName: cleanText(profile?.business_name, 120),
         avatarUrl: mediaUrl(requestOrigin, profile?.avatar_asset_id),
         coverUrl: mediaUrl(requestOrigin, profile?.cover_asset_id),
-        approvedListingCount: listingRows.length,
+        approvedListingCount: Math.max(0, numberValue(listingCount.count)),
         inventoryStatus: "ready",
         listingDisplayLimit: LISTING_LIMIT,
         ratingSummary: summary,
@@ -217,17 +234,20 @@ function mapReview(row: Row) {
   };
 }
 
-function ratingSummary(reviews: Array<{ rating: number }>) {
+function ratingSummary(ratingCounts: Row[]) {
   const distribution: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let total = 0;
-  for (const review of reviews) {
-    const rating = clampRating(review.rating) as 1 | 2 | 3 | 4 | 5;
-    distribution[rating] += 1;
-    total += rating;
+  let count = 0;
+  for (const row of ratingCounts) {
+    const rating = clampRating(numberValue(row.rating)) as 1 | 2 | 3 | 4 | 5;
+    const amount = Math.max(0, numberValue(row.count));
+    distribution[rating] += amount;
+    total += rating * amount;
+    count += amount;
   }
   return {
-    average: reviews.length ? Number((total / reviews.length).toFixed(1)) : null,
-    count: reviews.length,
+    average: count ? Number((total / count).toFixed(1)) : null,
+    count,
     distribution,
   };
 }
