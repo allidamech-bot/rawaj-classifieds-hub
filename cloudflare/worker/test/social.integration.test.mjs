@@ -418,7 +418,10 @@ test("inbox exposes older conversations after 50 and permits authorized older de
   executeLocalSql(`
     INSERT INTO conversations (id, listing_id, buyer_id, seller_id, status, created_at, updated_at)
     VALUES ${extra
-      .map((id) => `('${id}', NULL, '${buyer.userId}', '${owner.userId}', 'active', '${stamp}', '${stamp}')`)
+      .map(
+        (id) =>
+          `('${id}', NULL, '${buyer.userId}', '${owner.userId}', 'active', '${stamp}', '${stamp}')`,
+      )
       .join(",\n")};
   `);
   const first = await api("/v1/account/conversations?page=1&pageSize=50", buyer);
