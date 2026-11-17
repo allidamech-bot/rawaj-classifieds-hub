@@ -188,10 +188,7 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
     "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
     "n.latitude BETWEEN ? AND ?",
   ];
-  const values: Value[] = [
-    Math.max(-90, latitude - latDelta),
-    Math.min(90, latitude + latDelta),
-  ];
+  const values: Value[] = [Math.max(-90, latitude - latDelta), Math.min(90, latitude + latDelta)];
   // Longitude wraps at the antimeridian. Never drop valid cross-border rows.
   if (lonDelta < 180) {
     const west = longitude - lonDelta;
@@ -255,7 +252,10 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
       ),
     }))
     .filter((item) => item.distanceKm <= radius)
-    .sort((a, b) => a.distanceKm - b.distanceKm || stringValue(a.row.id).localeCompare(stringValue(b.row.id)))
+    .sort(
+      (a, b) =>
+        a.distanceKm - b.distanceKm || stringValue(a.row.id).localeCompare(stringValue(b.row.id)),
+    )
     .map((item) => ({
       listing: mapListing(item.row, url.origin),
       distanceKm: Math.round(item.distanceKm * 10) / 10,
