@@ -303,8 +303,8 @@ test("conversations enforce identity, idempotency, messaging, unread, and pagina
   assert.equal(older.payload.data.items[0].body, "First local message");
   assert.equal(older.payload.data.hasMore, false);
   assert.equal(
-    (await api(`/v1/conversations/${conversationId}/messages?order=latest`, outsider))
-      .response.status,
+    (await api(`/v1/conversations/${conversationId}/messages?order=latest`, outsider)).response
+      .status,
     404,
   );
   assert.equal((await api("/v1/account/messages/unread-count", buyer)).payload.data.count, 1);
@@ -406,4 +406,3 @@ async function api(path, options = {}) {
   const payload = await response.json();
   return { response, payload };
 }
-
