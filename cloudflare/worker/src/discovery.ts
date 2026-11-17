@@ -174,21 +174,39 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
   }
   const radius = clampNumber(url.searchParams.get("radiusKm"), 25, 1, 200);
   const limit = clampInteger(url.searchParams.get("limit"), 60, 1, 100);
-  const latDelta = radius / 111;
-  const lonDelta = radius / Math.max(1, 111 * Math.cos((latitude * Math.PI) / 180));
+  // The bounding box is a fast coarse filter. SQL ranks *all* candidates
+  // inside that box by exact great-circle distance before applying LIMIT.
+  // A row cap before distance sorting could hide the nearest listing.
+  const latDelta = radius / 110;
+  const polewardLatitude = Math.min(90, Math.abs(latitude) + latDelta);
+  const longitudeKmPerDegree = 110 * Math.cos((polewardLatitude * Math.PI) / 180);
+  const lonDelta =
+    polewardLatitude >= 90 ? 180 : Math.min(180, radius / Math.max(0.0001, longitudeKmPerDegree));
   const where = [
     "l.status = 'approved'",
     "l.archived_at IS NULL",
     "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
     "n.latitude BETWEEN ? AND ?",
-    "n.longitude BETWEEN ? AND ?",
   ];
   const values: Value[] = [
-    latitude - latDelta,
-    latitude + latDelta,
-    longitude - lonDelta,
-    longitude + lonDelta,
+    Math.max(-90, latitude - latDelta),
+    Math.min(90, latitude + latDelta),
   ];
+  // Longitude wraps at the antimeridian. Never drop valid cross-border rows.
+  if (lonDelta < 180) {
+    const west = longitude - lonDelta;
+    const east = longitude + lonDelta;
+    if (west < -180) {
+      where.push("(n.longitude >= ? OR n.longitude <= ?)");
+      values.push(west + 360, east);
+    } else if (east > 180) {
+      where.push("(n.longitude >= ? OR n.longitude <= ?)");
+      values.push(west, east - 360);
+    } else {
+      where.push("n.longitude BETWEEN ? AND ?");
+      values.push(west, east);
+    }
+  }
   addEqual(where, values, "l.category_id", clean(url.searchParams.get("categoryId"), 120));
   addEqual(where, values, "l.subcategory_id", clean(url.searchParams.get("subcategoryId"), 120));
   addEqual(where, values, "l.governorate_id", clean(url.searchParams.get("governorateId"), 120));
@@ -204,18 +222,26 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
     where.push("l.price <= ?");
     values.push(max);
   }
-  values.push(Math.min(500, limit * 8));
+  const exactDistanceSql = `6371 * 2 * asin(min(1, sqrt(
+    pow(sin((radians(n.latitude) - radians(?)) / 2), 2)
+    + cos(radians(?)) * cos(radians(n.latitude))
+      * pow(sin((radians(n.longitude) - radians(?)) / 2), 2)
+  )))`;
   const result = await env.DB.prepare(
-    `SELECT l.*, n.latitude, n.longitude, c.name_ar AS category_name_ar,
+    `SELECT l.*, n.latitude, n.longitude,
+       ${exactDistanceSql} AS exact_distance_km,
+       c.name_ar AS category_name_ar,
        c.placeholder AS category_placeholder, g.name_ar AS governorate_name_ar,
        (SELECT li.media_asset_id FROM listing_images li JOIN media_assets ma
           ON ma.id = li.media_asset_id AND ma.status = 'ready'
         WHERE li.listing_id = l.id ORDER BY li.sort_order, li.id LIMIT 1) AS primary_media_asset_id
        FROM listings l JOIN location_nodes n ON n.id = l.location_node_id AND n.is_active = 1
        JOIN categories c ON c.id = l.category_id JOIN governorates g ON g.id = l.governorate_id
-      WHERE ${where.join(" AND ")} LIMIT ?`,
+      WHERE ${where.join(" AND ")}
+      ORDER BY exact_distance_km ASC, l.id ASC
+      LIMIT ?`,
   )
-    .bind(...values)
+    .bind(latitude, latitude, longitude, ...values, limit)
     .all<Row>();
   if (!result.success) return databaseError(cors);
   const ranked = (result.results ?? [])
@@ -229,8 +255,7 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
       ),
     }))
     .filter((item) => item.distanceKm <= radius)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, limit)
+    .sort((a, b) => a.distanceKm - b.distanceKm || stringValue(a.row.id).localeCompare(stringValue(b.row.id)))
     .map((item) => ({
       listing: mapListing(item.row, url.origin),
       distanceKm: Math.round(item.distanceKm * 10) / 10,
