@@ -1649,7 +1649,8 @@ test("nearby search returns actual closest listing even when 600 farther listing
        'geo-near-node', 'Closest listing', 'Valid public listing', 500, 'SYP', 'fixed',
        'used', 'approved', '{}', '{}', 0, 'nearest', '${stamp}', '${stamp}');
   `);
-  const url = "/v1/listings/nearby?latitude=33.5&longitude=36&radiusKm=50&categoryId=geo-test-category";
+  const url =
+    "/v1/listings/nearby?latitude=33.5&longitude=36&radiusKm=50&categoryId=geo-test-category";
   const first = await api(`${url}&limit=1`);
   assert.equal(first.response.status, 200);
   assert.equal(first.payload.data.length, 1);
@@ -1658,12 +1659,18 @@ test("nearby search returns actual closest listing even when 600 farther listing
 
   const three = await api(`${url}&limit=3`);
   assert.equal(three.response.status, 200);
-  assert.deepEqual(three.payload.data.slice(0, 1).map((row) => row.listing.id), ["geo-nearest"]);
+  assert.deepEqual(
+    three.payload.data.slice(0, 1).map((row) => row.listing.id),
+    ["geo-nearest"],
+  );
   assert.ok(three.payload.data[0].distanceKm <= three.payload.data[1].distanceKm);
 
   const restricted = await api(`${url}&radiusKm=1&limit=10`);
   assert.equal(restricted.response.status, 200);
-  assert.deepEqual(restricted.payload.data.map((row) => row.listing.id), ["geo-nearest"]);
+  assert.deepEqual(
+    restricted.payload.data.map((row) => row.listing.id),
+    ["geo-nearest"],
+  );
 });
 
 test("nearby bounding box wraps across the international date line", async () => {
@@ -1687,7 +1694,10 @@ test("nearby bounding box wraps across the international date line", async () =>
     "/v1/listings/nearby?latitude=0&longitude=179.95&radiusKm=30&categoryId=geo-test-category&limit=5",
   );
   assert.equal(result.response.status, 200);
-  assert.deepEqual(result.payload.data.map((row) => row.listing.id), ["geo-dateline"]);
+  assert.deepEqual(
+    result.payload.data.map((row) => row.listing.id),
+    ["geo-dateline"],
+  );
   assert.ok(result.payload.data[0].distanceKm > 10);
 });
 
