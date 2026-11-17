@@ -545,7 +545,7 @@ function headers(session = {}, extra = {}) {
   return {
     Origin: "http://localhost:8080",
     "CF-Connecting-IP": testIp,
-    ...(session.token ? { Authorization: `*** } : {}),
+    ...(session.token ? { Authorization: `Bearer ${session.token}` } : {}),
     ...extra,
   };
 }
