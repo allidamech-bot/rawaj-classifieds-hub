@@ -397,21 +397,21 @@ export function NotificationPreferencesPanel() {
               pushCapability.available
                 ? devicePushEnabled
                   ? text(
-                      "هذا الجهاز مسجل ويستقبل التنبيهات.",
+                      "هذا الجهاز مسجل للإشعارات الفورية.",
                       "This device is registered for push alerts.",
                     )
                   : pushStatus.permissionStatus === "denied"
                     ? text(
-                        "إذن Android مرفوض من إعدادات الهاتف ولم يتم تغييره من رواج.",
-                        "Android permission is blocked in system settings and was not changed by RAWAJ.",
+                        "إذن الإشعارات مرفوض من إعدادات الجهاز ولم يتم تغييره من رواج.",
+                        "Notification permission is blocked in system settings and was not changed by RAWAJ.",
                       )
                     : text(
                         "الجهاز غير مسجل. فصله لا يعطّل قناة الحساب.",
                         "This device is detached. Detaching it does not disable the account channel.",
                       )
                 : text(
-                    "إدارة الجهاز متاحة داخل تطبيق رواج على Android.",
-                    "Device management is available in the RAWAJ Android app.",
+                    "استخدم تطبيق Android أو أضف رواج إلى الشاشة الرئيسية على iPhone.",
+                    "Use the Android app or add RAWAJ to the Home Screen on iPhone.",
                   )
             }
             checked={devicePushEnabled}
