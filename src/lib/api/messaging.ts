@@ -304,9 +304,7 @@ export async function startListingConversation(
 }
 
 export async function fetchUnreadMessagesCount(): Promise<ClassifiedsResult<number>> {
-  const result = await cloudflareApiRequest<{ count: number }>(
-    "/v1/account/messages/unread-count",
-  );
+  const result = await cloudflareApiRequest<{ count: number }>("/v1/account/messages/unread-count");
   return result.ok
     ? { ok: true, data: Math.max(0, Math.floor(Number(result.data.count) || 0)) }
     : apiFailure(result, "conversation_unread_count");
