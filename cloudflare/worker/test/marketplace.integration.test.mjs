@@ -1622,6 +1622,75 @@ test("moderator can extend_expiry on others' listings", async () => {
   assert.equal(moderate.payload.data.nextStatus, "pending_review");
 });
 
+test("nearby search returns actual closest listing even when 600 farther listings exist", async () => {
+  const stamp = new Date().toISOString();
+  executeSql(`
+    INSERT OR IGNORE INTO categories (id, slug, name_ar, name_en, sort_order, is_active)
+    VALUES ('geo-test-category', 'geo-test-category', 'اختبار القرب', 'Nearby tests', 99, 1);
+    INSERT OR IGNORE INTO location_nodes
+      (id, node_type, name_ar, name_en, slug, latitude, longitude, created_at, updated_at)
+    VALUES
+      ('geo-far-node', 'locality', 'موقع بعيد', 'Far test', 'geo-far', 33.7, 36.0, '${stamp}', '${stamp}'),
+      ('geo-near-node', 'locality', 'موقع قريب', 'Nearest test', 'geo-near', 33.5001, 36.0, '${stamp}', '${stamp}');
+    WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 600)
+    INSERT OR IGNORE INTO listings
+      (id, owner_id, category_id, governorate_id, location_node_id, title, description,
+       price, currency, price_type, listing_condition, status, contact_options,
+       details, is_featured, search_text_normalized, created_at, updated_at)
+    SELECT 'geo-far-' || i, 'test-public-seller', 'geo-test-category', 'test-governorate',
+       'geo-far-node', 'Far candidate', 'Valid public listing', 500, 'SYP', 'fixed',
+       'used', 'approved', '{}', '{}', 0, 'far candidate', '${stamp}', '${stamp}' FROM n;
+    INSERT OR IGNORE INTO listings
+      (id, owner_id, category_id, governorate_id, location_node_id, title, description,
+       price, currency, price_type, listing_condition, status, contact_options,
+       details, is_featured, search_text_normalized, created_at, updated_at)
+    VALUES
+      ('geo-nearest', 'test-public-seller', 'geo-test-category', 'test-governorate',
+       'geo-near-node', 'Closest listing', 'Valid public listing', 500, 'SYP', 'fixed',
+       'used', 'approved', '{}', '{}', 0, 'nearest', '${stamp}', '${stamp}');
+  `);
+  const url = "/v1/listings/nearby?latitude=33.5&longitude=36&radiusKm=50&categoryId=geo-test-category";
+  const first = await api(`${url}&limit=1`);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.payload.data.length, 1);
+  assert.equal(first.payload.data[0].listing.id, "geo-nearest");
+  assert.ok(first.payload.data[0].distanceKm < 1);
+
+  const three = await api(`${url}&limit=3`);
+  assert.equal(three.response.status, 200);
+  assert.deepEqual(three.payload.data.slice(0, 1).map((row) => row.listing.id), ["geo-nearest"]);
+  assert.ok(three.payload.data[0].distanceKm <= three.payload.data[1].distanceKm);
+
+  const restricted = await api(`${url}&radiusKm=1&limit=10`);
+  assert.equal(restricted.response.status, 200);
+  assert.deepEqual(restricted.payload.data.map((row) => row.listing.id), ["geo-nearest"]);
+});
+
+test("nearby bounding box wraps across the international date line", async () => {
+  const stamp = new Date().toISOString();
+  executeSql(`
+    INSERT OR IGNORE INTO location_nodes
+      (id, node_type, name_ar, name_en, slug, latitude, longitude, created_at, updated_at)
+    VALUES ('geo-dateline-node', 'locality', 'موقع دولي', 'Date line', 'geo-date-line',
+      0.0, -179.95, '${stamp}', '${stamp}');
+    INSERT OR IGNORE INTO listings
+      (id, owner_id, category_id, governorate_id, location_node_id, title, description,
+       price, currency, price_type, listing_condition, status, contact_options,
+       details, is_featured, search_text_normalized, created_at, updated_at)
+    VALUES
+      ('geo-dateline', 'test-public-seller', 'geo-test-category', 'test-governorate',
+       'geo-dateline-node', 'Crossing the date line', 'Valid public listing', 500,
+       'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'dateline',
+       '${stamp}', '${stamp}');
+  `);
+  const result = await api(
+    "/v1/listings/nearby?latitude=0&longitude=179.95&radiusKm=30&categoryId=geo-test-category&limit=5",
+  );
+  assert.equal(result.response.status, 200);
+  assert.deepEqual(result.payload.data.map((row) => row.listing.id), ["geo-dateline"]);
+  assert.ok(result.payload.data[0].distanceKm > 10);
+});
+
 async function createListing(session, overrides = {}) {
   const body = {
     categoryId: "test-category",
