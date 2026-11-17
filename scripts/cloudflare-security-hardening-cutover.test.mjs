@@ -94,3 +94,11 @@ test("security configuration remains Syria-only", () => {
   assert.doesNotMatch(wrangler, /saudi|sa\.rawa-j\.com/i);
   assert.doesNotMatch(security, /saudi|sa\.rawa-j\.com/i);
 });
+
+test("pre-auth rate limiting cannot be bypassed by rotating arbitrary bearer tokens", () => {
+  const actor = security.match(/async function actorKey\([\s\S]*?(?=\nasync function sha256Hex)/)?.[0];
+  assert.ok(actor, "actor identity function must be present");
+  assert.match(actor, /CF-Connecting-IP/);
+  assert.doesNotMatch(actor, /Authorization|Bearer|sha256Hex/);
+  assert.match(actor, /return "anonymous"/);
+});
