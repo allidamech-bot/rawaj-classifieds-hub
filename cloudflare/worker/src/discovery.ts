@@ -189,10 +189,7 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
     "n.latitude BETWEEN ? AND ?",
     "n.longitude BETWEEN -180 AND 180",
   ];
-  const values: Value[] = [
-    Math.max(-90, latitude - latDelta),
-    Math.min(90, latitude + latDelta),
-  ];
+  const values: Value[] = [Math.max(-90, latitude - latDelta), Math.min(90, latitude + latDelta)];
   if (!reachesPole) {
     const west = longitude - lonDelta;
     const east = longitude + lonDelta;
