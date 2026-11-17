@@ -9,6 +9,9 @@
   "observability": {
     "enabled": true
   },
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
   "ratelimits": [
     {
       "name": "RATE_LIMIT_PUBLIC",
