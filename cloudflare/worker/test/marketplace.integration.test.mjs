@@ -913,6 +913,50 @@ test("owner restrictions and staff roles are writable, reversible and enforced",
   );
 });
 
+test("owner restrictions cover every scoped operation including image and chat uploads", async () => {
+  const scopes = [
+    { type: "messaging", path: "/v1/conversations" },
+    { type: "promotions", path: "/v1/account/promotions" },
+    { type: "reviews", path: "/v1/sellers/example-seller/reviews" },
+    { type: "uploads", path: "/v1/listings/example-listing/images" },
+  ];
+  for (const scope of scopes) {
+    const set = await api("/v1/admin/users/restrictions", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        restrictionType: scope.type,
+        action: "set",
+        reason: "Scoped permission acceptance",
+      },
+    });
+    assert.equal(set.response.status, 200, scope.type);
+
+    const paths =
+      scope.type === "uploads"
+        ? [scope.path, "/v1/profile/media", "/v1/conversations/example-chat/attachments"]
+        : [scope.path];
+    for (const path of paths) {
+      const blocked = await api(path, { ...other, method: "POST", body: {} });
+      assert.equal(blocked.response.status, 403, path);
+      assert.equal(blocked.payload.error.code, "account_restricted", path);
+    }
+
+    const lift = await api("/v1/admin/users/restrictions", {
+      ...owner,
+      method: "POST",
+      body: {
+        userId: other.userId,
+        restrictionType: scope.type,
+        action: "lift",
+        reason: "Scoped permission acceptance complete",
+      },
+    });
+    assert.equal(lift.response.status, 200, scope.type);
+  }
+});
+
 test("owner can read admin audit logs", async () => {
   const result = await api("/v1/admin/audit?limit=100", owner);
   assert.equal(result.response.status, 200);
