@@ -794,15 +794,29 @@ async function listMessages(
   if (!(await participant(env, id, auth.userId))) return notFound(cors);
   const page = integer(url.searchParams.get("page"), 1, 1, 100000);
   const pageSize = integer(url.searchParams.get("pageSize"), 50, 1, 100);
+  // Preserve oldest-first for legacy clients. The chat UI explicitly opts in
+  // to newest-first paging so long threads never hide current messages.
+  const direction = url.searchParams.get("order") === "latest" ? "DESC" : "ASC";
   const result = await env.DB.prepare(
     `${messageSelect()} WHERE m.conversation_id = ? AND m.deleted_at IS NULL
-      ORDER BY m.created_at ASC, m.id ASC LIMIT ? OFFSET ?`,
+      ORDER BY m.created_at ${direction}, m.id ${direction} LIMIT ? OFFSET ?`,
   )
-    .bind(auth.userId, id, pageSize, (page - 1) * pageSize)
+    .bind(auth.userId, id, pageSize + 1, (page - 1) * pageSize)
     .all();
-  return result.success
-    ? json({ data: { items: result.results ?? [], page, pageSize } }, 200, cors)
-    : databaseError(cors);
+  if (!result.success) return databaseError(cors);
+  const items = result.results ?? [];
+  return json(
+    {
+      data: {
+        items: items.slice(0, pageSize),
+        hasMore: items.length > pageSize,
+        page,
+        pageSize,
+      },
+    },
+    200,
+    cors,
+  );
 }
 
 function messageSelect() {

@@ -1,7 +1,7 @@
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
 
 export const CHAT_MESSAGE_MAX_LENGTH = 2000;
-export const CHAT_HISTORY_PAGE_SIZE = 200;
+export const CHAT_HISTORY_PAGE_SIZE = 100;
 
 export const CHAT_RESOURCE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

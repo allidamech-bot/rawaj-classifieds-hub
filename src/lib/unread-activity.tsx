@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { fetchMyConversations } from "@/lib/api/messaging";
+import { fetchUnreadMessagesCount } from "@/lib/api/messaging";
 import {
   fetchUnreadNotificationsCount,
   getRecentUnreadNotificationsCount,
@@ -80,7 +80,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       try {
         const [conversationsResult, notificationsResult] = await Promise.all([
-          fetchMyConversations(),
+          fetchUnreadMessagesCount(),
           fetchUnreadNotificationsCount(),
         ]);
 
@@ -90,10 +90,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
           const currentForProfile =
             countsProfileIdRef.current === profileId ? current : EMPTY_COUNTS;
           const messages = conversationsResult.ok
-            ? conversationsResult.data.reduce(
-                (sum, conversation) => sum + Math.max(0, conversation.unreadCount),
-                0,
-              )
+            ? Math.max(0, conversationsResult.data)
             : currentForProfile.messages;
           const notifications = notificationsResult.ok
             ? Math.max(0, notificationsResult.data)

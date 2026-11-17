@@ -59,3 +59,17 @@ test("D1 schema supports audio, private chat assets, and moderation", async () =
   assert.match(migration, /CREATE TABLE message_reports/);
   assert.match(migration, /FOREIGN KEY \(asset_id\) REFERENCES media_assets/);
 });
+
+test("chat history starts with latest messages and supports older pages without refresh loss", async () => {
+  const worker = await read("cloudflare/worker/src/account-social.ts");
+  const api = await read("src/lib/api/messaging.ts");
+  const route = await read("src/routes/chats.tsx");
+  const workspace = await read("src/features/communication/useLiveChatWorkspace.ts");
+  assert.match(worker, /order"\) === "latest" \? "DESC" : "ASC"/);
+  assert.match(worker, /hasMore: items\.length > pageSize/);
+  assert.match(api, /fetchConversationMessagesPage\(/);
+  assert.match(api, /order=latest/);
+  assert.match(route, /loadOlderMessages\(/);
+  assert.match(route, /prependScrollRef/);
+  assert.match(workspace, /mergeConversationMessages\(current, messagesResult\.data, conversationId\)/);
+});
