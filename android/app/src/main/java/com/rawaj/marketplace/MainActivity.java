@@ -24,6 +24,7 @@ public class MainActivity extends BridgeActivity {
                 launchController.showInitialLoading();
             }
         }
+        routeIncomingIntent(getIntent());
     }
 
     @Override
