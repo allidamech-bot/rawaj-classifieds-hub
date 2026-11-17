@@ -312,9 +312,7 @@ export async function fetchUnreadMessagesCount(): Promise<ClassifiedsResult<numb
 
 export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
   const result = await fetchMyConversationsPage(1);
-  return result.ok
-    ? { ok: true, data: result.data.items }
-    : { ok: false, error: result.error };
+  return result.ok ? { ok: true, data: result.data.items } : { ok: false, error: result.error };
 }
 
 export async function fetchMyConversationsPage(
