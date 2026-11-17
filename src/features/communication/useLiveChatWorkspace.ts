@@ -9,6 +9,7 @@ import {
 import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
 import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
+import { mergeConversationMessages } from "@/lib/chat-integrity";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
 interface LiveChatWorkspaceOptions {
@@ -142,7 +143,9 @@ export function useLiveChatWorkspace({
 
       if (!conversationId || !messagesResult?.ok) return;
 
-      setMessages(messagesResult.data);
+      setMessages((current) =>
+        mergeConversationMessages(current, messagesResult.data, conversationId),
+      );
       if (!refreshedConversation || refreshedConversation.unreadCount <= 0) return;
 
       const readResult = await markConversationRead(conversationId);
