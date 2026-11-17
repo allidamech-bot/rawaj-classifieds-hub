@@ -430,7 +430,7 @@ function verificationKeySet(
 
 function bearerToken(request: Request): string | null {
   const header = request.headers.get("Authorization") ?? "";
-  const match = /^***;
+  const match = /^Bearer ([^\s]+)$/i.exec(header);
   return match?.[1] ?? null;
 }
 
