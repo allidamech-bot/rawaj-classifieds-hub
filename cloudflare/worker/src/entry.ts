@@ -6,6 +6,7 @@ import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-pri
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
 import { handleNotifications, type NotificationsEnv } from "./notifications";
 import { handlePushDeviceSession, type PushDeviceSessionEnv } from "./push-device-session";
+import { deliverAndroidPush, type AndroidPushEnv } from "./android-push-delivery";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleManagedMedia, type ManagedMediaEnv } from "./managed-media";
@@ -39,6 +40,7 @@ type EntryEnv = PublicCoreEnv &
   AccountSocialEnv &
   NotificationsEnv &
   PushDeviceSessionEnv &
+  AndroidPushEnv &
   AdminEnv &
   AdPlacementsEnv &
   ManagedMediaEnv &
@@ -119,6 +121,7 @@ export default {
     const results = await Promise.allSettled([
       expireTimedPromotions(env, timestamp),
       deliverDueSavedSearchAlerts(env, timestamp),
+      deliverAndroidPush(env, timestamp),
     ]);
     const failure = results.find((result) => result.status === "rejected");
     if (failure) throw failure.reason;
