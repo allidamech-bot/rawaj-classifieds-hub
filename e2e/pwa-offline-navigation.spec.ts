@@ -25,7 +25,9 @@ test("installed PWA fallback restores the original route after connection return
     await expect(page.getByRole("heading", { name: "Connection unavailable" })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
     await expect
-      .poll(() => page.locator("main img").evaluate((image: HTMLImageElement) => image.naturalWidth))
+      .poll(() =>
+        page.locator("main img").evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
       .toBeGreaterThan(0);
     await page.getByRole("button", { name: "Retry" }).click();
     await expect(page.getByRole("heading", { name: "Connection unavailable" })).toBeVisible();
