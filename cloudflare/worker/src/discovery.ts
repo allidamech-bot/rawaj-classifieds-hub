@@ -174,21 +174,36 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
   }
   const radius = clampNumber(url.searchParams.get("radiusKm"), 25, 1, 200);
   const limit = clampInteger(url.searchParams.get("limit"), 60, 1, 100);
-  const latDelta = radius / 111;
-  const lonDelta = radius / Math.max(1, 111 * Math.cos((latitude * Math.PI) / 180));
+  const earthRadius = 6371;
+  const radians = Math.PI / 180;
+  const angularRadius = radius / earthRadius;
+  const latDelta = angularRadius / radians;
+  const reachesPole = Math.abs(latitude) + latDelta >= 90;
+  const lonDelta = reachesPole
+    ? 180
+    : Math.asin(Math.min(1, Math.sin(angularRadius) / Math.cos(latitude * radians))) / radians;
   const where = [
     "l.status = 'approved'",
     "l.archived_at IS NULL",
     "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
     "n.latitude BETWEEN ? AND ?",
-    "n.longitude BETWEEN ? AND ?",
+    "n.longitude BETWEEN -180 AND 180",
   ];
-  const values: Value[] = [
-    latitude - latDelta,
-    latitude + latDelta,
-    longitude - lonDelta,
-    longitude + lonDelta,
-  ];
+  const values: Value[] = [Math.max(-90, latitude - latDelta), Math.min(90, latitude + latDelta)];
+  if (!reachesPole) {
+    const west = longitude - lonDelta;
+    const east = longitude + lonDelta;
+    if (west < -180) {
+      where.push("(n.longitude >= ? OR n.longitude <= ?)");
+      values.push(west + 360, east);
+    } else if (east > 180) {
+      where.push("(n.longitude >= ? OR n.longitude <= ?)");
+      values.push(west, east - 360);
+    } else {
+      where.push("n.longitude BETWEEN ? AND ?");
+      values.push(west, east);
+    }
+  }
   addEqual(where, values, "l.category_id", clean(url.searchParams.get("categoryId"), 120));
   addEqual(where, values, "l.subcategory_id", clean(url.searchParams.get("subcategoryId"), 120));
   addEqual(where, values, "l.governorate_id", clean(url.searchParams.get("governorateId"), 120));
@@ -204,37 +219,50 @@ async function nearbyListings(url: URL, env: DiscoveryEnv, cors: Headers): Promi
     where.push("l.price <= ?");
     values.push(max);
   }
-  values.push(Math.min(500, limit * 8));
+  // Haversine's intermediate value is monotonic in great-circle distance.
+  // Rank and apply the radius in SQL before LIMIT, with stable tie-breaking.
+  const haversineLimit = Math.sin(angularRadius / 2) ** 2;
   const result = await env.DB.prepare(
-    `SELECT l.*, n.latitude, n.longitude, c.name_ar AS category_name_ar,
-       c.placeholder AS category_placeholder, g.name_ar AS governorate_name_ar,
-       (SELECT li.media_asset_id FROM listing_images li JOIN media_assets ma
-          ON ma.id = li.media_asset_id AND ma.status = 'ready'
-        WHERE li.listing_id = l.id ORDER BY li.sort_order, li.id LIMIT 1) AS primary_media_asset_id
+    `WITH candidates AS (
+       SELECT l.*, n.latitude, n.longitude, c.name_ar AS category_name_ar,
+         c.placeholder AS category_placeholder, g.name_ar AS governorate_name_ar,
+         (sin((n.latitude - ?) * ? / 2) * sin((n.latitude - ?) * ? / 2)
+           + ? * cos(n.latitude * ?) * sin((n.longitude - ?) * ? / 2)
+             * sin((n.longitude - ?) * ? / 2)) AS distance_score,
+         (SELECT li.media_asset_id FROM listing_images li JOIN media_assets ma
+            ON ma.id = li.media_asset_id AND ma.status = 'ready'
+          WHERE li.listing_id = l.id ORDER BY li.sort_order, li.id LIMIT 1) AS primary_media_asset_id
        FROM listings l JOIN location_nodes n ON n.id = l.location_node_id AND n.is_active = 1
        JOIN categories c ON c.id = l.category_id JOIN governorates g ON g.id = l.governorate_id
-      WHERE ${where.join(" AND ")} LIMIT ?`,
+       WHERE ${where.join(" AND ")}
+     )
+     SELECT * FROM candidates WHERE distance_score <= ?
+     ORDER BY distance_score ASC, id ASC LIMIT ?`,
   )
-    .bind(...values)
+    .bind(
+      latitude,
+      radians,
+      latitude,
+      radians,
+      Math.cos(latitude * radians),
+      radians,
+      longitude,
+      radians,
+      longitude,
+      radians,
+      ...values,
+      haversineLimit + 1e-15,
+      limit,
+    )
     .all<Row>();
   if (!result.success) return databaseError(cors);
-  const ranked = (result.results ?? [])
-    .map((row) => ({
-      row,
-      distanceKm: haversine(
-        latitude,
-        longitude,
-        numberValue(row.latitude),
-        numberValue(row.longitude),
-      ),
-    }))
-    .filter((item) => item.distanceKm <= radius)
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, limit)
-    .map((item) => ({
-      listing: mapListing(item.row, url.origin),
-      distanceKm: Math.round(item.distanceKm * 10) / 10,
-    }));
+  const ranked = (result.results ?? []).map((row) => ({
+    listing: mapListing(row, url.origin),
+    distanceKm:
+      Math.round(
+        haversine(latitude, longitude, numberValue(row.latitude), numberValue(row.longitude)) * 10,
+      ) / 10,
+  }));
   return json({ data: ranked }, 200, cors);
 }
 
@@ -460,11 +488,11 @@ function numberParam(value: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
-  const n = Number(value);
+  const n = value === null || value === "" ? fallback : Number(value);
   return Math.max(min, Math.min(max, Number.isInteger(n) ? n : fallback));
 }
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
-  const n = Number(value);
+  const n = value === null || value === "" ? fallback : Number(value);
   return Math.max(min, Math.min(max, Number.isFinite(n) ? n : fallback));
 }
 function stringValue(value: unknown, fallback = ""): string {

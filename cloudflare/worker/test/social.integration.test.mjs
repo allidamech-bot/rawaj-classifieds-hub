@@ -412,6 +412,62 @@ test("scheduled saved-search delivery matches filters and never repeats the same
   assert.equal((await matching()).length, 1);
 });
 
+test("nearby search ranks before truncation and honors radius, defaults, and filters", async () => {
+  const profile = await api("/api/profile", owner);
+  const ownerId = profile.payload.data.id;
+  assert.match(ownerId, /^[a-f0-9-]{36}$/i);
+  const prefix = crypto.randomUUID();
+  const stamp = new Date().toISOString();
+  const price = 987654320;
+  executeLocalSql(`
+    INSERT INTO location_nodes
+      (id, node_type, name_ar, slug, latitude, longitude, created_at, updated_at)
+    VALUES
+      ('${prefix}-far', 'city', 'Far', '${prefix}-far', 34.15, 36.7, '${stamp}', '${stamp}'),
+      ('${prefix}-near', 'city', 'Near', '${prefix}-near', 34.001, 36.7, '${stamp}', '${stamp}'),
+      ('${prefix}-outside', 'city', 'Outside', '${prefix}-outside', 34.4, 36.7, '${stamp}', '${stamp}');
+    WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<520)
+    INSERT INTO listings
+      (id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
+       title, description, price, currency, price_type, listing_condition, status,
+       contact_options, details, is_featured, search_text_normalized, created_at, updated_at)
+    SELECT '${prefix}-' || printf('%04d', i), '${ownerId}', 'test-category', 'test-subcategory',
+      'test-governorate', '${prefix}-far', 'Nearby fixture', 'Nearby fixture', ${price},
+      'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'nearby fixture', '${stamp}', '${stamp}'
+      FROM n;
+    INSERT INTO listings
+      (id, owner_id, category_id, subcategory_id, governorate_id, location_node_id,
+       title, description, price, currency, price_type, listing_condition, status,
+       contact_options, details, is_featured, search_text_normalized, created_at, updated_at)
+    VALUES
+      ('${prefix}-zz-near', '${ownerId}', 'test-category', 'test-subcategory',
+       'test-governorate', '${prefix}-near', 'Nearest', 'Nearest', ${price},
+       'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'nearest', '${stamp}', '${stamp}'),
+      ('${prefix}-zz-outside', '${ownerId}', 'test-category', 'test-subcategory',
+       'test-governorate', '${prefix}-outside', 'Outside', 'Outside', ${price},
+       'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'outside', '${stamp}', '${stamp}');
+  `);
+  await waitForWorker();
+  const path = `/v1/listings/nearby?latitude=34&longitude=36.7&priceMin=${price}&priceMax=${price}`;
+  const nearest = await api(`${path}&radiusKm=25&limit=1`);
+  assert.equal(nearest.response.status, 200);
+  assert.equal(nearest.payload.data.length, 1);
+  assert.equal(nearest.payload.data[0].listing.id, `${prefix}-zz-near`);
+  assert.equal(nearest.payload.data[0].distanceKm, 0.1);
+  const defaults = await api(path);
+  assert.equal(defaults.response.status, 200);
+  assert.equal(defaults.payload.data.length, 60);
+  assert.equal(defaults.payload.data[0].listing.id, `${prefix}-zz-near`);
+  assert.ok(defaults.payload.data.every((item) => item.distanceKm <= 25));
+  assert.ok(defaults.payload.data.every((item) => item.listing.price === price));
+  const withinOne = await api(`${path}&radiusKm=1&limit=100`);
+  assert.equal(withinOne.response.status, 200);
+  assert.deepEqual(
+    withinOne.payload.data.map((item) => item.listing.id),
+    [`${prefix}-zz-near`],
+  );
+});
+
 async function signup(label) {
   const session = await auth.session(label);
   const profile = await api("/api/profile", session);
