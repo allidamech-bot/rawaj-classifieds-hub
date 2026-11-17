@@ -697,6 +697,85 @@ test("admin cannot read admin users", async () => {
   assert.equal(result.response.status, 403);
 });
 
+test("owner can activate and undo system maintenance and read-only safely", async () => {
+  const denied = await api("/v1/admin/system-controls", admin);
+  assert.equal(denied.response.status, 403);
+
+  for (const key of ["maintenance_mode", "emergency_read_only", "freeze_new_listings"]) {
+    const loaded = await api("/v1/admin/system-controls", owner);
+    assert.equal(loaded.response.status, 200);
+    const entry = loaded.payload.data.find((control) => control.key === key);
+    assert.ok(entry, key);
+    assert.equal(entry.enabled, false, key + " starts disabled");
+
+    const badReason = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: { key, enabled: true, reason: "", expectedVersion: entry.version },
+    });
+    assert.equal(badReason.response.status, 400);
+
+    const enable = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: true,
+        reason: "Isolated local D1 control test",
+        expectedVersion: entry.version,
+      },
+    });
+    assert.equal(enable.response.status, 200);
+    assert.equal(enable.payload.data.enabled, true);
+
+    const stale = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: false,
+        reason: "Stale write must be rejected",
+        expectedVersion: entry.version,
+      },
+    });
+    assert.equal(stale.response.status, 409);
+
+    if (key !== "freeze_new_listings") {
+      const status = await api("/v1/system-status");
+      assert.equal(status.response.status, 200);
+      const field = key === "maintenance_mode" ? "maintenanceMode" : "emergencyReadOnly";
+      assert.equal(status.payload.data[field], true);
+    }
+    const blocked = await api(
+      key === "freeze_new_listings" ? "/v1/listings" : "/v1/account/notification-preferences",
+      {
+        ...other,
+        method: key === "freeze_new_listings" ? "POST" : "PATCH",
+        body:
+          key === "freeze_new_listings"
+            ? {}
+            : { key: "messagesEnabled", enabled: false },
+      },
+    );
+    assert.equal(blocked.response.status, 503, key);
+    assert.equal(blocked.payload.error.code, "system_control_active");
+
+    const disable = await api("/v1/admin/system-controls", {
+      ...owner,
+      method: "POST",
+      body: {
+        key,
+        enabled: false,
+        reason: "Restore isolated test service",
+        expectedVersion: enable.payload.data.version,
+      },
+    });
+    assert.equal(disable.response.status, 200);
+    const after = await api("/v1/admin/system-controls", owner);
+    assert.equal(after.payload.data.find((control) => control.key === key).enabled, false);
+  }
+});
+
 test("owner user-management actions enforce authority, persistence and audit", async () => {
   const denied = await api("/v1/admin/users/status", {
     ...admin,
