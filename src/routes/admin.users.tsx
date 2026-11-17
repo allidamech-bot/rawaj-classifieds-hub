@@ -272,6 +272,10 @@ function UsersPage() {
             </div>
           </div>
 
+          {actionError ? (
+            <p role="alert" className="mt-4 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">{actionError}</p>
+          ) : null}
+
           {selectedUser.roles.includes("owner") ? (
             <div className="mt-4 rounded-xl bg-gold/10 p-4 text-xs font-semibold leading-6 hairline">
               {text(
@@ -406,7 +410,7 @@ function UsersPage() {
                     <StaffRoleButton
                       active={selectedUser.roles.includes("admin")}
                       label="Admin"
-                      disabled={busy}
+                      disabled={busy || !reasonReady}
                       onAssign={() =>
                         void runAction(() =>
                           ownerAssignStaffRole(auth.hasPermission("canManageRoles"), {
@@ -429,7 +433,7 @@ function UsersPage() {
                     <StaffRoleButton
                       active={selectedUser.roles.includes("moderator")}
                       label="Moderator"
-                      disabled={busy}
+                      disabled={busy || !reasonReady}
                       onAssign={() =>
                         void runAction(() =>
                           ownerAssignStaffRole(auth.hasPermission("canManageRoles"), {
