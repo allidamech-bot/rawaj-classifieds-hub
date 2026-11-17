@@ -273,7 +273,12 @@ function UsersPage() {
           </div>
 
           {actionError ? (
-            <p role="alert" className="mt-4 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive">{actionError}</p>
+            <p
+              role="alert"
+              className="mt-4 rounded-xl bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+            >
+              {actionError}
+            </p>
           ) : null}
 
           {selectedUser.roles.includes("owner") ? (

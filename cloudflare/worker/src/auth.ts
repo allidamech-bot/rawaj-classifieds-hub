@@ -123,30 +123,41 @@ async function blockedAccountMutation(
   env: AuthEnv,
   userId: string,
 ): Promise<AccountMutationError | null> {
-  const profile = await env.DB.prepare(
-    "SELECT account_status FROM public_profiles WHERE id = ?",
-  ).bind(userId).first<{ account_status: string }>();
+  const profile = await env.DB.prepare("SELECT account_status FROM public_profiles WHERE id = ?")
+    .bind(userId)
+    .first<{ account_status: string }>();
   if (!profile || profile.account_status === "frozen" || profile.account_status === "disabled") {
-    return { code: "account_restricted", message: "تم تعليق صلاحية تنفيذ العمليات على هذا الحساب." };
+    return {
+      code: "account_restricted",
+      message: "تم تعليق صلاحية تنفيذ العمليات على هذا الحساب.",
+    };
   }
 
   const path = normalizeApiPath(new URL(request.url).pathname);
   const method = request.method.toUpperCase();
   const restrictionType =
-    method === "POST" && path === "/v1/listings" ? "posting" :
-    method === "POST" && (path === "/v1/conversations" ||
-      /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path)) ? "messaging" :
-    method === "POST" && path === "/v1/account/promotions" ? "promotions" :
-    method === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path) ? "reviews" :
-    (path === "/v1/profile/media" || /^\/v1\/account\/chat-media(?:\/|$)/.test(path)) ? "uploads" :
-    null;
+    method === "POST" && path === "/v1/listings"
+      ? "posting"
+      : method === "POST" &&
+          (path === "/v1/conversations" ||
+            /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path))
+        ? "messaging"
+        : method === "POST" && path === "/v1/account/promotions"
+          ? "promotions"
+          : method === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path)
+            ? "reviews"
+            : path === "/v1/profile/media" || /^\/v1\/account\/chat-media(?:\/|$)/.test(path)
+              ? "uploads"
+              : null;
   if (!restrictionType) return null;
 
   const now = new Date().toISOString();
   const restriction = await env.DB.prepare(
     "SELECT reason FROM user_restrictions WHERE user_id = ? AND restriction_type = ? " +
       "AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1",
-  ).bind(userId, restrictionType, now, now).first<{ reason: string }>();
+  )
+    .bind(userId, restrictionType, now, now)
+    .first<{ reason: string }>();
   if (!restriction) return null;
   return {
     code: "account_restricted",
@@ -419,7 +430,7 @@ function verificationKeySet(
 
 function bearerToken(request: Request): string | null {
   const header = request.headers.get("Authorization") ?? "";
-  const match = /^Bearer ([^\s]+)$/i.exec(header);
+  const match = /^***;
   return match?.[1] ?? null;
 }
 

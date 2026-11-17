@@ -50,8 +50,11 @@ export async function handleAdmin(request: Request, env: AdminEnv): Promise<Resp
   if (path === "/v1/admin/users" && request.method === "GET") {
     return adminUsers(request, env, cors);
   }
-  if (path === "/v1/admin/users/status" || path === "/v1/admin/users/restrictions" ||
-      path === "/v1/admin/users/roles") {
+  if (
+    path === "/v1/admin/users/status" ||
+    path === "/v1/admin/users/restrictions" ||
+    path === "/v1/admin/users/roles"
+  ) {
     return handleAdminUserActions(request, asAuthEnv(env));
   }
   if (path === "/v1/admin/audit" && request.method === "GET") {
@@ -115,7 +118,9 @@ async function adminMetrics(request: Request, env: AdminEnv, cors: Headers) {
   ).first<{ count: number }>();
   const pendingListings = await env.DB.prepare(
     "SELECT count(*) AS count FROM listings WHERE status = ?",
-  ).bind(PENDING_LISTING_STATUS).first<{ count: number }>();
+  )
+    .bind(PENDING_LISTING_STATUS)
+    .first<{ count: number }>();
   const pendingPromotions = await env.DB.prepare(
     "SELECT count(*) AS count FROM listing_promotion_requests WHERE status = 'pending_review'",
   ).first<{ count: number }>();
@@ -193,7 +198,8 @@ async function adminUsers(request: Request, env: AdminEnv, cors: Headers) {
     listingCount: numberValue(row.listing_count),
     reportsSubmitted: numberValue(row.reports_submitted),
     reportsReceived: numberValue(row.reports_received),
-    activeRestrictions: (row.active_restrictions as string | null)?.split(",").filter(Boolean) ?? [],
+    activeRestrictions:
+      (row.active_restrictions as string | null)?.split(",").filter(Boolean) ?? [],
   }));
 
   return json({ data: users }, 200, cors);
@@ -262,7 +268,9 @@ async function adminPendingListings(request: Request, env: AdminEnv, cors: Heade
       WHERE l.status = ?
       ORDER BY l.updated_at DESC
       LIMIT 250`,
-  ).bind(PENDING_LISTING_STATUS).all<Row>();
+  )
+    .bind(PENDING_LISTING_STATUS)
+    .all<Row>();
 
   if (!result.success) return databaseError(cors);
 

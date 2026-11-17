@@ -138,7 +138,12 @@ function OwnerControlsPage() {
     if (toggleInFlightRef.current.has(control.key)) return;
     if (reason.trim().length < 3) {
       setActionErrorKey(control.key);
-      setActionError(text("أدخل سبباً من ثلاثة أحرف على الأقل قبل التفعيل أو التعطيل.", "Enter a reason of at least three characters before changing a control."));
+      setActionError(
+        text(
+          "أدخل سبباً من ثلاثة أحرف على الأقل قبل التفعيل أو التعطيل.",
+          "Enter a reason of at least three characters before changing a control.",
+        ),
+      );
       reasonInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       reasonInputRef.current?.focus({ preventScroll: true });
       return;
@@ -182,7 +187,12 @@ function OwnerControlsPage() {
       await refresh();
     } catch {
       setActionErrorKey(control.key);
-      setActionError(text("تعذر إكمال التغيير. راجع الاتصال وحاول مجدداً.", "Could not complete the change. Check the connection and retry."));
+      setActionError(
+        text(
+          "تعذر إكمال التغيير. راجع الاتصال وحاول مجدداً.",
+          "Could not complete the change. Check the connection and retry.",
+        ),
+      );
     } finally {
       toggleInFlightRef.current.delete(control.key);
       setBusyKey((current) => (current === control.key ? null : current));
@@ -275,7 +285,10 @@ function OwnerControlsPage() {
             className="input"
           />
           <span id="owner-control-reason-hint" className="mt-2 block text-xs text-muted-foreground">
-            {text("هذا السبب إلزامي لكل عملية، ولا يُفعَّل أي مفتاح بدونه.", "This reason is required for every action; no switch changes without it.")}
+            {text(
+              "هذا السبب إلزامي لكل عملية، ولا يُفعَّل أي مفتاح بدونه.",
+              "This reason is required for every action; no switch changes without it.",
+            )}
           </span>
         </label>
       </section>
@@ -389,7 +402,12 @@ function ControlCard({
         {control.enabled ? text("إلغاء التفعيل", "Disable") : text("تفعيل", "Enable")}
       </button>
       {error ? (
-        <p role="alert" className="mt-2 rounded-lg bg-destructive/10 p-3 text-xs font-semibold text-destructive">{error}</p>
+        <p
+          role="alert"
+          className="mt-2 rounded-lg bg-destructive/10 p-3 text-xs font-semibold text-destructive"
+        >
+          {error}
+        </p>
       ) : null}
     </article>
   );
