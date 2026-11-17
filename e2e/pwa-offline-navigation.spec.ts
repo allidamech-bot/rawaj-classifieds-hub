@@ -15,7 +15,6 @@ test("installed PWA fallback restores the original route after connection return
     const registration = await navigator.serviceWorker.getRegistration("/");
     return registration?.active?.scriptURL.endsWith("/rawaj-offline-sw.js");
   });
-  await page.reload();
   await page.waitForFunction(() =>
     navigator.serviceWorker.controller?.scriptURL.endsWith("/rawaj-offline-sw.js"),
   );

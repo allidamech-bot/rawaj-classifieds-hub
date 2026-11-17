@@ -11,10 +11,12 @@ function worker(fetch) {
   const handlers = {};
   const cached = [];
   const removed = [];
+  let claimed = false;
   vm.runInNewContext(source, {
     URL,
     self: {
       location: { origin },
+      clients: { claim: async () => { claimed = true; } },
       addEventListener: (name, handler) => { handlers[name] = handler; },
     },
     caches: {
@@ -30,6 +32,7 @@ function worker(fetch) {
   return {
     cached,
     removed,
+    get claimed() { return claimed; },
     run(name, request) {
       let result;
       handlers[name]({
@@ -50,6 +53,7 @@ test("offline worker caches only public static fallback assets", async () => {
     "/rawaj-offline.html", "/rawaj-offline.css", "/rawaj-offline.js", "/brand/rawaj-mark-transparent-192.png",
   ]);
   assert.deepEqual(instance.removed, ["rawaj-offline-v0"]);
+  assert.equal(instance.claimed, true);
 });
 
 test("network failure displays fallback, HTTP errors are not fabricated", async () => {

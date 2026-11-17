@@ -328,11 +328,13 @@ export function StateCard({
   body,
   actionLabel,
   actionTo,
+  onRetry,
 }: {
   title: string;
   body: string;
   actionLabel?: string;
   actionTo?: string;
+  onRetry?: () => void;
 }) {
   const { text } = useUiPreferences();
   const retryableLoadError = title.startsWith("تعذر ") || title.startsWith("Could not ");
@@ -346,7 +348,7 @@ export function StateCard({
           {retryableLoadError ? (
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={onRetry ?? (() => window.location.reload())}
               className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
             >
               {text("إعادة المحاولة", "Try again")}

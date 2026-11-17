@@ -107,10 +107,12 @@ test.describe("B4 independent marketplace journeys", () => {
 
     test("transient listing failure stays recoverable: " + language, async ({ page }) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
+      await visit(page, "/", language);
       let attempts = 0;
+      let fail = true;
       await page.route(/\/v1\/listings(?:\?|$)/, async (route) => {
         attempts += 1;
-        if (attempts === 1) {
+        if (fail) {
           await route.fulfill({
             status: 503,
             contentType: "application/json",
@@ -122,24 +124,36 @@ test.describe("B4 independent marketplace journeys", () => {
           await route.continue();
         }
       });
-      await visit(page, "/listings", language);
+      const search = page.locator("#rawaj-signature-search-input");
+      await search.fill("rawaj-recovery");
+      await search.press("Enter");
+      await expect(page).toHaveURL(/\/listings\?[^#]*q=rawaj-recovery/);
       await expect(page.getByRole("button", { name: /إعادة المحاولة|Try again/ })).toBeVisible();
+      expect(attempts).toBeGreaterThan(0);
+      fail = false;
       await page.getByRole("button", { name: /إعادة المحاولة|Try again/ }).click();
       await expect(page.locator(".rawaj-adaptive-card").first()).toBeVisible();
-      expect(attempts).toBeGreaterThanOrEqual(1);
+      expect(attempts).toBeGreaterThanOrEqual(2);
     });
 
     test("empty listings response is a controlled state: " + language, async ({ page }) => {
       await page.addInitScript((value) => localStorage.setItem("rawaj-language", value), language);
+      await visit(page, "/", language);
+      let intercepted = 0;
       await page.route(/\/v1\/listings(?:\?|$)/, async (route) => {
+        intercepted += 1;
         await route.fulfill({
           status: 200,
           contentType: "application/json",
           body: JSON.stringify({ data: { items: [], nextCursor: null, pageSize: 30 } }),
         });
       });
-      await visit(page, "/listings", language);
+      const search = page.locator("#rawaj-signature-search-input");
+      await search.fill("rawaj-empty");
+      await search.press("Enter");
+      await expect(page).toHaveURL(/\/listings\?[^#]*q=rawaj-empty/);
       await expect(page.locator(".rawaj-search-empty-state")).toBeVisible();
+      expect(intercepted).toBeGreaterThan(0);
       await expect(page.locator(".rawaj-adaptive-card")).toHaveCount(0);
     });
 

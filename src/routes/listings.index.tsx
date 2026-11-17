@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -78,6 +78,7 @@ export const Route = createFileRoute("/listings/")({
 function ListingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const router = useRouter();
   const { language, text } = useUiPreferences();
   const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");
   const [view, setView] = useState<ListingsView>(search.view ?? "grid");
@@ -1623,6 +1624,7 @@ function ListingsPage() {
             )}
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
+            onRetry={() => void router.invalidate()}
           />
         ) : hasInvalidCategory ? (
           <StateCard
