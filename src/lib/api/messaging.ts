@@ -327,10 +327,25 @@ export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversa
 export async function fetchConversationMessages(
   conversationId: string,
 ): Promise<ClassifiedsResult<ConversationMessage[]>> {
+  const result = await fetchConversationMessagesPage(conversationId, 1);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, data: result.data.items };
+}
+
+export async function fetchConversationMessagesPage(
+  conversationId: string,
+  page = 1,
+): Promise<ClassifiedsResult<{ items: ConversationMessage[]; hasMore: boolean }>> {
   const cleanConversationId = normalizeChatResourceId(conversationId);
-  if (!cleanConversationId) return failure("validation_error", "تعذر تحديد المحادثة.");
-  const result = await cloudflareApiRequest<{ items: Record<string, unknown>[] }>(
-    `/v1/conversations/${encodeURIComponent(cleanConversationId)}/messages?pageSize=${CHAT_HISTORY_PAGE_SIZE}`,
+  if (!cleanConversationId || !Number.isSafeInteger(page) || page < 1 || page > 100000) {
+    return failure("validation_error", "تعذر تحديد المحادثة أو صفحة الرسائل.");
+  }
+
+  const result = await cloudflareApiRequest<{
+    items: Record<string, unknown>[];
+    hasMore: boolean;
+  }>(
+    `/v1/conversations/${encodeURIComponent(cleanConversationId)}/messages?page=${page}&pageSize=${CHAT_HISTORY_PAGE_SIZE}&order=latest`,
   );
   if (!result.ok) return apiFailure(result, "conversation_messages_read");
 
@@ -345,7 +360,13 @@ export async function fetchConversationMessages(
       return { ...message, attachmentUrl };
     }),
   );
-  return { ok: true, data: sortAndDedupeMessages(hydrated, cleanConversationId) };
+  return {
+    ok: true,
+    data: {
+      items: sortAndDedupeMessages(hydrated, cleanConversationId),
+      hasMore: result.data.hasMore === true,
+    },
+  };
 }
 
 const MESSAGE_REQUEST_UUID_PATTERN =
