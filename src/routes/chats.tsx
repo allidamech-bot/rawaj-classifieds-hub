@@ -422,7 +422,9 @@ function ChatsPage() {
         requestId !== messagesRequestIdRef.current ||
         profileId !== profileIdRef.current ||
         conversationId !== selectedConversationIdRef.current
-      ) return;
+      ) {
+        return;
+      }
       if (!result.ok) {
         setNotice(result.error.message);
         return;
@@ -435,12 +437,16 @@ function ChatsPage() {
           scrollHeight: stream.scrollHeight,
         };
       }
-      setMessages((current) => mergeConversationMessages(current, result.data.items, conversationId));
+      setMessages((current) =>
+        mergeConversationMessages(current, result.data.items, conversationId),
+      );
       setOlderMessagesPage(nextPage);
       setHasOlderMessages(result.data.hasMore);
     } catch {
       if (conversationId === selectedConversationIdRef.current) {
-        setNotice(text("تعذر تحميل الرسائل الأقدم. حاول مجددًا.", "Older messages could not load. Retry."));
+        setNotice(
+          text("تعذر تحميل الرسائل الأقدم. حاول مجددًا.", "Older messages could not load. Retry."),
+        );
       }
     } finally {
       if (olderLoadInFlightRef.current === conversationId) olderLoadInFlightRef.current = null;
@@ -1072,6 +1078,18 @@ function ChatsPage() {
                   }
                 />
 
+                {hasOlderMessages && !loadingMessages && visibleMessages.length > 0 ? (
+                  <button
+                    type="button"
+                    className="mx-auto block rounded-xl border px-4 py-2 text-sm font-semibold"
+                    onClick={() => void loadOlderMessages()}
+                    disabled={loadingOlderMessages}
+                  >
+                    {loadingOlderMessages
+                      ? text("جارٍ تحميل الرسائل الأقدم...", "Loading earlier messages...")
+                      : text("عرض الرسائل الأقدم", "Show earlier messages")}
+                  </button>
+                ) : null}
                 <div
                   className="rawaj-message-stream"
                   ref={messageStreamRef}
@@ -1089,20 +1107,7 @@ function ChatsPage() {
                       )}
                     </PanelText>
                   ) : (
-                    <>
-                      {hasOlderMessages ? (
-                        <button
-                          type="button"
-                          className="mx-auto mb-3 block rounded-xl border px-4 py-2 text-sm font-semibold"
-                          onClick={() => void loadOlderMessages()}
-                          disabled={loadingOlderMessages}
-                        >
-                          {loadingOlderMessages
-                            ? text("جارٍ تحميل الرسائل الأقدم...", "Loading earlier messages...")
-                            : text("عرض الرسائل الأقدم", "Show earlier messages")}
-                        </button>
-                      ) : null}
-                      {visibleMessages.map((message) => {
+                    visibleMessages.map((message) => {
                       const mine = message.isMine;
                       return (
                         <article key={message.id} className="rawaj-message-bubble" data-mine={mine}>
@@ -1170,8 +1175,7 @@ function ChatsPage() {
                           )}
                         </article>
                       );
-                    })}
-                    </>
+                    })
                   )}
                 </div>
 
