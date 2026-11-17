@@ -689,6 +689,113 @@ test("admin cannot read admin users", async () => {
   assert.equal(result.response.status, 403);
 });
 
+test("owner user-management actions enforce authority, persistence and audit", async () => {
+  const denied = await api("/v1/admin/users/status", {
+    ...admin, method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "Owner-only account moderation" },
+  });
+  assert.equal(denied.response.status, 403);
+
+  const protectedOwner = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: owner.userId, status: "frozen", reason: "Protect owner accounts" },
+  });
+  assert.equal(protectedOwner.response.status, 403);
+
+  const missingReason = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "" },
+  });
+  assert.equal(missingReason.response.status, 400);
+
+  const frozen = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, status: "frozen", reason: "Investigate account activity" },
+  });
+  assert.equal(frozen.response.status, 200);
+  assert.equal(frozen.payload.data, null);
+  const afterFreeze = await api("/v1/admin/users", owner);
+  assert.equal(
+    afterFreeze.payload.data.find((user) => user.id === other.userId).accountStatus,
+    "frozen",
+  );
+
+  const blockedWrite = await api("/v1/account/notification-preferences", {
+    ...other, method: "PATCH", body: { key: "messagesEnabled", enabled: false },
+  });
+  assert.equal(blockedWrite.response.status, 403);
+  assert.equal(blockedWrite.payload.error.code, "account_restricted");
+
+  const restored = await api("/v1/admin/users/status", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, status: "active", reason: "Account review finished" },
+  });
+  assert.equal(restored.response.status, 200);
+  const afterRestore = await api("/v1/admin/users", owner);
+  assert.equal(
+    afterRestore.payload.data.find((user) => user.id === other.userId).accountStatus,
+    "active",
+  );
+
+  const audit = await api("/v1/admin/audit?limit=100", owner);
+  assert.equal(audit.response.status, 200);
+  assert.ok(audit.payload.data.some((row) =>
+    row.action === "user.status_changed" && row.targetId === other.userId));
+});
+
+test("owner restrictions and staff roles are writable, reversible and enforced", async () => {
+  const set = await api("/v1/admin/users/restrictions", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, restrictionType: "posting",
+      action: "set", reason: "Posting moderation test" },
+  });
+  assert.equal(set.response.status, 200);
+  assert.ok(typeof set.payload.data === "string");
+  const restrictedUsers = await api("/v1/admin/users", owner);
+  assert.ok(restrictedUsers.payload.data.find((user) =>
+    user.id === other.userId).activeRestrictions.includes("posting"));
+  const blocked = await api("/v1/listings", { ...other, method: "POST", body: {} });
+  assert.equal(blocked.response.status, 403);
+  assert.equal(blocked.payload.error.code, "account_restricted");
+
+  const duplicate = await api("/v1/admin/users/restrictions", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, restrictionType: "posting",
+      action: "set", reason: "Duplicate restriction" },
+  });
+  assert.equal(duplicate.response.status, 409);
+
+  const lifted = await api("/v1/admin/users/restrictions", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, restrictionType: "posting",
+      action: "lift", reason: "Restriction lifted" },
+  });
+  assert.equal(lifted.response.status, 200);
+  const restoredUsers = await api("/v1/admin/users", owner);
+  assert.ok(!restoredUsers.payload.data.find((user) =>
+    user.id === other.userId).activeRestrictions.includes("posting"));
+
+  const assigned = await api("/v1/admin/users/roles", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, role: "moderator",
+      action: "assign", note: "Staff role test" },
+  });
+  assert.equal(assigned.response.status, 200);
+  const staffUsers = await api("/v1/admin/users", owner);
+  assert.ok(staffUsers.payload.data.find((user) =>
+    user.id === other.userId).roles.includes("moderator"));
+
+  const removed = await api("/v1/admin/users/roles", {
+    ...owner, method: "POST",
+    body: { userId: other.userId, role: "moderator",
+      action: "remove", reason: "Remove test role" },
+  });
+  assert.equal(removed.response.status, 200);
+  const finalUsers = await api("/v1/admin/users", owner);
+  assert.ok(!finalUsers.payload.data.find((user) =>
+    user.id === other.userId).roles.includes("moderator"));
+});
+
 test("owner can read admin audit logs", async () => {
   const result = await api("/v1/admin/audit?limit=100", owner);
   assert.equal(result.response.status, 200);
