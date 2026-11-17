@@ -1,6 +1,7 @@
-import type { PluginListenerHandle } from "@capacitor/core";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import {
   disablePushDevice,
+  fetchPushChannelStatus,
   registerPushDevice,
   type PushPermissionStatus,
   type PushPlatform,
@@ -10,6 +11,7 @@ import { firebaseAuth } from "@/lib/firebase";
 import { notificationOpenPath } from "@/lib/notification-target-path";
 import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
+import { webPushAvailable, getWebPushToken, unsubscribeWebPush } from "@/lib/web-push";
 
 const PUSH_DEVICE_KEY_STORAGE = "rawaj:native-push-device-key:v1";
 const REGISTRATION_TIMEOUT_MS = 15_000;
@@ -62,7 +64,9 @@ export async function getNativePushCapability(): Promise<NativePushCapability> {
     const { Capacitor } = await import("@capacitor/core");
     const platform = Capacitor.getPlatform();
     return {
-      available: Capacitor.isNativePlatform() && (platform === "android" || platform === "ios"),
+      available: Capacitor.isNativePlatform()
+        ? platform === "android"
+        : webPushAvailable(),
       platform: platform === "android" || platform === "ios" ? platform : "web",
     };
   } catch {
@@ -74,6 +78,9 @@ export async function enableNativePush(
   locale: string,
   requestPermission = true,
 ): Promise<ClassifiedsResult<NativePushRegistration>> {
+  if (typeof window !== "undefined" && !Capacitor.isNativePlatform() && webPushAvailable()) {
+    return enableWebPush(locale, requestPermission);
+  }
   const actorResult = await currentPushAccount();
   if (!actorResult.ok) {
     return {
@@ -89,7 +96,7 @@ export async function enableNativePush(
       ok: false,
       error: {
         code: "setup_required",
-        message: "الإشعارات الفورية متاحة من تطبيق رواج على الهاتف فقط.",
+        message: "الإشعارات غير متاحة هنا. استخدم تطبيق Android أو ثبّت رواج على الشاشة الرئيسية.",
       },
     };
   }
@@ -149,6 +156,51 @@ export async function enableNativePush(
         message: "تعذر تهيئة الإشعارات الفورية على هذا الجهاز.",
         details: error instanceof Error ? error.message : String(error),
       },
+    };
+  }
+}
+
+async function enableWebPush(
+  locale: string,
+  requestPermission: boolean,
+): Promise<ClassifiedsResult<NativePushRegistration>> {
+  const userId = firebaseAuth.currentUser?.uid;
+  if (!userId) return stalePushAccountError();
+  const generation = nativePushGeneration;
+  const deviceKey = getOrCreatePushDeviceKey();
+  const stillCurrent = () =>
+    generation === nativePushGeneration && firebaseAuth.currentUser?.uid === userId;
+  try {
+    // Safari requires the permission call to originate directly in a user gesture.
+    const permission =
+      Notification.permission === "default" && requestPermission
+        ? await Notification.requestPermission()
+        : Notification.permission;
+    if (!stillCurrent()) return stalePushAccountError();
+    const permissionStatus: PushPermissionStatus = permission === "default" ? "prompt" : permission;
+    if (permission !== "granted") {
+      await disablePushDevice(deviceKey, false, permissionStatus);
+      return { ok: true, data: { deviceKey, permissionStatus, registered: false } };
+    }
+    // Never silently reactivate a device the user previously detached.
+    if (!requestPermission) {
+      const status = await fetchPushChannelStatus(deviceKey);
+      if (!stillCurrent()) return stalePushAccountError();
+      if (!status.ok) return status;
+      if (!status.data.registered || !status.data.pushEnabled) {
+        return { ok: true, data: { deviceKey, permissionStatus, registered: false } };
+      }
+    }
+    const token = await getWebPushToken();
+    if (!stillCurrent()) return stalePushAccountError();
+    const result = await syncRegistrationToken(token, { userId, locale, platform: "web", generation });
+    if (!result.ok) return result;
+    if (!stillCurrent()) return stalePushAccountError();
+    return { ok: true, data: { deviceKey, permissionStatus, registered: true } };
+  } catch {
+    return {
+      ok: false,
+      error: { code: "setup_required", message: "تعذر تسجيل إشعارات المتصفح. حاول مرة أخرى." },
     };
   }
 }
@@ -398,6 +450,9 @@ async function syncRegistrationToken(
 }
 
 async function unregisterNativePushLocally(): Promise<boolean> {
+  if (typeof window !== "undefined" && !Capacitor.isNativePlatform()) {
+    return unsubscribeWebPush();
+  }
   let unregistered = false;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");

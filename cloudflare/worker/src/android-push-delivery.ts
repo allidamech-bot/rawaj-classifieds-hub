@@ -31,6 +31,7 @@ interface Job {
 }
 interface Destination {
   encrypted_token: string;
+  platform: "android" | "web";
   conversation_id: string | null;
   locale: string | null;
 }
@@ -42,6 +43,7 @@ interface Credentials {
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const MAX_ATTEMPTS = 5;
 const MAX_JOBS = 20;
+const MAX_IMMEDIATE_DEVICES = 3;
 
 function credentials(env: AndroidPushEnv): Credentials | null {
   if (!env.FCM_SERVICE_ACCOUNT_JSON || !env.PUSH_TOKEN_ENCRYPTION_KEY) return null;
@@ -143,7 +145,7 @@ function jobKey(job: Job): Value[] {
 async function destination(db: DeliveryDb, job: Job): Promise<Destination | null> {
   return db
     .prepare(
-      `SELECT d.encrypted_token, d.locale, m.conversation_id
+      `SELECT d.encrypted_token, d.platform, d.locale, m.conversation_id
       FROM push_devices d
       JOIN public_profiles u ON u.id = d.user_id AND u.account_status = 'active'
       JOIN notification_preferences p ON p.user_id = d.user_id
@@ -151,7 +153,7 @@ async function destination(db: DeliveryDb, job: Job): Promise<Destination | null
       LEFT JOIN conversation_messages m ON m.id = ?
       LEFT JOIN conversations c ON c.id = m.conversation_id
       WHERE d.id = ? AND d.user_id = ? AND d.token_hash = ?
-        AND d.platform = 'android' AND d.active = 1 AND d.permission_status = 'granted'
+        AND d.platform IN ('android', 'web') AND d.active = 1 AND d.permission_status = 'granted'
         AND p.push_enabled = 1 AND (
           (? = 'message' AND m.id IS NOT NULL AND m.sender_id <> d.user_id
             AND m.deleted_at IS NULL AND m.read_at IS NULL AND c.status = 'active'
@@ -224,7 +226,7 @@ export async function deliverAndroidPush(
       .run();
   }
 
-  // Request-triggered delivery is scoped to the new message and one device;
+  // Request-triggered delivery is scoped to the new message and a bounded number of devices;
   // the scheduled job drains all remaining devices and retries.
   const due = await env.DB.prepare(
     `SELECT device_id, user_id, token_hash, event_kind, event_id, attempts
@@ -234,13 +236,13 @@ export async function deliverAndroidPush(
         ${messageId ? "AND event_kind = 'message' AND event_id = ?" : ""}
       ORDER BY next_attempt_at, created_at, device_id, event_id LIMIT ?`,
   )
-    .bind(timestamp, cutoff, MAX_ATTEMPTS, ...(messageId ? [messageId, 1] : [MAX_JOBS]))
+    .bind(timestamp, cutoff, MAX_ATTEMPTS, ...(messageId ? [messageId, MAX_IMMEDIATE_DEVICES] : [MAX_JOBS]))
     .all<Job>();
   if (!due.success) throw new Error("push_delivery_read_failed");
   if (!due.results?.length) return;
   const accessToken = await getAccessToken(account, request);
   const endpoint = `https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`;
-  for (const job of due.results) {
+  async function deliverJob(job: Job) {
     const lease = crypto.randomUUID();
     const leaseUntil = new Date(now + 5 * 60 * 1000).toISOString();
     const claimed = await env.DB.prepare(
@@ -251,13 +253,13 @@ export async function deliverAndroidPush(
     )
       .bind(lease, leaseUntil, ...jobKey(job), timestamp, job.attempts)
       .run();
-    if (!claimed.success || claimed.meta?.changes !== 1) continue;
+    if (!claimed.success || claimed.meta?.changes !== 1) return;
     const retry = new Date(now + Math.min(60, 2 ** (job.attempts + 1)) * 60 * 1000).toISOString();
     try {
       const target = await destination(env.DB, job);
       if (!target) {
         await finish(env.DB, job, lease, "cancelled", timestamp, "destination_inactive");
-        continue;
+        return;
       }
       const token = await decryptToken(target.encrypted_token, env.PUSH_TOKEN_ENCRYPTION_KEY!);
       const english = target.locale?.toLowerCase().startsWith("en");
@@ -265,32 +267,41 @@ export async function deliverAndroidPush(
         job.event_kind === "message" && target.conversation_id
           ? { conversation_id: target.conversation_id }
           : { notification_id: job.event_id };
+      const platformPayload =
+        target.platform === "web"
+          ? {
+              data: { ...data, language: english ? "en" : "ar", event_id: job.event_id },
+              webpush: { headers: { TTL: "3600", Urgency: "high" } },
+            }
+          : {
+              data,
+              notification: {
+                title: english ? "Rawaj" : "رواج",
+                body: english ? "You have a new update." : "لديك تحديث جديد.",
+              },
+              android: {
+                ttl: "3600s",
+                priority: "HIGH",
+                notification: {
+                  channel_id: "rawaj_activity",
+                  tag: `rawaj-${job.event_kind}-${job.event_id}`,
+                },
+              },
+            };
       const response = await request(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           message: {
             token,
-            data,
-            notification: {
-              title: english ? "Rawaj" : "رواج",
-              body: english ? "You have a new update." : "لديك تحديث جديد.",
-            },
-            android: {
-              ttl: "3600s",
-              priority: "HIGH",
-              notification: {
-                channel_id: "rawaj_activity",
-                tag: `rawaj-${job.event_kind}-${job.event_id}`,
-              },
-            },
+            ...platformPayload,
           },
         }),
         signal: AbortSignal.timeout(10000),
       });
       if (response.ok) {
         await finish(env.DB, job, lease, "sent", timestamp, null);
-        continue;
+        return;
       }
       const payload = (await response.json().catch(() => null)) as {
         error?: { details?: Array<{ errorCode?: string }> };
@@ -325,5 +336,10 @@ export async function deliverAndroidPush(
         "push_delivery_retryable_error",
       );
     }
+  }
+  if (messageId) {
+    await Promise.all(due.results.map(deliverJob));
+  } else {
+    for (const job of due.results) await deliverJob(job);
   }
 }

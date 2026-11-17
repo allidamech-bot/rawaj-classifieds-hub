@@ -1,0 +1,5 @@
+# Web Push release gate
+
+The PWA uses the existing Firebase project and FCM outbox. It does not implement native iOS APNs. Enable Web Push only after the owner configures the Firebase Web Push certificate and sets the PUBLIC build variable `VITE_FIREBASE_WEB_PUSH_VAPID_KEY` to its public key. Keep FCM service account JSON and token encryption key in Worker secrets only. Apply migrations 0026 and 0027 in order, then deploy the Worker and web application through the approved owner process.
+
+Physical acceptance (not replaced by CI): iPhone/iPad iOS 16.4+ installed on Home Screen; explicit permission via notification settings; new message from second test user with PWA closed; tap opens authorized conversation; test foreground, denied permission, device detachment, logout/account change, and token renewal. Repeat on Android and a supported desktop browser. Confirm notification preferences and read-state suppression. Record actual observed delivery latency; in-app notifications other than messages still use the scheduled queue. No real push or production mutation is part of CI.

@@ -9,6 +9,10 @@ const migration = await readFile(
   new URL("../../d1/migrations/0026_android_push_delivery.sql", import.meta.url),
   "utf8",
 );
+const webMigration = await readFile(
+  new URL("../../d1/migrations/0027_web_push_delivery.sql", import.meta.url),
+  "utf8",
+);
 const compiled = ts.transpileModule(source, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
 }).outputText;
@@ -73,6 +77,7 @@ function fixture() {
     INSERT INTO conversations VALUES ('conversation','buyer','seller','active');
   `);
   db.exec(migration);
+  db.exec(webMigration);
   const insert = db.prepare("INSERT INTO push_devices VALUES (?, ?, ?, ?, 1, 'granted', ?, 'ar')");
   insert.run("android", "buyer", "hash-1", "android", encrypted);
   insert.run("ios", "buyer", "hash-2", "ios", encrypted);
@@ -226,5 +231,29 @@ test("message fast path sends only the committed message; cron drains other jobs
   assert.equal(sent.length, 1);
   await deliverAndroidPush(env, stamp, request);
   assert.equal(sent.length, 3);
+  db.close();
+});
+
+test("PWA and Android receive the same new event with distinct platform payloads", async () => {
+  const { db, env, message } = fixture();
+  db.prepare("INSERT INTO push_devices VALUES (?, ?, ?, ?, 1, 'granted', ?, 'ar')").run(
+    "pwa",
+    "buyer",
+    "hash-web",
+    "web",
+    encrypted,
+  );
+  message("new");
+  const { request, sent } = transport();
+  await deliverAndroidPush(env, stamp, request, "new");
+  assert.equal(sent.length, 2);
+  const web = sent.find((item) => item.webpush);
+  assert.equal(web.data.event_id, "new");
+  assert.equal(web.data.conversation_id, "conversation");
+  assert.equal(web.notification, undefined);
+  assert.equal(web.android, undefined);
+  assert.ok(sent.some((item) => item.android && item.notification));
+  await deliverAndroidPush(env, stamp, request);
+  assert.equal(sent.length, 2);
   db.close();
 });
