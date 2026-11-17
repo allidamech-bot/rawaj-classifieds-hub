@@ -24,6 +24,10 @@ function field(value: unknown, maxLength = 500): string {
   const trimmed = value.trim();
   return trimmed.length <= maxLength ? trimmed : "";
 }
+function resultChanges(result: unknown): number {
+  const meta = (result as { meta?: { changes?: number } }).meta;
+  return meta?.changes ?? 0;
+}
 function failure(cors: Headers, code: string, message: string, status: number): Response {
   return json({ error: { code, message } }, status, cors);
 }
@@ -100,7 +104,7 @@ export async function handleAdminUserActions(
         { previousStatus: target.account_status, status, reason }, timestamp),
     ]);
     if (results.some((result) => !result.success)) return failure(cors, "database_error", "Failed to save account state.", 500);
-    if (!results[0].meta?.changes || !results[1].meta?.changes || !results[2].meta?.changes) {
+    if (!resultChanges(results[0]) || !resultChanges(results[1]) || !resultChanges(results[2])) {
       return failure(cors, "stale_write", "Account state changed. Refresh and retry.", 409);
     }
     return json({ data: null }, 200, cors);
@@ -153,7 +157,7 @@ export async function handleAdminUserActions(
         { restrictionType, reason, ...(action === "set" ? { endsAt } : {}) }, timestamp),
     ]);
     if (results.some((result) => !result.success)) return failure(cors, "database_error", "Failed to save restriction.", 500);
-    if (!results[0].meta?.changes || !results[1].meta?.changes) {
+    if (!resultChanges(results[0]) || !resultChanges(results[1])) {
       return failure(cors, "stale_write", "Restriction changed. Refresh and retry.", 409);
     }
     return json({ data: action === "set" ? restrictionId : null }, 200, cors);
@@ -189,7 +193,7 @@ export async function handleAdminUserActions(
       { role, reason }, timestamp),
   ]);
   if (results.some((result) => !result.success)) return failure(cors, "database_error", "Failed to save staff role.", 500);
-  if (!results[0].meta?.changes || !results[1].meta?.changes) {
+  if (!resultChanges(results[0]) || !resultChanges(results[1])) {
     return failure(cors, "stale_write", "Staff role changed. Refresh and retry.", 409);
   }
   return json({ data: null }, 200, cors);
