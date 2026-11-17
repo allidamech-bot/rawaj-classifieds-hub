@@ -135,28 +135,42 @@ async function blockedAccountMutation(
 
   const path = normalizeApiPath(new URL(request.url).pathname);
   const method = request.method.toUpperCase();
-  const restrictionType =
-    method === "POST" && path === "/v1/listings"
-      ? "posting"
-      : method === "POST" &&
-          (path === "/v1/conversations" ||
-            /^\/v1\/conversations\/[^/]+\/(?:messages|attachments)$/.test(path))
-        ? "messaging"
-        : method === "POST" && path === "/v1/account/promotions"
-          ? "promotions"
-          : method === "POST" && /^\/v1\/sellers\/[^/]+\/reviews$/.test(path)
-            ? "reviews"
-            : path === "/v1/profile/media" || /^\/v1\/account\/chat-media(?:\/|$)/.test(path)
-              ? "uploads"
-              : null;
-  if (!restrictionType) return null;
+  const restrictionTypes: string[] = [];
+  if (method === "POST" && path === "/v1/listings") restrictionTypes.push("posting");
+  if (
+    method === "POST" &&
+    (path === "/v1/conversations" ||
+      /^\\/v1\\/conversations\\/[^/]+\\/(?:messages|attachments)$/.test(path))
+  ) {
+    restrictionTypes.push("messaging");
+  }
+  if (method === "POST" && path === "/v1/account/promotions") {
+    restrictionTypes.push("promotions");
+  }
+  if (
+    (method === "POST" && /^\\/v1\\/sellers\\/[^/]+\\/reviews$/.test(path)) ||
+    (method === "PATCH" && /^\\/v1\\/reviews\\/[^/]+\\/response$/.test(path))
+  ) {
+    restrictionTypes.push("reviews");
+  }
+  if (
+    method === "POST" &&
+    (path === "/v1/profile/media" ||
+      /^\\/v1\\/listings\\/[^/]+\\/images$/.test(path) ||
+      /^\\/v1\\/conversations\\/[^/]+\\/attachments$/.test(path))
+  ) {
+    restrictionTypes.push("uploads");
+  }
+  if (restrictionTypes.length === 0) return null;
 
-  const now = new Date().toISOString();
+  const timestamp = new Date().toISOString();
+  const placeholders = restrictionTypes.map(() => "?").join(", ");
   const restriction = await env.DB.prepare(
-    "SELECT reason FROM user_restrictions WHERE user_id = ? AND restriction_type = ? " +
-      "AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1",
+    `SELECT reason FROM user_restrictions
+      WHERE user_id = ? AND restriction_type IN (${placeholders})
+        AND starts_at <= ? AND (ends_at IS NULL OR ends_at > ?) LIMIT 1`,
   )
-    .bind(userId, restrictionType, now, now)
+    .bind(userId, ...restrictionTypes, timestamp, timestamp)
     .first<{ reason: string }>();
   if (!restriction) return null;
   return {
