@@ -350,15 +350,12 @@ function normalizedScope(path: string): string {
 }
 
 async function actorKey(request: Request): Promise<string> {
-  const authorization = request.headers.get("Authorization") ?? "";
-  const bearer = /^Bearer\s+([^\s]+)$/i.exec(authorization)?.[1];
-  if (bearer) {
-    return `auth:${(await sha256Hex(bearer)).slice(0, 32)}`;
-  }
-
+  // Never use an unverified bearer token as a rate-limit identity: callers can
+  // rotate arbitrary tokens to bypass a per-token quota before authentication.
+  // Cloudflare supplies CF-Connecting-IP at the edge, independently of caller
+  // Authorization input. Keep unauthenticated/missing-IP traffic bounded too.
   const ip = request.headers.get("CF-Connecting-IP")?.trim();
   if (ip) return `ip:${ip.slice(0, 64)}`;
-
   return "anonymous";
 }
 
