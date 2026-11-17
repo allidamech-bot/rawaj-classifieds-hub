@@ -130,10 +130,16 @@ test.describe("B4 independent marketplace journeys", () => {
       await expect(page).toHaveURL(/\/listings\?[^#]*q=rawaj-recovery/);
       await expect(page.getByRole("button", { name: /إعادة المحاولة|Try again/ })).toBeVisible();
       expect(attempts).toBeGreaterThan(0);
+      const failedAttempts = attempts;
+      await page.evaluate(() => {
+        document.documentElement.dataset.retryDocument = "same";
+      });
       fail = false;
       await page.getByRole("button", { name: /إعادة المحاولة|Try again/ }).click();
+      await expect.poll(() => attempts).toBeGreaterThan(failedAttempts);
       await expect(page.locator(".rawaj-adaptive-card").first()).toBeVisible();
-      expect(attempts).toBeGreaterThanOrEqual(2);
+      await expect(page.locator("html")).toHaveAttribute("data-retry-document", "same");
+      await expect(page).toHaveURL(/\/listings\?[^#]*q=rawaj-recovery/);
     });
 
     test("empty listings response is a controlled state: " + language, async ({ page }) => {

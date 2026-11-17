@@ -1624,7 +1624,6 @@ function ListingsPage() {
             )}
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
-            onRetry={() => void router.invalidate()}
           />
         ) : hasInvalidCategory ? (
           <StateCard
@@ -1684,6 +1683,7 @@ function ListingsPage() {
             )}
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
+            onRetry={() => void router.invalidate()}
           />
         ) : visibleItems.length === 0 ? (
           <SearchEmptyState

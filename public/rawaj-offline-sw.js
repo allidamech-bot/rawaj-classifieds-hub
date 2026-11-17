@@ -19,7 +19,9 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key.startsWith(PREFIX) && key !== CACHE).map((key) => caches.delete(key)),
+        keys
+          .filter((key) => key.startsWith(PREFIX) && key !== CACHE)
+          .map((key) => caches.delete(key)),
       );
       await self.clients.claim();
     })(),
