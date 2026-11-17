@@ -43,7 +43,9 @@ const EMPTY_METRICS: AdminCommandCenterMetrics = {
 function AdminOverview() {
   const auth = useAuth();
   const { text } = useUiPreferences();
-  const canViewCommandCenterMetrics = auth.hasPermission("canManageUsers");
+  const canViewCommandCenterMetrics =
+    auth.hasPermission("canViewAdminDashboard") &&
+    Boolean(auth.profile?.roles.some((role) => role === "owner" || role === "admin"));
   const [metrics, setMetrics] = useState<AdminCommandCenterMetrics>(EMPTY_METRICS);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
