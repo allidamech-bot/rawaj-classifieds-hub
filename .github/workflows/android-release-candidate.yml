@@ -85,6 +85,21 @@ jobs:
 
           apkanalyzer="$(find_android_tool apkanalyzer)"
           apksigner="$(find_android_tool apksigner)"
+          aapt2="$(find_android_tool aapt2)"
+
+          # Inspect the actual APK, not merely the source manifest.
+          "$apkanalyzer" manifest print "$apk_path" > apk-merged-manifest.xml
+          "$aapt2" dump badging "$apk_path" > apk-badging.txt
+          "$aapt2" dump resources "$apk_path" > apk-resources.txt
+          grep -F "application-label:'رواج | Rawaj'" apk-badging.txt
+          grep -F "mipmap/rawaj_launcher" apk-resources.txt
+          grep -F "mipmap/rawaj_launcher_round" apk-resources.txt
+          grep -F "drawable/rawaj_logo_mark" apk-resources.txt
+          grep -F "drawable/splash" apk-resources.txt
+          if grep -Eq 'mipmap/ic_launcher(_round|_foreground)?([[:space:]:]|$)' apk-resources.txt; then
+            echo "Obsolete launcher resource entered the APK."
+            exit 1
+          fi
 
           application_id="$("$apkanalyzer" manifest application-id "$apk_path" | tr -d '\r' | tail -n 1)"
           version_code="$("$apkanalyzer" manifest version-code "$apk_path" | tr -d '\r' | tail -n 1)"
@@ -127,6 +142,7 @@ jobs:
         run: |
           cp apk-signing-inspection.txt android-rc/
           cp aab-signing-inspection.txt android-rc/
+          cp apk-merged-manifest.xml apk-badging.txt apk-resources.txt android-rc/
 
       - name: Upload Android release candidate
         uses: actions/upload-artifact@v4

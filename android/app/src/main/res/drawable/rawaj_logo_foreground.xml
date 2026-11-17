@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="72dp"
-        android:height="72dp"
-        android:gravity="center">
-        <bitmap
-            android:gravity="fill"
-            android:src="@drawable/rawaj_logo_mark" />
-    </item>
-</layer-list>
+<!-- A 66dp safe zone on the canonical 108dp adaptive icon canvas.
+     Fractional insets scale with actual launcher/system splash bounds. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:inset="19.5%">
+    <bitmap android:gravity="fill" android:src="@drawable/rawaj_logo_mark" />
+</inset>

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 
 const [
@@ -86,7 +86,7 @@ test("RAWAJ owns the native icon and system splash", async () => {
   assert.match(launchStyles, /@drawable\/rawaj_logo_foreground/);
   assert.match(launchStyles, /postSplashScreenTheme/);
   assert.match(splashDrawable, /@drawable\/rawaj_logo_mark/);
-  assert.match(splashDrawable, /232dp/);
+  assert.match(splashDrawable, /160dp/);
 
   const logoAsset = await stat(
     new URL("../android/app/src/main/res/drawable-nodpi/rawaj_logo_mark.png", import.meta.url),
@@ -132,4 +132,19 @@ test("Android signing credentials cannot be committed accidentally", () => {
 test("Batch 7 is permanently part of the Android release candidate gate", () => {
   assert.match(androidReleaseWorkflow, /Validate web and native contracts/);
   assert.match(androidReleaseWorkflow, /node --test scripts\/launch-readiness-batch-7\.test\.mjs/);
+});
+
+test("stock Capacitor launcher and density-specific splash placeholders cannot enter the APK", async () => {
+  const res = new URL("../android/app/src/main/res/", import.meta.url);
+  const dirs = await readdir(res, { withFileTypes: true });
+  for (const directory of dirs.filter((entry) => entry.isDirectory())) {
+    const names = await readdir(new URL(directory.name + "/", res));
+    for (const name of names) {
+      assert.doesNotMatch(name, /^ic_launcher(?:[_.]|$)/, directory.name + "/" + name);
+      assert.notEqual(name, "splash.png", "density-specific splash overrides branded XML");
+    }
+  }
+  const foreground = await readFile(new URL("drawable/rawaj_logo_foreground.xml", res), "utf8");
+  assert.match(foreground, /android:inset="19\.5%"/);
+  assert.match(foreground, /rawaj_logo_mark/);
 });
