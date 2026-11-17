@@ -32,15 +32,32 @@ function useViewportState() {
     const root = document.documentElement;
     const viewport = window.visualViewport;
     let focusFrame = 0;
+    let baselineHeight = 0;
+    let baselineWidth = 0;
 
     const update = () => {
       const mobileViewport = window.matchMedia("(max-width: 1023px)").matches;
+      const scale = viewport?.scale ?? 1;
+      // Pinch zoom changes visualViewport dimensions without opening a keyboard.
+      if (Math.abs(scale - 1) > 0.02) return;
       const viewportHeight = viewport?.height ?? window.innerHeight;
-      const inset = viewport
+      const viewportWidth = window.innerWidth;
+      const focusedEditable = mobileViewport && isEditableElement(document.activeElement);
+      if (Math.abs(viewportWidth - baselineWidth) > 2) {
+        baselineWidth = viewportWidth;
+        baselineHeight = viewportHeight;
+      } else if (!focusedEditable) {
+        baselineHeight = viewportHeight;
+      } else {
+        baselineHeight = Math.max(baselineHeight, viewportHeight);
+      }
+      const layoutInset = viewport
         ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
         : 0;
-      const focusedEditable = mobileViewport && isEditableElement(document.activeElement);
-      const nextOpen = mobileViewport && (focusedEditable || inset > 120);
+      const keyboardShrink = Math.max(0, baselineHeight - viewportHeight);
+      const nextOpen = focusedEditable && Math.max(layoutInset, keyboardShrink) > 120;
+      // apply only the part not already removed by adjustResize / layout viewport.
+      const inset = nextOpen ? layoutInset : 0;
 
       root.style.setProperty("--keyboard-inset", `${Math.round(inset)}px`);
       root.style.setProperty("--app-viewport-height", `${Math.round(viewportHeight)}px`);

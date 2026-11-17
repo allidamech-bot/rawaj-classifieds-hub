@@ -11,6 +11,7 @@ const [
   androidGitignore,
   androidReleaseWorkflow,
   mainActivity,
+  launchController,
   launchStyles,
   splashDrawable,
   launcherLegacy,
@@ -30,6 +31,7 @@ const [
     ),
     "utf8",
   ),
+  readFile(new URL("../android/app/src/main/java/com/rawaj/marketplace/RawajLaunchController.java", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/styles.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/drawable/splash.xml", import.meta.url), "utf8"),
   readFile(
@@ -92,17 +94,28 @@ test("RAWAJ owns the native icon and system splash", async () => {
   assert.ok(logoAsset.size > 10_000);
 });
 
-test("RAWAJ launch intro is native, animated, and shown only on a fresh activity", () => {
+test("RAWAJ launch follows visible content rather than a fixed animation delay", () => {
+  assert.match(mainActivity, /SplashScreen\.installSplashScreen/);
   assert.match(mainActivity, /savedInstanceState == null/);
-  assert.match(mainActivity, /R\.drawable\.rawaj_intro_background/);
-  assert.match(mainActivity, /R\.drawable\.rawaj_logo_mark/);
-  assert.match(mainActivity, /arabicName\.setText\("رواج"\)/);
-  assert.match(mainActivity, /englishName\.setText\("R A W A J"\)/);
-  assert.match(mainActivity, /setScaleX\(0\.76f\)/);
-  assert.match(mainActivity, /setStartDelay\(420L\)/);
-  assert.match(mainActivity, /setStartDelay\(1800L\)/);
-  assert.match(mainActivity, /setDuration\(380L\)/);
-  assert.match(mainActivity, /root\.removeView\(overlay\)/);
+  assert.match(launchController, /R\.drawable\.rawaj_logo_mark/);
+  assert.match(launchController, /onPageCommitVisible/);
+  assert.match(launchController, /if \(trusted\(url\) && !failed\) dismiss\(\)/);
+  assert.match(launchController, /STARTUP_TIMEOUT_MS/);
+  assert.match(launchController, /WindowInsetsCompat\.Type\.displayCutout/);
+  assert.doesNotMatch(mainActivity, /setStartDelay\(1800L\)/);
+});
+
+test("native fallback retains the Capacitor client and scopes failures to trusted main frames", () => {
+  assert.match(launchController, /new BridgeWebViewClient\(bridge\)/);
+  assert.match(launchController, /super\.onReceivedError/);
+  assert.match(launchController, /!request\.isForMainFrame\(\)/);
+  assert.match(launchController, /ERROR_HOST_LOOKUP/);
+  assert.match(launchController, /ERROR_FAILED_SSL_HANDSHAKE/);
+  assert.match(launchController, /status >= 500 && status <= 599/);
+  assert.match(launchController, /"GET"\.equalsIgnoreCase\(request\.getMethod\(\)\)/);
+  assert.doesNotMatch(launchController, /addJavascriptInterface|\.proceed\(/);
+  assert.match(launchController, /Settings\.ACTION_WIRELESS_SETTINGS/);
+  assert.match(capacitor, /appName: "رواج \| Rawaj"/);
 });
 
 test("Android signing credentials cannot be committed accidentally", () => {
