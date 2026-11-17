@@ -211,6 +211,8 @@ export function AppShell({
     useSeoLandingPalette;
   const keyboardOpen = useViewportState();
   const { text } = useUiPreferences();
+  const [feedbackSlot, setFeedbackSlot] = useState<HTMLDivElement | null>(null);
+  const inlineFeedback = config.mode === "auth";
   const showBackToTop = !["auth", "conversation", "fullScreen", "mediaViewer"].includes(
     config.mode,
   );
@@ -247,6 +249,7 @@ export function AppShell({
             {children}
           </div>
 
+          {inlineFeedback ? <div ref={setFeedbackSlot} /> : null}
           {config.showFooter ? <SiteFooter pathname={pathname} /> : null}
         </div>
 
@@ -280,6 +283,7 @@ export function AppShell({
 
         <FeedbackWidget
           pathname={pathname}
+          triggerContainer={inlineFeedback ? feedbackSlot : undefined}
           triggerHidden={
             keyboardOpen || config.mode === "mediaViewer" || pathname.startsWith("/admin")
           }

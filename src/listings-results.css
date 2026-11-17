@@ -125,6 +125,19 @@ main.rawaj-search-results-v1[data-design-palette="ivory"],
   color: var(--rawaj-identity-petrol);
   box-shadow: none;
 }
+.rawaj-search-results-v1 .rawaj-quick-filter-rail {
+  flex-wrap: wrap;
+  overflow: visible;
+  scroll-snap-type: none;
+}
+
+.rawaj-search-results-v1 .rawaj-quick-filter-rail button {
+  max-inline-size: 100%;
+  white-space: normal;
+  text-align: start;
+  box-shadow: none;
+}
+
 .rawaj-search-results-v1 .rawaj-search-toolbar__controls :is(button, a, label),
 .rawaj-search-results-v1 .rawaj-search-toolbar__recent button,
 .rawaj-search-results-v1 .rawaj-quick-filter-rail button {
