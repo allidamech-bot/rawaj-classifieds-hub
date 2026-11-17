@@ -9,7 +9,7 @@ import {
 import { fetchMyConversations, markConversationRead } from "@/lib/api/messaging";
 import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import type { Conversation, ConversationMessage } from "@/lib/classifieds-types";
-import { mergeConversationMessages } from "@/lib/chat-integrity";
+import { mergeConversationMessages, sortAndDedupeConversations } from "@/lib/chat-integrity";
 import { useUnreadActivityCounts } from "@/lib/unread-activity";
 
 interface LiveChatWorkspaceOptions {
@@ -138,7 +138,11 @@ export function useLiveChatWorkspace({
           : null;
 
       if (conversationsResult.ok) {
-        setConversations(conversationsResult.data);
+        // Keep older pages and authorized deep-linked conversations visible.
+        // Polling refreshes only the newest 50 threads, not the entire inbox.
+        setConversations((current) =>
+          sortAndDedupeConversations([...current, ...conversationsResult.data]),
+        );
       }
 
       if (!conversationId || !messagesResult?.ok) return;

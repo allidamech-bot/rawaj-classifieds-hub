@@ -311,15 +311,42 @@ export async function fetchUnreadMessagesCount(): Promise<ClassifiedsResult<numb
 }
 
 export async function fetchMyConversations(): Promise<ClassifiedsResult<Conversation[]>> {
-  const result = await cloudflareApiRequest<{ items: Record<string, unknown>[] }>(
-    "/v1/account/conversations?pageSize=50",
-  );
+  const result = await fetchMyConversationsPage(1);
+  return result.ok ? { ok: true, data: result.data.items } : { ok: false, error: result.error };
+}
+
+export async function fetchMyConversationsPage(
+  page = 1,
+): Promise<ClassifiedsResult<{ items: Conversation[]; hasMore: boolean }>> {
+  if (!Number.isSafeInteger(page) || page < 1 || page > 100000) {
+    return failure("validation_error", "رقم صفحة المحادثات غير صالح.");
+  }
+  const result = await cloudflareApiRequest<{
+    items: Record<string, unknown>[];
+    hasMore: boolean;
+  }>(`/v1/account/conversations?page=${page}&pageSize=50`);
   return result.ok
     ? {
         ok: true,
-        data: sortAndDedupeConversations(result.data.items.map(mapConversation)),
+        data: {
+          items: sortAndDedupeConversations(result.data.items.map(mapConversation)),
+          hasMore: result.data.hasMore === true,
+        },
       }
     : apiFailure(result, "conversation_list");
+}
+
+export async function fetchConversationById(
+  conversationId: string,
+): Promise<ClassifiedsResult<Conversation>> {
+  const cleanId = normalizeChatResourceId(conversationId);
+  if (!cleanId) return failure("validation_error", "تعذر تحديد المحادثة.");
+  const result = await cloudflareApiRequest<Record<string, unknown>>(
+    `/v1/conversations/${encodeURIComponent(cleanId)}`,
+  );
+  return result.ok
+    ? { ok: true, data: mapConversation(result.data) }
+    : apiFailure(result, "conversation_detail");
 }
 
 export async function fetchConversationMessages(

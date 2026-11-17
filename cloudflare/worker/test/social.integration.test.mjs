@@ -412,6 +412,39 @@ test("scheduled saved-search delivery matches filters and never repeats the same
   assert.equal((await matching()).length, 1);
 });
 
+test("inbox exposes older conversations after 50 and permits authorized older deep links", async () => {
+  const stamp = new Date().toISOString();
+  const extra = Array.from({ length: 55 }, () => crypto.randomUUID());
+  executeLocalSql(`
+    INSERT INTO conversations (id, listing_id, buyer_id, seller_id, status, created_at, updated_at)
+    VALUES ${extra
+      .map(
+        (id) =>
+          `('${id}', NULL, '${buyer.userId}', '${owner.userId}', 'active', '${stamp}', '${stamp}')`,
+      )
+      .join(",\n")};
+  `);
+  const first = await api("/v1/account/conversations?page=1&pageSize=50", buyer);
+  assert.equal(first.response.status, 200);
+  assert.equal(first.payload.data.items.length, 50);
+  assert.equal(first.payload.data.hasMore, true);
+  const second = await api("/v1/account/conversations?page=2&pageSize=50", buyer);
+  assert.equal(second.response.status, 200);
+  assert.equal(second.payload.data.hasMore, false);
+  assert.ok(second.payload.data.items.length >= 6);
+  const all = [...first.payload.data.items, ...second.payload.data.items];
+  assert.equal(new Set(all.map((row) => row.id)).size, all.length);
+  for (const row of second.payload.data.items) {
+    const authorized = await api(`/v1/conversations/${row.id}`, buyer);
+    assert.equal(authorized.response.status, 200);
+    assert.equal(authorized.payload.data.id, row.id);
+  }
+  assert.equal(
+    (await api(`/v1/conversations/${second.payload.data.items[0].id}`, outsider)).response.status,
+    404,
+  );
+});
+
 async function signup(label) {
   const session = await auth.session(label);
   const profile = await api("/api/profile", session);

@@ -757,11 +757,22 @@ async function listConversations(request: Request, env: AccountSocialEnv, cors: 
       ORDER BY COALESCE(c.last_message_at, c.created_at) DESC, c.id DESC
       LIMIT ? OFFSET ?`,
   )
-    .bind(auth.userId, auth.userId, auth.userId, auth.userId, pageSize, (page - 1) * pageSize)
+    .bind(auth.userId, auth.userId, auth.userId, auth.userId, pageSize + 1, (page - 1) * pageSize)
     .all();
-  return result.success
-    ? json({ data: { items: result.results ?? [], page, pageSize } }, 200, cors)
-    : databaseError(cors);
+  if (!result.success) return databaseError(cors);
+  const rows = result.results ?? [];
+  return json(
+    {
+      data: {
+        items: rows.slice(0, pageSize),
+        hasMore: rows.length > pageSize,
+        page,
+        pageSize,
+      },
+    },
+    200,
+    cors,
+  );
 }
 
 async function getConversation(request: Request, env: AccountSocialEnv, cors: Headers, id: string) {

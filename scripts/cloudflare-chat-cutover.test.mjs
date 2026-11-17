@@ -73,3 +73,16 @@ test("chat history starts with latest messages and supports older pages without 
   assert.match(route, /prependScrollRef/);
   assert.match(workspace, /mergeConversationMessages\(current, messagesResult\.data, conversationId\)/);
 });
+
+test("conversation inbox pages beyond fifty and direct links survive live refresh", async () => {
+  const worker = await read("cloudflare/worker/src/account-social.ts");
+  const api = await read("src/lib/api/messaging.ts");
+  const route = await read("src/routes/chats.tsx");
+  const workspace = await read("src/features/communication/useLiveChatWorkspace.ts");
+  assert.match(worker, /hasMore: rows\.length > pageSize/);
+  assert.match(api, /fetchMyConversationsPage\(/);
+  assert.match(api, /fetchConversationById\(/);
+  assert.match(route, /loadMoreConversations\(/);
+  assert.match(route, /fetchConversationById\(requestedId\)/);
+  assert.match(workspace, /sortAndDedupeConversations\(\[\.\.\.current, \.\.\.conversationsResult\.data\]\)/);
+});

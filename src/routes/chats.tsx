@@ -32,7 +32,8 @@ import {
   blockConversationParticipant,
   createMessageReport,
   fetchConversationMessagesPage,
-  fetchMyConversations,
+  fetchConversationById,
+  fetchMyConversationsPage,
   markConversationRead,
   removeChatAudio,
   removeChatImage,
@@ -51,6 +52,7 @@ import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/
 import {
   mergeConversationMessages,
   normalizeChatResourceId,
+  sortAndDedupeConversations,
   sortAndDedupeMessages,
 } from "@/lib/chat-integrity";
 import { resolveConversationTarget } from "@/lib/journey-target-resolution";
@@ -89,6 +91,10 @@ function ChatsPage() {
   const navigate = useNavigate();
   const { language, text } = useUiPreferences();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loadedConversationPage, setLoadedConversationPage] = useState(1);
+  const [hasMoreConversations, setHasMoreConversations] = useState(false);
+  const [loadingMoreConversations, setLoadingMoreConversations] = useState(false);
+  const [loadingLinkedConversation, setLoadingLinkedConversation] = useState(false);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -123,6 +129,10 @@ function ChatsPage() {
   const [isDesktop, setIsDesktop] = useState(false);
   const messagesRequestIdRef = useRef(0);
   const conversationsRequestIdRef = useRef(0);
+  const moreConversationsInFlightRef = useRef(false);
+  const lookedUpTargetIdsRef = useRef(new Set<string>());
+  const requestedConversationRef = useRef<string | null>(search.conversation ?? null);
+  requestedConversationRef.current = search.conversation ?? null;
   const selectedConversationIdRef = useRef<string | null>(null);
   const profileIdRef = useRef<string | null>(auth.profile?.id ?? null);
   const accountGenerationRef = useRef(0);
@@ -252,6 +262,12 @@ function ChatsPage() {
     conversationsRequestIdRef.current += 1;
     messagesRequestIdRef.current += 1;
     setConversations([]);
+    setLoadedConversationPage(1);
+    setHasMoreConversations(false);
+    setLoadingMoreConversations(false);
+    setLoadingLinkedConversation(false);
+    moreConversationsInFlightRef.current = false;
+    lookedUpTargetIdsRef.current.clear();
     setMessages([]);
     setConversationError(null);
     setMessageError(null);
@@ -320,12 +336,17 @@ function ChatsPage() {
     setLoadingConversations(true);
     setConversationError(null);
     try {
-      const result = await fetchMyConversations();
+      const result = await fetchMyConversationsPage(1);
       if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current) {
         return;
       }
       if (result.ok) {
-        setConversations(result.data);
+        setConversations((current) =>
+          sortAndDedupeConversations([...current, ...result.data.items]),
+        );
+        if (loadedConversationPage === 1) {
+          setHasMoreConversations(result.data.hasMore);
+        }
       } else {
         setConversationError(result.error);
       }
@@ -347,6 +368,77 @@ function ChatsPage() {
       }
     }
   }
+
+  async function loadMoreConversations() {
+    const profileId = auth.profile?.id ?? null;
+    if (!profileId || !hasMoreConversations || moreConversationsInFlightRef.current) return;
+    const requestId = conversationsRequestIdRef.current;
+    const nextPage = loadedConversationPage + 1;
+    moreConversationsInFlightRef.current = true;
+    setLoadingMoreConversations(true);
+    try {
+      const result = await fetchMyConversationsPage(nextPage);
+      if (requestId !== conversationsRequestIdRef.current || profileId !== profileIdRef.current) {
+        return;
+      }
+      if (!result.ok) {
+        setNotice(result.error.message);
+        return;
+      }
+      setConversations((current) => sortAndDedupeConversations([...current, ...result.data.items]));
+      setLoadedConversationPage(nextPage);
+      setHasMoreConversations(result.data.hasMore);
+    } catch {
+      if (profileId === profileIdRef.current) {
+        setNotice(text("تعذر تحميل المحادثات الأقدم.", "Could not load older conversations."));
+      }
+    } finally {
+      moreConversationsInFlightRef.current = false;
+      if (profileId === profileIdRef.current) setLoadingMoreConversations(false);
+    }
+  }
+
+  useEffect(() => {
+    const profileId = auth.profile?.id ?? null;
+    const requestedId = search.conversation ?? null;
+    if (
+      auth.status !== "signedIn" ||
+      !profileId ||
+      !requestedId ||
+      !missingConversationTarget ||
+      loadingConversations ||
+      !accountStateMatches
+    ) {
+      return;
+    }
+    const lookupKey = `${profileId}:${requestedId}`;
+    if (lookedUpTargetIdsRef.current.has(lookupKey)) return;
+    lookedUpTargetIdsRef.current.add(lookupKey);
+    setLoadingLinkedConversation(true);
+    void fetchConversationById(requestedId)
+      .then((result) => {
+        const isCurrentRequest =
+          profileId === profileIdRef.current && requestedConversationRef.current === requestedId;
+        if (!isCurrentRequest) return;
+        if (result.ok) {
+          setConversations((current) => sortAndDedupeConversations([...current, result.data]));
+        } else if (result.error.code !== "not_found") {
+          setNotice(result.error.message);
+        }
+      })
+      .finally(() => {
+        const isCurrentRequest =
+          profileId === profileIdRef.current && requestedConversationRef.current === requestedId;
+        if (isCurrentRequest) setLoadingLinkedConversation(false);
+      });
+  }, [
+    auth.status,
+    auth.profile?.id,
+    search.conversation,
+    missingConversationTarget,
+    loadingConversations,
+    accountStateMatches,
+  ]);
 
   async function loadMessages(conversationId: string) {
     const profileId = auth.profile?.id ?? null;
@@ -936,6 +1028,18 @@ function ChatsPage() {
                 ))}
               </div>
             )}
+            {hasMoreConversations && accountStateMatches && !loadingConversations ? (
+              <button
+                type="button"
+                className="mx-auto my-3 block rounded-xl border px-4 py-2 text-sm font-semibold"
+                onClick={() => void loadMoreConversations()}
+                disabled={loadingMoreConversations}
+              >
+                {loadingMoreConversations
+                  ? text("جارٍ تحميل محادثات أقدم...", "Loading older conversations...")
+                  : text("عرض محادثات أقدم", "Show older conversations")}
+              </button>
+            ) : null}
           </aside>
 
           <section
@@ -945,7 +1049,11 @@ function ChatsPage() {
                 : ""
             }`}
           >
-            {missingConversationTarget ? (
+            {missingConversationTarget && loadingLinkedConversation ? (
+              <PanelText>
+                {text("جارٍ فتح المحادثة المطلوبة...", "Opening the requested conversation...")}
+              </PanelText>
+            ) : missingConversationTarget ? (
               <div className="grid flex-1 place-items-center p-6 text-center">
                 <div className="max-w-md">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-warning/10 text-warning">
