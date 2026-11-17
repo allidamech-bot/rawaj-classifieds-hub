@@ -147,8 +147,12 @@ test("search remains operable with 200% text at 320px", async ({ page }, testInf
 for (const state of ["empty", "error"] as const) {
   test(`search ${state} state retains readable recovery actions`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 700 });
-    await page.route(/\/v1\/listings(?:\?|$)/, (route) =>
-      route.fulfill({
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+    let intercepted = 0;
+    await page.route(/\/v1\/listings(?:\?|$)/, (route) => {
+      intercepted += 1;
+      return route.fulfill({
         status: state === "empty" ? 200 : 503,
         contentType: "application/json",
         body: JSON.stringify(
@@ -156,10 +160,12 @@ for (const state of ["empty", "error"] as const) {
             ? { data: { items: [], nextCursor: null, pageSize: 30 } }
             : { error: { code: "unavailable", message: "Fixture unavailable" } },
         ),
-      }),
-    );
-    await page.goto("/listings");
-    await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+      });
+    });
+    const search = page.locator("#rawaj-signature-search-input");
+    await search.fill("rawaj-state-check");
+    await search.press("Enter");
+    await expect(page).toHaveURL(/\/listings\?[^#]*q=rawaj-state-check/);
     if (state === "empty") {
       await expect(page.locator(".rawaj-search-empty-state")).toBeVisible();
       await expect(page.locator(".rawaj-search-empty-state")).toHaveCSS(
@@ -172,6 +178,7 @@ for (const state of ["empty", "error"] as const) {
       ).toBeVisible();
       await expect(page.getByRole("button", { name: /إعادة المحاولة|Try again/ })).toBeVisible();
     }
+    expect(intercepted).toBeGreaterThan(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

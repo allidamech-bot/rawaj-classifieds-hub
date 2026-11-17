@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_offline_title">You are offline</string>
+    <string name="connection_offline_message">Check your internet connection, then try again.</string>
+    <string name="connection_failed_title">Could not connect to Rawaj</string>
+    <string name="connection_failed_message">The service could not be reached. Please try again.</string>
+    <string name="connection_server_title">Service temporarily unavailable</string>
+    <string name="connection_server_message">Please try again later.</string>
+    <string name="connection_security_title">A secure connection could not be established</string>
+    <string name="connection_security_message">Check your time and network settings. Do not continue over an insecure connection.</string>
+    <string name="connection_retry">Retry</string>
+    <string name="connection_settings">Network settings</string>
+    <string name="launch_loading">Loading…</string>
+</resources>

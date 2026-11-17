@@ -113,17 +113,22 @@ test("home search submits trimmed queries", async ({ page }) => {
   expect(new URL(page.url()).searchParams.has("q")).toBe(false);
 });
 
-test("mobile home search hides the bottom dock while the keyboard field is focused", async ({
+test("mobile home search hides the bottom dock during keyboard-sized viewport shrink", async ({
   page,
 }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile keyboard contract");
   await openHealthyPage(page, "/");
 
   const search = page.locator("#rawaj-signature-search-input");
+  const original = page.viewportSize()!;
   await search.focus();
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
+  await page.setViewportSize({ width: original.width, height: original.height - 250 });
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "true");
   await expect(page.locator(".rawaj-mobile-dock")).toHaveCSS("pointer-events", "none");
 
+  await page.setViewportSize(original);
+  await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
   await search.blur();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard-open", "false");
 });

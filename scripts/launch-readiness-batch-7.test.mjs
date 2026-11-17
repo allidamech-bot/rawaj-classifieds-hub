@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 
 const [
@@ -11,6 +11,7 @@ const [
   androidGitignore,
   androidReleaseWorkflow,
   mainActivity,
+  launchController,
   launchStyles,
   splashDrawable,
   launcherLegacy,
@@ -30,6 +31,7 @@ const [
     ),
     "utf8",
   ),
+  readFile(new URL("../android/app/src/main/java/com/rawaj/marketplace/RawajLaunchController.java", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/values/styles.xml", import.meta.url), "utf8"),
   readFile(new URL("../android/app/src/main/res/drawable/splash.xml", import.meta.url), "utf8"),
   readFile(
@@ -84,7 +86,7 @@ test("RAWAJ owns the native icon and system splash", async () => {
   assert.match(launchStyles, /@drawable\/rawaj_logo_foreground/);
   assert.match(launchStyles, /postSplashScreenTheme/);
   assert.match(splashDrawable, /@drawable\/rawaj_logo_mark/);
-  assert.match(splashDrawable, /232dp/);
+  assert.match(splashDrawable, /160dp/);
 
   const logoAsset = await stat(
     new URL("../android/app/src/main/res/drawable-nodpi/rawaj_logo_mark.png", import.meta.url),
@@ -92,17 +94,28 @@ test("RAWAJ owns the native icon and system splash", async () => {
   assert.ok(logoAsset.size > 10_000);
 });
 
-test("RAWAJ launch intro is native, animated, and shown only on a fresh activity", () => {
+test("RAWAJ launch follows visible content rather than a fixed animation delay", () => {
+  assert.match(mainActivity, /SplashScreen\.installSplashScreen/);
   assert.match(mainActivity, /savedInstanceState == null/);
-  assert.match(mainActivity, /R\.drawable\.rawaj_intro_background/);
-  assert.match(mainActivity, /R\.drawable\.rawaj_logo_mark/);
-  assert.match(mainActivity, /arabicName\.setText\("رواج"\)/);
-  assert.match(mainActivity, /englishName\.setText\("R A W A J"\)/);
-  assert.match(mainActivity, /setScaleX\(0\.76f\)/);
-  assert.match(mainActivity, /setStartDelay\(420L\)/);
-  assert.match(mainActivity, /setStartDelay\(1800L\)/);
-  assert.match(mainActivity, /setDuration\(380L\)/);
-  assert.match(mainActivity, /root\.removeView\(overlay\)/);
+  assert.match(launchController, /R\.drawable\.rawaj_logo_mark/);
+  assert.match(launchController, /onPageCommitVisible/);
+  assert.match(launchController, /if \(trusted\(url\) && !failed\) dismiss\(\)/);
+  assert.match(launchController, /STARTUP_TIMEOUT_MS/);
+  assert.match(launchController, /WindowInsetsCompat\.Type\.displayCutout/);
+  assert.doesNotMatch(mainActivity, /setStartDelay\(1800L\)/);
+});
+
+test("native fallback retains the Capacitor client and scopes failures to trusted main frames", () => {
+  assert.match(launchController, /new BridgeWebViewClient\(bridge\)/);
+  assert.match(launchController, /super\.onReceivedError/);
+  assert.match(launchController, /!request\.isForMainFrame\(\)/);
+  assert.match(launchController, /ERROR_HOST_LOOKUP/);
+  assert.match(launchController, /ERROR_FAILED_SSL_HANDSHAKE/);
+  assert.match(launchController, /status >= 500 && status <= 599/);
+  assert.match(launchController, /"GET"\.equalsIgnoreCase\(request\.getMethod\(\)\)/);
+  assert.doesNotMatch(launchController, /addJavascriptInterface|\.proceed\(/);
+  assert.match(launchController, /Settings\.ACTION_WIRELESS_SETTINGS/);
+  assert.match(capacitor, /appName: "رواج \| Rawaj"/);
 });
 
 test("Android signing credentials cannot be committed accidentally", () => {
@@ -119,4 +132,19 @@ test("Android signing credentials cannot be committed accidentally", () => {
 test("Batch 7 is permanently part of the Android release candidate gate", () => {
   assert.match(androidReleaseWorkflow, /Validate web and native contracts/);
   assert.match(androidReleaseWorkflow, /node --test scripts\/launch-readiness-batch-7\.test\.mjs/);
+});
+
+test("stock Capacitor launcher and density-specific splash placeholders cannot enter the APK", async () => {
+  const res = new URL("../android/app/src/main/res/", import.meta.url);
+  const dirs = await readdir(res, { withFileTypes: true });
+  for (const directory of dirs.filter((entry) => entry.isDirectory())) {
+    const names = await readdir(new URL(directory.name + "/", res));
+    for (const name of names) {
+      assert.doesNotMatch(name, /^ic_launcher(?:[_.]|$)/, directory.name + "/" + name);
+      assert.notEqual(name, "splash.png", "density-specific splash overrides branded XML");
+    }
+  }
+  const foreground = await readFile(new URL("drawable/rawaj_logo_foreground.xml", res), "utf8");
+  assert.match(foreground, /android:inset="19\.5%"/);
+  assert.match(foreground, /rawaj_logo_mark/);
 });

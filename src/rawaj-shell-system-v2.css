@@ -11,7 +11,7 @@
 /* Shared header frame */
 .rawaj-shell-header {
   top: 0;
-  padding: var(--safe-top) 0 0 !important;
+  padding: var(--safe-top) var(--rawaj-safe-right) 0 var(--rawaj-safe-left) !important;
 }
 
 .rawaj-shell-header .rawaj-shell-header__inner {
@@ -192,7 +192,7 @@
 /* Mobile dock and safe-area reserve */
 .rawaj-mobile-dock {
   inset-block-end: 0 !important;
-  padding: 0.35rem 0.55rem calc(0.35rem + var(--safe-bottom)) !important;
+  padding: 0.35rem max(0.55rem, var(--rawaj-safe-right)) calc(0.35rem + var(--safe-bottom)) max(0.55rem, var(--rawaj-safe-left)) !important;
 }
 
 .rawaj-bottom-nav-shell {

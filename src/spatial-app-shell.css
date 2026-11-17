@@ -20,8 +20,8 @@
 
   --motion-spring: var(--rawaj-motion-slow) var(--motion-ease);
 
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: var(--rawaj-safe-top);
+  --safe-bottom: var(--rawaj-safe-bottom);
   --keyboard-inset: 0px;
   --dock-height: 5.35rem;
   --header-height: 4.75rem;
@@ -150,15 +150,15 @@ body {
 }
 
 .rawaj-app-shell[data-shell-mode="conversation"] {
-  height: 100dvh;
+  height: var(--app-viewport-height, 100dvh);
   overflow: hidden;
 }
 
 .rawaj-app-shell[data-shell-mode="conversation"] .rawaj-app-shell__page,
 .rawaj-app-shell[data-shell-mode="mediaViewer"] .rawaj-app-shell__page,
 .rawaj-app-shell[data-shell-mode="fullScreen"] .rawaj-app-shell__page {
-  height: 100dvh;
-  min-height: 100dvh;
+  height: var(--app-viewport-height, 100dvh);
+  min-height: var(--app-viewport-height, 100dvh);
   padding-bottom: 0;
 }
 
@@ -167,12 +167,12 @@ body {
   border: 0;
   background: transparent;
   box-shadow: none;
-  padding: calc(var(--safe-top) + 0.45rem) 0.625rem 0;
+  padding: calc(var(--safe-top) + 0.45rem) max(0.625rem, var(--rawaj-safe-right)) 0 max(0.625rem, var(--rawaj-safe-left));
   backdrop-filter: none;
 }
 
 .rawaj-floating-header-shell {
-  width: min(calc(100vw - 1.25rem), 88rem);
+  width: min(100%, 88rem);
   margin-inline: auto;
   border: 1px solid color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
   border-radius: 1.25rem;
@@ -198,7 +198,8 @@ body {
 /* Floating mobile dock */
 .rawaj-mobile-dock {
   bottom: calc(var(--safe-bottom) + 0.5rem);
-  padding-inline: 0.625rem;
+  padding-right: max(0.625rem, var(--rawaj-safe-right));
+  padding-left: max(0.625rem, var(--rawaj-safe-left));
   transition:
     transform var(--motion-base) ease,
     opacity var(--motion-fast) ease;

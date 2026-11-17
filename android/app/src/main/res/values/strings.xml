@@ -1,10 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">رواج</string>
-    <string name="title_activity_main">رواج</string>
+    <string name="app_name">رواج | Rawaj</string>
+    <string name="title_activity_main">رواج | Rawaj</string>
     <string name="package_name">com.rawaj.marketplace</string>
     <string name="custom_url_scheme">com.rawaj.marketplace</string>
     <string name="default_notification_channel_id">rawaj_activity</string>
     <string name="push_channel_name">تنبيهات رواج</string>
     <string name="push_channel_description">الرسائل ونتائج البحث وتحديثات الحساب</string>
+    <string name="connection_offline_title">أنت غير متصل بالإنترنت</string>
+    <string name="connection_offline_message">تحقق من اتصالك بالإنترنت، ثم حاول مرة أخرى.</string>
+    <string name="connection_failed_title">تعذر الاتصال برواج</string>
+    <string name="connection_failed_message">لم نتمكن من الوصول إلى الخدمة. حاول مرة أخرى.</string>
+    <string name="connection_server_title">الخدمة غير متاحة مؤقتاً</string>
+    <string name="connection_server_message">يرجى المحاولة مرة أخرى لاحقاً.</string>
+    <string name="connection_security_title">تعذر إنشاء اتصال آمن</string>
+    <string name="connection_security_message">تحقق من إعدادات الوقت والشبكة. لا تتابع عبر اتصال غير آمن.</string>
+    <string name="connection_retry">إعادة المحاولة</string>
+    <string name="connection_settings">إعدادات الشبكة</string>
+    <string name="launch_loading">جارٍ التحميل…</string>
 </resources>

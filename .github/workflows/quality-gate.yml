@@ -89,6 +89,9 @@ jobs:
       - name: Run administrative authorization regression
         run: npm run test:admin-security
 
+      - name: Verify offline fallback isolation
+        run: node --test scripts/pwa-offline.test.mjs
+
       - name: Typecheck application
         run: npm run typecheck
 

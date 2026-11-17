@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -33,6 +33,7 @@ import {
 import { useUiPreferences } from "@/lib/ui-preferences";
 import {
   listingsSearchSchema,
+  equivalentListingsSearch,
   type ListingsSort,
   type ListingsView,
 } from "@/features/listings/listings-search-schema";
@@ -77,6 +78,7 @@ export const Route = createFileRoute("/listings/")({
 function ListingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const router = useRouter();
   const { language, text } = useUiPreferences();
   const [sort, setSort] = useState<ListingsSort>(search.sort ?? "latest");
   const [view, setView] = useState<ListingsView>(search.view ?? "grid");
@@ -365,48 +367,52 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!referencesLoaded || filtersOpen) return;
+    const nextSearch = {
+      ...buildListingsSyncSearch({
+        selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
+        selectedCategoryId: selectedCategory?.id,
+        subcategoryId,
+        taxonomyListingSearch,
+        taxonomyOwnsPropertyPurpose,
+        taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
+        propertyPurpose,
+        taxonomyOwnsPropertyType,
+        taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
+        propertyType,
+        govId,
+        districtAr,
+        parsedPriceMin,
+        parsedPriceMax,
+        priceType: priceType || undefined,
+        globalCondition: usesGlobalCondition ? globalCondition : undefined,
+        carMake,
+        carModel,
+        fuelType,
+        transmission,
+        rooms,
+        rentalDuration,
+        electronicsBrand,
+        detailCondition,
+        employmentType,
+        salaryType,
+        withPhotos,
+        debouncedQ,
+        sort,
+        view,
+      }),
+      attrs: encodedAttributeFilters,
+    };
+    // Avoid starting a replace-navigation for already equivalent URL state.
+    // Besides unnecessary loader requests, this can interrupt a route departure.
+    if (equivalentListingsSearch(search, nextSearch)) return;
     void navigate({
       to: "/listings",
-      search: {
-        ...buildListingsSyncSearch({
-          selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
-          selectedCategoryId: selectedCategory?.id,
-          subcategoryId,
-          taxonomyListingSearch,
-          taxonomyOwnsPropertyPurpose,
-          taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
-          propertyPurpose,
-          taxonomyOwnsPropertyType,
-          taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
-          propertyType,
-          govId,
-          districtAr,
-          parsedPriceMin,
-          parsedPriceMax,
-          priceType: priceType || undefined,
-          globalCondition: usesGlobalCondition ? globalCondition : undefined,
-          carMake,
-          carModel,
-          fuelType,
-          transmission,
-          rooms,
-          rentalDuration,
-          electronicsBrand,
-          detailCondition,
-          employmentType,
-          salaryType,
-          withPhotos,
-          debouncedQ,
-          sort,
-          view,
-        }),
-        attrs: encodedAttributeFilters,
-      },
+      search: nextSearch,
       replace: true,
     });
   }, [
     taxonomyAvailable,
-    search.taxonomy,
+    search,
     selectedTaxonomyNode,
     selectedTaxonomyNode?.id,
     referencesLoaded,
@@ -1677,6 +1683,7 @@ function ListingsPage() {
             )}
             actionLabel={text("العودة للرئيسية", "Back to home")}
             actionTo="/"
+            onRetry={() => void router.invalidate()}
           />
         ) : visibleItems.length === 0 ? (
           <SearchEmptyState
