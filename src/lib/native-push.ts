@@ -8,6 +8,7 @@ import {
 import type { ClassifiedsResult } from "@/lib/classifieds-types";
 import { firebaseAuth } from "@/lib/firebase";
 import { notificationOpenPath } from "@/lib/notification-target-path";
+import { normalizeChatResourceId } from "@/lib/chat-integrity";
 import { emitUnreadActivityChanged } from "@/lib/unread-activity-events";
 
 const PUSH_DEVICE_KEY_STORAGE = "rawaj:native-push-device-key:v1";
@@ -305,7 +306,12 @@ async function ensureNativePushListeners(
         emitUnreadActivityChanged();
         if (typeof window === "undefined") return;
         const data = event.notification.data;
-        window.location.assign(notificationOpenPath(data?.notification_id));
+        const conversationId = normalizeChatResourceId(data?.conversation_id);
+        window.location.assign(
+          conversationId
+            ? `/chats?conversation=${encodeURIComponent(conversationId)}`
+            : notificationOpenPath(data?.notification_id),
+        );
       },
     );
 
@@ -408,6 +414,7 @@ async function invalidateNativePushSession(): Promise<void> {
   nativePushGeneration += 1;
   registrationSync = null;
   registrationSyncKey = null;
+  lastTokenHashByUser.clear();
   await clearNativePushListeners();
 }
 

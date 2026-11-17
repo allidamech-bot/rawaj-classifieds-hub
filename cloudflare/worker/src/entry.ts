@@ -6,6 +6,7 @@ import { handleMarketplacePrivate, type MarketplaceEnv } from "./marketplace-pri
 import { handleAccountSocial, type AccountSocialEnv } from "./account-social";
 import { handleNotifications, type NotificationsEnv } from "./notifications";
 import { handlePushDeviceSession, type PushDeviceSessionEnv } from "./push-device-session";
+import { deliverAndroidPush, type AndroidPushEnv } from "./android-push-delivery";
 import { handleAdmin, type AdminEnv } from "./admin";
 import { handleAdPlacements, type AdPlacementsEnv } from "./ad-placements";
 import { handleManagedMedia, type ManagedMediaEnv } from "./managed-media";
@@ -39,6 +40,7 @@ type EntryEnv = PublicCoreEnv &
   AccountSocialEnv &
   NotificationsEnv &
   PushDeviceSessionEnv &
+  AndroidPushEnv &
   AdminEnv &
   AdPlacementsEnv &
   ManagedMediaEnv &
@@ -62,7 +64,11 @@ type EntryEnv = PublicCoreEnv &
   };
 
 export default {
-  async fetch(request: Request, env: EntryEnv): Promise<Response> {
+  async fetch(
+    request: Request,
+    env: EntryEnv,
+    ctx?: { waitUntil(promise: Promise<unknown>): void },
+  ): Promise<Response> {
     const origin = request.headers.get("Origin");
     const cors = corsHeadersForOrigin(origin, env);
     const requestId = crypto.randomUUID();
@@ -82,6 +88,27 @@ export default {
 
       const securedRequest = securityResult instanceof Request ? securityResult : request;
       const response = await routeRequest(securedRequest, env);
+      // The message and its outbox row are committed before this fast path.
+      // A delivery failure must never turn a successful message into an error.
+      if (
+        ctx &&
+        response.status === 201 &&
+        securedRequest.method === "POST" &&
+        /^\/v1\/conversations\/[^/]+\/messages$/.test(new URL(securedRequest.url).pathname)
+      ) {
+        const copy = response.clone();
+        ctx.waitUntil(
+          (async () => {
+            const payload = (await copy.json()) as { data?: { id?: unknown } };
+            const messageId = payload.data?.id;
+            if (typeof messageId === "string" && messageId.length <= 120 && messageId.length > 0) {
+              await deliverAndroidPush(env, new Date().toISOString(), fetch, messageId);
+            }
+          })().catch(() => {
+            console.warn(JSON.stringify({ event: "android_push_fast_path_failed" }));
+          }),
+        );
+      }
       return withCors(response, responseHeaders(cors, requestId, securedRequest));
     } catch (error) {
       const pathname = new URL(request.url).pathname;
@@ -119,6 +146,7 @@ export default {
     const results = await Promise.allSettled([
       expireTimedPromotions(env, timestamp),
       deliverDueSavedSearchAlerts(env, timestamp),
+      deliverAndroidPush(env, timestamp),
     ]);
     const failure = results.find((result) => result.status === "rejected");
     if (failure) throw failure.reason;
