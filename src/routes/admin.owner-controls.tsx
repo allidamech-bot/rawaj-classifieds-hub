@@ -101,6 +101,8 @@ function OwnerControlsPage() {
   const [busyKey, setBusyKey] = useState<OwnerSystemControlKey | null>(null);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [actionErrorKey, setActionErrorKey] = useState<OwnerSystemControlKey | null>(null);
+  const reasonInputRef = useRef<HTMLInputElement | null>(null);
   const [notice, setNotice] = useState("");
   const requestIdRef = useRef(0);
   const toggleInFlightRef = useRef<Set<OwnerSystemControlKey>>(new Set());
@@ -134,9 +136,17 @@ function OwnerControlsPage() {
 
   async function toggle(control: OwnerSystemControlSummary) {
     if (toggleInFlightRef.current.has(control.key)) return;
+    if (reason.trim().length < 3) {
+      setActionErrorKey(control.key);
+      setActionError(text("أدخل سبباً من ثلاثة أحرف على الأقل قبل التفعيل أو التعطيل.", "Enter a reason of at least three characters before changing a control."));
+      reasonInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      reasonInputRef.current?.focus({ preventScroll: true });
+      return;
+    }
     toggleInFlightRef.current.add(control.key);
     setBusyKey(control.key);
     setActionError("");
+    setActionErrorKey(null);
     setNotice("");
     const nextEnabled = !control.enabled;
     try {
@@ -147,7 +157,9 @@ function OwnerControlsPage() {
         expectedVersion: control.version,
       });
       if (!result.ok) {
+        setActionErrorKey(control.key);
         setActionError(result.error.message);
+        if (result.error.code === "stale_write") await refresh();
         return;
       }
       setControls((current) =>
@@ -164,10 +176,13 @@ function OwnerControlsPage() {
           "System control changed and audited.",
         ),
       );
-      if (control.key === "maintenance_mode") {
+      if (control.key === "maintenance_mode" || control.key === "emergency_read_only") {
         window.dispatchEvent(new Event("rawaj:system-control-changed"));
       }
       await refresh();
+    } catch {
+      setActionErrorKey(control.key);
+      setActionError(text("تعذر إكمال التغيير. راجع الاتصال وحاول مجدداً.", "Could not complete the change. Check the connection and retry."));
     } finally {
       toggleInFlightRef.current.delete(control.key);
       setBusyKey((current) => (current === control.key ? null : current));
@@ -249,11 +264,19 @@ function OwnerControlsPage() {
             {text("سبب التغيير الإلزامي", "Required change reason")}
           </span>
           <input
+            ref={reasonInputRef}
+            required
+            minLength={3}
+            maxLength={1000}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             placeholder={text("اكتب سبباً تشغيلياً واضحاً", "Enter a clear operational reason")}
+            aria-describedby="owner-control-reason-hint"
             className="input"
           />
+          <span id="owner-control-reason-hint" className="mt-2 block text-xs text-muted-foreground">
+            {text("هذا السبب إلزامي لكل عملية، ولا يُفعَّل أي مفتاح بدونه.", "This reason is required for every action; no switch changes without it.")}
+          </span>
         </label>
       </section>
 
@@ -280,6 +303,7 @@ function OwnerControlsPage() {
               key={control.key}
               control={control}
               busy={busyKey === control.key}
+              error={actionErrorKey === control.key ? actionError : ""}
               onToggle={() => void toggle(control)}
               text={text}
             />
@@ -309,11 +333,13 @@ function OwnerControlsPage() {
 function ControlCard({
   control,
   busy,
+  error,
   onToggle,
   text,
 }: {
   control: OwnerSystemControlSummary;
   busy: boolean;
+  error: string;
   onToggle: () => void;
   text: (ar: string, en: string) => string;
 }) {
@@ -362,6 +388,9 @@ function ControlCard({
       >
         {control.enabled ? text("إلغاء التفعيل", "Disable") : text("تفعيل", "Enable")}
       </button>
+      {error ? (
+        <p role="alert" className="mt-2 rounded-lg bg-destructive/10 p-3 text-xs font-semibold text-destructive">{error}</p>
+      ) : null}
     </article>
   );
 }
