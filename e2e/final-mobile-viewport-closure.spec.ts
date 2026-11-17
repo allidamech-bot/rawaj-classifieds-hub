@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const widths = [360, 390, 412] as const;
+const widths = [320, 360, 375, 390, 393, 412, 414, 430, 480] as const;
 const routes = [
   "/",
   "/categories",
@@ -17,7 +17,7 @@ const routes = [
 for (const width of widths) {
   test(`core surfaces remain structurally safe at ${width}px`, async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile-only viewport closure");
-    await page.setViewportSize({ width, height: 844 });
+    await page.setViewportSize({ width, height: width <= 360 ? 640 : 844 });
 
     for (const path of routes) {
       const response = await page.goto(path, { waitUntil: "domcontentloaded" });
