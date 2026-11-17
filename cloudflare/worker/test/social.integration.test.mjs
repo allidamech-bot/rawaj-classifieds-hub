@@ -29,6 +29,7 @@ before(async () => {
       "--config",
       "wrangler.generated.jsonc",
       "--local",
+      "--test-scheduled",
       "--persist-to",
       ".wrangler/test-state-auth",
       "--port",
@@ -320,6 +321,95 @@ test("conversations enforce identity, idempotency, messaging, unread, and pagina
   );
   assert.equal((await api("/v1/account/messages/unread-count", buyer)).payload.data.count, 0);
   assert.equal((await api("/v1/account/messages/unread-count", outsider)).payload.data.count, 0);
+});
+
+test("public seller totals are independent of listing and review display limits", async () => {
+  const profile = await api("/api/profile", owner);
+  const reviewer = await api("/api/profile", outsider);
+  const ownerId = profile.payload.data.id;
+  const reviewerId = reviewer.payload.data.id;
+  assert.match(ownerId, /^[a-f0-9-]{36}$/i);
+  assert.match(reviewerId, /^[a-f0-9-]{36}$/i);
+  const path = `/v1/sellers/${ownerId}`;
+  const initial = await api(path);
+  assert.equal(initial.response.status, 200);
+  const stamp = new Date().toISOString();
+  const prefix = crypto.randomUUID();
+  executeLocalSql(`
+    WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<25)
+    INSERT INTO listings
+      (id, owner_id, category_id, subcategory_id, governorate_id, title, description,
+       price, currency, price_type, listing_condition, status, contact_options, details,
+       is_featured, search_text_normalized, created_at, updated_at)
+    SELECT '${prefix}-listing-' || i, '${ownerId}', 'test-category', 'test-subcategory',
+      'test-governorate', 'Store totals fixture', 'Store totals fixture', 500,
+      'SYP', 'fixed', 'used', 'approved', '{}', '{}', 0, 'store totals fixture',
+      '${stamp}', '${stamp}' FROM n;
+    WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<501)
+    INSERT INTO seller_reviews
+      (id, seller_id, reviewer_id, rating, status, created_at, updated_at)
+    SELECT '${prefix}-review-' || i, '${ownerId}', '${reviewerId}',
+      CASE WHEN i<=251 THEN 5 ELSE 1 END, 'approved', '${stamp}', '${stamp}' FROM n;
+  `);
+  await waitForWorker();
+  const result = await api(path);
+  assert.equal(result.response.status, 200);
+  assert.equal(
+    result.payload.data.approvedListingCount,
+    initial.payload.data.approvedListingCount + 25,
+  );
+  assert.equal(result.payload.data.listings.length, 24);
+  const summary = result.payload.data.ratingSummary;
+  assert.equal(summary.count, initial.payload.data.ratingSummary.count + 501);
+  assert.equal(
+    summary.distribution["5"],
+    initial.payload.data.ratingSummary.distribution["5"] + 251,
+  );
+  assert.equal(
+    summary.distribution["1"],
+    initial.payload.data.ratingSummary.distribution["1"] + 250,
+  );
+  assert.equal(result.payload.data.approvedReviewCount, summary.count);
+  assert.equal(result.payload.data.reviews.length, 6);
+});
+
+test("scheduled saved-search delivery matches filters and never repeats the same window", async () => {
+  const uniquePrice = 987654321;
+  const search = await api("/v1/account/saved-searches", {
+    ...buyer,
+    method: "POST",
+    body: {
+      nameAr: "Daily alert integration",
+      filters: { categoryId: "test-category", priceMin: uniquePrice, priceMax: uniquePrice },
+      alertFrequency: "daily",
+    },
+  });
+  assert.equal(search.response.status, 201);
+  const searchId = search.payload.data.id;
+  const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const published = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  executeLocalSql(`
+    UPDATE saved_searches SET created_at = '${old}', last_alert_checked_at = NULL
+      WHERE id = '${searchId}';
+    UPDATE listings SET price = ${uniquePrice}, published_at = '${published}', expires_at = NULL
+      WHERE id = '${owner.listingId}';
+  `);
+  await waitForWorker();
+  const invoke = async () => {
+    const response = await fetch(`${baseUrl}/__scheduled?cron=*/15+*+*+*+*`);
+    assert.equal(response.ok, true, await response.text());
+  };
+  const matching = async () => {
+    const result = await api("/v1/account/notifications", buyer);
+    assert.equal(result.response.status, 200);
+    return result.payload.data.items.filter(
+      (item) => item.targetType === "saved_search" && item.targetId === searchId,
+    );
+  };
+  await invoke();
+  assert.equal((await matching()).length, 1);
+  await invoke();
+  assert.equal((await matching()).length, 1);
 });
 
 async function signup(label) {

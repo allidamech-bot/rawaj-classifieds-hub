@@ -90,90 +90,7 @@ export async function handlePublicListingsRequest(
   const sort = readSort(url.searchParams.get("sort"));
   const cursor = decodeCursor(url.searchParams.get("cursor"));
 
-  const where: string[] = [
-    "l.status = 'approved'",
-    "l.archived_at IS NULL",
-    "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
-  ];
-  const values: D1Value[] = [];
-  const joins: string[] = [];
-  let withClause = "";
-
-  const canonicalLocationId = filters.districtAr?.startsWith("@")
-    ? filters.districtAr.slice(1).trim()
-    : "";
-  if (canonicalLocationId) {
-    withClause = `WITH RECURSIVE location_scope(id) AS (
-      SELECT id FROM location_nodes WHERE id = ? AND is_active = 1
-      UNION ALL
-      SELECT child.id
-        FROM location_nodes child
-        JOIN location_scope parent ON child.parent_id = parent.id
-       WHERE child.is_active = 1
-    )`;
-    values.push(canonicalLocationId);
-  }
-
-  applyTaxonomyScope(where, values, filters);
-
-  if (filters.governorateId) {
-    where.push("l.governorate_id = ?");
-    values.push(filters.governorateId);
-  }
-
-  if (canonicalLocationId) {
-    if (filters.governorateId) {
-      where.push(
-        "(l.location_node_id IN (SELECT id FROM location_scope) OR l.location_node_id IS NULL)",
-      );
-    } else {
-      where.push("l.location_node_id IN (SELECT id FROM location_scope)");
-    }
-  } else if (filters.districtAr) {
-    where.push("l.district_ar = ?");
-    values.push(filters.districtAr);
-  }
-
-  addEqualFilter(where, values, "l.price_type", filters.priceType);
-  addEqualFilter(where, values, "l.listing_condition", filters.condition);
-
-  if (filters.priceMin !== null) {
-    where.push("l.price >= ?");
-    values.push(filters.priceMin);
-  }
-  if (filters.priceMax !== null) {
-    where.push("l.price <= ?");
-    values.push(filters.priceMax);
-  }
-  if (filters.withPhotos) {
-    where.push("EXISTS (SELECT 1 FROM listing_images li WHERE li.listing_id = l.id)");
-  }
-
-  addJsonTextFilter(where, values, ["car_make", "make"], filters.carMake);
-  addJsonTextFilter(where, values, ["car_model", "model"], filters.carModel);
-  addJsonNumberRange(where, values, "year", filters.yearFrom, filters.yearTo);
-  addJsonTextFilter(where, values, ["fuel_type"], filters.fuelType);
-  addJsonTextFilter(where, values, ["transmission"], filters.transmission);
-  addJsonTextFilter(
-    where,
-    values,
-    ["listing_purpose", "property_purpose"],
-    filters.propertyPurpose,
-  );
-  addJsonTextFilter(where, values, ["property_type"], filters.propertyType);
-  addJsonNumberFilter(where, values, "rooms", filters.rooms);
-  addJsonTextFilter(where, values, ["rental_duration"], filters.rentalDuration);
-  addJsonTextFilter(where, values, ["electronics_brand"], filters.electronicsBrand);
-  addJsonTextFilter(where, values, ["condition"], filters.detailCondition);
-  addJsonTextFilter(where, values, ["employment_type"], filters.employmentType);
-  addJsonTextFilter(where, values, ["salary_type"], filters.salaryType);
-  applyAttributeFilters(where, values, filters.attributeFilters);
-
-  if (filters.query) {
-    joins.push("JOIN listings_fts f ON f.listing_id = l.id");
-    where.push("listings_fts MATCH ?");
-    values.push(toFtsQuery(filters.query));
-  }
+  const { where, values, joins, withClause } = buildListingFilterQuery(filters);
 
   const cursorClause = buildCursorClause(sort, cursor, values);
   if (cursorClause) where.push(cursorClause);
@@ -237,6 +154,146 @@ export async function handlePublicListingsRequest(
     cors,
     cacheHeaders(env),
   );
+}
+
+function buildListingFilterQuery(filters: ListingFilters) {
+  const where: string[] = [
+    "l.status = 'approved'",
+    "l.archived_at IS NULL",
+    "(l.expires_at IS NULL OR l.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
+  ];
+  const values: D1Value[] = [];
+  const joins: string[] = [];
+  let withClause = "";
+
+  const canonicalLocationId = filters.districtAr?.startsWith("@")
+    ? filters.districtAr.slice(1).trim()
+    : "";
+  if (canonicalLocationId) {
+    withClause = `WITH RECURSIVE location_scope(id) AS (
+      SELECT id FROM location_nodes WHERE id = ? AND is_active = 1
+      UNION ALL
+      SELECT child.id
+        FROM location_nodes child
+        JOIN location_scope parent ON child.parent_id = parent.id
+       WHERE child.is_active = 1
+    )`;
+    values.push(canonicalLocationId);
+  }
+
+  applyTaxonomyScope(where, values, filters);
+
+  if (filters.governorateId) {
+    where.push("l.governorate_id = ?");
+    values.push(filters.governorateId);
+  }
+
+  if (canonicalLocationId) {
+    if (filters.governorateId) {
+      where.push(
+        "(l.location_node_id IN (SELECT id FROM location_scope) OR l.location_node_id IS NULL)",
+      );
+    } else {
+      where.push("l.location_node_id IN (SELECT id FROM location_scope)");
+    }
+  } else if (filters.districtAr) {
+    where.push("l.district_ar = ?");
+    values.push(filters.districtAr);
+  }
+
+  addEqualFilter(where, values, "l.price_type", filters.priceType);
+  addEqualFilter(where, values, "l.listing_condition", filters.condition);
+
+  if (filters.priceMin !== null) {
+    where.push("l.price >= ?");
+    values.push(filters.priceMin);
+  }
+  if (filters.priceMax !== null) {
+    where.push("l.price <= ?");
+    values.push(filters.priceMax);
+  }
+  if (filters.withPhotos) {
+    where.push(
+      "EXISTS (SELECT 1 FROM listing_images li JOIN media_assets ma ON ma.id = li.media_asset_id AND ma.status = 'ready' WHERE li.listing_id = l.id)",
+    );
+  }
+
+  addJsonTextFilter(where, values, ["car_make", "make"], filters.carMake);
+  addJsonTextFilter(where, values, ["car_model", "model"], filters.carModel);
+  addJsonNumberRange(where, values, "year", filters.yearFrom, filters.yearTo);
+  addJsonTextFilter(where, values, ["fuel_type"], filters.fuelType);
+  addJsonTextFilter(where, values, ["transmission"], filters.transmission);
+  addJsonTextFilter(
+    where,
+    values,
+    ["listing_purpose", "property_purpose"],
+    filters.propertyPurpose,
+  );
+  addJsonTextFilter(where, values, ["property_type"], filters.propertyType);
+  addJsonNumberFilter(where, values, "rooms", filters.rooms);
+  addJsonTextFilter(where, values, ["rental_duration"], filters.rentalDuration);
+  addJsonTextFilter(where, values, ["electronics_brand"], filters.electronicsBrand);
+  addJsonTextFilter(where, values, ["condition"], filters.detailCondition);
+  addJsonTextFilter(where, values, ["employment_type"], filters.employmentType);
+  addJsonTextFilter(where, values, ["salary_type"], filters.salaryType);
+  applyAttributeFilters(where, values, filters.attributeFilters);
+
+  if (filters.query) {
+    joins.push("JOIN listings_fts f ON f.listing_id = l.id");
+    where.push("listings_fts MATCH ?");
+    values.push(toFtsQuery(filters.query));
+  }
+
+  return { where, values, joins, withClause };
+}
+
+/** Internal scheduled-search query; never exposed as a public endpoint. */
+export async function countNewSavedSearchMatches(
+  env: PublicListingsEnv,
+  savedFilters: JsonRecord,
+  userId: string,
+  since: string,
+  until: string,
+): Promise<number> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(savedFilters)) {
+    if (key === "taxonomyNodeIds" || key === "taxonomyNodeId") {
+      const ids = Array.isArray(value) ? value : [value];
+      for (const id of ids) {
+        if (typeof id === "string") params.append("taxonomyNodeId", id);
+      }
+    } else if (key === "taxonomyLegacyScopes" && Array.isArray(value)) {
+      for (const scope of value)
+        params.append("legacyScope", base64UrlEncode(JSON.stringify(scope)));
+    } else if (key === "attributeFilters" && value && typeof value === "object") {
+      params.set("attrs", base64UrlEncode(JSON.stringify(value)));
+    } else if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      params.set(key === "query" ? "q" : key, String(value));
+    }
+  }
+  const { where, values, joins, withClause } = buildListingFilterQuery(readListingFilters(params));
+  where.push(
+    "l.owner_id <> ?",
+    "COALESCE(l.published_at, l.created_at) > ?",
+    "COALESCE(l.published_at, l.created_at) <= ?",
+  );
+  values.push(userId, since, until);
+  const result = await env.DB.prepare(
+    `${withClause}
+      SELECT COUNT(DISTINCT l.id) AS count FROM listings l
+      JOIN categories c ON c.id = l.category_id
+      JOIN governorates g ON g.id = l.governorate_id
+      ${joins.join("\n")}
+      WHERE ${where.join(" AND ")}`,
+  )
+    .bind(...values)
+    .all<{ count: number }>();
+  if (!result.success) throw new Error("saved_search_match_query_failed");
+  return Math.max(0, Number(result.results?.[0]?.count ?? 0));
 }
 
 function applyTaxonomyScope(where: string[], values: D1Value[], filters: ListingFilters): void {
@@ -436,7 +493,9 @@ function addJsonTextFilter(
 ): void {
   if (!value) return;
   const expressions = keys.map((key) => `json_extract(l.details, '$.${key}')`);
-  where.push(`COALESCE(${expressions.join(", ")}) = ?`);
+  const expression =
+    expressions.length === 1 ? expressions[0] : `COALESCE(${expressions.join(", ")})`;
+  where.push(`${expression} = ?`);
   values.push(value);
 }
 

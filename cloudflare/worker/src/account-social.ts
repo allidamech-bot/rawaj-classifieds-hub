@@ -639,9 +639,16 @@ async function updateSavedSearch(
       : normalizeFilters(body.data.filters);
   if (!name || !frequency || !filters) return validation(cors, "Invalid saved search.");
   const timestamp = now();
+  const resetAlertWindow =
+    (frequency !== "off" && existing.alert_frequency === "off") ||
+    filters !== String(existing.filters);
+  const lastAlertCheckedAt = resetAlertWindow
+    ? timestamp
+    : (existing.last_alert_checked_at as string | null);
   const result = await env.DB.prepare(
     `UPDATE saved_searches SET name = ?, query = ?, alerts_enabled = ?, name_ar = ?,
-      filters = ?, alert_frequency = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+      filters = ?, alert_frequency = ?, last_alert_checked_at = ?, updated_at = ?
+      WHERE id = ? AND user_id = ?`,
   )
     .bind(
       name,
@@ -650,6 +657,7 @@ async function updateSavedSearch(
       name,
       filters,
       frequency,
+      lastAlertCheckedAt,
       timestamp,
       id,
       auth.userId,
@@ -664,7 +672,7 @@ async function updateSavedSearch(
             nameAr: name,
             filters: JSON.parse(filters),
             alertFrequency: frequency,
-            lastAlertCheckedAt: existing.last_alert_checked_at ?? null,
+            lastAlertCheckedAt: lastAlertCheckedAt ?? null,
             createdAt: existing.created_at,
             updatedAt: timestamp,
           },
