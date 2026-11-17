@@ -80,7 +80,7 @@ export function UnreadActivityProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       try {
         const [conversationsResult, notificationsResult] = await Promise.all([
-          fetchMyConversations(),
+          fetchUnreadMessagesCount(),
           fetchUnreadNotificationsCount(),
         ]);
 
