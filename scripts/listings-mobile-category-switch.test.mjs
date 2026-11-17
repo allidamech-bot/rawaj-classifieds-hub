@@ -7,7 +7,10 @@ import {
   buildListingsMobileApplySearch,
   buildListingsSyncSearch,
 } from "../src/features/listings/listings-filters.ts";
-import { listingsSearchSchema } from "../src/features/listings/listings-search-schema.ts";
+import {
+  equivalentListingsSearch,
+  listingsSearchSchema,
+} from "../src/features/listings/listings-search-schema.ts";
 
 const baseInputs = {
   searchTaxonomy: undefined,
@@ -281,4 +284,24 @@ test("image-only filter reaches listing fetch inputs", () => {
   });
 
   assert.equal(filters.withPhotos, true);
+});
+
+test("URL synchronization does not navigate again for equivalent omitted defaults", () => {
+  const current = listingsSearchSchema.parse({});
+  assert.ok(equivalentListingsSearch(current, buildListingsSyncSearch(syncSearchInputs)));
+  assert.ok(equivalentListingsSearch({ sort: "latest", view: "grid" }, {}));
+  assert.ok(!equivalentListingsSearch({}, { sort: "cheapest" }));
+  assert.ok(!equivalentListingsSearch({}, { q: "Toyota" }));
+  assert.ok(!equivalentListingsSearch({ open_filters: true }, {}));
+});
+
+test("URL equality preserves canonical location, sort, and dynamic filter changes", () => {
+  assert.ok(
+    equivalentListingsSearch(
+      listingsSearchSchema.parse({ location: canonicalLocationId }),
+      { location: canonicalLocationId },
+    ),
+  );
+  assert.ok(!equivalentListingsSearch({ attrs: "a" }, { attrs: "b" }));
+  assert.ok(!equivalentListingsSearch({ with_photos: true }, {}));
 });

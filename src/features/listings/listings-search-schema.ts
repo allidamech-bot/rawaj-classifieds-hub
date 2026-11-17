@@ -81,3 +81,22 @@ export const listingsSearchSchema = z
   });
 
 export type ListingsSearch = z.infer<typeof listingsSearchSchema>;
+
+/** Compare validated URL state, treating omitted presentation defaults as equivalent. */
+export function equivalentListingsSearch(current: unknown, next: unknown): boolean {
+  const normalize = (value: unknown) => {
+    const result = listingsSearchSchema.safeParse(value);
+    if (!result.success) return null;
+    const search = result.data;
+    return JSON.stringify({
+      ...search,
+      sort: search.sort ?? "latest",
+      view: search.view ?? "grid",
+      with_photos: Boolean(search.with_photos),
+      open_filters: Boolean(search.open_filters),
+    });
+  };
+  const a = normalize(current);
+  const b = normalize(next);
+  return a !== null && a === b;
+}

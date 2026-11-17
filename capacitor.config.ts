@@ -12,6 +12,10 @@ const config: CapacitorConfig = {
     allowNavigation: ["rawa-j.com", "*.rawa-j.com"],
   },
   plugins: {
+    SystemBars: {
+      insetsHandling: "css",
+      initialViewportFitValueHint: "cover",
+    },
     PushNotifications: {
       presentationOptions: ["sound", "alert"],
     },

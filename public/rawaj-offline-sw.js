@@ -3,7 +3,12 @@
 const PREFIX = "rawaj-offline-";
 const CACHE = PREFIX + "v1";
 const PAGE = "/rawaj-offline.html";
-const ASSETS = [PAGE, "/rawaj-offline.css", "/rawaj-offline.js", "/brand/rawaj-mark-transparent-192.png"];
+const ASSETS = [
+  PAGE,
+  "/rawaj-offline.css",
+  "/rawaj-offline.js",
+  "/brand/rawaj-mark-transparent-192.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
@@ -15,7 +20,9 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key.startsWith(PREFIX) && key !== CACHE).map((key) => caches.delete(key)),
+          keys
+            .filter((key) => key.startsWith(PREFIX) && key !== CACHE)
+            .map((key) => caches.delete(key)),
         ),
       ),
   );

@@ -33,6 +33,7 @@ import {
 import { useUiPreferences } from "@/lib/ui-preferences";
 import {
   listingsSearchSchema,
+  equivalentListingsSearch,
   type ListingsSort,
   type ListingsView,
 } from "@/features/listings/listings-search-schema";
@@ -365,48 +366,52 @@ function ListingsPage() {
 
   useEffect(() => {
     if (!referencesLoaded || filtersOpen) return;
+    const nextSearch = {
+      ...buildListingsSyncSearch({
+        selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
+        selectedCategoryId: selectedCategory?.id,
+        subcategoryId,
+        taxonomyListingSearch,
+        taxonomyOwnsPropertyPurpose,
+        taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
+        propertyPurpose,
+        taxonomyOwnsPropertyType,
+        taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
+        propertyType,
+        govId,
+        districtAr,
+        parsedPriceMin,
+        parsedPriceMax,
+        priceType: priceType || undefined,
+        globalCondition: usesGlobalCondition ? globalCondition : undefined,
+        carMake,
+        carModel,
+        fuelType,
+        transmission,
+        rooms,
+        rentalDuration,
+        electronicsBrand,
+        detailCondition,
+        employmentType,
+        salaryType,
+        withPhotos,
+        debouncedQ,
+        sort,
+        view,
+      }),
+      attrs: encodedAttributeFilters,
+    };
+    // Avoid starting a replace-navigation for already equivalent URL state.
+    // Besides unnecessary loader requests, this can interrupt a route departure.
+    if (equivalentListingsSearch(search, nextSearch)) return;
     void navigate({
       to: "/listings",
-      search: {
-        ...buildListingsSyncSearch({
-          selectedTaxonomyNodeId: selectedTaxonomyNode?.id,
-          selectedCategoryId: selectedCategory?.id,
-          subcategoryId,
-          taxonomyListingSearch,
-          taxonomyOwnsPropertyPurpose,
-          taxonomyOwnsPropertyPurposeValue: taxonomyListingSearch?.property_purpose,
-          propertyPurpose,
-          taxonomyOwnsPropertyType,
-          taxonomyOwnsPropertyTypeValue: taxonomyListingSearch?.property_type,
-          propertyType,
-          govId,
-          districtAr,
-          parsedPriceMin,
-          parsedPriceMax,
-          priceType: priceType || undefined,
-          globalCondition: usesGlobalCondition ? globalCondition : undefined,
-          carMake,
-          carModel,
-          fuelType,
-          transmission,
-          rooms,
-          rentalDuration,
-          electronicsBrand,
-          detailCondition,
-          employmentType,
-          salaryType,
-          withPhotos,
-          debouncedQ,
-          sort,
-          view,
-        }),
-        attrs: encodedAttributeFilters,
-      },
+      search: nextSearch,
       replace: true,
     });
   }, [
     taxonomyAvailable,
-    search.taxonomy,
+    search,
     selectedTaxonomyNode,
     selectedTaxonomyNode?.id,
     referencesLoaded,

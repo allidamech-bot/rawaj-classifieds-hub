@@ -9,6 +9,8 @@ on:
       - "src/rawaj-page-by-page-recovery-v7.css"
       - "e2e/b4-personal-shell-identity.spec.ts"
       - "e2e/final-mobile-viewport-closure.spec.ts"
+      - "src/routes/listings.index.tsx"
+      - "src/features/listings/listings-search-schema.ts"
       - ".github/workflows/b4-personal-shell-webkit.yml"
 
 concurrency:
