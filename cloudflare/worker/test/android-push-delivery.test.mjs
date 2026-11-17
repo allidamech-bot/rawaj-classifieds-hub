@@ -73,9 +73,7 @@ function fixture() {
     INSERT INTO conversations VALUES ('conversation','buyer','seller','active');
   `);
   db.exec(migration);
-  const insert = db.prepare(
-    "INSERT INTO push_devices VALUES (?, ?, ?, ?, 1, 'granted', ?, 'ar')",
-  );
+  const insert = db.prepare("INSERT INTO push_devices VALUES (?, ?, ?, ?, 1, 'granted', ?, 'ar')");
   insert.run("android", "buyer", "hash-1", "android", encrypted);
   insert.run("ios", "buyer", "hash-2", "ios", encrypted);
   insert.run("sender", "seller", "hash-3", "android", encrypted);
@@ -150,7 +148,10 @@ test("outbox routes Android messages and in-app notices once to recipient, not s
   assert.ok(sent.some((item) => item.data.conversation_id === "conversation"));
   assert.ok(sent.some((item) => item.data.notification_id === "notice"));
   assert.ok(sent.every((item) => item.notification.body === "لديك تحديث جديد."));
-  assert.equal(db.prepare("SELECT count(*) AS n FROM push_delivery_jobs WHERE status='sent'").get().n, 2);
+  assert.equal(
+    db.prepare("SELECT count(*) AS n FROM push_delivery_jobs WHERE status='sent'").get().n,
+    2,
+  );
   db.close();
 });
 
