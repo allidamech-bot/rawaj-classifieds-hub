@@ -339,7 +339,7 @@ function AdminLayout() {
             )}
           </p>
         </div>
-        <div className="rawaj-admin-nav-shell sticky top-2 z-30 mb-4 rounded-[var(--rawaj-radius-surface)] p-2 backdrop-blur-xl sm:static sm:backdrop-blur-none">
+        <div className="rawaj-admin-nav-shell relative z-0 mb-4 rounded-[var(--rawaj-radius-surface)] p-2 sm:backdrop-blur-none">
           <div className="mb-2 flex items-center justify-between gap-3 px-1 sm:hidden">
             <div className="min-w-0">
               <p className="text-[10px] font-bold text-muted-foreground">
