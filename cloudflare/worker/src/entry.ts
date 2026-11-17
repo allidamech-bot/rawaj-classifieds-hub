@@ -24,6 +24,7 @@ import { handleAdminTaxonomyReview, type AdminTaxonomyReviewEnv } from "./admin-
 import { handleAdminDataQuality, type AdminDataQualityEnv } from "./admin-data-quality";
 import { handleReferrals, isReferralPath, type ReferralsEnv } from "./referrals";
 import { expireTimedPromotions } from "./promotion-expiry";
+import { deliverDueSavedSearchAlerts, type SavedSearchAlertsEnv } from "./saved-search-alert-delivery";
 import { corsHeadersForOrigin } from "./cors";
 import { enforceRequestSecurity, type SecurityEnv } from "./security";
 
@@ -52,7 +53,8 @@ type EntryEnv = PublicCoreEnv &
   AdminTaxonomyReviewEnv &
   AdminDataQualityEnv &
   ReferralsEnv &
-  SecurityEnv & {
+  SecurityEnv &
+  SavedSearchAlertsEnv & {
     API_ALLOWED_ORIGINS?: string;
   };
 
@@ -110,7 +112,13 @@ export default {
   },
 
   async scheduled(controller: { scheduledTime: number }, env: EntryEnv): Promise<void> {
-    await expireTimedPromotions(env, new Date(controller.scheduledTime).toISOString());
+    const timestamp = new Date(controller.scheduledTime).toISOString();
+    const results = await Promise.allSettled([
+      expireTimedPromotions(env, timestamp),
+      deliverDueSavedSearchAlerts(env, timestamp),
+    ]);
+    const failure = results.find((result) => result.status === "rejected");
+    if (failure) throw failure.reason;
   },
 };
 
