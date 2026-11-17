@@ -263,10 +263,15 @@ export async function countNewSavedSearchMatches(
         if (typeof id === "string") params.append("taxonomyNodeId", id);
       }
     } else if (key === "taxonomyLegacyScopes" && Array.isArray(value)) {
-      for (const scope of value) params.append("legacyScope", base64UrlEncode(JSON.stringify(scope)));
+      for (const scope of value)
+        params.append("legacyScope", base64UrlEncode(JSON.stringify(scope)));
     } else if (key === "attributeFilters" && value && typeof value === "object") {
       params.set("attrs", base64UrlEncode(JSON.stringify(value)));
-    } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    } else if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
       params.set(key === "query" ? "q" : key, String(value));
     }
   }
@@ -488,7 +493,8 @@ function addJsonTextFilter(
 ): void {
   if (!value) return;
   const expressions = keys.map((key) => `json_extract(l.details, '$.${key}')`);
-  const expression = expressions.length === 1 ? expressions[0] : `COALESCE(${expressions.join(", ")})`;
+  const expression =
+    expressions.length === 1 ? expressions[0] : `COALESCE(${expressions.join(", ")})`;
   where.push(`${expression} = ?`);
   values.push(value);
 }
