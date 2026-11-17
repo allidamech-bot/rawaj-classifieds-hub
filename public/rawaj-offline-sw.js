@@ -33,7 +33,9 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  if (request.mode === "navigate" && !url.pathname.startsWith("/rawaj-push/")) {
+  if (/^\/(auth|api|v1|rawaj-push|__api)(\/|$)/.test(url.pathname)) return;
+
+  if (request.mode === "navigate") {
     // Preserve real HTTP responses; fallback only for failed network navigation.
     // Never store account pages, listings, auth responses or API payloads.
     event.respondWith(

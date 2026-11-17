@@ -11,4 +11,8 @@ try {
 } catch {
   // Arabic remains accessible when browser storage is unavailable.
 }
-document.getElementById("retry").addEventListener("click", () => location.reload());
+document.getElementById("retry").addEventListener("click", () => {
+  if (navigator.onLine === false) return;
+  if (location.pathname === "/rawaj-offline.html") location.replace("/");
+  else location.reload();
+});

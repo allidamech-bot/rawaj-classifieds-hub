@@ -65,6 +65,10 @@ test("API, mutations, remote requests and scoped push requests are untouched", (
   const instance = worker(async () => { throw new Error("must not fetch"); });
   for (const request of [
     { url: origin + "/api/listings", method: "GET", mode: "cors" },
+    { url: origin + "/api/listings", method: "GET", mode: "navigate" },
+    { url: origin + "/v1/listings", method: "GET", mode: "navigate" },
+    { url: origin + "/auth/callback", method: "GET", mode: "navigate" },
+    { url: origin + "/rawaj-push", method: "GET", mode: "navigate" },
     { url: origin + "/listings", method: "POST", mode: "navigate" },
     { url: "https://other.example/", method: "GET", mode: "navigate" },
     { url: origin + "/rawaj-push/test", method: "GET", mode: "navigate" },
