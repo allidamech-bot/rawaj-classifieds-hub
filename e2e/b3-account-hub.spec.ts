@@ -65,6 +65,13 @@ test("B3.1a /more keyboard links and reduced motion remain accessible", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/more", { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-rawaj-hydrated", "true");
+  await expect
+    .poll(() =>
+      page
+        .locator(".rawaj-more-v2")
+        .evaluate((element) => getComputedStyle(element, "::before").content),
+    )
+    .toBe("none");
   const shortcut = page.locator("nav.rawaj-more-v2__secondary a").first();
   await shortcut.focus();
   await expect(shortcut).toBeFocused();

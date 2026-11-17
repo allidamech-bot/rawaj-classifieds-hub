@@ -11,7 +11,7 @@ async function hydrated(page: Page, path: string) {
 }
 
 for (const language of ["ar", "en"] as const) {
-  for (const path of ["/", "/support"] as const) {
+  for (const path of ["/", "/support", "/login"] as const) {
     test(`feedback dialog: ${path} ${language} contrast, focus, validation and close`, async ({
       page,
     }, testInfo) => {
@@ -31,6 +31,16 @@ for (const language of ["ar", "en"] as const) {
       await hydrated(page, path);
       const entry = page.locator("[data-feedback-trigger] button").first();
       await expect(entry).toBeVisible();
+      if (path === "/login") {
+        const widget = entry.locator("..");
+        await expect(widget).toHaveCSS("position", "static");
+        expect(
+          await widget.evaluate((element) => {
+            const google = document.querySelector(".rawaj-auth-google")!;
+            return element.getBoundingClientRect().top >= google.getBoundingClientRect().bottom;
+          }),
+        ).toBe(true);
+      }
       await entry.click();
       const dialog = page.getByRole("dialog", { name: /اقتراح أو شكوى|suggestion or complaint/i });
       await expect(dialog).toBeVisible();

@@ -12,7 +12,11 @@
   --secondary-v1-copy: var(--rawaj-text-secondary, #536b63);
 }
 
-/* Remove large decorative haze from sparse secondary pages. */
+/* The light account and support canvases have their own background. */
+.rawaj-app-shell[data-design-palette="ivory"] :is(.rawaj-auth-v2, .rawaj-trust-v2)::before {
+  content: none;
+}
+
 .rawaj-auth-v2::before,
 .rawaj-trust-v2::before {
   height: 15rem;

@@ -15,6 +15,17 @@ for (const language of ["ar", "en"]) {
       await expect(main).toHaveCSS("background-color", "rgb(255, 255, 255)");
       await expect(main.locator("h1")).toHaveCSS("color", "rgb(16, 63, 66)");
       await expect(main.locator(".rawaj-search-toolbar__saved")).toBeInViewport();
+      const quickFilters = main.locator(".rawaj-quick-filter-rail");
+      await expect(quickFilters).toHaveCSS("flex-wrap", "wrap");
+      expect(
+        await quickFilters.evaluate((rail) => {
+          const bounds = rail.getBoundingClientRect();
+          return Array.from(rail.querySelectorAll("button")).every((button) => {
+            const rect = button.getBoundingClientRect();
+            return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1;
+          });
+        }),
+      ).toBe(true);
       const cards = main.locator(".rawaj-adaptive-card");
       await expect(cards.first()).toBeVisible();
       await expect(cards.first()).toHaveCSS("background-color", "rgb(255, 255, 255)");

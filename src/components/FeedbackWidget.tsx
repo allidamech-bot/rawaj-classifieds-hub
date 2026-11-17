@@ -1,5 +1,6 @@
 import { Bug, CircleAlert, Lightbulb, MessageSquare, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { fetchFeedbackConfig, submitFeedback, type FeedbackType } from "@/lib/api/feedback";
 import { useUiPreferences } from "@/lib/ui-preferences";
 import { useAuth } from "@/lib/use-auth";
@@ -20,11 +21,14 @@ const EMPTY_DRAFT: Draft = { type: "technical_issue", subject: "", message: "" }
 export function FeedbackWidget({
   pathname,
   triggerHidden = false,
+  triggerContainer,
 }: {
   pathname: string;
   triggerHidden?: boolean;
+  triggerContainer?: HTMLElement | null;
 }) {
   const auth = useAuth();
+  const floatingTrigger = triggerContainer === undefined;
   const { language, theme, isArabic, text } = useUiPreferences();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
@@ -53,6 +57,10 @@ export function FeedbackWidget({
   }, []);
 
   useEffect(() => {
+    if (!floatingTrigger) {
+      setShowTeaser(false);
+      return;
+    }
     if (enabled !== true || triggerHidden) return;
     try {
       const shownThisSession = window.sessionStorage.getItem(TEASER_SESSION_KEY);
@@ -67,7 +75,7 @@ export function FeedbackWidget({
     } catch {
       // sessionStorage may be unavailable; skip teaser silently.
     }
-  }, [enabled, triggerHidden]);
+  }, [enabled, floatingTrigger, triggerHidden]);
 
   useEffect(() => {
     try {
@@ -267,9 +275,28 @@ export function FeedbackWidget({
   const teaserLine1 = text("عندك اقتراح أو شكوى؟", "Have a suggestion or complaint?");
   const teaserLine2 = text("أرسلها لنا", "Send it to us");
 
+  function openFeedback() {
+    setShowTeaser(false);
+    setOpen(true);
+    setSuccess(false);
+    setNotice("");
+    setNeedsSignIn(false);
+  }
+
   return (
     <>
-      {!triggerHidden ? (
+      {!triggerHidden && triggerContainer
+        ? createPortal(
+            <div className="rawaj-feedback-inline" data-feedback-trigger="true">
+              <button type="button" onClick={openFeedback}>
+                <MessageSquare aria-hidden="true" />
+                {triggerLabel}
+              </button>
+            </div>,
+            triggerContainer,
+          )
+        : null}
+      {!triggerHidden && floatingTrigger ? (
         <div
           className={`group rawaj-feedback-trigger fixed z-[58] ${isArabic ? "left-2 sm:left-3" : "right-2 sm:right-3"}`}
           style={{ bottom: "calc(var(--rawaj-mobile-obstruction, 0px) + 5.5rem)" }}
@@ -279,13 +306,7 @@ export function FeedbackWidget({
           {showTeaser ? (
             <button
               type="button"
-              onClick={() => {
-                setShowTeaser(false);
-                setOpen(true);
-                setSuccess(false);
-                setNotice("");
-                setNeedsSignIn(false);
-              }}
+              onClick={openFeedback}
               className="rawaj-feedback-teaser flex items-center gap-2 rounded-2xl border border-[var(--rawaj-identity-gold)] bg-[var(--rawaj-identity-petrol)] px-3 py-2.5 text-[var(--rawaj-identity-ivory)] shadow-lg transition-[background-color,transform] hover:bg-[var(--rawaj-identity-teal)] hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--rawaj-identity-gold)] motion-reduce:transition-none motion-reduce:hover:transform-none"
               aria-label={`${teaserLine1} ${teaserLine2}`}
             >
@@ -298,12 +319,7 @@ export function FeedbackWidget({
           ) : (
             <button
               type="button"
-              onClick={() => {
-                setOpen(true);
-                setSuccess(false);
-                setNotice("");
-                setNeedsSignIn(false);
-              }}
+              onClick={openFeedback}
               className="rawaj-feedback-button grid h-12 w-12 place-items-center rounded-full border border-[var(--rawaj-identity-gold)] bg-[var(--rawaj-identity-petrol)] text-[var(--rawaj-identity-ivory)] shadow-lg transition-[background-color,transform] hover:bg-[var(--rawaj-identity-teal)] hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--rawaj-identity-gold)] motion-reduce:transition-none motion-reduce:hover:transform-none"
               aria-label={triggerLabel}
               title={triggerLabel}
