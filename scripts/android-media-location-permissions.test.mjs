@@ -35,3 +35,17 @@ test("Android app keeps cleartext disabled and uses the RAWAJ package-owned acti
   assert.match(rawajActivity, /extends MainActivity/);
   assert.match(rawajActivity, /registerPlugin\(RawajGoogleAuthPlugin\.class\)/);
 });
+
+// Permissions must not turn optional marketplace capabilities into Play install filters.
+for (const feature of [
+  "android.hardware.camera",
+  "android.hardware.camera.autofocus",
+  "android.hardware.microphone",
+  "android.hardware.location",
+  "android.hardware.location.gps",
+  "android.hardware.location.network",
+]) {
+  test(`Android hardware ${feature} is optional for installation`, () => {
+    assert.ok(manifest.includes(`<uses-feature android:name="${feature}" android:required="false" />`));
+  });
+}
