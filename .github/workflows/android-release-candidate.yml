@@ -91,6 +91,15 @@ jobs:
           "$apkanalyzer" manifest print "$apk_path" > apk-merged-manifest.xml
           "$aapt2" dump badging "$apk_path" > apk-badging.txt
           "$aapt2" dump resources "$apk_path" > apk-resources.txt
+          # Enforce the actual packaged Play feature contract, not only XML source.
+          for feature in camera camera.autofocus microphone location location.gps location.network; do
+            name="android.hardware.$feature"
+            grep -F "uses-feature-not-required: name='$name'" apk-badging.txt
+            if grep -F "uses-feature: name='$name'" apk-badging.txt || grep -F "uses-implied-feature: name='$name'" apk-badging.txt; then
+              echo "Optional marketplace hardware became mandatory: $name" >&2
+              exit 1
+            fi
+          done
           grep -F "application-label:'رواج | Rawaj'" apk-badging.txt
           grep -F "mipmap/rawaj_launcher" apk-resources.txt
           grep -F "mipmap/rawaj_launcher_round" apk-resources.txt
