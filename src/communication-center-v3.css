@@ -6,9 +6,9 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   padding: 0.8rem 1rem;
-  box-shadow: 0 14px 34px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: 0 4px 16px rgb(16 63 66 / 9%);
 }
 
 .rawaj-communication-hero[data-mode="messages"] .rawaj-communication-hero__copy > p,

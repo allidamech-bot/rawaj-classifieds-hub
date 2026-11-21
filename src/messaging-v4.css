@@ -4,17 +4,17 @@
  */
 
 .rawaj-messaging-v4 {
-  --message-border: #d2ddd5;
-  --message-muted: #f2f0e8;
-  --message-surface: #fffaf3;
-  --message-ink: #173d38;
-  --message-subtle: #435650;
+  --message-border: #e3e7e4;
+  --message-muted: #f4f6f5;
+  --message-surface: #ffffff;
+  --message-ink: #152322;
+  --message-subtle: #53615e;
 }
 
 .rawaj-messaging-v4 .rawaj-communication-hero[data-mode="messages"] {
   border: 1px solid color-mix(in srgb, white 12%, transparent);
   border-radius: var(--radius-hero, 1.25rem);
-  background: #083d38;
+  background: #103f42;
   box-shadow: 0 8px 24px rgba(9, 45, 41, 0.12);
 }
 
@@ -122,14 +122,14 @@
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
-  border-color: color-mix(in srgb, #075d52 28%, var(--message-border));
+  border-color: color-mix(in srgb, #103f42 28%, var(--message-border));
   background: var(--message-surface);
   color: var(--message-ink);
-  box-shadow: inset 3px 0 0 #075d52;
+  box-shadow: inset 3px 0 0 #103f42;
 }
 
 [dir="rtl"] .rawaj-messaging-v4 .rawaj-conversation-summary[data-selected="true"] {
-  box-shadow: inset -3px 0 0 #075d52;
+  box-shadow: inset -3px 0 0 #103f42;
 }
 
 .rawaj-messaging-v4 .rawaj-participant-avatar {
@@ -165,13 +165,13 @@
 .rawaj-messaging-v4 .rawaj-conversation-summary__copy small {
   margin-top: 0.15rem;
   color: var(--message-subtle);
-  font-size: max(0.72rem, 11.5px);
+  font-size: max(0.8125rem, 13px);
 }
 
 .rawaj-messaging-v4 .rawaj-conversation-summary__copy p {
   margin-top: 0.28rem;
   color: var(--message-subtle);
-  font-size: max(0.78rem, 12.5px);
+  font-size: max(0.8125rem, 13px);
   line-height: 1.5;
 }
 
@@ -188,7 +188,7 @@
 
 .rawaj-messaging-v4 .rawaj-conversation-summary__meta time {
   color: var(--message-subtle);
-  font-size: max(0.68rem, 10.5px);
+  font-size: max(0.75rem, 12px);
   white-space: nowrap;
 }
 
@@ -198,9 +198,9 @@
   height: 1.45rem;
   place-items: center;
   border-radius: 999px;
-  background: #075d52;
+  background: #103f42;
   color: white;
-  font-size: max(0.7rem, 11px);
+  font-size: max(0.75rem, 12px);
 }
 
 .rawaj-messaging-v4 .rawaj-message-panel {
@@ -234,7 +234,7 @@
 .rawaj-messaging-v4 .rawaj-message-header__copy a,
 .rawaj-messaging-v4 .rawaj-message-header__copy span {
   color: var(--message-subtle);
-  font-size: max(0.76rem, 12px);
+  font-size: max(0.8125rem, 13px);
 }
 
 .rawaj-messaging-v4 .rawaj-message-header button,
@@ -248,7 +248,7 @@
 
 .rawaj-messaging-v4 .rawaj-message-stream {
   gap: 0.6rem;
-  background: color-mix(in srgb, var(--rawaj-page-background, #f5f2e9) 76%, var(--rawaj-muted-surface, #e9efea));
+  background: color-mix(in srgb, var(--rawaj-page-background, #f4f6f5) 76%, var(--rawaj-muted-surface, #edf4f2));
   padding: 1rem;
   scroll-padding-block: 1rem;
 }
@@ -260,7 +260,7 @@
   background: var(--message-surface);
   padding: 0.72rem 0.85rem;
   color: var(--message-ink);
-  font-size: max(0.84rem, 13.5px);
+  font-size: max(0.875rem, 14px);
   line-height: 1.7;
   box-shadow: 0 3px 10px rgba(9, 45, 41, 0.04);
 }
@@ -270,8 +270,8 @@
 }
 
 .rawaj-messaging-v4 .rawaj-message-bubble[data-mine="true"] {
-  border-color: #075d52;
-  background: #075d52;
+  border-color: #103f42;
+  background: #103f42;
   color: white;
   box-shadow: 0 4px 12px rgba(9, 45, 41, 0.13);
 }
@@ -324,8 +324,8 @@
 }
 
 .rawaj-messaging-v4 .rawaj-message-composer textarea:focus-visible {
-  border-color: #075d52;
-  outline: 3px solid color-mix(in srgb, #075d52 15%, transparent);
+  border-color: #103f42;
+  outline: 3px solid color-mix(in srgb, #103f42 15%, transparent);
   outline-offset: 1px;
   box-shadow: none;
 }
@@ -358,8 +358,8 @@
 .rawaj-messaging-v4 .rawaj-message-composer__send {
   min-height: 3.25rem;
   border-radius: 0.72rem;
-  border: 1px solid #075d52;
-  background: #075d52;
+  border: 1px solid #103f42;
+  background: #103f42;
   color: white;
   font-size: max(0.84rem, 13.5px);
   box-shadow: 0 5px 14px rgba(7, 93, 82, 0.16);
@@ -371,7 +371,7 @@
   .rawaj-messaging-v4 .rawaj-message-header a:hover,
   .rawaj-messaging-v4 .rawaj-quick-replies button:hover,
   .rawaj-messaging-v4 .rawaj-message-composer button:not(.rawaj-message-composer__send):hover:not(:disabled) {
-    border-color: color-mix(in srgb, #075d52 28%, var(--message-border));
+    border-color: color-mix(in srgb, #103f42 28%, var(--message-border));
     background: var(--message-surface);
   }
 
@@ -390,7 +390,7 @@
 .rawaj-messaging-v4 .rawaj-message-composer__send:focus-visible,
 .rawaj-messaging-v4 .rawaj-conversation-summary:focus-visible,
 .rawaj-messaging-v4 .rawaj-quick-replies button:focus-visible {
-  outline: 3px solid color-mix(in srgb, #075d52 20%, transparent);
+  outline: 3px solid color-mix(in srgb, #103f42 20%, transparent);
   outline-offset: 2px;
 }
 
@@ -475,7 +475,12 @@
     min-width: 0;
     min-height: 3rem;
     height: 3rem;
+    font-size: 16px;
     resize: none;
+  }
+
+  .rawaj-messaging-v4 .rawaj-communication-search input {
+    font-size: 16px;
   }
   .rawaj-messaging-v4 .rawaj-message-composer__send {
     grid-column: 1 / -1;
@@ -509,7 +514,7 @@
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-quick-replies button:focus-visible,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer textarea:focus-visible,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer__send:focus-visible {
-  outline: 3px solid #075d52 !important;
+  outline: 3px solid #103f42 !important;
   outline-offset: 2px;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4 .rawaj-message-composer__send:disabled {
@@ -543,7 +548,7 @@
   [data-price-offer-panel="true"] input {
   color: var(--message-ink) !important;
   border: 1px solid var(--message-border) !important;
-  background: #fffdf9 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-messaging-v4
   .rawaj-messaging-panel-state {
