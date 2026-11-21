@@ -16,7 +16,7 @@ test("phase 5 messaging layer is route-scoped and loaded after the communication
   assert.match(routeStyles, /messagingV4: messagingV4Css/);
   assert.ok(root.indexOf("messagingV4") > root.indexOf("communicationCenterV2"));
   assert.match(route, /rawaj-messaging-v4/);
-  assert.match(route, /title: "المحادثات \\| رواج \\| Rawaj"/);
+  assert.ok(route.includes('title: "المحادثات | رواج | Rawaj"'));
 });
 
 test("conversation cards expose useful time context without changing realtime behavior", () => {
