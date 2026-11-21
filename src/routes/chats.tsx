@@ -85,7 +85,7 @@ type PullRefreshRegistration = { register: (task: Promise<unknown>) => void };
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
   head: () => ({
-    meta: [{ title: "المحادثات | رواجا" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [{ title: "المحادثات | رواج | Rawaj" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: ChatsPage,
 });
