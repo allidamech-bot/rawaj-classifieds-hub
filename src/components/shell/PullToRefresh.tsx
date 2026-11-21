@@ -72,6 +72,7 @@ export function PullToRefresh({
     function start(event: TouchEvent) {
       if (
         busyRef.current ||
+        !window.matchMedia("(max-width: 1023px)").matches ||
         event.touches.length !== 1 ||
         document.documentElement.dataset.keyboardOpen === "true" ||
         !allowGestureTarget(event.target instanceof Element ? event.target : null) ||
