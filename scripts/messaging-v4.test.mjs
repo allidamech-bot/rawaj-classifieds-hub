@@ -38,7 +38,7 @@ test("phase 5 provides readable, restrained, responsive messaging UI", () => {
   assert.match(css, /box-shadow:\s*0 3px 10px/);
   assert.match(css, /min-height:\s*3rem/);
   // Phone composer: full-width writing field above attachment actions and Send.
-  assert.match(css, /grid-column:\s*1 \\/ -1;/);
+  assert.match(css, /grid-column:\s*1 \/ -1;/);
   assert.match(css, /grid-column:\s*4;/);
   assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(css, /@media \(min-width: 1024px\)/);
