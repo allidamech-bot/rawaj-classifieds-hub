@@ -89,10 +89,7 @@ test("new message starts a direct conversation without a listing", async ({ page
   expect(creations).toBe(1);
 });
 
-test("mobile pull-to-refresh invalidates data without reloading the document", async (
-  { page },
-  info,
-) => {
+test("mobile pull keeps the document intact", async ({ page }, info) => {
   test.skip(!info.project.name.includes("mobile"), "Touchscreen project required.");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/", { waitUntil: "domcontentloaded" });

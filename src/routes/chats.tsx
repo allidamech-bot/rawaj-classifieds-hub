@@ -1319,8 +1319,7 @@ function ChatsPage() {
                         </Link>
                       ) : (
                         <span className="block truncate text-xs font-semibold text-muted-foreground">
-                          {selectedConversation.listingTitle} ·{" "}
-                          {text("إعلان محذوف", "Deleted listing")}
+                          {text("محادثة", "Conversation")}
                         </span>
                       )}
                     </div>
