@@ -363,7 +363,10 @@ function ChatsPage() {
       if (!result.ok) {
         setRecipientNotice(
           result.error.code === "not_found"
-            ? text("لم نعثر على حساب متاح بهذا البريد.", "No available account found for that email.")
+            ? text(
+                "لم نعثر على حساب متاح بهذا البريد.",
+                "No available account found for that email.",
+              )
             : result.error.message,
         );
         return;
@@ -419,7 +422,9 @@ function ChatsPage() {
       }
       if (result.ok) {
         setConversations((current) =>
-          sortAndDedupeConversations(replace ? result.data.items : [...current, ...result.data.items]),
+          sortAndDedupeConversations(
+            replace ? result.data.items : [...current, ...result.data.items],
+          ),
         );
         if (replace) setLoadedConversationPage(1);
         if (replace || loadedConversationPage === 1) {
@@ -659,7 +664,9 @@ function ChatsPage() {
   useEffect(() => {
     if (auth.status !== "signedIn" || !auth.profile?.id) return;
     const onPullRefresh = (event: Event) => {
-      const registration = (event as CustomEvent<{ register: (task: Promise<unknown>) => void }>).detail;
+      const registration = (
+        event as CustomEvent<{ register: (task: Promise<unknown>) => void }>
+      ).detail;
       if (!registration?.register) return;
       const currentThreadId = selectedConversationIdRef.current;
       const tasks: Promise<unknown>[] = [loadConversations(true)];
@@ -1101,8 +1108,14 @@ function ChatsPage() {
                 className="my-3 space-y-3 rounded-2xl border border-[#dce5e1] bg-white p-3"
                 aria-label={text("بدء محادثة جديدة", "Start a new conversation")}
               >
-                <form className="space-y-2" onSubmit={(event) => void lookupNewMessageRecipient(event)}>
-                  <label htmlFor="rawaj-new-recipient" className="block text-xs font-semibold text-[#152322]">
+                <form
+                  className="space-y-2"
+                  onSubmit={(event) => void lookupNewMessageRecipient(event)}
+                >
+                  <label
+                    htmlFor="rawaj-new-recipient"
+                    className="block text-xs font-semibold text-[#152322]"
+                  >
                     {text("البريد الإلكتروني للمستخدم", "Recipient email")}
                   </label>
                   <input
@@ -1124,18 +1137,40 @@ function ChatsPage() {
                     dir="ltr"
                   />
                   <p className="text-xs leading-5 text-[#53615e]">
-                    {text("البحث عن بريد كامل فقط. لن يظهر بريد الشخص للآخرين.", "Exact email lookup only. The email stays private.")}
+                    {text(
+                      "البحث عن بريد كامل فقط. لن يظهر بريد الشخص للآخرين.",
+                      "Exact email lookup only. The email stays private.",
+                    )}
                   </p>
-                  <button type="submit" disabled={recipientBusy || directStartBusy} className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60">
-                    {recipientBusy ? text("جارٍ البحث...", "Searching...") : text("بحث عن المستخدم", "Find user")}
+                  <button
+                    type="submit"
+                    disabled={recipientBusy || directStartBusy}
+                    className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60"
+                  >
+                    {recipientBusy
+                      ? text("جارٍ البحث...", "Searching...")
+                      : text("بحث عن المستخدم", "Find user")}
                   </button>
                 </form>
-                {recipientNotice ? <p role="status" className="text-xs text-[#a13a32]">{recipientNotice}</p> : null}
+                {recipientNotice ? (
+                  <p role="status" className="text-xs text-[#a13a32]">
+                    {recipientNotice}
+                  </p>
+                ) : null}
                 {recipientMatch ? (
                   <div className="space-y-2 border-t border-[#e3e7e4] pt-3">
-                    <p className="text-sm font-semibold text-[#152322]">{recipientMatch.displayName}</p>
-                    <button type="button" disabled={directStartBusy} onClick={() => void beginDirectMessage()} className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60">
-                      {directStartBusy ? text("جارٍ فتح المحادثة...", "Opening conversation...") : text("بدء المحادثة", "Start conversation")}
+                    <p className="text-sm font-semibold text-[#152322]">
+                      {recipientMatch.displayName}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={directStartBusy}
+                      onClick={() => void beginDirectMessage()}
+                      className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60"
+                    >
+                      {directStartBusy
+                        ? text("جارٍ فتح المحادثة...", "Opening conversation...")
+                        : text("بدء المحادثة", "Start conversation")}
                     </button>
                   </div>
                 ) : null}

@@ -11,8 +11,18 @@ const MAX_PULL = 116;
 
 export function pullToRefreshEnabled(pathname: string) {
   return (
-    ["/", "/categories", "/listings", "/chats", "/notifications", "/favorites",
-      "/saved-searches", "/activity", "/more", "/profile"].includes(pathname) ||
+    [
+      "/",
+      "/categories",
+      "/listings",
+      "/chats",
+      "/notifications",
+      "/favorites",
+      "/saved-searches",
+      "/activity",
+      "/more",
+      "/profile",
+    ].includes(pathname) ||
     /^\/(?:category|syria|seller|listings)\/[^/]+$/.test(pathname)
   );
 }
@@ -33,17 +43,11 @@ function allowGestureTarget(target: Element | null) {
   return !target?.closest(
     'input, textarea, select, [contenteditable="true"], [role="dialog"], ' +
       '[role="slider"], .embla, .rawaj-message-composer, .rawaj-modal-layer, ' +
-      '.rawaj-app-shell__floating-layer, button, a, [data-pull-refresh-ignore]',
+      ".rawaj-app-shell__floating-layer, button, a, [data-pull-refresh-ignore]",
   );
 }
 
-export function PullToRefresh({
-  pathname,
-  disabled,
-}: {
-  pathname: string;
-  disabled: boolean;
-}) {
+export function PullToRefresh({ pathname, disabled }: { pathname: string; disabled: boolean }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { text } = useUiPreferences();
@@ -78,7 +82,9 @@ export function PullToRefresh({
         !allowGestureTarget(event.target instanceof Element ? event.target : null) ||
         window.scrollY > 2 ||
         (document.scrollingElement?.scrollTop ?? 0) > 2
-      ) return;
+      ) {
+        return;
+      }
       const target = event.target instanceof Element ? event.target : null;
       scrollParent = scrollContainer(target);
       if (scrollParent && scrollParent.scrollTop > 2) return;
@@ -125,11 +131,15 @@ export function PullToRefresh({
       setPhase("refreshing");
       const tasks: Promise<unknown>[] = [];
       const registration: RefreshRegistration = {
-        register(task) { tasks.push(task); },
+        register(task) {
+          tasks.push(task);
+        },
       };
-      window.dispatchEvent(new CustomEvent<RefreshRegistration>("rawaj:pull-refresh", {
-        detail: registration,
-      }));
+      window.dispatchEvent(
+        new CustomEvent<RefreshRegistration>("rawaj:pull-refresh", {
+          detail: registration,
+        }),
+      );
       tasks.push(Promise.resolve(router.invalidate()));
       tasks.push(queryClient.invalidateQueries({ refetchType: "active" }));
       try {
