@@ -319,19 +319,21 @@ export async function findDirectMessageRecipient(
     "/v1/conversations/direct/lookup",
     { method: "POST", body: { email: normalized } },
   );
-  return result.ok ? { ok: true, data: result.data } : apiFailure(result, "direct_recipient_lookup");
+  return result.ok
+    ? { ok: true, data: result.data }
+    : apiFailure(result, "direct_recipient_lookup");
 }
 
-export async function startDirectMessage(
-  recipientId: string,
-): Promise<ClassifiedsResult<string>> {
+export async function startDirectMessage(recipientId: string): Promise<ClassifiedsResult<string>> {
   const id = normalizeChatResourceId(recipientId);
   if (!id) return failure("validation_error", "تعذر تحديد المستخدم.");
-  const result = await cloudflareApiRequest<{ id: string }>(
-    "/v1/conversations/direct",
-    { method: "POST", body: { recipientId: id } },
-  );
-  return result.ok ? { ok: true, data: result.data.id } : apiFailure(result, "direct_conversation_start");
+  const result = await cloudflareApiRequest<{ id: string }>("/v1/conversations/direct", {
+    method: "POST",
+    body: { recipientId: id },
+  });
+  return result.ok
+    ? { ok: true, data: result.data.id }
+    : apiFailure(result, "direct_conversation_start");
 }
 
 export async function fetchUnreadMessagesCount(): Promise<ClassifiedsResult<number>> {
