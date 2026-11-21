@@ -170,9 +170,7 @@ export function ConversationSummaryItem({
       <span className="rawaj-conversation-summary__copy">
         <strong>{conversation.otherParticipant.displayName}</strong>
         <small>
-          {conversation.listingId
-            ? conversation.listingTitle
-            : text("محادثة", "Conversation")}
+          {conversation.listingId ? conversation.listingTitle : text("محادثة", "Conversation")}
         </small>
         {conversation.lastMessagePreview ? <p>{conversation.lastMessagePreview}</p> : null}
       </span>
