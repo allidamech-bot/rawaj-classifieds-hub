@@ -200,8 +200,8 @@ html[data-keyboard-open="true"] .rawaj-app-shell__page {
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search label {
-  border-color: #e4d5bb !important;
-  background: var(--rawaj-identity-ivory) !important;
+  border-color: #e3e7e4 !important;
+  background: #ffffff !important;
 }
 
 .rawaj-app-shell[data-resolved-pathname="/categories"] .rawaj-categories-v2__hero-search input,
