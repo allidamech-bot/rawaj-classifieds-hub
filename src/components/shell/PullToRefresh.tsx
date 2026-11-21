@@ -22,8 +22,7 @@ export function pullToRefreshEnabled(pathname: string) {
       "/activity",
       "/more",
       "/profile",
-    ].includes(pathname) ||
-    /^\/(?:category|syria|seller|listings)\/[^/]+$/.test(pathname)
+    ].includes(pathname) || /^\/(?:category|syria|seller|listings)\/[^/]+$/.test(pathname)
   );
 }
 

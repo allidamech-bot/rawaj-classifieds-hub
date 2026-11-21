@@ -750,7 +750,6 @@ async function createConversation(request: Request, env: AccountSocialEnv, cors:
   return json({ data: { id: resolved?.id ?? id, created: resolved?.id === id } }, 201, cors);
 }
 
-
 const DIRECT_RECIPIENT_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function lookupDirectRecipient(request: Request, env: AccountSocialEnv, cors: Headers) {
@@ -771,11 +770,7 @@ async function lookupDirectRecipient(request: Request, env: AccountSocialEnv, co
   )
     .bind(email)
     .first<{ id: string; display_name: string | null }>();
-  if (
-    !person ||
-    person.id === auth.userId ||
-    (await usersBlocked(env, auth.userId, person.id))
-  ) {
+  if (!person || person.id === auth.userId || (await usersBlocked(env, auth.userId, person.id))) {
     return notFound(cors);
   }
   // Never return or search a user's email by partial match.

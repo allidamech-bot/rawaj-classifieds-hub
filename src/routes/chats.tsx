@@ -80,6 +80,7 @@ const quickReplies = [
 ] as const;
 const EMPTY_CONVERSATIONS: Conversation[] = [];
 const EMPTY_MESSAGES: ConversationMessage[] = [];
+type PullRefreshRegistration = { register: (task: Promise<unknown>) => void };
 
 export const Route = createFileRoute("/chats")({
   validateSearch: chatsSearchSchema,
@@ -664,9 +665,7 @@ function ChatsPage() {
   useEffect(() => {
     if (auth.status !== "signedIn" || !auth.profile?.id) return;
     const onPullRefresh = (event: Event) => {
-      const registration = (
-        event as CustomEvent<{ register: (task: Promise<unknown>) => void }>
-      ).detail;
+      const registration = (event as CustomEvent<PullRefreshRegistration>).detail;
       if (!registration?.register) return;
       const currentThreadId = selectedConversationIdRef.current;
       const tasks: Promise<unknown>[] = [loadConversations(true)];
