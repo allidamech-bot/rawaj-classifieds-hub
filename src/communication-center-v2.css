@@ -950,12 +950,12 @@
 .rawaj-communication-signed-out {
   display: grid;
   justify-items: center;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 9%, var(--color-border));
-  border-radius: 1.5rem;
-  background: var(--rawaj-surface-card);
-  padding: clamp(2rem, 8vw, 4rem) 1rem;
+  border: 1px solid #e3e7e4;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: clamp(1.25rem, 5vw, 2.5rem) 1rem;
   text-align: center;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .rawaj-communication-signed-out > span {
@@ -964,8 +964,8 @@
   height: 3.7rem;
   place-items: center;
   border-radius: 1.15rem;
-  background: color-mix(in srgb, var(--rawaj-orange) 9%, white);
-  color: var(--rawaj-orange);
+  background: #edf4f2;
+  color: #103f42;
 }
 
 .rawaj-communication-signed-out > span svg {
@@ -974,16 +974,17 @@
 }
 .rawaj-communication-signed-out h1 {
   margin-top: 0.9rem;
-  color: var(--color-primary);
-  font-size: 1rem;
-  font-weight: 900;
+  color: #152322;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.45;
 }
 .rawaj-communication-signed-out p {
   max-width: 35rem;
   margin-top: 0.4rem;
-  color: var(--color-muted-foreground);
-  font-size: 0.65rem;
-  line-height: 1.8;
+  color: #53615e;
+  font-size: 0.875rem;
+  line-height: 1.65;
 }
 .rawaj-communication-signed-out > a {
   display: inline-flex;
@@ -992,10 +993,10 @@
   gap: 0.3rem;
   margin-top: 0.6rem;
   border-radius: 999px;
-  background: var(--color-primary);
-  padding-inline: 0.9rem;
-  color: white;
-  font-size: 0.6rem;
+  background: #103f42;
+  padding-inline: 1rem;
+  color: #ffffff;
+  font-size: 0.875rem;
   font-weight: 850;
 }
 .rawaj-communication-signed-out > a + a {
