@@ -1111,10 +1111,7 @@ function ChatsPage() {
                   className="space-y-2"
                   onSubmit={(event) => void lookupNewMessageRecipient(event)}
                 >
-                  <label
-                    htmlFor="rawaj-new-recipient"
-                    className="rawaj-new-message-label"
-                  >
+                  <label htmlFor="rawaj-new-recipient" className="rawaj-new-message-label">
                     {text("البريد الإلكتروني للمستخدم", "Recipient email")}
                   </label>
                   <input
@@ -1158,9 +1155,7 @@ function ChatsPage() {
                 ) : null}
                 {recipientMatch ? (
                   <div className="space-y-2 border-t border-[#e3e7e4] pt-3">
-                    <p className="rawaj-new-message-recipient">
-                      {recipientMatch.displayName}
-                    </p>
+                    <p className="rawaj-new-message-recipient">{recipientMatch.displayName}</p>
                     <button
                       type="button"
                       disabled={directStartBusy}
