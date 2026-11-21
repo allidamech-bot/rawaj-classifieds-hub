@@ -170,6 +170,10 @@ export async function handleAccountSocial(
     return listConversations(request, env, cors, url);
   if (path === "/v1/account/messages/unread-count" && request.method === "GET")
     return unreadCount(request, env, cors);
+  if (path === "/v1/conversations/direct/lookup" && request.method === "POST")
+    return lookupDirectRecipient(request, env, cors);
+  if (path === "/v1/conversations/direct" && request.method === "POST")
+    return createDirectConversation(request, env, cors);
   if (path === "/v1/conversations" && request.method === "POST")
     return createConversation(request, env, cors);
   const conversation = path.match(/^\/v1\/conversations\/([^/]+)$/);
@@ -744,6 +748,81 @@ async function createConversation(request: Request, env: AccountSocialEnv, cors:
     .bind(listingId, auth.userId, listing.owner_id)
     .first<{ id: string }>();
   return json({ data: { id: resolved?.id ?? id, created: resolved?.id === id } }, 201, cors);
+}
+
+
+const DIRECT_RECIPIENT_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function lookupDirectRecipient(request: Request, env: AccountSocialEnv, cors: Headers) {
+  const auth = await requireMutationAuth(request, env as unknown as AuthEnv, cors);
+  if (auth instanceof Response) return auth;
+  const body = await readJson(request);
+  if (!body.ok) return json({ error: body.error }, body.status, cors);
+  const email = clean(body.data.email, 254).toLowerCase();
+  if (!DIRECT_RECIPIENT_EMAIL_PATTERN.test(email)) return validation(cors, "Enter a complete email address.");
+  const person = await env.DB.prepare(
+    `SELECT u.id, p.display_name FROM auth_users u
+      JOIN public_profiles p ON p.id = u.id
+      WHERE lower(u.email_normalized) = ? AND u.disabled_at IS NULL
+        AND p.account_status NOT IN ('frozen', 'disabled')
+      LIMIT 1`,
+  ).bind(email).first<{ id: string; display_name: string | null }>();
+  if (!person || person.id === auth.userId || await usersBlocked(env, auth.userId, person.id)) {
+    return notFound(cors);
+  }
+  // Never return or search a user's email by partial match.
+  return json({ data: { id: person.id, displayName: person.display_name || "مستخدم رواج" } }, 200, cors);
+}
+
+async function directConversationId(firstId: string, secondId: string): Promise<string> {
+  // Canonical participant order plus a deterministic UUID protects against concurrent duplicates.
+  const pair = [firstId, secondId].sort().join(":");
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(
+    "rawaj-direct-conversation-v1:" + pair,
+  ))).slice(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+async function createDirectConversation(request: Request, env: AccountSocialEnv, cors: Headers) {
+  const auth = await requireMutationAuth(request, env as unknown as AuthEnv, cors);
+  if (auth instanceof Response) return auth;
+  const body = await readJson(request);
+  if (!body.ok) return json({ error: body.error }, body.status, cors);
+  const recipientId = clean(body.data.recipientId, 80);
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(recipientId)) {
+    return validation(cors, "Invalid recipient.");
+  }
+  if (recipientId === auth.userId) return validation(cors, "Cannot message yourself.");
+  const person = await env.DB.prepare(
+    `SELECT u.id FROM auth_users u JOIN public_profiles p ON p.id = u.id
+      WHERE u.id = ? AND u.disabled_at IS NULL
+        AND p.account_status NOT IN ('frozen', 'disabled') LIMIT 1`,
+  ).bind(recipientId).first<{ id: string }>();
+  if (!person || await usersBlocked(env, auth.userId, recipientId)) return notFound(cors);
+  const [buyerId, sellerId] = [auth.userId, recipientId].sort();
+  const id = await directConversationId(buyerId, sellerId);
+  const existing = await env.DB.prepare("SELECT id, status FROM conversations WHERE id = ?")
+    .bind(id).first<{ id: string; status: string }>();
+  if (existing) {
+    if (existing.status !== "active") return json(
+      { error: { code: "permission_denied", message: "Conversation unavailable." } }, 403, cors,
+    );
+    return json({ data: { id, created: false } }, 200, cors);
+  }
+  const timestamp = now();
+  const written = await env.DB.prepare(
+    `INSERT OR IGNORE INTO conversations
+      (id, listing_id, buyer_id, seller_id, status, created_at, updated_at)
+      VALUES (?, NULL, ?, ?, 'active', ?, ?)`,
+  ).bind(id, buyerId, sellerId, timestamp, timestamp).run();
+  if (!written.success) return databaseError(cors);
+  const resolved = await env.DB.prepare("SELECT id, status FROM conversations WHERE id = ?")
+    .bind(id).first<{ id: string; status: string }>();
+  if (!resolved || resolved.status !== "active") return databaseError(cors);
+  return json({ data: { id, created: true } }, 201, cors);
 }
 
 async function listConversations(request: Request, env: AccountSocialEnv, cors: Headers, url: URL) {
