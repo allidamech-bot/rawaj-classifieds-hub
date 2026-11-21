@@ -154,6 +154,7 @@ export function ConversationSummaryItem({
   onSelect: () => void;
   dateLabel: string;
 }) {
+  const { text } = useUiPreferences();
   return (
     <button
       type="button"
@@ -168,7 +169,9 @@ export function ConversationSummaryItem({
       />
       <span className="rawaj-conversation-summary__copy">
         <strong>{conversation.otherParticipant.displayName}</strong>
-        <small>{conversation.listingTitle}</small>
+        <small>
+          {conversation.listingId ? conversation.listingTitle : text("محادثة", "Conversation")}
+        </small>
         {conversation.lastMessagePreview ? <p>{conversation.lastMessagePreview}</p> : null}
       </span>
       <span className="rawaj-conversation-summary__meta">

@@ -5,6 +5,7 @@ import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomDock } from "@/components/shell/BottomDock";
+import { PullToRefresh } from "@/components/shell/PullToRefresh";
 import { resolveBrowserChrome } from "@/lib/browser-chrome";
 import { registerInstalledOfflineWorker } from "@/lib/pwa-offline";
 import { resolveAppShellConfig } from "@/lib/primary-navigation";
@@ -311,6 +312,7 @@ export function AppShell({
         />
         {showBackToTop ? <BackToTop /> : null}
         <BottomDock pathname={pathname} />
+        <PullToRefresh pathname={pathname} disabled={keyboardOpen || isRouteNavigating} />
 
         <div
           id="rawaj-modal-layer"
