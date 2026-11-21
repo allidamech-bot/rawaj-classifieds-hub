@@ -6,6 +6,7 @@ import {
   ImagePlus,
   MapPin,
   MessageCircle,
+  SquarePen,
   Send,
   TriangleAlert,
   X,
@@ -33,11 +34,13 @@ import {
   createMessageReport,
   fetchConversationMessagesPage,
   fetchConversationById,
+  findDirectMessageRecipient,
   fetchMyConversationsPage,
   markConversationRead,
   removeChatAudio,
   removeChatImage,
   sendConversationMessage,
+  startDirectMessage,
   uploadChatAudio,
   uploadChatImage,
   validateChatAudio,
@@ -48,6 +51,7 @@ import {
   completeMessageSendRequest,
   readOrCreateMessageSendRequestId,
 } from "@/lib/api/message-send-request";
+import type { DirectMessageRecipient } from "@/lib/api/messaging";
 import type { ClassifiedsError, Conversation, ConversationMessage } from "@/lib/classifieds-types";
 import {
   mergeConversationMessages,
@@ -114,6 +118,14 @@ function ChatsPage() {
   >(null);
   const [locating, setLocating] = useState(false);
   const [conversationQuery, setConversationQuery] = useState("");
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientMatch, setRecipientMatch] = useState<DirectMessageRecipient | null>(null);
+  const [recipientBusy, setRecipientBusy] = useState(false);
+  const [directStartBusy, setDirectStartBusy] = useState(false);
+  const [recipientNotice, setRecipientNotice] = useState("");
+  const recipientLookupIdRef = useRef(0);
+  const directStartInFlightRef = useRef(false);
   const [sendingScopes, setSendingScopes] = useState<Set<string>>(() => new Set());
   const [notice, setNotice] = useState("");
   const [confirmedRisk, setConfirmedRisk] = useState<{
@@ -248,6 +260,14 @@ function ChatsPage() {
       return null;
     });
     setConversationQuery("");
+    recipientLookupIdRef.current += 1;
+    directStartInFlightRef.current = false;
+    setNewMessageOpen(false);
+    setRecipientEmail("");
+    setRecipientMatch(null);
+    setRecipientBusy(false);
+    setDirectStartBusy(false);
+    setRecipientNotice("");
     setSendingScopes(new Set());
     setConfirmedRisk(null);
     setReportingMessageId(null);
@@ -328,6 +348,63 @@ function ChatsPage() {
       }
     }
   }, [accountConversations, isDesktop, search.conversation]);
+
+  async function lookupNewMessageRecipient(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!auth.profile?.id || recipientBusy || directStartBusy) return;
+    const requestId = ++recipientLookupIdRef.current;
+    const profileId = auth.profile.id;
+    setRecipientBusy(true);
+    setRecipientNotice("");
+    setRecipientMatch(null);
+    try {
+      const result = await findDirectMessageRecipient(recipientEmail);
+      if (requestId !== recipientLookupIdRef.current || profileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setRecipientNotice(
+          result.error.code === "not_found"
+            ? text("لم نعثر على حساب متاح بهذا البريد.", "No available account found for that email.")
+            : result.error.message,
+        );
+        return;
+      }
+      setRecipientMatch(result.data);
+    } finally {
+      if (requestId === recipientLookupIdRef.current && profileId === profileIdRef.current) {
+        setRecipientBusy(false);
+      }
+    }
+  }
+
+  async function beginDirectMessage() {
+    const person = recipientMatch;
+    const profileId = auth.profile?.id ?? null;
+    if (!person || !profileId || directStartInFlightRef.current) return;
+    directStartInFlightRef.current = true;
+    setDirectStartBusy(true);
+    setRecipientNotice("");
+    try {
+      const result = await startDirectMessage(person.id);
+      if (profileId !== profileIdRef.current) return;
+      if (!result.ok) {
+        setRecipientNotice(result.error.message);
+        return;
+      }
+      const conversation = await fetchConversationById(result.data);
+      if (profileId !== profileIdRef.current) return;
+      if (conversation.ok) {
+        setConversations((current) => sortAndDedupeConversations([...current, conversation.data]));
+      }
+      setNewMessageOpen(false);
+      setRecipientEmail("");
+      setRecipientMatch(null);
+      if (!isDesktop) setViewingConversationOnMobile(true);
+      await navigate({ to: "/chats", search: { conversation: result.data } });
+    } finally {
+      directStartInFlightRef.current = false;
+      if (profileId === profileIdRef.current) setDirectStartBusy(false);
+    }
+  }
 
   async function loadConversations() {
     const profileId = auth.profile?.id ?? null;
@@ -982,8 +1059,71 @@ function ChatsPage() {
                 <MessageCircle aria-hidden="true" />
                 {text("المحادثات", "Conversations")}
               </h2>
-              <span>{filteredConversations.length}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#dce5e1] bg-white px-3 text-xs font-bold text-[#103f42]"
+                  aria-expanded={newMessageOpen}
+                  aria-controls="rawaj-new-message"
+                  onClick={() => {
+                    recipientLookupIdRef.current += 1;
+                    setNewMessageOpen((current) => !current);
+                    setRecipientMatch(null);
+                    setRecipientNotice("");
+                  }}
+                >
+                  <SquarePen className="h-4 w-4" aria-hidden="true" />
+                  {text("رسالة جديدة", "New message")}
+                </button>
+                <span>{filteredConversations.length}</span>
+              </div>
             </div>
+            {newMessageOpen ? (
+              <section
+                id="rawaj-new-message"
+                className="my-3 space-y-3 rounded-2xl border border-[#dce5e1] bg-white p-3"
+                aria-label={text("بدء محادثة جديدة", "Start a new conversation")}
+              >
+                <form className="space-y-2" onSubmit={(event) => void lookupNewMessageRecipient(event)}>
+                  <label htmlFor="rawaj-new-recipient" className="block text-xs font-semibold text-[#152322]">
+                    {text("البريد الإلكتروني للمستخدم", "Recipient email")}
+                  </label>
+                  <input
+                    id="rawaj-new-recipient"
+                    type="email"
+                    autoComplete="off"
+                    inputMode="email"
+                    maxLength={254}
+                    required
+                    value={recipientEmail}
+                    onChange={(event) => {
+                      recipientLookupIdRef.current += 1;
+                      setRecipientEmail(event.target.value);
+                      setRecipientMatch(null);
+                      setRecipientNotice("");
+                    }}
+                    className="min-h-11 w-full rounded-xl border border-[#dce5e1] bg-white px-3 text-sm text-[#152322]"
+                    placeholder={text("أدخل البريد كاملاً", "Enter the complete email")}
+                    dir="ltr"
+                  />
+                  <p className="text-xs leading-5 text-[#53615e]">
+                    {text("البحث عن بريد كامل فقط. لن يظهر بريد الشخص للآخرين.", "Exact email lookup only. The email stays private.")}
+                  </p>
+                  <button type="submit" disabled={recipientBusy || directStartBusy} className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60">
+                    {recipientBusy ? text("جارٍ البحث...", "Searching...") : text("بحث عن المستخدم", "Find user")}
+                  </button>
+                </form>
+                {recipientNotice ? <p role="status" className="text-xs text-[#a13a32]">{recipientNotice}</p> : null}
+                {recipientMatch ? (
+                  <div className="space-y-2 border-t border-[#e3e7e4] pt-3">
+                    <p className="text-sm font-semibold text-[#152322]">{recipientMatch.displayName}</p>
+                    <button type="button" disabled={directStartBusy} onClick={() => void beginDirectMessage()} className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60">
+                      {directStartBusy ? text("جارٍ فتح المحادثة...", "Opening conversation...") : text("بدء المحادثة", "Start conversation")}
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
             <CommunicationSearch
               value={conversationQuery}
               onChange={setConversationQuery}
