@@ -406,7 +406,7 @@ function ChatsPage() {
     }
   }
 
-  async function loadConversations() {
+  async function loadConversations(replace = false) {
     const profileId = auth.profile?.id ?? null;
     if (!profileId) return;
     const requestId = ++conversationsRequestIdRef.current;
@@ -419,9 +419,10 @@ function ChatsPage() {
       }
       if (result.ok) {
         setConversations((current) =>
-          sortAndDedupeConversations([...current, ...result.data.items]),
+          sortAndDedupeConversations(replace ? result.data.items : [...current, ...result.data.items]),
         );
-        if (loadedConversationPage === 1) {
+        if (replace) setLoadedConversationPage(1);
+        if (replace || loadedConversationPage === 1) {
           setHasMoreConversations(result.data.hasMore);
         }
       } else {
@@ -654,6 +655,22 @@ function ChatsPage() {
     }
     void loadMessages(selectedConversation.id);
   }, [auth.status, isConversationPanelVisible, selectedConversation?.id]);
+
+  useEffect(() => {
+    if (auth.status !== "signedIn" || !auth.profile?.id) return;
+    const onPullRefresh = (event: Event) => {
+      const registration = (event as CustomEvent<{ register: (task: Promise<unknown>) => void }>).detail;
+      if (!registration?.register) return;
+      const currentThreadId = selectedConversationIdRef.current;
+      const tasks: Promise<unknown>[] = [loadConversations(true)];
+      if (isConversationPanelVisible && currentThreadId) {
+        tasks.push(loadMessages(currentThreadId));
+      }
+      registration.register(Promise.allSettled(tasks));
+    };
+    window.addEventListener("rawaj:pull-refresh", onPullRefresh);
+    return () => window.removeEventListener("rawaj:pull-refresh", onPullRefresh);
+  }, [auth.status, auth.profile?.id, isConversationPanelVisible]);
 
   function updateComposerDraft(scopeKey: string, value: string) {
     setComposerDrafts((current) => {
