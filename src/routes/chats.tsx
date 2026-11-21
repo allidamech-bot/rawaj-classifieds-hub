@@ -1085,7 +1085,7 @@ function ChatsPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#dce5e1] bg-white px-3 text-xs font-bold text-[#103f42]"
+                  className="rawaj-new-message-trigger"
                   aria-expanded={newMessageOpen}
                   aria-controls="rawaj-new-message"
                   onClick={() => {
@@ -1104,7 +1104,7 @@ function ChatsPage() {
             {newMessageOpen ? (
               <section
                 id="rawaj-new-message"
-                className="my-3 space-y-3 rounded-2xl border border-[#dce5e1] bg-white p-3"
+                className="rawaj-new-message-panel"
                 aria-label={text("بدء محادثة جديدة", "Start a new conversation")}
               >
                 <form
@@ -1113,7 +1113,7 @@ function ChatsPage() {
                 >
                   <label
                     htmlFor="rawaj-new-recipient"
-                    className="block text-xs font-semibold text-[#152322]"
+                    className="rawaj-new-message-label"
                   >
                     {text("البريد الإلكتروني للمستخدم", "Recipient email")}
                   </label>
@@ -1131,11 +1131,11 @@ function ChatsPage() {
                       setRecipientMatch(null);
                       setRecipientNotice("");
                     }}
-                    className="min-h-11 w-full rounded-xl border border-[#dce5e1] bg-white px-3 text-sm text-[#152322]"
+                    className="rawaj-new-message-input"
                     placeholder={text("أدخل البريد كاملاً", "Enter the complete email")}
                     dir="ltr"
                   />
-                  <p className="text-xs leading-5 text-[#53615e]">
+                  <p className="rawaj-new-message-hint">
                     {text(
                       "البحث عن بريد كامل فقط. لن يظهر بريد الشخص للآخرين.",
                       "Exact email lookup only. The email stays private.",
@@ -1144,7 +1144,7 @@ function ChatsPage() {
                   <button
                     type="submit"
                     disabled={recipientBusy || directStartBusy}
-                    className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60"
+                    className="rawaj-new-message-submit"
                   >
                     {recipientBusy
                       ? text("جارٍ البحث...", "Searching...")
@@ -1158,14 +1158,14 @@ function ChatsPage() {
                 ) : null}
                 {recipientMatch ? (
                   <div className="space-y-2 border-t border-[#e3e7e4] pt-3">
-                    <p className="text-sm font-semibold text-[#152322]">
+                    <p className="rawaj-new-message-recipient">
                       {recipientMatch.displayName}
                     </p>
                     <button
                       type="button"
                       disabled={directStartBusy}
                       onClick={() => void beginDirectMessage()}
-                      className="min-h-11 w-full rounded-xl bg-[#103f42] px-3 text-sm font-bold text-white disabled:opacity-60"
+                      className="rawaj-new-message-submit"
                     >
                       {directStartBusy
                         ? text("جارٍ فتح المحادثة...", "Opening conversation...")
@@ -1295,10 +1295,10 @@ function ChatsPage() {
                           setViewingConversationOnMobile(false);
                           void navigate({ to: "/chats", search: {}, replace: true });
                         }}
-                        className="inline-flex items-center gap-1 rounded-xl bg-muted-surface px-3 py-2 text-xs font-bold hairline"
+                        className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#e3e7e4] bg-white px-3 py-2 text-sm font-bold text-[#103f42]"
                         aria-label={text("المحادثات", "Conversations")}
                       >
-                        ← {text("المحادثات", "Conversations")}
+                        {language === "ar" ? "→" : "←"} {text("المحادثات", "Conversations")}
                       </button>
                     )}
                     <Avatar
@@ -1330,7 +1330,7 @@ function ChatsPage() {
                       disabled={blocking}
                       aria-busy={blocking}
                       aria-label={text("حظر المستخدم", "Block user")}
-                      className="inline-flex items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 text-[11px] font-bold text-destructive"
+                      className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive"
                     >
                       <Ban className="h-3.5 w-3.5" />
                       {blocking ? text("جارٍ الحظر", "Blocking") : text("حظر", "Block")}
@@ -1354,27 +1354,28 @@ function ChatsPage() {
                   )}
                 </header>
 
-                <div className="rawaj-message-secondary-actions">
-                  <button
-                    type="button"
-                    aria-expanded={offersOpen}
-                    aria-controls="rawaj-conversation-offers"
-                    onClick={() => setOffersOpen((current) => !current)}
-                    className="rawaj-message-offers-toggle"
-                  >
-                    <HandCoins className="h-4 w-4" aria-hidden="true" />
-                    {text("عروض السعر وسجل التفاوض", "Price offers and history")}
-                  </button>
-                </div>
-                <ConversationPriceOffers
-                  key={selectedConversation.id}
-                  conversationId={selectedConversation.id}
-                  open={offersOpen}
-                  enabled={
-                    selectedConversation.status === "active" &&
-                    Boolean(selectedConversation.listingId)
-                  }
-                />
+                {selectedConversation.listingId ? (
+                  <>
+                    <div className="rawaj-message-secondary-actions">
+                      <button
+                        type="button"
+                        aria-expanded={offersOpen}
+                        aria-controls="rawaj-conversation-offers"
+                        onClick={() => setOffersOpen((current) => !current)}
+                        className="rawaj-message-offers-toggle"
+                      >
+                        <HandCoins className="h-4 w-4" aria-hidden="true" />
+                        {text("عروض السعر وسجل التفاوض", "Price offers and history")}
+                      </button>
+                    </div>
+                    <ConversationPriceOffers
+                      key={selectedConversation.id}
+                      conversationId={selectedConversation.id}
+                      open={offersOpen}
+                      enabled={selectedConversation.status === "active"}
+                    />
+                  </>
+                ) : null}
 
                 {hasOlderMessages && !loadingMessages && visibleMessages.length > 0 ? (
                   <button
@@ -1545,14 +1546,14 @@ function ChatsPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-bold">{currentImage.file.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {(currentImage.file.size / 1024 / 1024).toFixed(1)} MB
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={clearSelectedImage}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-destructive/10 text-destructive"
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"
                         aria-label={text("إزالة الصورة", "Remove image")}
                       >
                         <X className="h-4 w-4" />

@@ -623,3 +623,119 @@
   color: #152322 !important;
   background: #ffffff !important;
 }
+
+
+/* New-message creation belongs to the same surface/typography as the inbox.
+ * Keep the email field 16px on iOS to prevent focusing from zooming the PWA. */
+.rawaj-messaging-v4 .rawaj-new-message-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--message-border);
+  border-radius: 12px;
+  background: var(--message-surface);
+  color: #103f42;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-trigger[aria-expanded="true"] {
+  border-color: #103f42;
+  background: #edf4f2;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-panel {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin-block: 0.75rem;
+  padding: 0.875rem;
+  border: 1px solid var(--message-border);
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--message-ink);
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-label,
+.rawaj-messaging-v4 .rawaj-new-message-recipient {
+  display: block;
+  color: var(--message-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--message-border);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--message-ink);
+  font-size: 16px;
+  text-align: start;
+  direction: ltr;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-input::placeholder {
+  color: var(--message-subtle);
+  opacity: 1;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-hint {
+  color: var(--message-subtle);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.875rem;
+  border: 1px solid #103f42;
+  border-radius: 12px;
+  background: #103f42;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-submit:disabled {
+  opacity: 0.55;
+}
+
+.rawaj-messaging-v4 .rawaj-new-message-input:focus-visible,
+.rawaj-messaging-v4 .rawaj-new-message-trigger:focus-visible,
+.rawaj-messaging-v4 .rawaj-new-message-submit:focus-visible {
+  outline: 3px solid #103f42;
+  outline-offset: 2px;
+}
+
+@media (max-width: 359px) {
+  .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading {
+    gap: 0.35rem;
+  }
+
+  .rawaj-messaging-v4 .rawaj-conversation-sidebar__heading h2 {
+    font-size: 0.9375rem;
+  }
+
+  .rawaj-messaging-v4 .rawaj-new-message-trigger {
+    padding-inline: 0.55rem;
+  }
+
+  .rawaj-messaging-v4 .rawaj-new-message-panel {
+    padding: 0.75rem;
+  }
+}
