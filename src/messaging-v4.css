@@ -470,11 +470,13 @@
     align-items: stretch;
   }
   .rawaj-messaging-v4 .rawaj-message-composer > div:last-of-type > textarea {
-    grid-column: 4;
+    /* A 320px device must show a full-width writing field; media actions
+       move below, alongside Send, rather than squeezing the input to ~100px. */
+    grid-column: 1 / -1;
     grid-row: 1;
     min-width: 0;
-    min-height: 3rem;
-    height: 3rem;
+    min-height: 3.25rem;
+    height: 3.25rem;
     font-size: 16px;
     resize: none;
   }
@@ -483,8 +485,9 @@
     font-size: 16px;
   }
   .rawaj-messaging-v4 .rawaj-message-composer__send {
-    grid-column: 1 / -1;
+    grid-column: 4;
     grid-row: 2;
+    min-width: 0;
     min-height: 3rem;
     position: static;
   }
