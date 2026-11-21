@@ -65,7 +65,7 @@ test.describe("authenticated rendered visual QA", () => {
       if (route.name === "chats") {
         await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
           "background-color",
-          "rgb(247, 243, 236)",
+          "rgb(255, 255, 255)",
         );
         await expect(page.locator(".rawaj-app-shell__content")).toHaveCSS(
           "background-color",

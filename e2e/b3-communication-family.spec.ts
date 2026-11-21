@@ -39,7 +39,7 @@ for (const { path, selector } of routes) {
             await signInPanel.evaluate((node) => getComputedStyle(node, "::after").content),
           ).toBe("none");
           if (path === "/chats") {
-            await expect(shell).toHaveCSS("background-color", "rgb(247, 243, 236)");
+            await expect(shell).toHaveCSS("background-color", "rgb(255, 255, 255)");
             await expect(page.locator(selector)).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
           }
 

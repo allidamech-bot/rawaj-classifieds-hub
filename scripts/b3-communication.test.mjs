@@ -16,10 +16,10 @@ test("B3.2 restores source-owned identity without changing B3.1 saved collection
   for (const route of ["/activity", "/notifications", "/chats"]) {
     assert.ok(communication.includes(`data-resolved-pathname="${route}"`));
   }
-  for (const color of ["#083d38", "#fffaf3", "#173d38", "#075d52"]) {
+  for (const color of ["#103f42", "#ffffff", "#152322", "#53615e"]) {
     assert.ok(communication.includes(color), `missing identity color ${color}`);
   }
-  assert.doesNotMatch(communication, /#(?:303137|292a30|1a1d25|87415b|6b406d|e9663c)/i);
+  assert.doesNotMatch(communication, /#(?:303137|292a30|1a1d25|87415b|6b406d|e9663c|083d38|fffaf3|173d38|075d52)/i);
   const collections = combined.slice(end);
   assert.match(collections, /rawaj-route-favorites/);
   assert.match(collections, /rawaj-route-saved-searches/);
