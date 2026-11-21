@@ -61,7 +61,9 @@ test("new message starts a direct conversation without a listing", async ({ page
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ data: messages ? { items: [], hasMore: false } : { success: true } }),
+        body: JSON.stringify({
+          data: messages ? { items: [], hasMore: false } : { success: true },
+        }),
       });
     },
   );
@@ -70,7 +72,10 @@ test("new message starts a direct conversation without a listing", async ({ page
   await expect(page.locator('html[data-rawaj-hydrated="true"]')).toHaveCount(1);
   await page.getByLabel(/^(Email|البريد الإلكتروني)$/).fill("browser-smoke@rawa-j.test");
   await page.locator('form input[type="password"]').fill("Rawaj-E2E-Password-1");
-  await page.locator("form").getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ }).click();
+  await page
+    .locator("form")
+    .getByRole("button", { name: /^(Log in|تسجيل الدخول)$/ })
+    .click();
 
   await expect(page).toHaveURL(/\/chats(?:[/?#]|$)/, { timeout: 20_000 });
   await page.getByRole("button", { name: /رسالة جديدة|New message/ }).click();
@@ -84,7 +89,10 @@ test("new message starts a direct conversation without a listing", async ({ page
   expect(creations).toBe(1);
 });
 
-test("mobile pull-to-refresh invalidates data without reloading the document", async ({ page }, info) => {
+test("mobile pull-to-refresh invalidates data without reloading the document", async (
+  { page },
+  info,
+) => {
   test.skip(!info.project.name.includes("mobile"), "Touchscreen project required.");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/", { waitUntil: "domcontentloaded" });
