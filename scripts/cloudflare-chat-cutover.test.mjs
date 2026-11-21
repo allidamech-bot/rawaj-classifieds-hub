@@ -86,3 +86,33 @@ test("conversation inbox pages beyond fifty and direct links survive live refres
   assert.match(route, /fetchConversationById\(requestedId\)/);
   assert.match(workspace, /sortAndDedupeConversations\(\[\.\.\.current, \.\.\.conversationsResult\.data\]\)/);
 });
+
+test("direct messages require authenticated exact-email lookup and respect blocking", async () => {
+  const worker = await read("cloudflare/worker/src/account-social.ts");
+  const messaging = await read("src/lib/api/messaging.ts");
+  const screen = await read("src/routes/chats.tsx");
+  const security = await read("cloudflare/worker/src/security.ts");
+  assert.match(worker, /path === "\/v1\/conversations\/direct\/lookup"/);
+  assert.match(worker, /requireMutationAuth\(request/);
+  assert.match(worker, /DIRECT_RECIPIENT_EMAIL_PATTERN/);
+  assert.match(worker, /usersBlocked\(env, auth\.userId/);
+  assert.match(worker, /listing_id, buyer_id, seller_id, status/);
+  assert.match(worker, /VALUES \(\?, NULL, \?, \?, 'active'/);
+  assert.match(messaging, /findDirectMessageRecipient/);
+  assert.match(screen, /بدء المحادثة/);
+  assert.match(security, /isAbuseProneMutation/);
+});
+
+test("pull refresh keeps documents and message drafts and avoids forms and embedded scrollers", async () => {
+  const pull = await read("src/components/shell/PullToRefresh.tsx");
+  const chats = await read("src/routes/chats.tsx");
+  assert.match(pull, /rawaj:pull-refresh/);
+  assert.match(pull, /router\.invalidate\(\)/);
+  assert.match(pull, /invalidateQueries/);
+  assert.doesNotMatch(pull, /location\.reload|window\.location/);
+  assert.match(pull, /scrollContainer\(target\)/);
+  assert.match(pull, /dataset\.keyboardOpen/);
+  assert.match(chats, /loadConversations\(true\)/);
+  assert.match(chats, /loadMessages\(currentThreadId\)/);
+  assert.match(chats, /setComposerDrafts/);
+});
