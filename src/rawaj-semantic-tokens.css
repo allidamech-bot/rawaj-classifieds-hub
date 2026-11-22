@@ -201,6 +201,7 @@
 
 html:has(.rawaj-app-shell[data-design-palette="ivory"]) {
   color-scheme: light;
+  background-color: #ffffff !important;
 }
 
 html:has(.rawaj-app-shell[data-design-palette="ivory"]) body {

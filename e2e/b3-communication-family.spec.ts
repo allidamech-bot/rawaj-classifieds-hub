@@ -35,6 +35,16 @@ for (const { path, selector } of routes) {
         if (width === 390) {
           const signInPanel = page.locator(".rawaj-communication-signed-out");
           await expect(signInPanel).toBeVisible();
+          const signedOutTypography = await signInPanel.evaluate((element) => ({
+            heading: Number.parseFloat(getComputedStyle(element.querySelector("h1")!).fontSize),
+            actions: Array.from(element.querySelectorAll("a")).map((link) =>
+              Number.parseFloat(getComputedStyle(link).fontSize),
+            ),
+          }));
+          expect(signedOutTypography.heading).toBeGreaterThanOrEqual(20);
+          expect(signedOutTypography.actions.length).toBeGreaterThan(0);
+          expect(Math.min(...signedOutTypography.actions)).toBeGreaterThanOrEqual(14);
+
           expect(
             await signInPanel.evaluate((node) => getComputedStyle(node, "::after").content),
           ).toBe("none");
