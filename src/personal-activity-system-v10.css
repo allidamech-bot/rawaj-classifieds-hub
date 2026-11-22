@@ -96,17 +96,17 @@
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"]
 ) {
-  --rawaj-shell-chrome-surface: #083d38;
-  --rawaj-shell-chrome-ink: #fffaf3;
+  --rawaj-shell-chrome-surface: #103f42;
+  --rawaj-shell-chrome-ink: #ffffff;
   --rawaj-shell-chrome-line: rgba(245, 216, 164, 0.22);
-  --rawaj-text-primary: #173d38;
-  --rawaj-text-secondary: #435650;
-  --rawaj-text-muted: #536660;
-  --rawaj-border: #d4ded7;
-  --rawaj-surface-card: #fffaf3;
-  --rawaj-surface-inset: #f0ede5;
-  color: #173d38 !important;
-  background: #f7f3ec !important;
+  --rawaj-text-primary: #152322;
+  --rawaj-text-secondary: #53615e;
+  --rawaj-text-muted: #53615e;
+  --rawaj-border: #e3e7e4;
+  --rawaj-surface-card: #ffffff;
+  --rawaj-surface-inset: #f4f6f5;
+  color: #152322 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/chats"],
@@ -114,8 +114,8 @@
   [data-resolved-pathname="/activity"]
 ) .rawaj-shell-header.rawaj-shell-header--context {
   border-bottom: 1px solid rgba(245, 216, 164, 0.18) !important;
-  color: #fffaf3 !important;
-  background: #083d38 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
@@ -123,7 +123,7 @@
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"]
 ) .rawaj-shell-header__title :is(h1, p) {
-  color: #fffaf3 !important;
+  color: #ffffff !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/chats"],
@@ -131,7 +131,7 @@
   [data-resolved-pathname="/activity"]
 ) .rawaj-communication-v2 {
   min-width: 0;
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/chats"],
@@ -150,8 +150,8 @@
   border: 1px solid #27665c !important;
   border-radius: 1.15rem !important;
   padding: clamp(0.85rem, 2vw, 1.15rem) !important;
-  color: #fffaf3 !important;
-  background: #083d38 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
@@ -169,7 +169,7 @@
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"]
 ) .rawaj-communication-hero__metrics strong {
-  color: #fffaf3 !important;
+  color: #ffffff !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/chats"],
@@ -198,7 +198,7 @@
 ) .rawaj-communication-hero__actions :is(a, button) {
   min-height: 2.75rem;
   border: 1px solid rgba(255, 250, 243, 0.25) !important;
-  color: #fffaf3 !important;
+  color: #ffffff !important;
   background: #14594f !important;
   box-shadow: none !important;
 }
@@ -207,16 +207,16 @@
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"]
 ) .rawaj-communication-hero__actions [data-active="true"] {
-  color: #083d38 !important;
+  color: #103f42 !important;
   background: #f5d8a4 !important;
 }
 
 /* Activity: explicit selected state and restrained individual feed rows. */
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs {
-  border: 1px solid #d2ddd5 !important;
+  border: 1px solid #e3e7e4 !important;
   border-radius: 0.95rem !important;
   padding: 0.3rem !important;
-  background: #fffaf3 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button {
@@ -227,98 +227,98 @@
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] {
   color: #fff !important;
-  background: #075d52 !important;
+  background: #103f42 !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button b {
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-tabs button[aria-selected="true"] b {
-  color: #083d38 !important;
+  color: #103f42 !important;
   background: #f5d8a4 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/activity"] .rawaj-activity-panel {
   min-width: 0;
-  border: 1px solid #d2ddd5 !important;
+  border: 1px solid #e3e7e4 !important;
   border-radius: 1.1rem !important;
   padding: 0.9rem !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-panel > div:first-child :is(h2, a) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-notification-timeline, .rawaj-activity-conversation) {
-  border: 1px solid #d2ddd5 !important;
+  border: 1px solid #e3e7e4 !important;
   border-radius: 0.9rem !important;
-  color: #173d38 !important;
+  color: #152322 !important;
   background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-notification-timeline[data-read="false"] {
-  border-inline-start: 3px solid #075d52 !important;
+  border-inline-start: 3px solid #103f42 !important;
   background: #eff7f1 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-notification-timeline, .rawaj-activity-conversation) :is(h2, strong) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] :is(.rawaj-notification-timeline, .rawaj-activity-conversation) :is(p, small, span.text-muted-foreground) {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/activity"] .rawaj-activity-conversation > b {
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
 }
 
 /* Notifications: reading order first, actions visible and legible. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"] .rawaj-notification-panel,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-preferences,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up {
-  border: 1px solid #d2ddd5 !important;
+  border: 1px solid #e3e7e4 !important;
   border-radius: 1.1rem !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-section-header :is(h2, p, span) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline {
   min-width: 0;
-  border: 1px solid #d2ddd5 !important;
+  border: 1px solid #e3e7e4 !important;
   border-radius: 0.9rem !important;
-  color: #173d38 !important;
+  color: #152322 !important;
   background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] article.rawaj-notification-timeline[data-read="false"] {
-  border-inline-start: 3px solid #075d52 !important;
+  border-inline-start: 3px solid #103f42 !important;
   background: #eff7f1 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy :is(strong, p) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__copy small {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__icon {
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-timeline__read,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid > a {
   min-height: 2.75rem;
   border: 1px solid #ccd8cf !important;
-  color: #075d52 !important;
-  background: #fffaf3 !important;
+  color: #103f42 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-notification-preferences :is(input, select, button) {
   min-height: 2.75rem;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-follow-up__grid > a :is(span, svg) {
-  color: #075d52 !important;
+  color: #103f42 !important;
 }
 
 /* B3.2 accessibility: the retired dark personal-space layer can still supply
@@ -327,7 +327,7 @@
    These selectors intentionally do not match B3.1 collections or other routes. */
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-communication-section-header p {
-  color: #075d52 !important;
+  color: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-panel .rawaj-communication-section-header h2,
@@ -335,167 +335,167 @@
   .rawaj-notification-panel .rawaj-notification-timeline__copy strong,
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-communication-follow-up > h2 {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-panel .rawaj-notification-timeline__copy :is(p, small) {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-preferences > section {
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-preferences :is(h2, p:not(.text-destructive)) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-preferences .text-muted-foreground {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-preferences .bg-muted-surface {
-  background: #f2f0e8 !important;
+  background: #f4f6f5 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/notifications"] .rawaj-communication-v2
   .rawaj-notification-preferences .bg-card {
-  background: #fffaf3 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
   .rawaj-communication-v2 .rawaj-communication-signed-out {
-  border: 1px solid #d2ddd5 !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  border: 1px solid #e3e7e4 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
   .rawaj-communication-v2 .rawaj-communication-signed-out h1 {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
   .rawaj-communication-v2 .rawaj-communication-signed-out p {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
   .rawaj-communication-v2 .rawaj-communication-signed-out > a:first-of-type {
-  color: #fffaf3 !important;
-  background: #075d52 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
 }
 .rawaj-app-shell:is([data-resolved-pathname="/notifications"], [data-resolved-pathname="/activity"])
   .rawaj-communication-v2 .rawaj-communication-signed-out > a + a {
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
 }
 
 /* Messages: list-first mobile behavior remains owned by communication V3;
    every desktop and mobile state shares accessible opaque surface roles. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"] .rawaj-communication-safety {
-  border-color: #d2ddd5;
-  background: #eff7f1;
+  border-color: #e3e7e4;
+  background: #f4f6f5;
 }
 
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"]
   .rawaj-communication-safety :is(strong, p) {
-  color: #173d38 !important;
+  color: #152322 !important;
   font-size: max(0.75rem, 12px);
 }
 
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-workspace {
   border: 1px solid #cedbd3 !important;
   border-radius: 1.1rem !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-sidebar {
-  border-color: #d2ddd5 !important;
-  background: #f2f0e8 !important;
+  border-color: #e3e7e4 !important;
+  background: #f4f6f5 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-panel {
-  border-color: #d2ddd5 !important;
-  background: #fffaf3 !important;
+  border-color: #e3e7e4 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary {
-  min-height: 4.65rem !important;
+  min-height: 4.4rem !important;
   border: 1px solid transparent !important;
   border-radius: 0.85rem !important;
-  color: #173d38 !important;
+  color: #152322 !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary[data-selected="true"] {
-  border-color: #82aca0 !important;
-  background: #e2f0e8 !important;
-  box-shadow: inset 3px 0 0 #075d52 !important;
+  border-color: #cbd9d4 !important;
+  background: #edf4f2 !important;
+  box-shadow: inset 3px 0 0 #103f42 !important;
 }
 [dir="rtl"] .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary[data-selected="true"] {
-  box-shadow: inset -3px 0 0 #075d52 !important;
+  box-shadow: inset -3px 0 0 #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__copy strong,
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header__copy h2 {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__copy :is(p, small),
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header__copy :is(a, span),
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-conversation-summary__meta time {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-header {
-  border-color: #d2ddd5 !important;
-  background: #fffaf3 !important;
+  border-color: #e3e7e4 !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-stream {
-  background: #f2f0e8 !important;
+  background: #f4f6f5 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble {
-  border: 1px solid #d2ddd5 !important;
-  color: #173d38 !important;
+  border: 1px solid #e3e7e4 !important;
+  color: #152322 !important;
   background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble[data-mine="true"] {
-  border-color: #075d52 !important;
-  color: #fffaf3 !important;
-  background: #075d52 !important;
+  border-color: #103f42 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-bubble[data-mine="true"] .rawaj-message-bubble__time {
-  color: #e1eee6 !important;
+  color: #e8eeed !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer {
-  border-color: #d2ddd5 !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  border-color: #e3e7e4 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer :is(textarea, input, .rawaj-communication-search) {
   min-height: 2.75rem;
-  border-color: #c8d7cc !important;
-  color: #173d38 !important;
+  border-color: #e3e7e4 !important;
+  color: #152322 !important;
   background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-message-composer__send {
   min-height: 2.75rem;
-  color: #fffaf3 !important;
-  background: #075d52 !important;
+  color: #ffffff !important;
+  background: #103f42 !important;
   box-shadow: none !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] .rawaj-quick-replies button {
   min-height: 2.75rem !important;
-  border: 1px solid #c8d7cc !important;
-  color: #075d52 !important;
+  border: 1px solid #e3e7e4 !important;
+  color: #103f42 !important;
   background: #ffffff !important;
 }
 .rawaj-app-shell[data-resolved-pathname="/chats"] :is(.rawaj-communication-state, .rawaj-message-composer__block-reason) {
-  color: #435650 !important;
-  background: #fffaf3 !important;
+  color: #53615e !important;
+  background: #ffffff !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/chats"],
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"]
 ) :is(a, button, textarea, input, select):focus-visible {
-  outline: 3px solid #075d52 !important;
+  outline: 3px solid #103f42 !important;
   outline-offset: 2px;
 }
 @media (max-width: 639px) {
@@ -521,7 +521,7 @@
  * copy. They must not leak onto ivory notification/activity surfaces. Scope only
  * to the three communication paths and preserve B3.1 account styles. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/chats"] {
-  --rawaj-shell-canvas: #f7f3ec;
+  --rawaj-shell-canvas: #ffffff;
   background: var(--rawaj-shell-canvas) !important;
 }
 
@@ -535,11 +535,11 @@
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out {
-  --foreground: #173d38;
-  --muted-foreground: #435650;
-  border: 1px solid #d2ddd5 !important;
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  --foreground: #152322;
+  --muted-foreground: #53615e;
+  border: 1px solid #e3e7e4 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   background-image: none !important;
   box-shadow: 0 8px 22px rgba(8, 61, 56, 0.06) !important;
 }
@@ -548,23 +548,23 @@
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out > h1 {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out > p {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-shell-mode]:is(
   [data-resolved-pathname="/notifications"],
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out > a:first-of-type {
-  border-color: #075d52 !important;
+  border-color: #103f42 !important;
   color: #ffffff !important;
-  background: #075d52 !important;
+  background: #103f42 !important;
   background-image: none !important;
   box-shadow: none !important;
 }
@@ -573,9 +573,9 @@
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out > a:nth-of-type(2) {
-  border-color: #b5cdc0 !important;
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  border-color: #cbd9d4 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
   background-image: none !important;
   box-shadow: none !important;
 }
@@ -584,9 +584,9 @@
   [data-resolved-pathname="/activity"],
   [data-resolved-pathname="/chats"]
 ) .rawaj-communication-v2 .rawaj-communication-signed-out > span:first-child {
-  border-color: #b5cdc0 !important;
-  color: #075d52 !important;
-  background: #e1f1e8 !important;
+  border-color: #cbd9d4 !important;
+  color: #103f42 !important;
+  background: #edf4f2 !important;
   background-image: none !important;
   box-shadow: none !important;
 }
@@ -602,58 +602,58 @@
  * white-on-dark declaration and color utilities at both browser-smoke sizes. */
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3 {
-  --foreground: #173d38;
-  --muted-foreground: #435650;
-  --color-foreground: #173d38;
-  --color-muted-foreground: #435650;
+  --foreground: #152322;
+  --muted-foreground: #53615e;
+  --color-foreground: #152322;
+  --color-muted-foreground: #53615e;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-communication-section-header :is(h2, p, span) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-communication-section-header p {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-timeline__copy :is(strong, p, small) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-timeline__copy :is(p, small) {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-preferences > section {
-  color: #173d38 !important;
-  background: #fffaf3 !important;
+  color: #152322 !important;
+  background: #ffffff !important;
   background-image: none !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-preferences > section .bg-muted-surface {
-  color: #173d38 !important;
-  background: #f2f0e8 !important;
+  color: #152322 !important;
+  background: #f4f6f5 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-preferences :is(h2, h3, p, label, small) {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-notification-preferences :is(p.text-muted-foreground, p.text-xs, small) {
-  color: #435650 !important;
+  color: #53615e !important;
 }
 .rawaj-app-shell[data-shell-mode][data-resolved-pathname="/notifications"]
   .rawaj-communication-v2.rawaj-account-activity-v3
   .rawaj-communication-follow-up > h2 {
-  color: #173d38 !important;
+  color: #152322 !important;
 }
 
 /* B3.1 favorites: canonical ivory cards, unavailable history clearly separated. */

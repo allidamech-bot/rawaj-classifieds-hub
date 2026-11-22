@@ -16,7 +16,7 @@ for (const language of ["ar", "en"] as const) {
       await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
       await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
         "background-color",
-        "rgb(249, 240, 228)",
+        "rgb(255, 255, 255)",
       );
       const widths = await page.evaluate(() => ({
         document: document.documentElement.scrollWidth,

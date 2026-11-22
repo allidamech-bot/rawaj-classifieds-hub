@@ -132,7 +132,7 @@ test("search remains operable with 200% text at 320px", async ({ page }, testInf
   const input = toolbar.locator('input[type="search"]');
   await input.focus();
   await input.press("a");
-  await expect(input).toHaveCSS("outline-color", "rgb(8, 99, 94)");
+  await expect(input).toHaveCSS("outline-color", "rgb(16, 63, 66)");
   expect((await input.boundingBox())?.width).toBeGreaterThanOrEqual(80);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const openFilters = toolbar.getByRole("button", { name: /فتح الفلاتر|Open filters/ });

@@ -45,8 +45,8 @@ test.describe("authenticated rendered visual QA", () => {
       });
 
       const communicationSurfaces: Record<string, { selector: string; color: string }> = {
-        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 250, 243)" },
-        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 250, 243)" },
+        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 255, 255)" },
+        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 255, 255)" },
         chats: { selector: ".rawaj-communication-search", color: "rgb(255, 255, 255)" },
       };
       const communicationSurface = communicationSurfaces[route.name];
@@ -65,7 +65,7 @@ test.describe("authenticated rendered visual QA", () => {
       if (route.name === "chats") {
         await expect(page.locator(".rawaj-app-shell")).toHaveCSS(
           "background-color",
-          "rgb(247, 243, 236)",
+          "rgb(255, 255, 255)",
         );
         await expect(page.locator(".rawaj-app-shell__content")).toHaveCSS(
           "background-color",

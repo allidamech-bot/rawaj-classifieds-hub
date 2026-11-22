@@ -562,14 +562,19 @@
 
 .rawaj-categories-v2__hero-search label {
   min-height: 3.05rem;
-  border-color: #e4d5bb;
-  background: #fffaf3;
-  color: var(--rawaj-identity-ink);
+  border-color: #e3e7e4;
+  background: #ffffff;
+  color: #152322;
+}
+
+.rawaj-categories-v2__hero-search input {
+  min-width: 0;
+  font-size: 16px;
 }
 
 .rawaj-categories-v2__hero-search label:focus-within {
-  border-color: var(--rawaj-identity-gold);
-  box-shadow: 0 0 0 3px rgba(255, 227, 176, 0.26);
+  border-color: #103f42;
+  box-shadow: 0 0 0 3px rgb(16 63 66 / 12%);
 }
 
 .rawaj-category-directory-grid {

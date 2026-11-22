@@ -143,3 +143,69 @@
   --font-sans: "Cairo", "Segoe UI", system-ui, sans-serif;
   --font-display: "Cairo", "Segoe UI", system-ui, sans-serif;
 }
+
+/*
+ * Canonical light-route palette. Legacy V5/V17/V19 dark tokens still serve
+ * approved dark-only screens, but must not bleed into ivory marketplace,
+ * account, auth, communication or trust content. This is token ownership,
+ * not a general repaint of homepage, My Store, or administration.
+ */
+.rawaj-app-shell[data-design-palette="ivory"] {
+  color-scheme: light;
+  --rawaj-page-background: #ffffff !important;
+  --rawaj-page-background-deep: #f4f6f5 !important;
+  --rawaj-card-background: #ffffff !important;
+  --rawaj-elevated-background: #ffffff !important;
+  --rawaj-subtle-background: #f4f6f5 !important;
+  --rawaj-muted-surface: #f4f6f5 !important;
+  --rawaj-surface-active: #edf4f2 !important;
+  --rawaj-surface-selected: #edf4f2 !important;
+  --rawaj-surface-inset: #ffffff !important;
+  --rawaj-surface-card: #ffffff !important;
+  --rawaj-surface-sage: #f4f6f5 !important;
+  --rawaj-surface-sage-strong: #edf4f2 !important;
+  --rawaj-surface-warm: #f4f6f5 !important;
+  --rawaj-surface-gold: #faf7f0 !important;
+  --rawaj-surface-elevated: #ffffff !important;
+  --rawaj-text-primary: #152322 !important;
+  --rawaj-text-secondary: #53615e !important;
+  --rawaj-text-muted: #53615e !important;
+  --rawaj-text-disabled: #697873 !important;
+  --rawaj-text-inverse: #ffffff !important;
+  --rawaj-link: #103f42 !important;
+  --rawaj-border: #e3e7e4 !important;
+  --rawaj-border-strong: #cbd5d0 !important;
+  --rawaj-border-active: #103f42 !important;
+  --rawaj-identity-ink: #152322 !important;
+  --rawaj-identity-teal: #103f42 !important;
+  --rawaj-identity-petrol: #103f42 !important;
+  --rawaj-identity-gold: #bd984b !important;
+  --rawaj-identity-ivory: #ffffff !important;
+  --background: #ffffff !important;
+  --foreground: #152322 !important;
+  --card: #ffffff !important;
+  --card-foreground: #152322 !important;
+  --popover: #ffffff !important;
+  --popover-foreground: #152322 !important;
+  --secondary: #f4f6f5 !important;
+  --secondary-foreground: #152322 !important;
+  --muted: #f4f6f5 !important;
+  --muted-foreground: #53615e !important;
+  --input: #e3e7e4 !important;
+  --border: #e3e7e4 !important;
+  --ring: #103f42 !important;
+  --rawaj-shell-canvas: #ffffff !important;
+  --rawaj-focus-ring: #103f42 !important;
+  --rawaj-focus-shadow: 0 0 0 3px rgb(16 63 66 / 12%) !important;
+}
+
+html:has(.rawaj-app-shell[data-design-palette="ivory"]) {
+  color-scheme: light;
+  background-color: #ffffff !important;
+}
+
+html:has(.rawaj-app-shell[data-design-palette="ivory"]) body {
+  color-scheme: light !important;
+  color: #152322;
+  background: #ffffff !important;
+}

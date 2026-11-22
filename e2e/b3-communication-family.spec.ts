@@ -35,11 +35,21 @@ for (const { path, selector } of routes) {
         if (width === 390) {
           const signInPanel = page.locator(".rawaj-communication-signed-out");
           await expect(signInPanel).toBeVisible();
+          const signedOutTypography = await signInPanel.evaluate((element) => ({
+            heading: Number.parseFloat(getComputedStyle(element.querySelector("h1")!).fontSize),
+            actions: Array.from(element.querySelectorAll("a")).map((link) =>
+              Number.parseFloat(getComputedStyle(link).fontSize),
+            ),
+          }));
+          expect(signedOutTypography.heading).toBeGreaterThanOrEqual(20);
+          expect(signedOutTypography.actions.length).toBeGreaterThan(0);
+          expect(Math.min(...signedOutTypography.actions)).toBeGreaterThanOrEqual(14);
+
           expect(
             await signInPanel.evaluate((node) => getComputedStyle(node, "::after").content),
           ).toBe("none");
           if (path === "/chats") {
-            await expect(shell).toHaveCSS("background-color", "rgb(247, 243, 236)");
+            await expect(shell).toHaveCSS("background-color", "rgb(255, 255, 255)");
             await expect(page.locator(selector)).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
           }
 
@@ -73,6 +83,10 @@ test("B3.2 chats preserves list-first mobile layout and keyboard access", async 
   const workspace = page.locator(".rawaj-message-workspace");
   await expect(workspace).toBeVisible();
   await expect(workspace).toHaveAttribute("data-view", "list");
+  const newMessage = workspace.getByRole("button", { name: /رسالة جديدة|New message/i });
+  await expect(newMessage).toHaveCSS("color", "rgb(16, 63, 66)");
+  await expect(newMessage).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
   await expect(workspace.locator(".rawaj-message-panel")).toBeHidden();
 
   const firstControl = workspace.locator(":is(a, button, input):visible").first();

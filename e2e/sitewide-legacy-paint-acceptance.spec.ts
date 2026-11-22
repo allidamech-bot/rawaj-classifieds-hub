@@ -39,7 +39,7 @@ for (const pathname of ivoryRoutes) {
       await expect(shell).toHaveAttribute("data-design-palette", "ivory");
       await expect(shell).toHaveCSS("color-scheme", "light");
       await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
-      await expect(page.locator("html")).toHaveCSS("background-color", "rgb(249, 240, 228)");
+      await expect(page.locator("html")).toHaveCSS("background-color", "rgb(255, 255, 255)");
       await expect(page.locator("main")).toBeVisible();
 
       if (pathname === "/categories" || pathname === "/more" || pathname === "/chats") {
@@ -70,7 +70,7 @@ for (const pathname of ivoryRoutes) {
       if (pathname === "/offers") {
         await expect(page.locator(".rawaj-offers-stage")).toHaveCSS(
           "background-color",
-          "rgb(7, 56, 54)",
+          "rgb(16, 63, 66)",
         );
       }
       expect(

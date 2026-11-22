@@ -16,6 +16,7 @@ test("phase 5 messaging layer is route-scoped and loaded after the communication
   assert.match(routeStyles, /messagingV4: messagingV4Css/);
   assert.ok(root.indexOf("messagingV4") > root.indexOf("communicationCenterV2"));
   assert.match(route, /rawaj-messaging-v4/);
+  assert.ok(route.includes('title: "المحادثات | رواج | Rawaj"'));
 });
 
 test("conversation cards expose useful time context without changing realtime behavior", () => {
@@ -33,10 +34,13 @@ test("messages retain one page heading and accessible interaction contracts", ()
 });
 
 test("phase 5 provides readable, restrained, responsive messaging UI", () => {
-  assert.match(css, /font-size:\s*max\(0\.84rem, 13\.5px\)/);
-  assert.match(css, /background:\s*#075d52/);
+  assert.match(css, /font-size:\s*max\(0\.875rem, 14px\)/);
+  assert.match(css, /background:\s*#103f42/);
   assert.match(css, /box-shadow:\s*0 3px 10px/);
   assert.match(css, /min-height:\s*3rem/);
+  // Phone composer: full-width writing field above attachment actions and Send.
+  assert.match(css, /grid-column:\s*1 \/ -1;/);
+  assert.match(css, /grid-column:\s*4;/);
   assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
   assert.match(css, /@media \(min-width: 1024px\)/);
   assert.match(css, /@media \(max-width: 639px\)/);
