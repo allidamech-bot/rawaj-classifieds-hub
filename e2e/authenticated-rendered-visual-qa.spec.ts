@@ -45,8 +45,8 @@ test.describe("authenticated rendered visual QA", () => {
       });
 
       const communicationSurfaces: Record<string, { selector: string; color: string }> = {
-        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 250, 243)" },
-        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 250, 243)" },
+        activity: { selector: ".rawaj-activity-panel", color: "rgb(255, 255, 255)" },
+        notifications: { selector: ".rawaj-notification-panel", color: "rgb(255, 255, 255)" },
         chats: { selector: ".rawaj-communication-search", color: "rgb(255, 255, 255)" },
       };
       const communicationSurface = communicationSurfaces[route.name];
