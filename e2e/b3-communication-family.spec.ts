@@ -83,6 +83,10 @@ test("B3.2 chats preserves list-first mobile layout and keyboard access", async 
   const workspace = page.locator(".rawaj-message-workspace");
   await expect(workspace).toBeVisible();
   await expect(workspace).toHaveAttribute("data-view", "list");
+  const newMessage = workspace.getByRole("button", { name: /رسالة جديدة|New message/i });
+  await expect(newMessage).toHaveCSS("color", "rgb(16, 63, 66)");
+  await expect(newMessage).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
   await expect(workspace.locator(".rawaj-message-panel")).toBeHidden();
 
   const firstControl = workspace.locator(":is(a, button, input):visible").first();

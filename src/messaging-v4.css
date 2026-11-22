@@ -652,6 +652,22 @@
   background: #edf4f2;
 }
 
+.rawaj-app-shell[data-design-palette="ivory"][data-resolved-pathname="/chats"]
+  .rawaj-messaging-v4 button.rawaj-new-message-trigger {
+  border-color: #e3e7e4 !important;
+  color: #103f42 !important;
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+.rawaj-app-shell[data-design-palette="ivory"][data-resolved-pathname="/chats"]
+  .rawaj-messaging-v4 button.rawaj-new-message-trigger[aria-expanded="true"] {
+  border-color: #103f42 !important;
+  background: #edf4f2 !important;
+}
+
+
+
 .rawaj-messaging-v4 .rawaj-new-message-panel {
   display: grid;
   gap: 0.75rem;
